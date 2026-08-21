@@ -28,7 +28,7 @@ function renderGnb() {
 }
 function markActive() {
   const r = (location.hash.split('/')[1] || 'home').split('?')[0] || 'home';
-  document.querySelectorAll('.gnb-item[data-r]').forEach((el) =>
+  document.querySelectorAll('[data-r]').forEach((el) =>
     el.classList.toggle('on', (el as HTMLElement).dataset.r === r));
 }
 
@@ -101,8 +101,13 @@ async function boot() {
     }, 500);
   });
 
+  // GNB 스크롤 반응 (상단에서는 투명, 내리면 불투명)
+  const onScroll = () => document.querySelector('.gnb')!.classList.toggle('scrolled', window.scrollY > 10);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
   document.addEventListener('lilac:me', renderGnb);
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', () => { route().then(onScroll); });
 
   await Promise.all([loadData(), refreshMe(), loadLikes()]);
   renderGnb();

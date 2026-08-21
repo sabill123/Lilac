@@ -1,7 +1,16 @@
 import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
 import { playQueue, openYt, toast } from './player';
+import { applyTone } from './colors';
 import { t } from './i18n';
+
+/* ---- 스켈레톤 ---- */
+const skRows = (n = 6) => `<div class="sk-list">${Array.from({ length: n }, () => `
+  <div class="sk-row"><span class="sk sk-n"></span><span class="sk sk-art"></span>
+  <span class="sk-tt"><span class="sk sk-l1"></span><span class="sk sk-l2"></span></span></div>`).join('')}</div>`;
+const skCards = (n = 6, round = false) => `<div class="shelf">${Array.from({ length: n }, () => `
+  <div class="card"><div class="cover sk ${round ? 'rd' : ''}"></div>
+  <span class="sk sk-l1" style="margin-top:11px"></span><span class="sk sk-l2"></span></div>`).join('')}</div>`;
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 const root = () => $('#page');
@@ -141,21 +150,26 @@ function fillEventArts(container: HTMLElement) {
 export async function pageHome() {
   const feat = seeds.find((s) => s.id === 't5') ?? seeds[0];
   root().innerHTML = `
-    <section class="billboard">
-      <img class="bb-img" id="bbImg" alt="" />
+    <section class="billboard" id="bb">
+      <div class="bb-blur" id="bbBlur"></div>
       <div class="bb-scrim"></div>
-      <div class="bb-content">
-        <p class="bb-eyebrow">${t('todayPick')}</p>
-        <h1 class="bb-title">${esc(feat.title.split(' (')[0])}</h1>
-        <p class="bb-meta">${esc(feat.artist)} · ${esc(feat.tag)}</p>
-        <div class="bb-actions">
-          <button class="btn-play-w" id="heroPlay">${icon('i-play')}${t('play')}</button>
-          <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
+      <div class="bb-inner">
+        <div class="bb-content">
+          <p class="bb-eyebrow">${t('todayPick')}</p>
+          <h1 class="bb-title">${esc(feat.title.split(' (')[0])}</h1>
+          <p class="bb-meta">${esc(feat.artist)}</p>
+          <p class="bb-tag">${esc(feat.tag)}</p>
+          <div class="bb-actions">
+            <button class="btn-play-w" id="heroPlay">${icon('i-play')}${t('play')}</button>
+            <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
+          </div>
         </div>
+        <div class="bb-card" id="bbCard"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
     <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2><a class="sec-link" href="#/library/follows">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
     <section class="sec"><div class="sec-head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
+    <section class="sec"><div class="sec-head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
     <section class="sec"><div class="sec-head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
     <section class="store-wrap"><div class="store-inner">
       <p class="store-label">STORE</p>
@@ -163,18 +177,44 @@ export async function pageHome() {
       <div class="store-grid" id="hStore"></div>
     </div></section>`;
 
-  findCatalog(feat.searchTerm).then((hit) => { if (hit) ($('#bbImg') as HTMLImageElement).src = artUrl(hit, 1200); });
+  findCatalog(feat.searchTerm).then((hit) => {
+    if (!hit) return;
+    const big = artUrl(hit, 1200);
+    $('#bbBlur').style.backgroundImage = `url(${big})`;
+    $('#bbCard').innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/>`;
+    void applyTone($('#bb'), artUrl(hit, 200));
+  });
   $('#heroPlay').addEventListener('click', async () => {
     const hit = await findCatalog(feat.searchTerm);
     if (hit) playQueue([toPlayable(hit, feat.youtubeId)], 0);
   });
   $('#heroMv').addEventListener('click', () => { if (feat.youtubeId) openYt(feat.youtubeId); });
 
+  $('#hArtists').innerHTML = skCards(7, true);
   $('#hArtists').innerHTML = shelf(artists.map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm })));
   fillShelfArts($('#hArtists'));
 
+  $('#hChart').innerHTML = skRows(5);
   const chart = await api('/api/chart?source=combined').catch(() => null);
   if (chart) { const top = chart.list.slice(0, 5); $('#hChart').innerHTML = rankList(top); bindRank($('#hChart'), top); }
+
+  // 무드 타일
+  const moods = [
+    { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' },
+    { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
+    { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' },
+    { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
+    { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' },
+    { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
+  ];
+  $('#hMoods').innerHTML = moods.map((m) => `
+    <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})">
+      <span class="mood-k">${m.k}</span><span class="mood-sq" data-term="${esc(m.q)}"></span></a>`).join('');
+  moods.forEach(async (m, i) => {
+    const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
+    const sq = $('#hMoods').querySelectorAll<HTMLElement>('.mood-sq')[i];
+    if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
+  });
 
   $('#hEvents').innerHTML = events.slice(0, 4).map((ev) => {
     const { d, txt } = dday(ev.date);
@@ -208,11 +248,12 @@ export async function pageChart(sub?: string) {
     </section>
     <section class="sec chart-body">
       <div class="ch-bar"><button class="play-big" id="chPlayAll">${icon('i-play')}</button><span class="ch-updated" id="chUpdated"></span></div>
-      <div id="chartBody"><p class="loading">불러오는 중…</p></div>
+      <div id="chartBody">${skRows(8)}</div>
     </section>`;
   const data = await api(`/api/chart?source=${source}`).catch(() => null);
   if (!data) { $('#chartBody').innerHTML = '<p class="loading">차트를 불러오지 못했습니다</p>'; return; }
   $('#chUpdated').textContent = `${new Date(data.updated).toLocaleString()} 기준`;
+  if (data.list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), data.list[0].artwork);
   $('#chartBody').innerHTML = rankList(data.list, { big: true });
   bindRank($('#chartBody'), data.list);
   data.list.forEach(async (e: { artwork?: string; searchTerm?: string; artist: string; title: string }, i: number) => {
@@ -395,12 +436,16 @@ export async function pageArtist(id: string) {
       <a class="tbtn big-ghost" href="${a.official}" target="_blank" rel="noopener" title="공식 사이트">${icon('i-ext')}</a>
       <span class="ar-op">${t('store.operator')} · ${esc(a.operator)}</span>
     </div>
-    <section class="sec"><div class="sec-head"><h2>인기</h2></div><div id="arTracks"><p class="loading">불러오는 중…</p></div></section>
+    <section class="sec"><div class="sec-head"><h2>인기</h2></div><div id="arTracks">${skRows(5)}</div></section>
     <section class="sec" id="arEvSec" style="display:none"><div class="sec-head"><h2>${t('schedule.title')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="ev-shelf" id="arEvents"></div></section>
     <section class="sec" id="arGoodsSec" style="display:none"><div class="sec-head"><h2>${t('store.title')}</h2><a class="sec-link" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="store-dark-grid" id="arGoods"></div></section>
     <section class="sec"><div class="sec-head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>`;
 
-  findCatalog(a.searchTerm).then((hit) => { if (hit) $('#arBg').style.backgroundImage = `url(${artUrl(hit, 1200)})`; });
+  findCatalog(a.searchTerm).then((hit) => {
+    if (!hit) return;
+    $('#arBg').style.backgroundImage = `url(${artUrl(hit, 1200)})`;
+    void applyTone(document.querySelector('.ar-hero'), artUrl(hit, 200));
+  });
   $('#arFollow').addEventListener('click', async () => {
     const list = await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: a.id, name: a.name }) });
     const on = list.some((o: { artistId: string }) => o.artistId === a.id);
@@ -474,7 +519,7 @@ export async function pageLibrary(sub?: string) {
       </div>
       <div id="likeTable"></div>`;
     const rows = likes.map((l: PlayableTrack & { likedAt?: string }) => ({ ...l, addedAt: l.likedAt }));
-    $('#likeTable').innerHTML = rows.length ? trackTable(rows) : `<p class="loading">플레이어의 하트를 눌러 곡을 저장해 보세요</p>`;
+    $('#likeTable').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-heart', 'ic eb')}<p>저장한 곡이 없습니다</p><span>플레이어의 하트를 눌러 곡을 저장해 보세요</span></div>`;
     bindTable($('#likeTable'), rows);
     $('#likePlay')?.addEventListener('click', () => rows.length && playQueue(rows, 0));
   }
@@ -502,11 +547,11 @@ export async function pageLibrary(sub?: string) {
   }
   if (tab === 'history') {
     const rows = hist.slice(0, 40).map((h: PlayableTrack & { playedAt?: string }) => ({ ...h, addedAt: h.playedAt }));
-    body.innerHTML = rows.length ? trackTable(rows, { album: true, date: true }) : `<p class="loading">아직 재생 기록이 없습니다</p>`;
+    body.innerHTML = rows.length ? trackTable(rows, { album: true, date: true }) : `<div class="empty-box">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p><span>곡을 재생하면 여기에 쌓입니다</span></div>`;
     bindTable(body, rows);
   }
   if (tab === 'follows') {
-    if (!oshi.length) { body.innerHTML = `<p class="loading">아티스트를 팔로우해 보세요</p>`; return; }
+    if (!oshi.length) { body.innerHTML = `<div class="empty-box">${icon('i-plus', 'ic eb')}<p>팔로우한 아티스트가 없습니다</p><span>아티스트 페이지에서 팔로우해 보세요</span></div>`; return; }
     body.innerHTML = shelf(oshi.map((o: { artistId: string; name: string }) => {
       const a = artists.find((x) => x.id === o.artistId);
       return { title: o.name, sub: a?.genre || t('artists'), round: true, href: `#/artist/${o.artistId}`, term: a?.searchTerm };
@@ -543,8 +588,9 @@ export async function pagePlaylist(id: string) {
       </div>
       <div class="sp-body" id="plTracks"></div>
     </section>`;
+  if (covers[0]?.artwork) void applyTone(document.querySelector('.sp-head'), covers[0].artwork);
   const rows = pl.tracks as PlayableTrack[];
-  $('#plTracks').innerHTML = rows.length ? trackTable(rows) : `<p class="loading">플레이어의 + 버튼으로 곡을 추가해 보세요</p>`;
+  $('#plTracks').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-queue', 'ic eb')}<p>아직 곡이 없습니다</p><span>플레이어의 + 버튼으로 곡을 추가해 보세요</span></div>`;
   bindTable($('#plTracks'), rows, async (i) => { await api(`/api/playlists/${id}/tracks/${i}`, { method: 'DELETE' }); pagePlaylist(id); });
   $('#plPlayAll').addEventListener('click', () => rows.length && playQueue(rows, 0));
   $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0));
@@ -705,7 +751,7 @@ export async function pageSearch(q: string) {
     <section class="sec page-top">
       <div class="page-head"><p class="sp-label">검색</p><h1 class="page-title">‘${esc(q)}’</h1>
         <p class="page-desc">Apple Music 카탈로그 검색 결과입니다.</p></div>
-      <div id="srBody"><p class="loading">검색 중…</p></div>
+      <div id="srBody">${skRows(6)}</div>
     </section>`;
   const { tracks } = await api(`/api/catalog/search?term=${encodeURIComponent(q)}&limit=15`).catch(() => ({ tracks: [] }));
   if (!tracks.length) { $('#srBody').innerHTML = '<p class="loading">결과가 없습니다</p>'; return; }
