@@ -1,0 +1,6 @@
+[
+  { "id": "ev1", "type": "내한", "title": "YOASOBI 단독 내한 콘서트 (데모)", "artist": "YOASOBI", "date": "2026-09-13", "venue": "고려대 화정체육관", "note": "티켓팅 오픈 08.30 20:00 · 데모 데이터" },
+  { "id": "ev2", "type": "발매", "title": "요루시카 신보 발매 (데모)", "artist": "요루시카", "date": "2026-09-05", "venue": "전 플랫폼", "note": "한정반 예약 진행 중 · 데모 데이터" },
+  { "id": "ev3", "type": "원정", "title": "Mrs. GREEN APPLE 도쿄돔 (데모)", "artist": "Mrs. GREEN APPLE", "date": "2026-10-24", "venue": "도쿄돔", "note": "원정 패키지 알림 신청 · 데모 데이터" },
+  { "id": "ev4", "type": "응모", "title": "Ado 팬클럽 선행 추첨 마감 (데모)", "artist": "Ado", "date": "2026-08-29", "venue": "FC 회원 한정", "note": "응모 가이드 제공 · 데모 데이터" }
+]

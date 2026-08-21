@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lilac — 당신의 오시에게 닿는 가장 가까운 길</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Sans+JP:wght@400;700;900&family=Noto+Serif+KR:wght@600;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- 배경 그라디언트 블롭 -->
+    <div class="bg-blobs" aria-hidden="true">
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+      <div class="blob b3"></div>
+    </div>
+
+    <!-- 글래스 네비 (Apple Music 스타일) -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <a class="logo" href="#top">Lilac<span class="logo-dot">·</span><span class="logo-kr">라일락</span></a>
+        <div class="nav-links">
+          <a href="#chart" class="nav-link">차트</a>
+          <a href="#discover" class="nav-link">디스커버리</a>
+          <a href="#honjin" class="nav-link">본진</a>
+          <a href="#goods" class="nav-link">굿즈</a>
+        </div>
+        <div class="nav-actions">
+          <div class="search-box">
+            <input id="searchInput" type="text" placeholder="곡·아티스트 검색" autocomplete="off" />
+            <span class="search-ico">⌕</span>
+          </div>
+          <button id="connectApple" class="btn-connect apple">🍎 애플뮤직 연동</button>
+        </div>
+      </div>
+    </nav>
+
+    <main id="top">
+      <!-- 히어로 (넷플릭스 스타일 풀블리드) -->
+      <header class="hero">
+        <div class="hero-content">
+          <p class="hero-eyebrow mono reveal">CROSS-BORDER FANDOM PLATFORM · DEMO</p>
+          <h1 class="hero-title">
+            <span class="line reveal">밤에 듣는 노래는</span>
+            <span class="line reveal grad-text">국경이 없다</span>
+          </h1>
+          <p class="hero-sub reveal">한국의 J-POP 팬과 일본의 K-POP 팬을 위한 팬덤 플랫폼.<br />
+            가사 · 차트 · 내한 일정 · 한정반까지, 당신의 오시에게 닿는 가장 가까운 길.</p>
+          <div class="hero-cta reveal">
+            <button class="btn-primary" id="heroPlay">▶ 지금 듣기</button>
+            <a class="btn-ghost" href="#honjin">본진 입장</a>
+          </div>
+        </div>
+        <div class="hero-marquee" aria-hidden="true">
+          <div class="marquee-track" id="marquee"></div>
+        </div>
+      </header>
+
+      <!-- 오시 스토리 링 -->
+      <section class="section" id="oshi">
+        <div class="section-head reveal">
+          <h2>MY 오시 <span class="mono sub-label">推し · 클릭하면 로컬 폴더 DB에 저장</span></h2>
+        </div>
+        <div class="oshi-row" id="oshiRow"></div>
+      </section>
+
+      <!-- 실시간 차트 (스포티파이/애플뮤직 카드 행) -->
+      <section class="section" id="chart">
+        <div class="section-head reveal">
+          <h2>라일락 차트 <span class="live-dot"></span><span class="mono sub-label">APPLE MUSIC CATALOG</span></h2>
+          <p class="section-desc">▶ 프리뷰는 30초 인앱 재생(애플뮤직 카탈로그) · ▷ MV는 유튜브 공식 영상</p>
+        </div>
+        <div class="track-row" id="trackRow"></div>
+      </section>
+
+      <!-- 디스커버리 (검색 결과) -->
+      <section class="section" id="discover">
+        <div class="section-head reveal">
+          <h2>디스커버리 <span class="mono sub-label">TAG CHAIN · SEARCH</span></h2>
+          <p class="section-desc">곡 ↔ 애니 ↔ 아티스트로 이어지는 탐색 — 상단 검색 결과가 여기에 표시됩니다</p>
+        </div>
+        <div class="discover-grid" id="discoverGrid"></div>
+      </section>
+
+      <!-- 본진 (D-day) -->
+      <section class="section" id="honjin">
+        <div class="section-head reveal">
+          <h2>본진 <span class="mono sub-label">내한 · 발매 · 응모 캘린더</span></h2>
+          <p class="section-desc">파편화된 덕질 정보를 한 곳에</p>
+        </div>
+        <div class="event-grid" id="eventGrid"></div>
+      </section>
+
+      <!-- 굿즈 (YG셀렉트 커머스 그리드) -->
+      <section class="section" id="goods">
+        <div class="section-head reveal">
+          <h2>굿즈 & 한정반 <span class="mono sub-label">예약 공구 · DEMO</span></h2>
+          <p class="section-desc">일본 내수 한정템을 정식으로 — 커머스 데모</p>
+        </div>
+        <div class="goods-grid" id="goodsGrid"></div>
+      </section>
+
+      <footer class="footer">
+        <p class="mono">LILAC DEMO v0.1 · FE Vite+TS · BE Express · DB 로컬 폴더(JSON) · 재생: Apple Music 30s 프리뷰 + YouTube 공식 임베드</p>
+        <p class="mono dim">데모 데이터입니다. 가사 패널의 텍스트는 자체 제작 예시 문구입니다.</p>
+      </footer>
+    </main>
+
+    <!-- 플레이어 바 (스포티파이 스타일) -->
+    <div class="player" id="player">
+      <div class="player-art" id="playerArt"></div>
+      <div class="player-info">
+        <div class="player-title" id="playerTitle">재생 중인 곡 없음</div>
+        <div class="player-artist" id="playerArtist">카드에서 ▶ 를 눌러보세요</div>
+      </div>
+      <div class="player-center">
+        <button class="pbtn" id="btnPlay">▶</button>
+        <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="mono ptime" id="ptime">0:00 / 0:30</span>
+      </div>
+      <div class="player-right">
+        <button class="pbtn small" id="btnLyrics">가사</button>
+        <span class="eq" id="eq"><i></i><i></i><i></i><i></i></span>
+      </div>
+      <audio id="audio"></audio>
+    </div>
+
+    <!-- 가사 패널 (3단 데모: 원문/독음/번역 자리) -->
+    <div class="lyrics-panel" id="lyricsPanel">
+      <div class="lyrics-head">
+        <span class="mono">LYRICS PREVIEW · 자체 제작 데모 문구</span>
+        <button id="lyricsClose" class="pbtn small">✕</button>
+      </div>
+      <div class="lyrics-body" id="lyricsBody"></div>
+      <p class="mono dim lyrics-note">* 실제 가사가 아닌 데모 텍스트입니다. 실서비스에서는 가사 라이선스 계약 후 원문·독음·번역 3단 싱크로 제공합니다.</p>
+    </div>
+
+    <!-- 유튜브 모달 -->
+    <div class="modal" id="ytModal">
+      <div class="modal-box">
+        <button class="modal-close" id="ytClose">✕</button>
+        <div class="yt-frame-wrap" id="ytFrameWrap"></div>
+      </div>
+    </div>
+
+    <!-- 애플뮤직 연동 모달 -->
+    <div class="modal" id="appleModal">
+      <div class="modal-box apple-box">
+        <button class="modal-close" id="appleClose">✕</button>
+        <h3>🍎 애플뮤직 연동 (MusicKit)</h3>
+        <p>실서비스 구조: Apple Developer 미디어 키로 발급한 <b>개발자 토큰(JWT)</b> + 유저의 Apple ID 1회 인증(Music User Token) → 구독자는 <b>라일락 안에서 풀트랙 재생</b>.</p>
+        <p class="dim">이 데모는 토큰 없이 작동하는 <b>공개 30초 프리뷰</b>로 같은 UX를 시연합니다. <code>src/musickit.ts</code>에 개발자 토큰을 넣으면 MusicKit JS가 활성화됩니다.</p>
+        <button class="btn-primary" id="appleDemoOk">데모 모드로 계속</button>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

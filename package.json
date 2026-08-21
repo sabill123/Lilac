@@ -1,0 +1,12 @@
+{
+  "name": "lilac",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lilac — 한국의 J-POP 팬과 일본의 K-POP 팬을 위한 크로스보더 팬덤 플랫폼 (데모)",
+  "scripts": {
+    "dev:be": "node backend/server.mjs",
+    "dev:fe": "npm --prefix frontend run dev",
+    "dev": "node backend/server.mjs & npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build"
+  }
+}

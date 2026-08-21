@@ -1,0 +1,10 @@
+[
+  { "id": "yoasobi", "name": "YOASOBI", "nameJa": "ヨアソビ", "genre": "J-POP", "emoji": "🎹", "color": "#C77DFF", "searchTerm": "YOASOBI", "tags": ["애니 타이업", "유닛"] },
+  { "id": "ado", "name": "Ado", "nameJa": "アド", "genre": "J-POP", "emoji": "🎤", "color": "#7B5CF6", "searchTerm": "Ado", "tags": ["보컬", "우타이테"] },
+  { "id": "imase", "name": "imase", "nameJa": "イマセ", "genre": "J-POP", "emoji": "🌃", "color": "#67E8F9", "searchTerm": "imase", "tags": ["시티팝", "숏폼"] },
+  { "id": "yorushika", "name": "요루시카", "nameJa": "ヨルシカ", "genre": "J-ROCK", "emoji": "🌙", "color": "#5B6CF9", "searchTerm": "ヨルシカ", "tags": ["밴드", "밤샘 감성"] },
+  { "id": "mga", "name": "Mrs. GREEN APPLE", "nameJa": "ミセス", "genre": "J-POP", "emoji": "🍏", "color": "#8FE388", "searchTerm": "Mrs. GREEN APPLE", "tags": ["밴드", "국민 히트"] },
+  { "id": "kenshi", "name": "요네즈 켄시", "nameJa": "米津玄師", "genre": "J-POP", "emoji": "🎨", "color": "#FBBF24", "searchTerm": "米津玄師", "tags": ["싱어송라이터"] },
+  { "id": "aimyon", "name": "아이묭", "nameJa": "あいみょん", "genre": "J-POP", "emoji": "🎸", "color": "#FF8FAB", "searchTerm": "あいみょん", "tags": ["어쿠스틱"] },
+  { "id": "radwimps", "name": "RADWIMPS", "nameJa": "ラッドウィンプス", "genre": "J-ROCK", "emoji": "🌧", "color": "#93C5FD", "searchTerm": "RADWIMPS", "tags": ["밴드", "영화 OST"] }
+]
