@@ -1,6 +1,8 @@
 import { api, esc, icon } from './api';
 import type { PlayableTrack } from './api';
 import { t } from './i18n';
+import { applyMarquee, bindDragReorder, openContextMenu } from './interactions';
+import { applyTone } from './colors';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -13,39 +15,44 @@ export function toast(msg: string) {
   toastTimer = window.setTimeout(() => el.classList.remove('show'), 2400);
 }
 
-// ---------- 상태 ----------
 let audio: HTMLAudioElement;
 let queue: PlayableTrack[] = [];
 let queueIdx = -1;
 let shuffle = false;
 let repeat: 'off' | 'all' | 'one' = 'off';
 let likeKeys = new Set<string>();
-const trackKey = (tr: PlayableTrack) => (tr.title + '|' + (tr.artist || '')).toLowerCase().replace(/\s/g, '');
+const keyOf = (tr: PlayableTrack) => (tr.title + '|' + (tr.artist || '')).toLowerCase().replace(/\s/g, '');
 
 export const nowPlaying = () => (queueIdx >= 0 ? queue[queueIdx] : null);
-
 export async function loadLikes() {
   const list = await api('/api/likes').catch(() => []);
   likeKeys = new Set(list.map((x: { key: string }) => x.key));
 }
-const likeKeyOf = (tr: PlayableTrack) => trackKey(tr);
-export const isLiked = (tr: PlayableTrack) => likeKeys.has(likeKeyOf(tr));
+export const isLiked = (tr: PlayableTrack) => likeKeys.has(keyOf(tr));
 
-// ---------- 재생 ----------
-function fmt(s: number) { return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; }
-function setPlayIcon(playing: boolean) { $('#playIcon').innerHTML = `<use href="#${playing ? 'i-pause' : 'i-play'}"/>`; }
+const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function setPlayIcon(playing: boolean) {
+  $('#playIcon').innerHTML = `<use href="#${playing ? 'i-pause' : 'i-play'}"/>`;
+  document.body.classList.toggle('playing', playing);
+}
 
 function renderNow() {
   const tr = nowPlaying();
   if (!tr) return;
   $('#playerTitle').textContent = tr.title;
   $('#playerArtist').textContent = tr.artist;
-  $('#playerArt').style.backgroundImage = tr.artwork ? `url(${tr.artwork})` : '';
+  applyMarquee($('#playerTitle'));
+  const art = tr.artwork || '';
+  $('#playerArt').style.backgroundImage = art ? `url(${art})` : '';
+  $('#vinyl').style.backgroundImage = art ? `url(${art})` : '';
+  $('#npCover').style.backgroundImage = art ? `url(${art})` : '';
+  $('#npTitle').textContent = tr.title;
+  $('#npArtist').textContent = tr.artist;
+  if (art) void applyTone($('#npFull'), art);
   const heart = $('#btnLike');
   heart.classList.toggle('liked', isLiked(tr));
   heart.innerHTML = icon(isLiked(tr) ? 'i-heart-f' : 'i-heart');
   renderQueuePanel();
-  document.dispatchEvent(new CustomEvent('lilac:nowplaying'));
 }
 
 function playCurrent() {
@@ -53,7 +60,7 @@ function playCurrent() {
   if (!tr) return;
   if (!tr.preview) { toast('미리듣기가 없는 곡입니다'); next(); return; }
   audio.src = tr.preview;
-  void audio.play();
+  audio.play().catch(() => {});
   $('#player').classList.add('show');
   document.body.classList.add('has-player');
   setPlayIcon(true);
@@ -61,15 +68,12 @@ function playCurrent() {
   void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
   startLyricsDemo();
 }
-
 export function playQueue(list: PlayableTrack[], idx = 0) {
-  queue = list.filter((x) => x); queueIdx = Math.min(idx, queue.length - 1);
+  queue = list.filter(Boolean); queueIdx = Math.min(idx, queue.length - 1);
   playCurrent();
 }
 export function enqueue(tr: PlayableTrack) {
-  queue.push(tr);
-  toast(`재생목록에 추가됨: ${tr.title}`);
-  renderQueuePanel();
+  queue.push(tr); toast(`대기열에 추가됨: ${tr.title}`); renderQueuePanel();
   if (queueIdx < 0) { queueIdx = 0; playCurrent(); }
 }
 function next() {
@@ -87,14 +91,20 @@ function prev() {
   queueIdx = queueIdx > 0 ? queueIdx - 1 : (repeat === 'all' ? queue.length - 1 : 0);
   playCurrent();
 }
+export const playerActions = {
+  toggle: () => { if (!audio?.src) return; if (audio.paused) { audio.play().catch(() => {}); } else { audio.pause(); } },
+  next, prev,
+  seek: (d: number) => { if (audio?.src) audio.currentTime = Math.max(0, Math.min((audio.duration || 30), audio.currentTime + d)); },
+};
 
-// ---------- 큐 패널 ----------
+/* ---------- 대기열 ---------- */
 function renderQueuePanel() {
   const body = $('#queueBody');
   if (!body) return;
-  if (!queue.length) { body.innerHTML = `<p class="q-empty">${t('browse.hint')}</p>`; return; }
+  if (!queue.length) { body.innerHTML = `<div class="empty-box sm">${icon('i-queue', 'ic eb')}<p>대기열이 비어 있습니다</p></div>`; return; }
   const row = (tr: PlayableTrack, i: number, now: boolean) => `
     <div class="q-row ${now ? 'now' : ''}" data-i="${i}">
+      <span class="q-grip">${icon('i-grip', 'ic s')}</span>
       <div class="q-art" style="background-image:url(${esc(tr.artwork || '')})">${now ? '' : `<span class="q-hover-play">${icon('i-play')}</span>`}</div>
       <div class="q-meta"><div class="q-t">${esc(tr.title)}</div><div class="q-a">${esc(tr.artist)}</div></div>
       ${now ? `<span class="np-eq"><i></i><i></i><i></i></span>` : `<button class="q-x" data-x="${i}" title="제거">${icon('i-close')}</button>`}
@@ -105,21 +115,41 @@ function renderQueuePanel() {
     ${cur ? row(cur, queueIdx, true) : ''}
     ${queue.length > 1 ? `<p class="q-label">${t('queue.next')}</p>` : ''}
     ${queue.map((tr, i) => (i === queueIdx ? '' : row(tr, i, false))).join('')}`;
-  body.querySelectorAll<HTMLElement>('.q-row:not(.now)').forEach((el) =>
+
+  body.querySelectorAll<HTMLElement>('.q-row:not(.now)').forEach((el) => {
     el.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).closest('.q-x')) return;
       queueIdx = Number(el.dataset.i); playCurrent();
-    }));
+    });
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const i = Number(el.dataset.i);
+      const tr = queue[i];
+      openContextMenu(e.clientX, e.clientY, [
+        { label: '지금 재생', icon: 'i-play', run: () => { queueIdx = i; playCurrent(); } },
+        { label: t('player.addPl'), icon: 'i-plus', run: () => void openPlaylistPicker(tr) },
+        { label: '대기열에서 제거', icon: 'i-close', danger: true, run: () => { queue.splice(i, 1); if (i < queueIdx) queueIdx--; renderQueuePanel(); } },
+      ]);
+    });
+  });
   body.querySelectorAll<HTMLButtonElement>('.q-x').forEach((btn) =>
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const i = Number(btn.dataset.x);
-      queue.splice(i, 1);
-      if (i < queueIdx) queueIdx--;
+      queue.splice(i, 1); if (i < queueIdx) queueIdx--;
       renderQueuePanel();
     }));
+  bindDragReorder(body, (from, to) => {
+    const [moved] = queue.splice(from, 1);
+    queue.splice(to, 0, moved);
+    const cur2 = nowPlaying();
+    queueIdx = cur2 ? queue.indexOf(cur2) : queueIdx;
+    renderQueuePanel();
+    toast('대기열 순서를 변경했습니다');
+  });
 }
 
-// ---------- 가사 (자체 제작 데모 문구) ----------
+/* ---------- 가사 (자체 제작 데모 문구) ---------- */
 const DEMO_LINES = [
   { jp: 'ここは Lilac のデモ画面', romaji: 'koko wa lilac no demo gamen', ko: '여기는 라일락 데모 화면' },
   { jp: '歌詞はライセンス契約の後で', romaji: 'kashi wa raisensu keiyaku no ato de', ko: '가사는 라이선스 계약 후에' },
@@ -142,7 +172,7 @@ function startLyricsDemo() {
   lyricTimer = window.setInterval(tick, 3200);
 }
 
-// ---------- 플레이리스트 추가 피커 ----------
+/* ---------- 플레이리스트 피커 ---------- */
 export async function openPlaylistPicker(tr: PlayableTrack) {
   const lists = await api('/api/playlists').catch(() => []);
   const box = $('#plPickerBody');
@@ -156,18 +186,19 @@ export async function openPlaylistPicker(tr: PlayableTrack) {
     btn.addEventListener('click', async () => {
       await api(`/api/playlists/${btn.dataset.id}/tracks`, { method: 'POST', body: JSON.stringify(payload) });
       $('#plPicker').classList.remove('show');
-      toast(t('player.addPl') + ' 완료');
+      document.dispatchEvent(new CustomEvent('lilac:playlists'));
+      toast('플레이리스트에 추가했습니다');
     }));
   $('#ppNew').addEventListener('click', async () => {
     const name = prompt(t('lib.newPlaylist'), 'My Mix') || 'My Mix';
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
     await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify(payload) });
     $('#plPicker').classList.remove('show');
+    document.dispatchEvent(new CustomEvent('lilac:playlists'));
     toast(`‘${name}’ 생성 및 추가 완료`);
   });
 }
 
-// ---------- 유튜브 모달 ----------
 export function openYt(videoId: string) {
   $('#ytFrameWrap').innerHTML =
     `<iframe src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="YouTube player"></iframe>`;
@@ -175,21 +206,15 @@ export function openYt(videoId: string) {
   audio?.pause(); setPlayIcon(false);
 }
 
-// ---------- 초기화 ----------
+/* ---------- 초기화 ---------- */
 export function initPlayer() {
   audio = $('#audio') as unknown as HTMLAudioElement;
   audio.volume = 0.7;
 
-  $('#btnPlay').addEventListener('click', () => {
-    if (!audio.src) return;
-    if (audio.paused) { void audio.play(); setPlayIcon(true); } else { audio.pause(); setPlayIcon(false); }
-  });
+  $('#btnPlay').addEventListener('click', () => playerActions.toggle());
   $('#btnPrev').addEventListener('click', prev);
   $('#btnNext').addEventListener('click', next);
-  $('#btnShuffle').addEventListener('click', () => {
-    shuffle = !shuffle;
-    $('#btnShuffle').classList.toggle('on', shuffle);
-  });
+  $('#btnShuffle').addEventListener('click', () => { shuffle = !shuffle; $('#btnShuffle').classList.toggle('on', shuffle); toast(shuffle ? '셔플 켜짐' : '셔플 꺼짐'); });
   $('#btnRepeat').addEventListener('click', () => {
     repeat = repeat === 'off' ? 'all' : repeat === 'all' ? 'one' : 'off';
     $('#btnRepeat').classList.toggle('on', repeat !== 'off');
@@ -202,37 +227,72 @@ export function initPlayer() {
     $('#tDur').textContent = fmt(d);
   });
   audio.addEventListener('ended', next);
-  $('#progressBar').addEventListener('click', (e) => {
+  audio.addEventListener('play', () => setPlayIcon(true));
+  audio.addEventListener('pause', () => setPlayIcon(false));
+
+  const scrub = (e: MouseEvent) => {
     const r = $('#progressBar').getBoundingClientRect();
-    audio.currentTime = (((e as MouseEvent).clientX - r.left) / r.width) * (audio.duration || 30);
+    audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (audio.duration || 30);
+  };
+  $('#progressBar').addEventListener('pointerdown', (e) => {
+    scrub(e as MouseEvent);
+    const move = (ev: PointerEvent) => scrub(ev as unknown as MouseEvent);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
   });
-  $('#volBar').addEventListener('click', (e) => {
+  const setVol = (e: MouseEvent) => {
     const r = $('#volBar').getBoundingClientRect();
-    const v = Math.min(1, Math.max(0, ((e as MouseEvent).clientX - r.left) / r.width));
-    audio.volume = v;
-    $('#volFill').style.width = `${v * 100}%`;
+    const v = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    audio.volume = v; $('#volFill').style.width = `${v * 100}%`;
+  };
+  $('#volBar').addEventListener('pointerdown', (e) => {
+    setVol(e as MouseEvent);
+    const move = (ev: PointerEvent) => setVol(ev as unknown as MouseEvent);
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
   });
+
   $('#btnLike').addEventListener('click', async () => {
     const tr = nowPlaying();
     if (!tr) return;
     const list = await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) });
     likeKeys = new Set(list.map((x: { key: string }) => x.key));
     renderNow();
+    $('#btnLike').classList.add('pulse');
+    setTimeout(() => $('#btnLike').classList.remove('pulse'), 500);
+    document.dispatchEvent(new CustomEvent('lilac:playlists'));
     toast(isLiked(tr) ? '좋아요에 추가됨' : '좋아요 해제됨');
   });
   $('#btnAddPl').addEventListener('click', () => { const tr = nowPlaying(); if (tr) void openPlaylistPicker(tr); });
+
   const syncDock = () => document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show'));
-  $('#btnQueue').addEventListener('click', () => { $('#queuePanel').classList.toggle('show'); $('#lyricsPanel').classList.remove('show'); renderQueuePanel(); syncDock(); $('#btnQueue').classList.toggle('on', $('#queuePanel').classList.contains('show')); $('#btnLyrics').classList.remove('on'); });
+  $('#btnQueue').addEventListener('click', () => {
+    const on = $('#queuePanel').classList.toggle('show');
+    $('#lyricsPanel').classList.remove('show');
+    $('#btnQueue').classList.toggle('on', on); $('#btnLyrics').classList.remove('on');
+    renderQueuePanel(); syncDock();
+  });
   $('#queueClose').addEventListener('click', () => { $('#queuePanel').classList.remove('show'); $('#btnQueue').classList.remove('on'); syncDock(); });
+  $('#btnLyrics').addEventListener('click', () => {
+    const on = $('#lyricsPanel').classList.toggle('show');
+    $('#queuePanel').classList.remove('show');
+    $('#btnLyrics').classList.toggle('on', on); $('#btnQueue').classList.remove('on');
+    syncDock();
+  });
+  $('#lyricsClose').addEventListener('click', () => { $('#lyricsPanel').classList.remove('show'); $('#btnLyrics').classList.remove('on'); syncDock(); });
   $('#queueSave').addEventListener('click', async () => {
     if (!queue.length) return;
     const name = prompt(t('queue.saveAsPl'), 'Queue Mix') || 'Queue Mix';
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
-    for (const tr of queue) await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, artwork: tr.artwork, preview: tr.preview } }) });
+    for (const tr of queue) await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) });
+    document.dispatchEvent(new CustomEvent('lilac:playlists'));
     toast(`‘${name}’ 저장 완료 (${queue.length}곡)`);
   });
-  $('#btnLyrics').addEventListener('click', () => { $('#lyricsPanel').classList.toggle('show'); $('#queuePanel').classList.remove('show'); document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show')); $('#btnLyrics').classList.toggle('on', $('#lyricsPanel').classList.contains('show')); $('#btnQueue').classList.remove('on'); });
-  $('#lyricsClose').addEventListener('click', () => { $('#lyricsPanel').classList.remove('show'); $('#btnLyrics').classList.remove('on'); document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show')); });
+
+  // 전체화면 나우플레잉
+  $('#btnExpand').addEventListener('click', () => { if (nowPlaying()) $('#npFull').classList.add('show'); });
+  $('#npClose').addEventListener('click', () => $('#npFull').classList.remove('show'));
+
   $('#ytClose').addEventListener('click', () => { $('#ytModal').classList.remove('show'); $('#ytFrameWrap').innerHTML = ''; });
   $('#ytModal').addEventListener('click', (e) => { if (e.target === $('#ytModal')) { $('#ytModal').classList.remove('show'); $('#ytFrameWrap').innerHTML = ''; } });
   $('#plPicker').addEventListener('click', (e) => { if (e.target === $('#plPicker')) $('#plPicker').classList.remove('show'); });

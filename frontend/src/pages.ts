@@ -77,8 +77,9 @@ function bindTable(container: HTMLElement, rows: PlayableTrack[], onRemove?: (i:
 /* ============ 공용: 카드 셸프 ============ */
 function shelf(cards: { title: string; sub: string; art?: string; round?: boolean; href: string; term?: string }[]) {
   return `<div class="shelf">${cards.map((c) => `
-    <a class="card ${c.round ? 'round' : ''}" href="${c.href}" data-term="${esc(c.term || '')}">
+    <a class="card ${c.round ? 'round' : ''}" href="${c.href}" data-term="${esc(c.term || '')}" data-tilt="8" data-expand>
       <div class="cover">${c.art ? `<img src="${c.art}" alt="" loading="lazy"/>` : `<div class="ph">${esc(c.title[0] || '?')}</div>`}
+        <span class="glare"></span>
         <button class="hover-play">${icon('i-play')}</button></div>
       <div class="c-title">${esc(c.title)}</div><div class="c-sub">${esc(c.sub)}</div>
     </a>`).join('')}</div>`;
@@ -126,7 +127,7 @@ function bindRank(container: HTMLElement, entries: { title: string; artist: stri
 
 /* ============ 공용: 상품 카드 ============ */
 function productCard(p: Product) {
-  return `<a class="p-card" href="#/store/${p.id}">
+  return `<a class="p-card" href="#/store/${p.id}" data-tilt="7">
     <div class="p-img" data-term="${esc(p.searchTerm)}"><span class="p-badge">${esc(p.badge)}</span></div>
     <div class="p-brand">${esc(p.brand)}</div><div class="p-name">${esc(p.name)}</div>
     <div class="p-price">₩${p.price.toLocaleString()}</div>
@@ -151,7 +152,7 @@ export async function pageHome() {
   const feat = seeds.find((s) => s.id === 't5') ?? seeds[0];
   root().innerHTML = `
     <section class="billboard" id="bb">
-      <div class="bb-blur" id="bbBlur"></div>
+      <div class="bb-blur" id="bbBlur" data-parallax="0.34"></div>
       <div class="bb-scrim"></div>
       <div class="bb-inner">
         <div class="bb-content">
@@ -164,7 +165,7 @@ export async function pageHome() {
             <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
           </div>
         </div>
-        <div class="bb-card" id="bbCard"><div class="bb-card-inner sk"></div></div>
+        <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
     <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2><a class="sec-link" href="#/library/follows">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
@@ -181,7 +182,7 @@ export async function pageHome() {
     if (!hit) return;
     const big = artUrl(hit, 1200);
     $('#bbBlur').style.backgroundImage = `url(${big})`;
-    $('#bbCard').innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/>`;
+    $('#bbCard').innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/><span class="glare"></span>`;
     void applyTone($('#bb'), artUrl(hit, 200));
   });
   $('#heroPlay').addEventListener('click', async () => {
@@ -208,7 +209,7 @@ export async function pageHome() {
     { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
   ];
   $('#hMoods').innerHTML = moods.map((m) => `
-    <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})">
+    <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-tilt="6">
       <span class="mood-k">${m.k}</span><span class="mood-sq" data-term="${esc(m.q)}"></span></a>`).join('');
   moods.forEach(async (m, i) => {
     const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
@@ -542,6 +543,7 @@ export async function pageLibrary(sub?: string) {
       const name = prompt(t('lib.newPlaylist'), 'My Mix');
       if (!name) return;
       await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
+      document.dispatchEvent(new CustomEvent('lilac:playlists'));
       pageLibrary('playlists');
     });
   }
@@ -591,12 +593,13 @@ export async function pagePlaylist(id: string) {
   if (covers[0]?.artwork) void applyTone(document.querySelector('.sp-head'), covers[0].artwork);
   const rows = pl.tracks as PlayableTrack[];
   $('#plTracks').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-queue', 'ic eb')}<p>아직 곡이 없습니다</p><span>플레이어의 + 버튼으로 곡을 추가해 보세요</span></div>`;
-  bindTable($('#plTracks'), rows, async (i) => { await api(`/api/playlists/${id}/tracks/${i}`, { method: 'DELETE' }); pagePlaylist(id); });
+  bindTable($('#plTracks'), rows, async (i) => { await api(`/api/playlists/${id}/tracks/${i}`, { method: 'DELETE' }); document.dispatchEvent(new CustomEvent('lilac:playlists')); pagePlaylist(id); });
   $('#plPlayAll').addEventListener('click', () => rows.length && playQueue(rows, 0));
   $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0));
   $('#plDelete').addEventListener('click', async () => {
     if (!confirm(`‘${pl.name}’ 플레이리스트를 삭제할까요?`)) return;
     await api(`/api/playlists/${id}`, { method: 'DELETE' });
+    document.dispatchEvent(new CustomEvent('lilac:playlists'));
     location.hash = '#/library/playlists';
   });
 }
