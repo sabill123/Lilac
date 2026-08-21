@@ -62,6 +62,7 @@ function playCurrent() {
   audio.src = tr.preview;
   audio.play().catch(() => {});
   $('#player').classList.add('show');
+  $('#player').classList.remove('idle');
   document.body.classList.add('has-player');
   setPlayIcon(true);
   renderNow();
@@ -210,6 +211,12 @@ export function openYt(videoId: string) {
 export function initPlayer() {
   audio = $('#audio') as unknown as HTMLAudioElement;
   audio.volume = 0.7;
+  // 플레이어 바는 항상 표시 (스포티파이 동일) — 빈 상태로 시작
+  $('#player').classList.add('show', 'idle');
+  document.body.classList.add('has-player');
+  $('#playerTitle').textContent = '재생 중이 아님';
+  $('#playerArtist').textContent = '곡을 선택해 주세요';
+  renderQueuePanel();
 
   $('#btnPlay').addEventListener('click', () => playerActions.toggle());
   $('#btnPrev').addEventListener('click', prev);

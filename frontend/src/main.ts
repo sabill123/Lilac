@@ -40,12 +40,15 @@ async function renderSidebar() {
 /* ---------- 모드 (브라우즈 / 플레이) ---------- */
 type Mode = 'browse' | 'play';
 const PLAY_ROUTES = new Set(['library', 'playlist']);
+const BROWSE_ONLY = new Set(['login', 'signup', 'account']); // 계정 화면은 항상 브라우즈
+const LIGHT_ROUTES = new Set(['store']);                      // 화이트 배경 페이지
 let userMode: Mode = (localStorage.getItem('lilac.mode') as Mode) || 'browse';
 function currentSeg() { return (location.hash.split('/')[1] || 'home').split('?')[0] || 'home'; }
 function applyMode() {
-  const forced = PLAY_ROUTES.has(currentSeg());
-  const mode: Mode = forced ? 'play' : userMode;
+  const seg = currentSeg();
+  const mode: Mode = BROWSE_ONLY.has(seg) ? 'browse' : PLAY_ROUTES.has(seg) ? 'play' : userMode;
   document.body.classList.toggle('play-mode', mode === 'play');
+  document.body.classList.toggle('light-page', LIGHT_ROUTES.has(seg));
   $('#btnMode').classList.toggle('on', mode === 'play');
   $('#btnMode').title = mode === 'play' ? '브라우즈 모드로' : '플레이 모드로';
 }
