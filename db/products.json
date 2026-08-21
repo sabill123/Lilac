@@ -1,8 +1,10 @@
 [
-  { "id": "p1", "name": "한정반 CD (첫회한정 A반)", "brand": "예약 공구", "price": 42000, "badge": "특전 포함", "grad": "linear-gradient(140deg,#C77DFF,#5B6CF9)" },
-  { "id": "p2", "name": "투어 한정 아크릴 스탠드", "brand": "일본 내수", "price": 28000, "badge": "대행", "grad": "linear-gradient(140deg,#67E8F9,#7B5CF6)" },
-  { "id": "p3", "name": "가사집 화보 북 (한정판)", "brand": "예약 공구", "price": 35000, "badge": "마감 임박", "grad": "linear-gradient(140deg,#FBBF24,#FF8FAB)" },
-  { "id": "p4", "name": "콘서트 응원 타올", "brand": "공식 굿즈", "price": 19000, "badge": "재입고", "grad": "linear-gradient(140deg,#FF8FAB,#C77DFF)" },
-  { "id": "p5", "name": "랜덤 트레이딩 포카 세트", "brand": "일본 내수", "price": 15000, "badge": "대행", "grad": "linear-gradient(140deg,#8FE388,#67E8F9)" },
-  { "id": "p6", "name": "리릭 필름 세트 (5매)", "brand": "예약 공구", "price": 12000, "badge": "신상", "grad": "linear-gradient(140deg,#5B6CF9,#C77DFF)" }
+  { "id": "p1", "name": "THE BOOK 3 (완전생산한정반)", "brand": "YOASOBI", "price": 64000, "badge": "예약", "searchTerm": "YOASOBI THE BOOK 3" },
+  { "id": "p2", "name": "残夢 (첫회한정반 CD+DVD)", "brand": "Ado", "price": 58000, "badge": "예약", "searchTerm": "Ado 残夢" },
+  { "id": "p3", "name": "幻燈 (화집반)", "brand": "요루시카", "price": 72000, "badge": "품절임박", "searchTerm": "ヨルシカ 幻燈" },
+  { "id": "p4", "name": "ANTENNA (통상반)", "brand": "Mrs. GREEN APPLE", "price": 38000, "badge": "재입고", "searchTerm": "Mrs. GREEN APPLE ANTENNA" },
+  { "id": "p5", "name": "LOST CORNER (첫회한정 영상반)", "brand": "요네즈 켄시", "price": 61000, "badge": "예약", "searchTerm": "米津玄師 LOST CORNER" },
+  { "id": "p6", "name": "凡人 (통상반)", "brand": "imase", "price": 36000, "badge": "신상", "searchTerm": "imase 凡人" },
+  { "id": "p7", "name": "瞳へ落ちるよレコード (LP)", "brand": "아이묭", "price": 89000, "badge": "한정", "searchTerm": "あいみょん 瞳へ落ちるよレコード" },
+  { "id": "p8", "name": "天気の子 complete version", "brand": "RADWIMPS", "price": 54000, "badge": "예약", "searchTerm": "RADWIMPS 天気の子" }
 ]
