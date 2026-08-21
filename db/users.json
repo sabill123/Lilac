@@ -1,0 +1,18 @@
+[
+  {
+    "id": "82e19c37-13c3-4825-82f2-00706f4b0d41",
+    "email": "tester@lilac.demo",
+    "name": "테스터",
+    "pw": "0ead2060b65992dca4769af601a1b3a35ef38cfad2c2c465bb160ea764157c5d",
+    "language": "ko",
+    "createdAt": "2026-08-21T08:55:16.671Z",
+    "plan": {
+      "tier": "free",
+      "name": "Free",
+      "renewsAt": null
+    },
+    "credits": 19000,
+    "paymentMethods": [],
+    "addresses": []
+  }
+]

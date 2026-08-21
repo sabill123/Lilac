@@ -1,8 +1,12 @@
 [
-  { "id": "t1", "title": "アイドル (Idol)", "artist": "YOASOBI", "tag": "『최애의 아이』 OP", "youtubeId": "ZRtdQ81jPUQ", "searchTerm": "YOASOBI アイドル", "grad": "linear-gradient(140deg,#C77DFF,#5B6CF9)" },
-  { "id": "t2", "title": "唱 (Show)", "artist": "Ado", "tag": "USJ 할로윈 테마", "youtubeId": "pgXpM4l_MwI", "searchTerm": "Ado 唱", "grad": "linear-gradient(140deg,#7B5CF6,#0EA5E9)" },
-  { "id": "t3", "title": "NIGHT DANCER", "artist": "imase", "tag": "멜론 차트인 최초 J-POP", "youtubeId": "kagoEGKHZvU", "searchTerm": "imase NIGHT DANCER", "grad": "linear-gradient(140deg,#67E8F9,#5B6CF9)" },
-  { "id": "t4", "title": "晴る (Hare)", "artist": "요루시카", "tag": "『장송의 프리렌』 OP", "youtubeId": "CkvWJNt77mU", "searchTerm": "ヨルシカ 晴る", "grad": "linear-gradient(140deg,#93C5FD,#C77DFF)" },
-  { "id": "t5", "title": "ライラック (Lilac)", "artist": "Mrs. GREEN APPLE", "tag": "『망각 배터리』 OP · 서비스명의 유래", "youtubeId": "QjrkrVmC-8M", "searchTerm": "Mrs GREEN APPLE ライラック", "grad": "linear-gradient(140deg,#C77DFF,#8FE388)" },
-  { "id": "t6", "title": "KICK BACK", "artist": "요네즈 켄시", "tag": "『체인소 맨』 OP", "youtubeId": "M2cckDmNLMI", "searchTerm": "米津玄師 KICK BACK", "grad": "linear-gradient(140deg,#FBBF24,#EF4444)" }
+  { "id": "t1", "title": "アイドル (Idol)", "artist": "YOASOBI", "artistId": "yoasobi", "tag": "『최애의 아이』 OP", "youtubeId": "ZRtdQ81jPUQ", "ytViews": 685035459, "searchTerm": "YOASOBI アイドル" },
+  { "id": "t2", "title": "マリーゴールド", "artist": "아이묭", "artistId": "aimyon", "tag": "국민 발라드", "youtubeId": "0xSiBpUdW4E", "ytViews": 388180339, "searchTerm": "あいみょん マリーゴールド" },
+  { "id": "t3", "title": "NIGHT DANCER", "artist": "imase", "artistId": "imase", "tag": "멜론 차트인 최초 J-POP", "youtubeId": "kagoEGKHZvU", "ytViews": 364060899, "searchTerm": "imase NIGHT DANCER" },
+  { "id": "t4", "title": "唱 (Show)", "artist": "Ado", "artistId": "ado", "tag": "USJ 할로윈 테마", "youtubeId": "pgXpM4l_MwI", "ytViews": 276096100, "searchTerm": "Ado 唱" },
+  { "id": "t5", "title": "ライラック (Lilac)", "artist": "Mrs. GREEN APPLE", "artistId": "mga", "tag": "『망각 배터리』 OP", "youtubeId": "QjrkrVmC-8M", "ytViews": 244349202, "searchTerm": "Mrs GREEN APPLE ライラック" },
+  { "id": "t6", "title": "KICK BACK", "artist": "요네즈 켄시", "artistId": "kenshi", "tag": "『체인소 맨』 OP", "youtubeId": "M2cckDmNLMI", "ytViews": 239609109, "searchTerm": "米津玄師 KICK BACK" },
+  { "id": "t7", "title": "怪獣の花唄", "artist": "Vaundy", "artistId": "vaundy", "tag": "홍백가합전 화제곡", "youtubeId": "UM9XNpgrqVk", "ytViews": 203047684, "searchTerm": "Vaundy 怪獣の花唄" },
+  { "id": "t8", "title": "Subtitle", "artist": "Official髭男dism", "artistId": "higedan", "tag": "드라마 『silent』 주제가", "youtubeId": "hN5MBlGv2Ac", "ytViews": 186797828, "searchTerm": "Official髭男dism Subtitle" },
+  { "id": "t9", "title": "すずめ feat.十明", "artist": "RADWIMPS", "artistId": "radwimps", "tag": "『스즈메의 문단속』 주제가", "youtubeId": "Xs0Lxif1u9E", "ytViews": 129093841, "searchTerm": "RADWIMPS すずめ" },
+  { "id": "t10", "title": "晴る (Hare)", "artist": "요루시카", "artistId": "yorushika", "tag": "『장송의 프리렌』 OP", "youtubeId": "CkvWJNt77mU", "ytViews": 89886202, "searchTerm": "ヨルシカ 晴る" }
 ]

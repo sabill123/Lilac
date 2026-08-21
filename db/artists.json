@@ -1,10 +1,12 @@
 [
-  { "id": "yoasobi", "name": "YOASOBI", "nameJa": "ヨアソビ", "genre": "J-POP", "emoji": "🎹", "color": "#C77DFF", "searchTerm": "YOASOBI", "tags": ["애니 타이업", "유닛"] },
-  { "id": "ado", "name": "Ado", "nameJa": "アド", "genre": "J-POP", "emoji": "🎤", "color": "#7B5CF6", "searchTerm": "Ado", "tags": ["보컬", "우타이테"] },
-  { "id": "imase", "name": "imase", "nameJa": "イマセ", "genre": "J-POP", "emoji": "🌃", "color": "#67E8F9", "searchTerm": "imase", "tags": ["시티팝", "숏폼"] },
-  { "id": "yorushika", "name": "요루시카", "nameJa": "ヨルシカ", "genre": "J-ROCK", "emoji": "🌙", "color": "#5B6CF9", "searchTerm": "ヨルシカ", "tags": ["밴드", "밤샘 감성"] },
-  { "id": "mga", "name": "Mrs. GREEN APPLE", "nameJa": "ミセス", "genre": "J-POP", "emoji": "🍏", "color": "#8FE388", "searchTerm": "Mrs. GREEN APPLE", "tags": ["밴드", "국민 히트"] },
-  { "id": "kenshi", "name": "요네즈 켄시", "nameJa": "米津玄師", "genre": "J-POP", "emoji": "🎨", "color": "#FBBF24", "searchTerm": "米津玄師", "tags": ["싱어송라이터"] },
-  { "id": "aimyon", "name": "아이묭", "nameJa": "あいみょん", "genre": "J-POP", "emoji": "🎸", "color": "#FF8FAB", "searchTerm": "あいみょん", "tags": ["어쿠스틱"] },
-  { "id": "radwimps", "name": "RADWIMPS", "nameJa": "ラッドウィンプス", "genre": "J-ROCK", "emoji": "🌧", "color": "#93C5FD", "searchTerm": "RADWIMPS", "tags": ["밴드", "영화 OST"] }
+  { "id": "yoasobi", "name": "YOASOBI", "nameJa": "ヨアソビ", "genre": "J-POP", "searchTerm": "YOASOBI", "operator": "Sony Music Entertainment Japan", "official": "https://www.yoasobi-music.jp/" },
+  { "id": "ado", "name": "Ado", "nameJa": "アド", "genre": "J-POP", "searchTerm": "Ado", "operator": "Universal Music Japan", "official": "https://www.universal-music.co.jp/ado/" },
+  { "id": "imase", "name": "imase", "nameJa": "イマセ", "genre": "J-POP", "searchTerm": "imase", "operator": "Universal Music Japan (EMI)", "official": "https://imase.jp/" },
+  { "id": "yorushika", "name": "요루시카", "nameJa": "ヨルシカ", "genre": "J-ROCK", "searchTerm": "ヨルシカ", "operator": "Universal Music Japan", "official": "https://yorushika.com/" },
+  { "id": "mga", "name": "Mrs. GREEN APPLE", "nameJa": "ミセスグリーンアップル", "genre": "J-POP", "searchTerm": "Mrs. GREEN APPLE", "operator": "Universal Music Japan (EMI)", "official": "https://mrsgreenapple.com/" },
+  { "id": "kenshi", "name": "요네즈 켄시", "nameJa": "米津玄師", "genre": "J-POP", "searchTerm": "米津玄師", "operator": "Sony Music Entertainment Japan", "official": "https://reissuerecords.net/" },
+  { "id": "aimyon", "name": "아이묭", "nameJa": "あいみょん", "genre": "J-POP", "searchTerm": "あいみょん", "operator": "Warner Music Japan (unBORDE)", "official": "https://www.aimyong.net/" },
+  { "id": "radwimps", "name": "RADWIMPS", "nameJa": "ラッドウィンプス", "genre": "J-ROCK", "searchTerm": "RADWIMPS", "operator": "Universal Music Japan (EMI)", "official": "https://radwimps.jp/" },
+  { "id": "vaundy", "name": "Vaundy", "nameJa": "バウンディ", "genre": "J-POP", "searchTerm": "Vaundy", "operator": "SDR / 독립 레이블", "official": "https://vaundy.jp/" },
+  { "id": "higedan", "name": "Official髭男dism", "nameJa": "ヒゲダン", "genre": "J-POP", "searchTerm": "Official髭男dism", "operator": "Pony Canyon (IRORI Records)", "official": "https://higedan.com/" }
 ]
