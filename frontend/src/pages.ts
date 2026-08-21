@@ -1,7 +1,8 @@
 import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
-import { playQueue, openYt, toast } from './player';
+import { playQueue, openYt, toast, enqueue, openPlaylistPicker } from './player';
 import { applyTone } from './colors';
+import { openContextMenu, bindTilt, bindDragReorder } from './interactions';
 import { t } from './i18n';
 
 /* ---- 스켈레톤 ---- */
@@ -26,7 +27,8 @@ export async function loadData() {
 }
 
 const toPlayable = (c: CatalogTrack, yt?: string | null): PlayableTrack =>
-  ({ title: c.title, artist: c.artist, album: c.album, artwork: artUrl(c, 200), preview: c.preview, youtubeId: yt });
+  ({ title: c.title, artist: c.artist, album: c.album, artwork: artUrl(c, 200), preview: c.preview, youtubeId: yt, durationMs: c.durationMs });
+const dur = (ms?: number) => (ms ? `${Math.floor(ms / 60000)}:${String(Math.round((ms % 60000) / 1000)).padStart(2, '0')}` : '0:30');
 
 function dday(date: string) {
   const d = Math.ceil((new Date(date).getTime() - Date.now()) / 864e5);
@@ -39,9 +41,9 @@ function relDate(iso?: string) {
 }
 
 /* ============ 공용: 스포티파이식 트랙 테이블 ============ */
-function trackTable(rows: PlayableTrack[], opts: { date?: boolean; album?: boolean } = { date: true, album: true }) {
+function trackTable(rows: PlayableTrack[], opts: { date?: boolean; album?: boolean; sticky?: boolean } = { date: true, album: true }) {
   return `
-  <div class="sp-table ${opts.album === false ? 'no-al' : ''} ${opts.date === false ? 'no-dt' : ''}">
+  <div class="sp-table ${opts.album === false ? 'no-al' : ''} ${opts.date === false ? 'no-dt' : ''} ${opts.sticky ? 'sticky' : ''}">
     <div class="t-head">
       <span class="t-num">#</span><span>제목</span>
       ${opts.album === false ? '' : '<span class="t-al">앨범</span>'}
@@ -49,29 +51,57 @@ function trackTable(rows: PlayableTrack[], opts: { date?: boolean; album?: boole
       <span class="t-du">${icon('i-clock', 'ic s')}</span>
     </div>
     ${rows.map((r, i) => `
-    <div class="t-row" data-i="${i}">
+    <div class="t-row" data-i="${i}" draggable="false">
       <span class="t-num"><span class="n">${i + 1}</span><span class="p">${icon('i-play')}</span></span>
       <span class="t-title"><img src="${esc(r.artwork || '')}" loading="lazy" alt=""/><span class="tt"><b>${esc(r.title)}</b><i>${esc(r.artist)}</i></span></span>
       ${opts.album === false ? '' : `<span class="t-al">${esc(r.album || '—')}</span>`}
       ${opts.date === false ? '' : `<span class="t-dt">${relDate(r.addedAt)}</span>`}
-      <span class="t-du">0:30</span>
+      <span class="t-du">${dur(r.durationMs)}</span>
+      <span class="t-acts">
+        <button class="t-a" data-like="${i}" title="좋아요">${icon('i-heart')}</button>
+        <button class="t-a" data-more="${i}" title="더보기">${icon('i-grip')}</button>
+      </span>
     </div>`).join('')}
   </div>`;
 }
-function bindTable(container: HTMLElement, rows: PlayableTrack[], onRemove?: (i: number) => void) {
+function bindTable(
+  container: HTMLElement, rows: PlayableTrack[], onRemove?: (i: number) => void,
+  extra?: { onReorder?: (from: number, to: number) => void; onMenu?: (i: number, e: MouseEvent) => void },
+) {
   container.querySelectorAll<HTMLElement>('.t-row').forEach((row) => {
     row.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.t-x')) return;
+      if ((e.target as HTMLElement).closest('.t-x, .t-a')) return;
       playQueue(rows, Number(row.dataset.i));
       container.querySelectorAll('.t-row').forEach((r) => { r.classList.remove('playing'); r.querySelector('.eq-slot')?.remove(); });
       row.classList.add('playing');
       row.querySelector('.t-num')!.insertAdjacentHTML('beforeend', `<span class="eq-slot"><span class="np-eq"><i></i><i></i><i></i></span></span>`);
     });
+    row.querySelector('[data-like]')?.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tr = rows[Number(row.dataset.i)];
+      await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview, durationMs: tr.durationMs } }) });
+      (e.currentTarget as HTMLElement).classList.toggle('on');
+      toast('좋아요를 업데이트했습니다');
+    });
+    const menuHandler = (e: MouseEvent) => {
+      e.preventDefault(); e.stopPropagation();
+      const i = Number(row.dataset.i);
+      if (extra?.onMenu) return extra.onMenu(i, e);
+      const tr = rows[i];
+      openContextMenu(e.clientX, e.clientY, [
+        { label: '지금 재생', icon: 'i-play', run: () => playQueue(rows, i) },
+        { label: '대기열에 추가', icon: 'i-queue', run: () => enqueue(tr) },
+        { label: t('player.addPl'), icon: 'i-plus', run: () => void openPlaylistPicker(tr) },
+      ]);
+    };
+    row.addEventListener('contextmenu', menuHandler);
+    row.querySelector('[data-more]')?.addEventListener('click', (e) => menuHandler(e as MouseEvent));
     if (onRemove) {
-      row.insertAdjacentHTML('beforeend', `<button class="t-x" title="삭제">${icon('i-close')}</button>`);
+      row.querySelector('.t-acts')!.insertAdjacentHTML('beforeend', `<button class="t-a t-x" title="삭제">${icon('i-close')}</button>`);
       row.querySelector('.t-x')!.addEventListener('click', (e) => { e.stopPropagation(); onRemove(Number(row.dataset.i)); });
     }
   });
+  if (extra?.onReorder) bindDragReorder(container, extra.onReorder, '.t-row[data-i]');
 }
 
 /* ============ 공용: 카드 셸프 ============ */
@@ -177,6 +207,25 @@ export async function pageHome() {
       <div class="sec-head store-head"><h2>${t('newArrivals')}</h2><a class="sec-link dark" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div>
       <div class="store-grid" id="hStore"></div>
     </div></section>`;
+
+  // 플레이 모드 전용: 스포티파이 홈의 바로 가기 타일
+  if (document.body.classList.contains('play-mode')) {
+    const [lists, likes] = await Promise.all([api('/api/playlists').catch(() => []), api('/api/likes').catch(() => [])]);
+    const quick = [
+      ...(likes.length ? [{ name: t('lib.likes'), href: '#/library/likes', liked: true, art: '' }] : []),
+      ...lists.slice(0, 5).map((p: { id: string; name: string; tracks: PlayableTrack[] }) => ({ name: p.name, href: `#/playlist/${p.id}`, liked: false, art: p.tracks[0]?.artwork || '' })),
+    ].slice(0, 6);
+    if (quick.length) {
+      root().insertAdjacentHTML('afterbegin', `
+        <section class="sec quick-sec"><div class="sec-head"><h2>바로 가기</h2></div>
+        <div class="quick-grid">${quick.map((q) => `
+          <a class="quick" href="${q.href}">
+            <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
+            <b>${esc(q.name)}</b>
+            <span class="quick-play">${icon('i-play')}</span>
+          </a>`).join('')}</div></section>`);
+    }
+  }
 
   findCatalog(feat.searchTerm).then((hit) => {
     if (!hit) return;
@@ -487,121 +536,333 @@ export async function pageArtist(id: string) {
   fillShelfArts($('#arSimilar'));
 }
 
-/* ================= 보관함 ================= */
+/* ================= 보관함 (독립 페이지) =================
+   레퍼런스: 스포티파이 라이브러리(필터 칩·정렬·그리드/리스트 토글)
+   + 라프텔(태그 필터 감각) + 넷플릭스(행 단위 큐레이션) */
+type LibFilter = 'all' | 'playlists' | 'artists' | 'likes' | 'history';
+let libView: 'grid' | 'list' = (localStorage.getItem('lilac.libView') as 'grid' | 'list') || 'grid';
+let libSort: 'recent' | 'name' | 'count' = (localStorage.getItem('lilac.libSort') as never) || 'recent';
+
 export async function pageLibrary(sub?: string) {
-  const tab = sub || 'likes';
+  const filter = (sub || 'all') as LibFilter;
   const [likes, lists, hist, oshi] = await Promise.all([
     api('/api/likes').catch(() => []), api('/api/playlists').catch(() => []),
     api('/api/history').catch(() => []), api('/api/oshi').catch(() => []),
   ]);
+
+  const FILTERS: { k: LibFilter; label: string }[] = [
+    { k: 'all', label: '전체' }, { k: 'playlists', label: t('lib.playlists') },
+    { k: 'artists', label: t('lib.follows') }, { k: 'likes', label: t('lib.likes') }, { k: 'history', label: t('lib.history') },
+  ];
+
   root().innerHTML = `
-    <section class="sec page-top">
-      <div class="page-head">
-        <p class="sp-label">${t('nav.library')}</p>
-        <h1 class="page-title">${t('nav.library')}</h1>
-        <div class="chips">
-          ${['likes', 'playlists', 'history', 'follows'].map((s) => `<a class="chip ${s === tab ? 'on' : ''}" href="#/library/${s}">${t('lib.' + s)}</a>`).join('')}
+    <section class="lib-page">
+      <div class="lib-head">
+        <div class="lib-title-row">
+          <h1 class="page-title">${t('nav.library')}</h1>
+          <button class="lib-newbtn" id="libNew">${icon('i-plus', 'ic s')} ${t('lib.newPlaylist')}</button>
+        </div>
+        <div class="lib-filters">
+          ${FILTERS.map((f) => `<a class="chip ${f.k === filter ? 'on' : ''}" href="#/library/${f.k}">${f.label}</a>`).join('')}
+        </div>
+        <div class="lib-toolbar">
+          <div class="lib-find">${icon('i-search', 'ic s')}<input id="libFind" placeholder="보관함에서 찾기" /></div>
+          <div class="lib-tools">
+            <select id="libSort">
+              <option value="recent" ${libSort === 'recent' ? 'selected' : ''}>최근 추가순</option>
+              <option value="name" ${libSort === 'name' ? 'selected' : ''}>이름순</option>
+              <option value="count" ${libSort === 'count' ? 'selected' : ''}>곡 많은순</option>
+            </select>
+            <button class="view-toggle ${libView === 'grid' ? 'on' : ''}" id="libGrid" title="그리드">${icon('i-grid', 'ic s')}</button>
+            <button class="view-toggle ${libView === 'list' ? 'on' : ''}" id="libList" title="리스트">${icon('i-rows', 'ic s')}</button>
+          </div>
         </div>
       </div>
       <div id="libBody"></div>
     </section>`;
-  const body = $('#libBody');
 
-  if (tab === 'likes') {
+  type Item = { id: string; kind: 'playlist' | 'artist' | 'likes'; name: string; sub: string; art?: string; term?: string; href: string; count: number; at: string };
+  const items: Item[] = [];
+  if (filter === 'all' || filter === 'likes') {
+    items.push({ id: 'likes', kind: 'likes', name: t('lib.likes'), sub: `플레이리스트 · ${likes.length}곡`, href: '#/library/likes', count: likes.length, at: likes[0]?.likedAt || '' });
+  }
+  if (filter === 'all' || filter === 'playlists') {
+    lists.forEach((p: { id: string; name: string; tracks: PlayableTrack[]; createdAt: string }) =>
+      items.push({ id: p.id, kind: 'playlist', name: p.name, sub: `플레이리스트 · ${p.tracks.length}곡`, art: p.tracks[0]?.artwork, href: `#/playlist/${p.id}`, count: p.tracks.length, at: p.createdAt }));
+  }
+  if (filter === 'all' || filter === 'artists') {
+    oshi.forEach((o: { artistId: string; name: string; at: string }) => {
+      const a = artists.find((x) => x.id === o.artistId);
+      items.push({ id: o.artistId, kind: 'artist', name: o.name, sub: `아티스트 · ${a?.genre ?? ''}`, term: a?.searchTerm, href: `#/artist/${o.artistId}`, count: 0, at: o.at });
+    });
+  }
+
+  const body = $('#libBody');
+  const renderItems = (q = '') => {
+    if (filter === 'likes' && sub === 'likes') { /* 전용 뷰 아래에서 처리 */ }
+    let rows = items.filter((i) => !q || i.name.toLowerCase().includes(q.toLowerCase()));
+    if (libSort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
+    else if (libSort === 'count') rows.sort((a, b) => b.count - a.count);
+    else rows.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+
+    if (!rows.length) {
+      body.innerHTML = `<div class="empty-box">${icon('i-lib', 'ic eb')}<p>항목이 없습니다</p><span>플레이리스트를 만들거나 아티스트를 팔로우해 보세요</span></div>`;
+      return;
+    }
+    if (libView === 'grid') {
+      body.innerHTML = `<div class="lib-grid2">${rows.map((i) => `
+        <a class="lib-card ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-id="${i.id}" data-kind="${i.kind}" data-term="${esc(i.term || '')}" data-tilt="7">
+          <div class="lib-cover ${i.kind === 'likes' ? 'liked' : ''}">
+            ${i.kind === 'likes' ? icon('i-heart-f', 'ic lt') : i.art ? `<img src="${esc(i.art)}" alt="" loading="lazy"/>` : `<span class="ph">${esc(i.name[0])}</span>`}
+            <button class="hover-play" data-play="${i.id}">${icon('i-play')}</button>
+          </div>
+          <div class="c-title">${esc(i.name)}</div><div class="c-sub">${esc(i.sub)}</div>
+        </a>`).join('')}</div>`;
+    } else {
+      body.innerHTML = `<div class="lib-rows">${rows.map((i) => `
+        <a class="lib-row ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-id="${i.id}" data-kind="${i.kind}" data-term="${esc(i.term || '')}">
+          <span class="lib-rcover ${i.kind === 'likes' ? 'liked' : ''}">
+            ${i.kind === 'likes' ? icon('i-heart-f', 'ic s') : i.art ? `<img src="${esc(i.art)}" alt="" loading="lazy"/>` : `<span class="ph">${esc(i.name[0])}</span>`}</span>
+          <span class="lib-rmeta"><b>${esc(i.name)}</b><i>${esc(i.sub)}</i></span>
+          <span class="lib-rdate">${i.at ? new Date(i.at).toLocaleDateString() : '—'}</span>
+        </a>`).join('')}</div>`;
+    }
+    // 아티스트 커버 채우기
+    body.querySelectorAll<HTMLElement>('[data-term]').forEach(async (el) => {
+      if (!el.dataset.term) return;
+      const hit = await findCatalog(el.dataset.term);
+      const box = el.querySelector('.lib-cover, .lib-rcover');
+      if (hit && box) box.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 300)}" alt="" loading="lazy"/>`);
+    });
+    // 재생 버튼
+    body.querySelectorAll<HTMLButtonElement>('[data-play]').forEach((btn) =>
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault(); e.stopPropagation();
+        const id = btn.dataset.play!;
+        if (id === 'likes') { if (likes.length) playQueue(likes, 0); return; }
+        const pl = lists.find((p: { id: string }) => p.id === id);
+        if (pl?.tracks?.length) playQueue(pl.tracks, 0);
+        else toast('재생할 곡이 없습니다');
+      }));
+    // 컨텍스트 메뉴
+    body.querySelectorAll<HTMLElement>('[data-kind]').forEach((el) =>
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const kind = el.dataset.kind, id = el.dataset.id!;
+        const menu: { label: string; icon?: string; danger?: boolean; run: () => void }[] = [
+          { label: '열기', icon: 'i-ext', run: () => { location.hash = el.getAttribute('href')!; } },
+        ];
+        if (kind === 'playlist') {
+          menu.push({ label: '이름 바꾸기', icon: 'i-mic', run: async () => {
+            const pl = lists.find((p: { id: string; name: string }) => p.id === id);
+            const name = prompt('플레이리스트 이름', pl?.name || '');
+            if (!name) return;
+            await api(`/api/playlists/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+            document.dispatchEvent(new CustomEvent('lilac:playlists'));
+            pageLibrary(sub);
+          } });
+          menu.push({ label: '삭제', icon: 'i-close', danger: true, run: async () => {
+            if (!confirm('플레이리스트를 삭제할까요?')) return;
+            await api(`/api/playlists/${id}`, { method: 'DELETE' });
+            document.dispatchEvent(new CustomEvent('lilac:playlists'));
+            pageLibrary(sub);
+          } });
+        }
+        if (kind === 'artist') {
+          menu.push({ label: '팔로우 해제', icon: 'i-close', danger: true, run: async () => {
+            await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: id, name: el.querySelector('b,.c-title')?.textContent }) });
+            pageLibrary(sub);
+          } });
+        }
+        openContextMenu(e.clientX, e.clientY, menu);
+      }));
+    bindTilt(body);
+  };
+
+  // 좋아요/최근재생 전용 트랙 뷰
+  if (filter === 'likes') {
+    const rows = likes.map((l: PlayableTrack & { likedAt?: string }) => ({ ...l, addedAt: l.likedAt }));
     body.innerHTML = `
       <div class="liked-hero">
-        <div class="liked-tile">${icon('i-heart-f', 'ic lt')}</div>
+        <div class="liked-tile" data-tilt="10">${icon('i-heart-f', 'ic lt')}</div>
         <div>
           <p class="sp-label">플레이리스트</p>
           <h2 class="liked-title">${t('lib.likes')}</h2>
-          <p class="sp-meta">${likes.length}곡</p>
-          <div class="sp-actions inline"><button class="play-big" id="likePlay" ${likes.length ? '' : 'disabled'}>${icon('i-play')}</button></div>
+          <p class="sp-meta">${esc(me?.name || 'Lilac 유저')}<span class="sep">·</span>${rows.length}곡</p>
+          <div class="sp-actions inline"><button class="play-big" id="likePlay" ${rows.length ? '' : 'disabled'}>${icon('i-play')}</button></div>
         </div>
       </div>
       <div id="likeTable"></div>`;
-    const rows = likes.map((l: PlayableTrack & { likedAt?: string }) => ({ ...l, addedAt: l.likedAt }));
     $('#likeTable').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-heart', 'ic eb')}<p>저장한 곡이 없습니다</p><span>플레이어의 하트를 눌러 곡을 저장해 보세요</span></div>`;
     bindTable($('#likeTable'), rows);
     $('#likePlay')?.addEventListener('click', () => rows.length && playQueue(rows, 0));
-  }
-  if (tab === 'playlists') {
-    body.innerHTML = `
-      <div class="pl-toolbar"><button class="chip solid" id="newPl">${icon('i-plus', 'ic s')} ${t('lib.newPlaylist')}</button></div>
-      <div class="lib-grid">
-        <a class="lib-liked" href="#/library/likes"><div class="liked-tile sm">${icon('i-heart-f', 'ic lt')}</div>
-          <div class="c-title">${t('lib.likes')}</div><div class="c-sub">${likes.length}곡</div></a>
-        ${lists.map((p: { id: string; name: string; tracks: PlayableTrack[] }) => `
-          <a class="card" href="#/playlist/${p.id}">
-            <div class="cover">${p.tracks.length >= 4
-              ? `<div class="mosaic">${p.tracks.slice(0, 4).map((x) => `<span style="background-image:url(${esc(x.artwork || '')})"></span>`).join('')}</div>`
-              : p.tracks[0]?.artwork ? `<img src="${esc(p.tracks[0].artwork)}" alt=""/>` : `<div class="ph">${icon('i-queue')}</div>`}
-              <button class="hover-play">${icon('i-play')}</button></div>
-            <div class="c-title">${esc(p.name)}</div><div class="c-sub">플레이리스트 · ${p.tracks.length}곡</div>
-          </a>`).join('')}
-      </div>`;
-    $('#newPl').addEventListener('click', async () => {
-      const name = prompt(t('lib.newPlaylist'), 'My Mix');
-      if (!name) return;
-      await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
-      document.dispatchEvent(new CustomEvent('lilac:playlists'));
-      pageLibrary('playlists');
-    });
-  }
-  if (tab === 'history') {
-    const rows = hist.slice(0, 40).map((h: PlayableTrack & { playedAt?: string }) => ({ ...h, addedAt: h.playedAt }));
-    body.innerHTML = rows.length ? trackTable(rows, { album: true, date: true }) : `<div class="empty-box">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p><span>곡을 재생하면 여기에 쌓입니다</span></div>`;
+    bindTilt(body);
+  } else if (filter === 'history') {
+    const rows = hist.slice(0, 50).map((h: PlayableTrack & { playedAt?: string }) => ({ ...h, addedAt: h.playedAt }));
+    body.innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p><span>곡을 재생하면 여기에 쌓입니다</span></div>`;
     bindTable(body, rows);
+  } else {
+    renderItems();
   }
-  if (tab === 'follows') {
-    if (!oshi.length) { body.innerHTML = `<div class="empty-box">${icon('i-plus', 'ic eb')}<p>팔로우한 아티스트가 없습니다</p><span>아티스트 페이지에서 팔로우해 보세요</span></div>`; return; }
-    body.innerHTML = shelf(oshi.map((o: { artistId: string; name: string }) => {
-      const a = artists.find((x) => x.id === o.artistId);
-      return { title: o.name, sub: a?.genre || t('artists'), round: true, href: `#/artist/${o.artistId}`, term: a?.searchTerm };
-    }));
-    fillShelfArts(body);
-  }
+
+  $('#libNew').addEventListener('click', async () => {
+    const name = prompt(t('lib.newPlaylist'), 'My Mix');
+    if (!name) return;
+    const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
+    document.dispatchEvent(new CustomEvent('lilac:playlists'));
+    location.hash = `#/playlist/${pl.id}`;
+  });
+  $('#libFind')?.addEventListener('input', (e) => {
+    if (filter === 'likes' || filter === 'history') return;
+    renderItems((e.target as HTMLInputElement).value);
+  });
+  $('#libSort')?.addEventListener('change', (e) => {
+    libSort = (e.target as HTMLSelectElement).value as never;
+    localStorage.setItem('lilac.libSort', libSort);
+    if (filter !== 'likes' && filter !== 'history') renderItems(($('#libFind') as HTMLInputElement)?.value || '');
+  });
+  const setView = (v: 'grid' | 'list') => {
+    libView = v; localStorage.setItem('lilac.libView', v);
+    $('#libGrid').classList.toggle('on', v === 'grid');
+    $('#libList').classList.toggle('on', v === 'list');
+    if (filter !== 'likes' && filter !== 'history') renderItems(($('#libFind') as HTMLInputElement)?.value || '');
+  };
+  $('#libGrid')?.addEventListener('click', () => setView('grid'));
+  $('#libList')?.addEventListener('click', () => setView('list'));
 }
 
-/* ================= 플레이리스트 상세 (스포티파이) ================= */
+/* ================= 플레이리스트 상세 (스포티파이 심화) ================= */
 export async function pagePlaylist(id: string) {
   const lists = await api('/api/playlists').catch(() => []);
   const pl = lists.find((p: { id: string }) => p.id === id);
   if (!pl) return page404();
-  const covers = pl.tracks.slice(0, 4) as PlayableTrack[];
+  let rows = pl.tracks as PlayableTrack[];
+  const covers = rows.slice(0, 4);
+  const totalMs = rows.reduce((s, r) => s + (r.durationMs || 0), 0);
+  const totalTxt = totalMs ? `${Math.floor(totalMs / 60000)}분` : '';
   const coverHtml = covers.length >= 4
-    ? `<div class="sp-cover mosaic">${covers.map((x) => `<span style="background-image:url(${esc(x.artwork || '')})"></span>`).join('')}</div>`
+    ? `<div class="sp-cover mosaic" data-tilt="9">${covers.map((x) => `<span style="background-image:url(${esc(x.artwork || '')})"></span>`).join('')}</div>`
     : covers[0]?.artwork
-      ? `<div class="sp-cover" style="background-image:url(${esc(covers[0].artwork)})"></div>`
-      : `<div class="sp-cover empty">${icon('i-queue', 'ic ph-ic')}</div>`;
+      ? `<div class="sp-cover" style="background-image:url(${esc(covers[0].artwork)})" data-tilt="9"></div>`
+      : `<div class="sp-cover empty" data-tilt="9">${icon('i-queue', 'ic ph-ic')}</div>`;
+
   root().innerHTML = `
     <section class="sp-page">
       <div class="sp-head">
         ${coverHtml}
         <div class="sp-info">
           <p class="sp-label">공개 플레이리스트</p>
-          <h1 class="sp-title">${esc(pl.name)}</h1>
-          <p class="sp-meta"><span class="sp-owner">${esc((me?.name || 'L')[0])}</span><b>${esc(me?.name || 'Lilac 유저')}</b><span class="sep">·</span>${pl.tracks.length}곡<span class="sep">·</span>${new Date(pl.createdAt).toLocaleDateString()}</p>
+          <h1 class="sp-title" id="plTitle" title="클릭해서 이름 변경">${esc(pl.name)}</h1>
+          ${pl.desc ? `<p class="sp-desc">${esc(pl.desc)}</p>` : ''}
+          <p class="sp-meta"><span class="sp-owner">${esc((me?.name || 'L')[0])}</span><b>${esc(me?.name || 'Lilac 유저')}</b><span class="sep">·</span>${rows.length}곡${totalTxt ? `<span class="sep">·</span>약 ${totalTxt}` : ''}</p>
         </div>
       </div>
       <div class="sp-actions">
-        <button class="play-big" id="plPlayAll" ${pl.tracks.length ? '' : 'disabled'}>${icon('i-play')}</button>
+        <button class="play-big" id="plPlayAll" ${rows.length ? '' : 'disabled'}>${icon('i-play')}</button>
         <button class="tbtn big-ghost" id="plShuffle" title="셔플 재생">${icon('i-shuffle')}</button>
-        <button class="tbtn big-ghost" id="plDelete" title="플레이리스트 삭제">${icon('i-close')}</button>
+        <button class="tbtn big-ghost" id="plMore" title="더보기">${icon('i-grip')}</button>
+        <div class="sp-find">${icon('i-search', 'ic s')}<input id="plFind" placeholder="이 플레이리스트에서 찾기" /></div>
       </div>
-      <div class="sp-body" id="plTracks"></div>
+      <div class="sp-body">
+        <div id="plTracks"></div>
+        <div class="sp-reco" id="plReco"></div>
+      </div>
     </section>`;
+
   if (covers[0]?.artwork) void applyTone(document.querySelector('.sp-head'), covers[0].artwork);
-  const rows = pl.tracks as PlayableTrack[];
-  $('#plTracks').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-queue', 'ic eb')}<p>아직 곡이 없습니다</p><span>플레이어의 + 버튼으로 곡을 추가해 보세요</span></div>`;
-  bindTable($('#plTracks'), rows, async (i) => { await api(`/api/playlists/${id}/tracks/${i}`, { method: 'DELETE' }); document.dispatchEvent(new CustomEvent('lilac:playlists')); pagePlaylist(id); });
+  bindTilt(root());
+
+  const paint = (q = '') => {
+    const view = q ? rows.filter((r) => (r.title + r.artist).toLowerCase().includes(q.toLowerCase())) : rows;
+    $('#plTracks').innerHTML = view.length
+      ? trackTable(view, { album: true, date: true, sticky: true })
+      : `<div class="empty-box">${icon('i-queue', 'ic eb')}<p>${q ? '검색 결과가 없습니다' : '아직 곡이 없습니다'}</p><span>${q ? '다른 검색어를 시도해 보세요' : '아래 추천에서 곡을 추가해 보세요'}</span></div>`;
+    bindTable($('#plTracks'), view, async (i) => {
+      const realIdx = rows.indexOf(view[i]);
+      await api(`/api/playlists/${id}/tracks/${realIdx}`, { method: 'DELETE' });
+      document.dispatchEvent(new CustomEvent('lilac:playlists'));
+      pagePlaylist(id);
+    }, {
+      onReorder: async (from, to) => {
+        const [m] = rows.splice(from, 1); rows.splice(to, 0, m);
+        await api(`/api/playlists/${id}/tracks`, { method: 'PUT', body: JSON.stringify({ tracks: rows }) });
+        document.dispatchEvent(new CustomEvent('lilac:playlists'));
+        paint(($('#plFind') as HTMLInputElement).value);
+        toast('순서를 변경했습니다');
+      },
+      onMenu: (i, e) => {
+        const tr = view[i];
+        openContextMenu(e.clientX, e.clientY, [
+          { label: '지금 재생', icon: 'i-play', run: () => playQueue(view, i) },
+          { label: '대기열에 추가', icon: 'i-queue', run: () => enqueue(tr) },
+          { label: t('player.addPl'), icon: 'i-plus', run: () => void openPlaylistPicker(tr) },
+          { label: '이 플레이리스트에서 삭제', icon: 'i-close', danger: true, run: async () => {
+            await api(`/api/playlists/${id}/tracks/${rows.indexOf(tr)}`, { method: 'DELETE' });
+            document.dispatchEvent(new CustomEvent('lilac:playlists'));
+            pagePlaylist(id);
+          } },
+        ]);
+      },
+    });
+  };
+  paint();
+
   $('#plPlayAll').addEventListener('click', () => rows.length && playQueue(rows, 0));
   $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0));
-  $('#plDelete').addEventListener('click', async () => {
-    if (!confirm(`‘${pl.name}’ 플레이리스트를 삭제할까요?`)) return;
-    await api(`/api/playlists/${id}`, { method: 'DELETE' });
+  $('#plFind').addEventListener('input', (e) => paint((e.target as HTMLInputElement).value));
+  const rename = async () => {
+    const name = prompt('플레이리스트 이름', pl.name);
+    if (!name || name === pl.name) return;
+    await api(`/api/playlists/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
     document.dispatchEvent(new CustomEvent('lilac:playlists'));
-    location.hash = '#/library/playlists';
+    pagePlaylist(id);
+  };
+  $('#plTitle').addEventListener('click', rename);
+  $('#plMore').addEventListener('click', (e) => {
+    const r = ($('#plMore')).getBoundingClientRect();
+    openContextMenu(r.left, r.bottom + 6, [
+      { label: '이름 바꾸기', icon: 'i-mic', run: rename },
+      { label: '대기열에 모두 추가', icon: 'i-queue', run: () => { rows.forEach((tr) => enqueue(tr)); } },
+      { label: '플레이리스트 삭제', icon: 'i-close', danger: true, run: async () => {
+        if (!confirm(`‘${pl.name}’ 플레이리스트를 삭제할까요?`)) return;
+        await api(`/api/playlists/${id}`, { method: 'DELETE' });
+        document.dispatchEvent(new CustomEvent('lilac:playlists'));
+        location.hash = '#/library/playlists';
+      } },
+    ]);
+    e.stopPropagation();
   });
+
+  // 추천: 플리에 없는 시드곡 제안 (스포티파이 '추천 항목')
+  const have = new Set(rows.map((r) => (r.title || '').slice(0, 6)));
+  const cands = seeds.filter((s) => !have.has(s.title.slice(0, 6))).slice(0, 5);
+  const hits = await Promise.all(cands.map((s) => findCatalog(s.searchTerm)));
+  const reco = cands.map((s, i) => ({ seed: s, hit: hits[i] })).filter((x) => x.hit);
+  if (reco.length) {
+    $('#plReco').innerHTML = `
+      <div class="reco-head"><h3>추천 항목</h3><span>이 플레이리스트에 어울리는 곡</span></div>
+      <div class="reco-list">${reco.map((r, i) => `
+        <div class="reco-row" data-i="${i}">
+          <img src="${artUrl(r.hit!, 100)}" alt="" loading="lazy"/>
+          <span class="reco-meta"><b>${esc(r.hit!.title)}</b><i>${esc(r.hit!.artist)}</i></span>
+          <span class="reco-al">${esc(r.hit!.album || '')}</span>
+          <button class="reco-add" data-add="${i}">추가</button>
+        </div>`).join('')}</div>`;
+    $('#plReco').querySelectorAll<HTMLButtonElement>('[data-add]').forEach((btn) =>
+      btn.addEventListener('click', async () => {
+        const r = reco[Number(btn.dataset.add)];
+        await api(`/api/playlists/${id}/tracks`, { method: 'POST', body: JSON.stringify({ track: toPlayable(r.hit!, r.seed.youtubeId) }) });
+        document.dispatchEvent(new CustomEvent('lilac:playlists'));
+        toast(`‘${r.hit!.title}’ 추가됨`);
+        pagePlaylist(id);
+      }));
+    $('#plReco').querySelectorAll<HTMLElement>('.reco-row').forEach((el) =>
+      el.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('.reco-add')) return;
+        const r = reco[Number(el.dataset.i)];
+        playQueue([toPlayable(r.hit!, r.seed.youtubeId)], 0);
+      }));
+  }
 }
 
 /* ================= 인증 ================= */

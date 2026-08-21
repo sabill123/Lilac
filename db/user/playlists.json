@@ -5,14 +5,6 @@
     "createdAt": "2026-08-21T09:14:18.744Z",
     "tracks": [
       {
-        "title": "アイドル",
-        "artist": "YOASOBI",
-        "album": "アイドル - Single",
-        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/3a/17/eb/3a17eb30-eacb-82eb-51df-d1321dbb55bc/197188492205.jpg/400x400bb.jpg",
-        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/f0/db/16/f0db16be-457e-f10f-98b6-f30b11de34e4/mzaf_5189430943078523093.plus.aac.p.m4a",
-        "addedAt": "2026-08-21T09:14:19.107Z"
-      },
-      {
         "title": "NIGHT DANCER",
         "artist": "imase",
         "album": "NIGHT DANCER - Single",
@@ -29,6 +21,14 @@
         "addedAt": "2026-08-21T09:14:19.720Z"
       },
       {
+        "title": "アイドル",
+        "artist": "YOASOBI",
+        "album": "アイドル - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/3a/17/eb/3a17eb30-eacb-82eb-51df-d1321dbb55bc/197188492205.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/f0/db/16/f0db16be-457e-f10f-98b6-f30b11de34e4/mzaf_5189430943078523093.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:19.107Z"
+      },
+      {
         "title": "晴る",
         "artist": "ヨルシカ",
         "album": "晴る - Single",
@@ -43,6 +43,16 @@
         "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/4e/a8/75/4ea875d1-bdb6-9b83-185a-646391cbffbd/4547366589849.jpg/400x400bb.jpg",
         "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/ef/35/15/ef3515d7-ec49-a0d5-5941-b312a31d89f9/mzaf_6584056106462089749.plus.aac.p.m4a",
         "addedAt": "2026-08-21T09:14:20.205Z"
+      },
+      {
+        "title": "アイドル",
+        "artist": "YOASOBI",
+        "album": "アイドル - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/3a/17/eb/3a17eb30-eacb-82eb-51df-d1321dbb55bc/197188492205.jpg/200x200bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/f0/db/16/f0db16be-457e-f10f-98b6-f30b11de34e4/mzaf_5189430943078523093.plus.aac.p.m4a",
+        "youtubeId": "ZRtdQ81jPUQ",
+        "durationMs": 213234,
+        "addedAt": "2026-08-21T13:45:21.036Z"
       }
     ]
   }

@@ -80,20 +80,36 @@ export function bindReveal(scope: ParentNode = document, rootEl?: Element | null
   scope.querySelectorAll('.reveal:not(.on)').forEach((el) => io!.observe(el));
 }
 
-/* ---------- 큐 드래그 정렬 ---------- */
-export function bindDragReorder(container: HTMLElement, onMove: (from: number, to: number) => void) {
-  let src: HTMLElement | null = null;
-  container.querySelectorAll<HTMLElement>('.q-row[data-i]').forEach((row) => {
-    row.draggable = true;
-    row.addEventListener('dragstart', () => { src = row; row.classList.add('dragging'); });
-    row.addEventListener('dragend', () => { row.classList.remove('dragging'); src = null; container.querySelectorAll('.drop-tgt').forEach((x) => x.classList.remove('drop-tgt')); });
-    row.addEventListener('dragover', (e) => { e.preventDefault(); if (src && src !== row) row.classList.add('drop-tgt'); });
-    row.addEventListener('dragleave', () => row.classList.remove('drop-tgt'));
-    row.addEventListener('drop', (e) => {
-      e.preventDefault();
-      row.classList.remove('drop-tgt');
-      if (!src || src === row) return;
-      onMove(Number(src.dataset.i), Number(row.dataset.i));
+/* ---------- 드래그 정렬 (포인터 기반 — 마우스·터치 모두 지원) ---------- */
+export function bindDragReorder(container: HTMLElement, onMove: (from: number, to: number) => void, rowSel = '.q-row[data-i]') {
+  container.querySelectorAll<HTMLElement>(rowSel).forEach((row) => {
+    row.addEventListener('pointerdown', (e) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      const startY = e.clientY;
+      let dragging = false;
+      let target: HTMLElement | null = null;
+
+      const move = (ev: PointerEvent) => {
+        if (!dragging && Math.abs(ev.clientY - startY) < 6) return;
+        if (!dragging) { dragging = true; row.classList.add('dragging'); document.body.style.userSelect = 'none'; }
+        container.querySelectorAll('.drop-tgt').forEach((x) => x.classList.remove('drop-tgt'));
+        target = null;
+        container.querySelectorAll<HTMLElement>(rowSel).forEach((r) => {
+          if (r === row) return;
+          const b = r.getBoundingClientRect();
+          if (ev.clientY >= b.top && ev.clientY <= b.bottom) { target = r; r.classList.add('drop-tgt'); }
+        });
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        document.body.style.userSelect = '';
+        row.classList.remove('dragging');
+        container.querySelectorAll('.drop-tgt').forEach((x) => x.classList.remove('drop-tgt'));
+        if (dragging && target) onMove(Number(row.dataset.i), Number((target as HTMLElement).dataset.i));
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
     });
   });
 }

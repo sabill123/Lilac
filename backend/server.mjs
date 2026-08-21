@@ -51,6 +51,7 @@ app.get('/api/catalog/search', async (req, res) => {
         id: t.trackId, title: t.trackName, artist: t.artistName, album: t.collectionName,
         artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
         preview: t.previewUrl, appleUrl: t.trackViewUrl, genre: t.primaryGenreName,
+        durationMs: t.trackTimeMillis || 0, releaseDate: t.releaseDate,
       })),
     });
   } catch (e) { res.status(502).json({ error: 'itunes upstream failed', detail: String(e) }); }
@@ -223,6 +224,26 @@ app.delete('/api/playlists/:id/tracks/:idx', async (req, res) => {
   const pl = list.find((p) => p.id === req.params.id);
   if (!pl) return res.status(404).json({ error: 'playlist not found' });
   pl.tracks.splice(Number(req.params.idx), 1);
+  await writeJson('user/playlists', list);
+  res.json(pl);
+});
+// 이름 변경
+app.patch('/api/playlists/:id', async (req, res) => {
+  const list = await readJson('user/playlists', []);
+  const pl = list.find((p) => p.id === req.params.id);
+  if (!pl) return res.status(404).json({ error: 'playlist not found' });
+  if (req.body?.name) pl.name = String(req.body.name).slice(0, 60);
+  if (typeof req.body?.desc === 'string') pl.desc = req.body.desc.slice(0, 200);
+  await writeJson('user/playlists', list);
+  res.json(pl);
+});
+// 순서 저장 (드래그 정렬)
+app.put('/api/playlists/:id/tracks', async (req, res) => {
+  const list = await readJson('user/playlists', []);
+  const pl = list.find((p) => p.id === req.params.id);
+  if (!pl) return res.status(404).json({ error: 'playlist not found' });
+  if (!Array.isArray(req.body?.tracks)) return res.status(400).json({ error: 'tracks array required' });
+  pl.tracks = req.body.tracks;
   await writeJson('user/playlists', list);
   res.json(pl);
 });
