@@ -30,6 +30,7 @@
       <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"/></symbol>
       <symbol id="i-heart-f" viewBox="0 0 24 24"><path d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"/></symbol>
       <symbol id="i-queue" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h10M4 18h10"/><path d="m17 13 5 3-5 3v-6Z"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7.5V12l3 2"/></symbol>
       <symbol id="i-globe" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c2.5-2.2 4-5.4 4-9s-1.5-6.8-4-9m0 18c-2.5-2.2-4-5.4-4-9s1.5-6.8 4-9M3.5 9h17M3.5 15h17"/></symbol>
     </svg>
 
@@ -92,21 +93,21 @@
       <audio id="audio"></audio>
     </div>
 
-    <!-- 재생목록(큐) 패널 -->
-    <aside class="side-panel" id="queuePanel">
-      <div class="ly-head"><span>재생목록</span>
-        <span>
+    <!-- 재생목록(큐) — 우측 도크 -->
+    <aside class="right-dock" id="queuePanel">
+      <div class="dock-head"><span>대기열</span>
+        <span class="dock-head-actions">
           <button class="tbtn small-txt" id="queueSave">플레이리스트로 저장</button>
           <button class="tbtn" id="queueClose"><svg class="ic"><use href="#i-close"/></svg></button>
         </span>
       </div>
-      <div class="q-body" id="queueBody"></div>
+      <div class="dock-body" id="queueBody"></div>
     </aside>
 
-    <!-- 가사 패널 -->
-    <aside class="side-panel" id="lyricsPanel">
-      <div class="ly-head"><span>가사 미리보기</span><button class="tbtn" id="lyricsClose"><svg class="ic"><use href="#i-close"/></svg></button></div>
-      <div class="ly-body" id="lyricsBody"></div>
+    <!-- 가사 — 우측 도크 -->
+    <aside class="right-dock" id="lyricsPanel">
+      <div class="dock-head"><span>가사 미리보기</span><button class="tbtn" id="lyricsClose"><svg class="ic"><use href="#i-close"/></svg></button></div>
+      <div class="dock-body ly-body" id="lyricsBody"></div>
       <p class="ly-note">자체 제작 데모 문구입니다. 실서비스에서는 가사 라이선스 계약 후 원문·독음·번역 3단 싱크로 제공됩니다.</p>
     </aside>
 

@@ -1,1 +1,49 @@
-[]
+[
+  {
+    "id": "c90a8e72",
+    "name": "심야의 J-POP",
+    "createdAt": "2026-08-21T09:14:18.744Z",
+    "tracks": [
+      {
+        "title": "アイドル",
+        "artist": "YOASOBI",
+        "album": "アイドル - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/3a/17/eb/3a17eb30-eacb-82eb-51df-d1321dbb55bc/197188492205.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/f0/db/16/f0db16be-457e-f10f-98b6-f30b11de34e4/mzaf_5189430943078523093.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:19.107Z"
+      },
+      {
+        "title": "NIGHT DANCER",
+        "artist": "imase",
+        "album": "NIGHT DANCER - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c2/49/87/c249873f-fa61-9d61-52aa-a7e1d780c8b3/22UMGIM81500.rgb.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/b3/d4/05/b3d40599-79fe-8ae8-030b-c534dcbc2564/mzaf_13850105976352284754.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:19.437Z"
+      },
+      {
+        "title": "唱",
+        "artist": "Ado",
+        "album": "唱 - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/80/e8/82/80e8826c-f877-9a74-0e7b-a142108feda0/23UMGIM92958.rgb.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/cb/3c/81/cb3c81aa-7e19-61a3-5aaa-fc521b81d27a/mzaf_11772413152923766264.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:19.720Z"
+      },
+      {
+        "title": "晴る",
+        "artist": "ヨルシカ",
+        "album": "晴る - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/9e/e4/3d/9ee43dd8-818c-c085-899c-c27a1e3b82cc/23UM1IM53496.rgb.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/67/f1/7a/67f17aa9-2909-5a14-a949-31959c1d4d80/mzaf_13425942078361372642.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:19.961Z"
+      },
+      {
+        "title": "KICK BACK",
+        "artist": "米津玄師",
+        "album": "KICK BACK - Single",
+        "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/4e/a8/75/4ea875d1-bdb6-9b83-185a-646391cbffbd/4547366589849.jpg/400x400bb.jpg",
+        "preview": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/ef/35/15/ef3515d7-ec49-a0d5-5941-b312a31d89f9/mzaf_6584056106462089749.plus.aac.p.m4a",
+        "addedAt": "2026-08-21T09:14:20.205Z"
+      }
+    ]
+  }
+]

@@ -58,7 +58,7 @@ function playCurrent() {
   document.body.classList.add('has-player');
   setPlayIcon(true);
   renderNow();
-  void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
+  void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
   startLyricsDemo();
 }
 
@@ -95,7 +95,7 @@ function renderQueuePanel() {
   if (!queue.length) { body.innerHTML = `<p class="q-empty">${t('browse.hint')}</p>`; return; }
   const row = (tr: PlayableTrack, i: number, now: boolean) => `
     <div class="q-row ${now ? 'now' : ''}" data-i="${i}">
-      <div class="q-art" style="background-image:url(${esc(tr.artwork || '')})"></div>
+      <div class="q-art" style="background-image:url(${esc(tr.artwork || '')})">${now ? '' : `<span class="q-hover-play">${icon('i-play')}</span>`}</div>
       <div class="q-meta"><div class="q-t">${esc(tr.title)}</div><div class="q-a">${esc(tr.artist)}</div></div>
       ${now ? `<span class="np-eq"><i></i><i></i><i></i></span>` : `<button class="q-x" data-x="${i}" title="제거">${icon('i-close')}</button>`}
     </div>`;
@@ -151,7 +151,7 @@ export async function openPlaylistPicker(tr: PlayableTrack) {
     ${lists.map((p: { id: string; name: string; tracks: unknown[] }) => `
       <button class="pp-row" data-id="${p.id}"><span>${esc(p.name)}</span><span class="pp-n">${p.tracks.length}곡</span></button>`).join('')}`;
   $('#plPicker').classList.add('show');
-  const payload = { track: { title: tr.title, artist: tr.artist, artwork: tr.artwork, preview: tr.preview } };
+  const payload = { track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } };
   box.querySelectorAll<HTMLButtonElement>('.pp-row').forEach((btn) =>
     btn.addEventListener('click', async () => {
       await api(`/api/playlists/${btn.dataset.id}/tracks`, { method: 'POST', body: JSON.stringify(payload) });
@@ -215,14 +215,15 @@ export function initPlayer() {
   $('#btnLike').addEventListener('click', async () => {
     const tr = nowPlaying();
     if (!tr) return;
-    const list = await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, artwork: tr.artwork, preview: tr.preview } }) });
+    const list = await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) });
     likeKeys = new Set(list.map((x: { key: string }) => x.key));
     renderNow();
     toast(isLiked(tr) ? '좋아요에 추가됨' : '좋아요 해제됨');
   });
   $('#btnAddPl').addEventListener('click', () => { const tr = nowPlaying(); if (tr) void openPlaylistPicker(tr); });
-  $('#btnQueue').addEventListener('click', () => { $('#queuePanel').classList.toggle('show'); $('#lyricsPanel').classList.remove('show'); renderQueuePanel(); });
-  $('#queueClose').addEventListener('click', () => $('#queuePanel').classList.remove('show'));
+  const syncDock = () => document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show'));
+  $('#btnQueue').addEventListener('click', () => { $('#queuePanel').classList.toggle('show'); $('#lyricsPanel').classList.remove('show'); renderQueuePanel(); syncDock(); $('#btnQueue').classList.toggle('on', $('#queuePanel').classList.contains('show')); $('#btnLyrics').classList.remove('on'); });
+  $('#queueClose').addEventListener('click', () => { $('#queuePanel').classList.remove('show'); $('#btnQueue').classList.remove('on'); syncDock(); });
   $('#queueSave').addEventListener('click', async () => {
     if (!queue.length) return;
     const name = prompt(t('queue.saveAsPl'), 'Queue Mix') || 'Queue Mix';
@@ -230,8 +231,8 @@ export function initPlayer() {
     for (const tr of queue) await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, artwork: tr.artwork, preview: tr.preview } }) });
     toast(`‘${name}’ 저장 완료 (${queue.length}곡)`);
   });
-  $('#btnLyrics').addEventListener('click', () => { $('#lyricsPanel').classList.toggle('show'); $('#queuePanel').classList.remove('show'); });
-  $('#lyricsClose').addEventListener('click', () => $('#lyricsPanel').classList.remove('show'));
+  $('#btnLyrics').addEventListener('click', () => { $('#lyricsPanel').classList.toggle('show'); $('#queuePanel').classList.remove('show'); document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show')); $('#btnLyrics').classList.toggle('on', $('#lyricsPanel').classList.contains('show')); $('#btnQueue').classList.remove('on'); });
+  $('#lyricsClose').addEventListener('click', () => { $('#lyricsPanel').classList.remove('show'); $('#btnLyrics').classList.remove('on'); document.body.classList.toggle('dock-open', !!document.querySelector('.right-dock.show')); });
   $('#ytClose').addEventListener('click', () => { $('#ytModal').classList.remove('show'); $('#ytFrameWrap').innerHTML = ''; });
   $('#ytModal').addEventListener('click', (e) => { if (e.target === $('#ytModal')) { $('#ytModal').classList.remove('show'); $('#ytFrameWrap').innerHTML = ''; } });
   $('#plPicker').addEventListener('click', (e) => { if (e.target === $('#plPicker')) $('#plPicker').classList.remove('show'); });

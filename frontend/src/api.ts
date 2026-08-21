@@ -3,7 +3,7 @@ export interface Artist { id: string; name: string; nameJa: string; genre: strin
 export interface SeedTrack { id: string; title: string; artist: string; artistId: string; tag: string; youtubeId: string | null; ytViews: number; searchTerm: string; }
 export interface Ev { id: string; type: string; title: string; artist: string; date: string; venue: string; note: string; }
 export interface Product { id: string; name: string; brand: string; price: number; badge: string; searchTerm: string; operator: string; officialUrl: string; towerUrl: string; desc: string; options: string[]; stock: number; }
-export interface PlayableTrack { title: string; artist: string; artwork?: string; preview?: string; youtubeId?: string | null; }
+export interface PlayableTrack { title: string; artist: string; album?: string; artwork?: string; preview?: string; youtubeId?: string | null; addedAt?: string; }
 export interface User { id: string; email: string; name: string; language: string; plan: { tier: string; name: string; renewsAt: string | null }; credits: number; createdAt: string; paymentMethods: { id: string; brand: string; last4: string }[]; }
 
 export const api = (path: string, init?: RequestInit) =>
