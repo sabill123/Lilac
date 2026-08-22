@@ -1501,3 +1501,76 @@ body:not(.play-mode) .sp-table.sticky .t-head { background: rgba(11,12,15,.94); 
 .quick:hover .quick-play { opacity: 1; transform: none; }
 body:not(.play-mode) .quick-sec { display: none; }
 @media (max-width: 760px) { .quick-grid { grid-template-columns: 1fr 1fr; } .quick b { font-size: 12.5px; } .quick-art { width: 52px; height: 52px; } .quick-play { display: none; } }
+
+/* ============================================================
+   v1.0 — 검색 강화 · 디스코그래피 · 캘린더 · 상품 상세 탭
+   ============================================================ */
+
+/* ---------- 검색 ---------- */
+.sr-top { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 24px; margin-bottom: 34px; }
+.sr-topcard { position: relative; background: var(--bg-raised); border-radius: var(--radius-md); padding: 22px; cursor: pointer; transition: background var(--dur-short); overflow: hidden; }
+.sr-topcard:hover { background: var(--bg-soft); }
+.sr-toplabel { font-size: 12px; font-weight: 700; color: var(--ink-muted); margin-bottom: 14px; }
+.sr-topcard img { width: 96px; height: 96px; border-radius: 6px; object-fit: cover; box-shadow: 0 10px 26px rgba(0,0,0,.5); display: block; }
+.sr-topcard h3 { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin: 16px 0 8px; line-height: 1.2; }
+.sr-topcard p { font-size: 13px; color: var(--ink-muted); display: flex; align-items: center; gap: 8px; }
+.sr-kind { background: var(--bg-hover); color: var(--ink); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+.sr-topcard .play-big { position: absolute; right: 20px; bottom: 20px; opacity: 0; transform: translateY(8px); transition: all var(--dur-short) var(--ease-out); }
+.sr-topcard:hover .play-big { opacity: 1; transform: none; }
+.sr-golink { display: inline-flex; align-items: center; gap: 4px; margin-top: 14px; font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.sr-h { font-size: 17px; font-weight: 800; margin-bottom: 10px; }
+.sr-sec { margin: 30px 0 14px; }
+.card-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.66); backdrop-filter: blur(6px); color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+@media (max-width: 900px) { .sr-top { grid-template-columns: 1fr; } }
+
+/* ---------- 아티스트 정보 ---------- */
+.ar-about { display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start; }
+.ar-about-img { aspect-ratio: 1; border-radius: var(--radius-md); background: var(--bg-soft); background-size: cover; background-position: center; box-shadow: 0 14px 40px rgba(0,0,0,.5); }
+.ar-about-txt p { font-size: 14px; color: var(--ink-muted); line-height: 1.75; margin-bottom: 12px; max-width: 620px; }
+.ar-listeners { font-size: 15px !important; color: var(--ink) !important; }
+.ar-listeners b { font-variant-numeric: tabular-nums; }
+.ar-about-txt .btn-out { margin-top: 6px; }
+@media (max-width: 760px) { .ar-about { grid-template-columns: 1fr; gap: 18px; } .ar-about-img { max-width: 200px; } }
+
+/* ---------- 일정: 캘린더 ---------- */
+.sch-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 20px; }
+.sch-toolbar .chips { margin-top: 0; }
+.cal-month { margin-bottom: 34px; }
+.cal-title { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-w { text-align: center; font-size: 11.5px; font-weight: 700; color: var(--ink-faint); padding-bottom: 6px; }
+.cal-w.sun { color: #ff6b6e; }
+.cal-cell { min-height: 92px; border-radius: var(--radius-sm); background: var(--bg-raised); border: 1px solid var(--rule); padding: 7px 8px; display: flex; flex-direction: column; gap: 5px; }
+.cal-cell.empty { background: transparent; border-color: transparent; }
+.cal-cell.has { border-color: rgba(167,139,250,.4); }
+.cal-cell.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal-d { font-size: 12px; font-weight: 700; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.cal-cell.today .cal-d { color: var(--accent); }
+.cal-ev { background: rgba(167,139,250,.16); border-radius: 5px; padding: 5px 7px; cursor: pointer; transition: background var(--dur-micro); overflow: hidden; }
+.cal-ev:hover { background: rgba(167,139,250,.3); }
+.cal-ev b { display: block; font-size: 10.5px; font-weight: 800; color: var(--accent); }
+.cal-ev span { display: block; font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) {
+  .cal-cell { min-height: 62px; padding: 5px; }
+  .cal-ev span { display: none; }
+  .cal-ev { padding: 3px 5px; }
+  .cal-grid { gap: 4px; }
+}
+
+/* ---------- 상품 상세 탭 ---------- */
+.pd-tabs { display: flex; gap: 26px; border-bottom: 1px solid var(--paper-rule); margin-top: 52px; }
+.pd-tab { background: none; border: none; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--paper-muted); padding: 0 0 14px; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.pd-tab:hover { color: var(--paper-ink); }
+.pd-tab.on { color: var(--paper-ink); border-bottom-color: var(--paper-ink); }
+.pd-panel { padding: 26px 0 8px; color: #55585f; font-size: 13.5px; line-height: 1.8; }
+.pd-panel p { max-width: 720px; margin-bottom: 14px; }
+.pd-spec { width: 100%; max-width: 640px; border-top: 1px solid var(--paper-rule); border-collapse: collapse; margin-top: 18px; }
+.pd-spec th, .pd-spec td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--paper-rule); font-size: 13px; }
+.pd-spec th { width: 140px; color: var(--paper-muted); font-weight: 600; background: #fafafb; }
+.pd-spec td { color: var(--paper-ink); }
+.pd-ul { list-style: none; max-width: 720px; }
+.pd-ul li { position: relative; padding: 7px 0 7px 16px; }
+.pd-ul li::before { content: ''; position: absolute; left: 0; top: 15px; width: 4px; height: 4px; border-radius: 50%; background: var(--paper-muted); }
+.pd-ul li.dim { color: var(--paper-muted); font-size: 12.5px; }
+.pd-panel .pd-actions { margin-top: 18px; }
+@media (max-width: 760px) { .pd-tabs { gap: 18px; margin-top: 34px; } .pd-tab { font-size: 13px; } .pd-spec th { width: 96px; } }

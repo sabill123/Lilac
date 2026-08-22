@@ -228,11 +228,12 @@ export async function pageHome() {
   }
 
   findCatalog(feat.searchTerm).then((hit) => {
-    if (!hit) return;
+    const blur = document.getElementById('bbBlur'), cardEl = document.getElementById('bbCard');
+    if (!hit || !blur || !cardEl) return;
     const big = artUrl(hit, 1200);
-    $('#bbBlur').style.backgroundImage = `url(${big})`;
-    $('#bbCard').innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/><span class="glare"></span>`;
-    void applyTone($('#bb'), artUrl(hit, 200));
+    blur.style.backgroundImage = `url(${big})`;
+    cardEl.innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/><span class="glare"></span>`;
+    void applyTone(document.getElementById('bb'), artUrl(hit, 200));
   });
   $('#heroPlay').addEventListener('click', async () => {
     const hit = await findCatalog(feat.searchTerm);
@@ -262,7 +263,7 @@ export async function pageHome() {
       <span class="mood-k">${m.k}</span><span class="mood-sq" data-term="${esc(m.q)}"></span></a>`).join('');
   moods.forEach(async (m, i) => {
     const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
-    const sq = $('#hMoods').querySelectorAll<HTMLElement>('.mood-sq')[i];
+    const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
     if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
   });
 
@@ -309,7 +310,7 @@ export async function pageChart(sub?: string) {
   data.list.forEach(async (e: { artwork?: string; searchTerm?: string; artist: string; title: string }, i: number) => {
     if (!e.artwork) {
       const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
-      const art = $('#chartBody').querySelectorAll('.rk-art')[i];
+      const art = document.querySelectorAll('#chartBody .rk-art')[i];
       if (hit && art) art.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 100)}" alt=""/>`);
     }
   });
@@ -353,7 +354,7 @@ export async function pageStore() {
     fillProductArts($('#storeGrid'));
   };
   render();
-  findCatalog(products[0].searchTerm).then((hit) => { if (hit) $('#shImg').style.backgroundImage = `url(${artUrl(hit, 600)})`; });
+  findCatalog(products[0].searchTerm).then((hit) => { const el = document.getElementById('shImg'); if (hit && el) el.style.backgroundImage = `url(${artUrl(hit, 600)})`; });
   $('#pSort').addEventListener('change', render);
   document.querySelectorAll<HTMLElement>('.sn-item').forEach((el) =>
     el.addEventListener('click', () => {
@@ -388,9 +389,55 @@ export async function pageProduct(id: string) {
           <p class="pd-note">예약 주문은 데모 크레딧으로 결제되며, 공식 스토어·타워레코드 링크는 실제 판매처로 연결됩니다.</p>
         </div>
       </div>
+      <div class="pd-tabs" id="pdTabs">
+        <button class="pd-tab on" data-p="info">상품 정보</button>
+        <button class="pd-tab" data-p="ship">배송 · 교환</button>
+        <button class="pd-tab" data-p="op">판매자 정보</button>
+      </div>
+      <div class="pd-panel" id="pdPanel"></div>
       ${artist ? `<div class="sec-head pd-sec"><h2 class="dark-h">${esc(artist.name)}의 곡</h2></div><div id="pdTracks" class="on-light"></div>` : ''}
+      <div class="sec-head pd-sec"><h2 class="dark-h">함께 본 상품</h2></div>
+      <div class="store-grid" id="pdRelated"></div>
     </div></div>`;
-  findCatalog(p.searchTerm).then((hit) => { if (hit) $('#pdImg').insertAdjacentHTML('beforeend', `<img src="${artUrl(hit, 600)}" alt=""/>`); });
+  findCatalog(p.searchTerm).then((hit) => { const el = document.getElementById('pdImg'); if (hit && el) el.insertAdjacentHTML('beforeend', `<img src="${artUrl(hit, 600)}" alt=""/>`); });
+
+  // 탭 패널
+  const panels: Record<string, string> = {
+    info: `<p>${esc(p.desc)}</p>
+      <table class="pd-spec"><tbody>
+        <tr><th>상품명</th><td>${esc(p.name)}</td></tr>
+        <tr><th>아티스트</th><td>${esc(p.brand)}</td></tr>
+        <tr><th>사양</th><td>${p.options.map(esc).join(' / ')}</td></tr>
+        <tr><th>공식 운영사</th><td>${esc(p.operator)}</td></tr>
+        <tr><th>재고</th><td>${p.stock}개</td></tr>
+      </tbody></table>`,
+    ship: `<ul class="pd-ul">
+        <li>예약 상품은 일본 발매일 이후 순차 발송됩니다(통상 2~3주).</li>
+        <li>해외 배송이 지원되지 않는 상품을 Lilac이 공동구매로 묶어 발송합니다.</li>
+        <li>한정반·특전 상품은 수량 소진 시 재입고가 없을 수 있습니다.</li>
+        <li>단순 변심 교환·반품은 미개봉 상태에서 수령 후 7일 이내 가능합니다.</li>
+        <li class="dim">데모 페이지입니다. 실제 결제·배송은 이뤄지지 않습니다.</li>
+      </ul>`,
+    op: `<p>이 상품의 공식 운영사는 <b>${esc(p.operator)}</b>입니다.</p>
+      <p class="dim">Lilac은 티켓 재판매를 취급하지 않으며, 공식 유통채널과 연결된 상품만 중개합니다.</p>
+      <div class="pd-actions">
+        <a class="btn-out" href="${p.officialUrl}" target="_blank" rel="noopener">${t('store.official')} ${icon('i-ext', 'ic s')}</a>
+        <a class="btn-out" href="${p.towerUrl}" target="_blank" rel="noopener">${t('store.tower')} ${icon('i-ext', 'ic s')}</a>
+      </div>`,
+  };
+  const paintPanel = (k: string) => { $('#pdPanel').innerHTML = panels[k]; };
+  paintPanel('info');
+  $('#pdTabs').querySelectorAll<HTMLButtonElement>('.pd-tab').forEach((b) =>
+    b.addEventListener('click', () => {
+      $('#pdTabs').querySelectorAll('.pd-tab').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on'); paintPanel(b.dataset.p!);
+    }));
+
+  // 관련 상품
+  const related = products.filter((x) => x.id !== p.id).slice(0, 4);
+  $('#pdRelated').innerHTML = related.map(productCard).join('');
+  fillProductArts($('#pdRelated'));
+  bindTilt($('#pdRelated'));
   $('#pdOrder').addEventListener('click', async () => {
     try {
       const r = await api('/api/orders', { method: 'POST', body: JSON.stringify({ productId: p.id, option: ($('#pdOpt') as HTMLSelectElement).value, qty: Number(($('#pdQty') as HTMLInputElement).value) }) });
@@ -420,9 +467,15 @@ export async function pageSchedule() {
         <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
         <p class="page-desc">${t('schedule.hint')} — 팔로우한 아티스트의 일정이 가장 위에 표시됩니다.</p>
-        <div class="chips" id="schFilters">
-          <button class="chip on" data-f="all">전체</button>
-          ${[...new Set(sorted.map((e) => e.type))].map((ty) => `<button class="chip" data-f="${esc(ty)}">${esc(ty)}</button>`).join('')}
+        <div class="sch-toolbar">
+          <div class="chips" id="schFilters">
+            <button class="chip on" data-f="all">전체</button>
+            ${[...new Set(sorted.map((e) => e.type))].map((ty) => `<button class="chip" data-f="${esc(ty)}">${esc(ty)}</button>`).join('')}
+          </div>
+          <div class="lib-tools">
+            <button class="view-toggle on" id="schListBtn" title="리스트">${icon('i-rows', 'ic s')}</button>
+            <button class="view-toggle" id="schCalBtn" title="캘린더">${icon('i-cal', 'ic s')}</button>
+          </div>
         </div>
       </div>
       <div id="schBody"></div>
@@ -456,12 +509,56 @@ export async function pageSchedule() {
     $('#schBody').querySelectorAll<HTMLElement>('.sch-row[data-href]').forEach((el) =>
       el.addEventListener('click', () => { location.hash = el.dataset.href!; }));
   };
-  render('all');
+  // 캘린더 뷰 (라프텔식 월간 그리드)
+  const renderCal = (f: string) => {
+    const rows = f === 'all' ? sorted : sorted.filter((e) => e.type === f);
+    const months = [...new Set(rows.map((e) => e.date.slice(0, 7)))];
+    $('#schBody').innerHTML = months.map((month) => {
+      const [y, m] = month.split('-').map(Number);
+      const first = new Date(y, m - 1, 1);
+      const days = new Date(y, m, 0).getDate();
+      const pad = first.getDay();
+      const cells: string[] = [];
+      for (let i = 0; i < pad; i++) cells.push('<div class="cal-cell empty"></div>');
+      for (let d = 1; d <= days; d++) {
+        const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const evs = rows.filter((e) => e.date === iso);
+        const isToday = iso === new Date().toISOString().slice(0, 10);
+        cells.push(`<div class="cal-cell ${evs.length ? 'has' : ''} ${isToday ? 'today' : ''}">
+          <span class="cal-d">${d}</span>
+          ${evs.map((e) => {
+            const a = artists.find((x) => x.name === e.artist);
+            return `<div class="cal-ev" ${a ? `data-href="#/artist/${a.id}"` : ''} title="${esc(e.title)}">
+              <b>${esc(e.type)}</b><span>${esc(e.artist)}</span></div>`;
+          }).join('')}
+        </div>`);
+      }
+      return `<div class="cal-month">
+        <div class="cal-title">${y}년 ${m}월</div>
+        <div class="cal-grid">
+          ${['일','월','화','수','목','금','토'].map((w, i) => `<div class="cal-w ${i === 0 ? 'sun' : ''}">${w}</div>`).join('')}
+          ${cells.join('')}
+        </div></div>`;
+    }).join('') || '<p class="loading">해당 일정이 없습니다</p>';
+    $('#schBody').querySelectorAll<HTMLElement>('.cal-ev[data-href]').forEach((el) =>
+      el.addEventListener('click', () => { location.hash = el.dataset.href!; }));
+  };
+
+  let schView: 'list' | 'cal' = 'list';
+  let schFilter = 'all';
+  const draw = () => (schView === 'list' ? render(schFilter) : renderCal(schFilter));
+  draw();
   $('#schFilters').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) =>
     b.addEventListener('click', () => {
       $('#schFilters').querySelectorAll('.chip').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on'); render(b.dataset.f!);
+      b.classList.add('on'); schFilter = b.dataset.f!; draw();
     }));
+  $('#schListBtn').addEventListener('click', () => {
+    schView = 'list'; $('#schListBtn').classList.add('on'); $('#schCalBtn').classList.remove('on'); draw();
+  });
+  $('#schCalBtn').addEventListener('click', () => {
+    schView = 'cal'; $('#schCalBtn').classList.add('on'); $('#schListBtn').classList.remove('on'); draw();
+  });
 }
 
 /* ================= 아티스트 상세 ================= */
@@ -487,13 +584,27 @@ export async function pageArtist(id: string) {
       <span class="ar-op">${t('store.operator')} · ${esc(a.operator)}</span>
     </div>
     <section class="sec"><div class="sec-head"><h2>인기</h2></div><div id="arTracks">${skRows(5)}</div></section>
+    <section class="sec" id="arDiscSec"><div class="sec-head"><h2>디스코그래피</h2><span class="sec-sub">Apple Music 카탈로그</span></div><div id="arDisc">${skCards(6)}</div></section>
     <section class="sec" id="arEvSec" style="display:none"><div class="sec-head"><h2>${t('schedule.title')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="ev-shelf" id="arEvents"></div></section>
     <section class="sec" id="arGoodsSec" style="display:none"><div class="sec-head"><h2>${t('store.title')}</h2><a class="sec-link" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="store-dark-grid" id="arGoods"></div></section>
-    <section class="sec"><div class="sec-head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>`;
+    <section class="sec"><div class="sec-head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>
+    <section class="sec"><div class="sec-head"><h2>정보</h2></div>
+      <div class="ar-about">
+        <div class="ar-about-img" id="arAboutImg"></div>
+        <div class="ar-about-txt">
+          <p class="ar-listeners">월간 청취자 <b>${listeners}</b>명</p>
+          <p>${esc(a.name)}(${esc(a.nameJa)})는 ${esc(a.genre)} 아티스트입니다. 공식 운영사는 ${esc(a.operator)}이며,
+            Lilac은 공식 유통망과 연결된 정보만 표시합니다.</p>
+          <p class="dim">이 소개문은 데모용으로 생성된 텍스트입니다. 실서비스에서는 레이블 제공 프로필이 들어갑니다.</p>
+          <a class="btn-out" href="${a.official}" target="_blank" rel="noopener">공식 사이트 ${icon('i-ext', 'ic s')}</a>
+        </div>
+      </div>
+    </section>`;
 
   findCatalog(a.searchTerm).then((hit) => {
-    if (!hit) return;
-    $('#arBg').style.backgroundImage = `url(${artUrl(hit, 1200)})`;
+    const bg = document.getElementById('arBg');
+    if (!hit || !bg) return;
+    bg.style.backgroundImage = `url(${artUrl(hit, 1200)})`;
     void applyTone(document.querySelector('.ar-hero'), artUrl(hit, 200));
   });
   $('#arFollow').addEventListener('click', async () => {
@@ -531,6 +642,26 @@ export async function pageArtist(id: string) {
     $('#arGoods').innerHTML = goods.map(productCard).join('');
     fillProductArts($('#arGoods'));
   }
+  // 디스코그래피
+  api(`/api/catalog/albums?term=${encodeURIComponent(a.searchTerm)}`).then((r) => {
+    const albums = (r.albums || []) as { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }[];
+    const mine = albums.filter((x) => x.artist === a.searchTerm || x.artist === a.name || x.artist === a.nameJa);
+    const use = (mine.length ? mine : albums).slice(0, 8);
+    const el = document.getElementById('arDisc');
+    const sec = document.getElementById('arDiscSec');
+    if (!el || !sec) return;
+    if (!use.length) { sec.style.display = 'none'; return; }
+    el.innerHTML = `<div class="shelf">${use.map((al) => `
+      <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
+        <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy"/><span class="glare"></span>
+          <span class="card-badge">${al.trackCount}곡</span></div>
+        <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · 앨범</div>
+      </a>`).join('')}</div>`;
+    bindTilt(el);
+    const about = document.getElementById('arAboutImg');
+    if (use[0] && about) about.style.backgroundImage = `url(${esc(use[0].artwork)})`;
+  }).catch(() => { const s = document.getElementById('arDiscSec'); if (s) s.style.display = 'none'; });
+
   const sim = artists.filter((x) => x.id !== a.id).slice(0, 6);
   $('#arSimilar').innerHTML = shelf(sim.map((x) => ({ title: x.name, sub: x.genre, round: true, href: `#/artist/${x.id}`, term: x.searchTerm })));
   fillShelfArts($('#arSimilar'));
@@ -1010,18 +1141,92 @@ export async function pageAccount() {
 }
 
 /* ================= 검색 ================= */
-export async function pageSearch(q: string) {
+interface AlbumRes { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }
+export async function pageSearch(q: string, tab = 'all') {
   root().innerHTML = `
     <section class="sec page-top">
-      <div class="page-head"><p class="sp-label">검색</p><h1 class="page-title">‘${esc(q)}’</h1>
-        <p class="page-desc">Apple Music 카탈로그 검색 결과입니다.</p></div>
+      <div class="page-head">
+        <p class="sp-label">검색 결과</p>
+        <h1 class="page-title">${esc(q)}</h1>
+        <div class="chips" id="srTabs">
+          ${[['all', '전체'], ['songs', '곡'], ['artists', '아티스트'], ['albums', '앨범']].map(([k, l]) =>
+            `<button class="chip ${k === tab ? 'on' : ''}" data-t="${k}">${l}</button>`).join('')}
+        </div>
+      </div>
       <div id="srBody">${skRows(6)}</div>
     </section>`;
-  const { tracks } = await api(`/api/catalog/search?term=${encodeURIComponent(q)}&limit=15`).catch(() => ({ tracks: [] }));
-  if (!tracks.length) { $('#srBody').innerHTML = '<p class="loading">결과가 없습니다</p>'; return; }
-  const rows = (tracks as CatalogTrack[]).map((c) => toPlayable(c));
-  $('#srBody').innerHTML = trackTable(rows, { album: true, date: false });
-  bindTable($('#srBody'), rows);
+  $('#srTabs').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) =>
+    b.addEventListener('click', () => pageSearch(q, b.dataset.t!)));
+
+  const [songRes, albumRes] = await Promise.all([
+    api(`/api/catalog/search?term=${encodeURIComponent(q)}&limit=20`).catch(() => ({ tracks: [] })),
+    api(`/api/catalog/search?term=${encodeURIComponent(q)}&entity=album&limit=12`).catch(() => ({ albums: [] })),
+  ]);
+  const tracks = (songRes.tracks || []) as CatalogTrack[];
+  const albums = (albumRes.albums || []) as AlbumRes[];
+  // 아티스트는 곡/앨범 결과에서 집계 (이름 빈도순)
+  const artistMap = new Map<string, number>();
+  [...tracks.map((t) => t.artist), ...albums.map((a) => a.artist)].forEach((n) => artistMap.set(n, (artistMap.get(n) || 0) + 1));
+  const artistList = [...artistMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name]) => name);
+
+  if (!tracks.length && !albums.length) {
+    $('#srBody').innerHTML = `<div class="empty-box">${icon('i-search', 'ic eb')}<p>‘${esc(q)}’ 결과가 없습니다</p><span>다른 검색어를 시도해 보세요</span></div>`;
+    return;
+  }
+
+  const rows = tracks.map((c) => toPlayable(c));
+  const localArtist = artists.find((a) => a.name.toLowerCase().includes(q.toLowerCase()) || a.searchTerm.toLowerCase().includes(q.toLowerCase()) || a.nameJa.includes(q));
+  const top = tracks[0];
+
+  const albumGrid = (list: AlbumRes[]) => `<div class="shelf">${list.map((a) => `
+    <a class="card" href="${a.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
+      <div class="cover"><img src="${esc(a.artwork)}" alt="" loading="lazy"/><span class="glare"></span></div>
+      <div class="c-title">${esc(a.title)}</div><div class="c-sub">${esc(a.year || '')} · ${esc(a.artist)}</div>
+    </a>`).join('')}</div>`;
+  const artistShelf = (names: string[]) => `<div class="shelf">${names.map((n) => {
+    const local = artists.find((a) => a.name === n || a.nameJa === n || a.searchTerm === n);
+    return `<a class="card round" href="${local ? `#/artist/${local.id}` : `#/search?q=${encodeURIComponent(n)}`}" data-term="${esc(n)}" data-tilt="8">
+      <div class="cover"><div class="ph">${esc(n[0] || '?')}</div><span class="glare"></span></div>
+      <div class="c-title">${esc(n)}</div><div class="c-sub">${t('artists')}</div></a>`;
+  }).join('')}</div>`;
+
+  let html = '';
+  if (tab === 'all') {
+    html = `
+      <div class="sr-top">
+        ${top ? `<div class="sr-topcard" id="srTop" data-tilt="6">
+          <p class="sr-toplabel">상위 결과</p>
+          <img src="${esc(artUrl(top, 300))}" alt=""/>
+          <h3>${esc(top.title)}</h3>
+          <p>${esc(top.artist)}<span class="sr-kind">곡</span></p>
+          <button class="play-big" id="srTopPlay">${icon('i-play')}</button>
+        </div>` : ''}
+        <div class="sr-songs">
+          <h3 class="sr-h">곡</h3>
+          <div id="srSongs"></div>
+        </div>
+      </div>
+      ${artistList.length ? `<div class="sec-head sr-sec"><h2>아티스트</h2></div>${artistShelf(artistList.slice(0, 6))}` : ''}
+      ${albums.length ? `<div class="sec-head sr-sec"><h2>앨범</h2></div>${albumGrid(albums.slice(0, 8))}` : ''}`;
+  } else if (tab === 'songs') html = '<div id="srSongs"></div>';
+  else if (tab === 'artists') html = artistList.length ? artistShelf(artistList) : `<p class="loading">아티스트 결과가 없습니다</p>`;
+  else html = albums.length ? albumGrid(albums) : `<p class="loading">앨범 결과가 없습니다</p>`;
+
+  $('#srBody').innerHTML = html;
+
+  const songBox = document.getElementById('srSongs');
+  if (songBox) {
+    const list = tab === 'all' ? rows.slice(0, 5) : rows;
+    songBox.innerHTML = trackTable(list, { album: tab !== 'all', date: false });
+    bindTable(songBox, list);
+  }
+  $('#srTopPlay')?.addEventListener('click', (e) => { e.stopPropagation(); if (top) playQueue([toPlayable(top)], 0); });
+  $('#srTop')?.addEventListener('click', () => { if (top) playQueue([toPlayable(top)], 0); });
+  if (localArtist) {
+    $('#srTop')?.insertAdjacentHTML('beforeend', `<a class="sr-golink" href="#/artist/${localArtist.id}">아티스트 페이지 ${icon('i-chev-r', 'ic s')}</a>`);
+  }
+  fillShelfArts($('#srBody'));
+  bindTilt($('#srBody'));
 }
 
 export function page404() {

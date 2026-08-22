@@ -36,13 +36,15 @@ app.get('/api/db/:name', async (req, res) => {
 });
 
 /* ================= Apple Music 카탈로그 프록시 ================= */
+const ENTITIES = { song: 'song', album: 'album', artist: 'musicArtist' };
 app.get('/api/catalog/search', async (req, res) => {
   const term = String(req.query.term || '').slice(0, 100);
   const country = /^[a-z]{2}$/i.test(String(req.query.country)) ? req.query.country : 'jp';
   const limit = Math.min(Number(req.query.limit) || 12, 25);
+  const entity = ENTITIES[String(req.query.entity || 'song')] || 'song';
   if (!term) return res.status(400).json({ error: 'term required' });
   try {
-    const url = `https://itunes.apple.com/search?media=music&entity=song&country=${country}&limit=${limit}&term=${encodeURIComponent(term)}`;
+    const url = `https://itunes.apple.com/search?media=music&entity=${entity}&country=${country}&limit=${limit}&term=${encodeURIComponent(term)}`;
     const r = await fetch(url, { headers: { 'user-agent': 'lilac-demo/0.3' } });
     const data = await r.json();
     res.json({
@@ -52,6 +54,32 @@ app.get('/api/catalog/search', async (req, res) => {
         artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
         preview: t.previewUrl, appleUrl: t.trackViewUrl, genre: t.primaryGenreName,
         durationMs: t.trackTimeMillis || 0, releaseDate: t.releaseDate,
+      })),
+      albums: (data.results || []).filter((r) => r.wrapperType === 'collection').map((a) => ({
+        id: a.collectionId, title: a.collectionName, artist: a.artistName,
+        artwork: (a.artworkUrl100 || '').replace('100x100', '400x400'),
+        year: (a.releaseDate || '').slice(0, 4), trackCount: a.trackCount, appleUrl: a.collectionViewUrl,
+      })),
+      artists: (data.results || []).filter((r) => r.wrapperType === 'artist').map((a) => ({
+        id: a.artistId, name: a.artistName, genre: a.primaryGenreName, appleUrl: a.artistLinkUrl,
+      })),
+    });
+  } catch (e) { res.status(502).json({ error: 'itunes upstream failed', detail: String(e) }); }
+});
+
+// 아티스트 디스코그래피 (lookup)
+app.get('/api/catalog/albums', async (req, res) => {
+  const term = String(req.query.term || '').slice(0, 100);
+  if (!term) return res.status(400).json({ error: 'term required' });
+  try {
+    const url = `https://itunes.apple.com/search?media=music&entity=album&country=jp&limit=12&term=${encodeURIComponent(term)}`;
+    const r = await fetch(url, { headers: { 'user-agent': 'lilac-demo/0.3' } });
+    const data = await r.json();
+    res.json({
+      albums: (data.results || []).map((a) => ({
+        id: a.collectionId, title: a.collectionName, artist: a.artistName,
+        artwork: (a.artworkUrl100 || '').replace('100x100', '400x400'),
+        year: (a.releaseDate || '').slice(0, 4), trackCount: a.trackCount, appleUrl: a.collectionViewUrl,
       })),
     });
   } catch (e) { res.status(502).json({ error: 'itunes upstream failed', detail: String(e) }); }
