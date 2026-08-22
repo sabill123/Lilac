@@ -1925,3 +1925,16 @@ body.play-mode .calc-table .calc-total th, body.play-mode .calc-table .calc-tota
 .mini-rank.off { background: rgba(255,255,255,.05); color: var(--ink-faint); }
 @media (max-width: 900px) { .rk-ranks { display: none; } }
 @media (max-width: 700px) { .ch-controls { gap: 8px; } .seg-btn { padding: 7px 13px; font-size: 12.5px; } }
+
+/* v1.7 — 일본 대표 차트 반영 */
+.seg.wrap { flex-wrap: wrap; }
+.mini-rank.billboard { background: rgba(103,232,249,.16); color: #67e8f9; }
+.mini-rank.oricon { background: rgba(251,191,36,.16); color: #fbbf24; }
+.rk-move { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rk-move.up { color: #4ade80; }
+.rk-move.down { color: #ff6b6e; }
+.rk-move.new { color: var(--accent); }
+.rk-ph { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: var(--ink-faint); }
+.rk-ph .ic { width: 20px; height: 20px; }
+.ch-method { line-height: 1.8; }
+@media (max-width: 900px) { .rk-move { display: none; } }

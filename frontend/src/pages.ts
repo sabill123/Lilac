@@ -284,142 +284,79 @@ export async function pageHome() {
   bindTilt($('#hStore'));
 }
 
-/* ================= 차트 ================= */
-/* ---- 플레이 모드 홈 (스포티파이 홈) ---- */
-async function pageHomePlay() {
-  const hour = new Date().getHours();
-  const greet = hour < 6 ? '깊은 밤이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
-  root().innerHTML = `
-    <section class="sec home-play">
-      <h1 class="greet">${greet}</h1>
-      <div class="quick-grid" id="hQuick"></div>
-    </section>
-    <section class="sec"><div class="sec-head"><h2>최근 재생</h2><a class="sec-link" href="#/library/history">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hRecent">${skCards(6)}</div></section>
-    <section class="sec"><div class="sec-head"><h2>오늘의 추천</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hPicks">${skCards(6)}</div></section>
-    <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2></div><div id="hArtists">${skCards(7, true)}</div></section>
-    <section class="sec"><div class="sec-head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>`;
-
-  // 바로 가기
-  const [lists, likes, hist] = await Promise.all([
-    api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/history').catch(() => []),
-  ]);
-  const quick = [
-    ...(likes.length ? [{ name: t('lib.likes'), href: '#/library/likes', liked: true, art: '' }] : []),
-    ...lists.slice(0, 5).map((p: { id: string; name: string; tracks: PlayableTrack[] }) => ({ name: p.name, href: `#/playlist/${p.id}`, liked: false, art: p.tracks[0]?.artwork || '' })),
-  ].slice(0, 6);
-  $('#hQuick').innerHTML = quick.length ? quick.map((q) => `
-    <a class="quick" href="${q.href}">
-      <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
-      <b>${esc(q.name)}</b><span class="quick-play">${icon('i-play')}</span></a>`).join('')
-    : `<p class="loading">플레이리스트를 만들면 여기에 표시됩니다</p>`;
-
-  // 최근 재생
-  const recent: PlayableTrack[] = (hist as PlayableTrack[]).filter((h, i, arr) => arr.findIndex((x) => x.title === h.title) === i).slice(0, 6);
-  if (recent.length) {
-    $('#hRecent').innerHTML = `<div class="shelf">${recent.map((h, i) => `
-      <a class="card" href="javascript:void 0" data-r="${i}" data-tilt="8" data-expand>
-        <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
-          <button class="hover-play" data-play="${i}">${icon('i-play')}</button></div>
-        <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
-    $('#hRecent').querySelectorAll<HTMLElement>('[data-r]').forEach((el) =>
-      el.addEventListener('click', () => playQueue(recent, Number(el.dataset.r))));
-  } else {
-    $('#hRecent').innerHTML = `<div class="empty-box sm">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p></div>`;
-  }
-
-  // 오늘의 추천 (시드곡)
-  const hits = await Promise.all(seeds.slice(0, 6).map((s) => findCatalog(s.searchTerm)));
-  const picks = hits.map((h, i) => (h ? toPlayable(h, seeds[i].youtubeId) : null)).filter(Boolean) as PlayableTrack[];
-  const pickBox = document.getElementById('hPicks');
-  if (pickBox) {
-    pickBox.innerHTML = `<div class="shelf">${picks.map((h, i) => `
-      <a class="card" href="javascript:void 0" data-p="${i}" data-tilt="8" data-expand>
-        <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
-          <button class="hover-play" data-play="${i}">${icon('i-play')}</button></div>
-        <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
-    pickBox.querySelectorAll<HTMLElement>('[data-p]').forEach((el) =>
-      el.addEventListener('click', () => playQueue(picks, Number(el.dataset.p))));
-  }
-
-  // 아티스트
-  const ab = document.getElementById('hArtists');
-  if (ab) {
-    ab.innerHTML = shelf(artists.map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm })));
-    fillShelfArts(ab);
-  }
-
-  // 무드
-  const moods = [
-    { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' },
-    { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
-    { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' },
-    { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
-    { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' },
-    { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
-  ];
-  const mb = document.getElementById('hMoods');
-  if (mb) {
-    mb.innerHTML = moods.map((m) => `
-      <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-tilt="6">
-        <span class="mood-k">${m.k}</span><span class="mood-sq"></span></a>`).join('');
-    moods.forEach(async (m, i) => {
-      const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
-      const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
-      if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
-    });
-  }
-}
-
 /* ================= 차트 =================
-   3종 차트가 같은 곡 풀(Apple 국가별 최다 재생)을 공유한다.
-   - apple    : Apple Music 공식 순위
-   - youtube  : 같은 풀을 공식 MV 누적 조회수로 재정렬
-   - combined : 두 순위를 정규화해 50:50 합산한 Lilac 통합 순위 */
+   일본은 현지 대표 차트(Billboard JAPAN, 오리콘)까지 함께 반영한다.
+   - billboard : Billboard JAPAN HOT 100 (스트리밍·DL·CD·라디오·동영상·노래방 종합)
+   - oricon    : 오리콘 주간 싱글 (CD 판매)
+   - apple     : Apple Music 최다 재생
+   - youtube   : 공식 MV 누적 조회수
+   - combined  : 위 순위를 정규화해 가중 합산 */
 interface ChartRow {
   rank: number; title: string; artist: string; artwork?: string; appleUrl?: string;
   youtubeId?: string | null; ytViews?: number | null;
   appleRank?: number | null; youtubeRank?: number | null; sources?: string[]; score?: number;
-  confidence?: string;
+  ranks?: Record<string, number>; move?: string; lastRank?: number | null;
 }
-const SOURCES = [
-  { k: 'combined', label: '통합' }, { k: 'apple', label: 'Apple Music' }, { k: 'youtube', label: 'YouTube' },
-];
+const SOURCES_BY_COUNTRY: Record<string, { k: string; label: string }[]> = {
+  jp: [
+    { k: 'combined', label: '통합' },
+    { k: 'billboard', label: 'Billboard JAPAN' },
+    { k: 'oricon', label: '오리콘' },
+    { k: 'apple', label: 'Apple Music' },
+    { k: 'youtube', label: 'YouTube' },
+  ],
+  kr: [
+    { k: 'combined', label: '통합' },
+    { k: 'apple', label: 'Apple Music' },
+    { k: 'youtube', label: 'YouTube' },
+  ],
+};
+const sourcesOf = (c: string) => SOURCES_BY_COUNTRY[c] || SOURCES_BY_COUNTRY.kr;
+const labelOf = (c: string, k: string) => sourcesOf(c).find((s) => s.k === k)?.label || '통합';
 const COUNTRY = [{ k: 'jp', label: '일본' }, { k: 'kr', label: '한국' }];
-let chCountry = (localStorage.getItem('lilac.chartCountry') || 'jp');
+let chCountry = localStorage.getItem('lilac.chartCountry') || 'jp';
 
+const RANK_BADGES: [string, string, string][] = [
+  ['billboard', 'B', 'Billboard JAPAN'],
+  ['apple', 'A', 'Apple Music'],
+  ['youtube', 'Y', 'YouTube 조회수'],
+  ['oricon', 'O', '오리콘'],
+];
 const viewsTxt = (n?: number | null) =>
   !n ? '' : n >= 1e8 ? `${(n / 1e8).toFixed(2)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString();
 
 function chartRowsHtml(list: ChartRow[], source: string) {
-  return `<div class="rank-list big">${list.map((e) => `
+  return `<div class="rank-list big">${list.map((e) => {
+    const badges = source === 'combined'
+      ? `<span class="rk-ranks">${RANK_BADGES.filter(([k]) => e.ranks?.[k])
+          .map(([k, s, tt]) => `<span class="mini-rank ${k}" title="${tt} 순위">${s} ${e.ranks![k]}</span>`).join('')}</span>`
+      : '';
+    const move = e.move
+      ? `<span class="rk-move ${e.move}">${e.move === 'new' ? 'NEW' : e.move === 'up' ? '▲' : '▼'}${e.lastRank && e.move !== 'new' ? ` ${Math.abs(e.lastRank - e.rank)}` : ''}</span>`
+      : '';
+    return `
     <div class="rk-row" data-i="${e.rank - 1}">
       <span class="rk-n">${e.rank}</span>
-      <div class="rk-art">${e.artwork ? `<img src="${esc(e.artwork)}" loading="lazy" alt=""/>` : ''}<span class="rk-ov">${icon('i-play')}</span></div>
+      <div class="rk-art">${e.artwork ? `<img src="${esc(e.artwork)}" loading="lazy" alt=""/>` : `<span class="rk-ph">${icon('i-chart')}</span>`}<span class="rk-ov">${icon('i-play')}</span></div>
       <div class="rk-meta">
         <div class="rk-t">${esc(e.title)}</div>
         <div class="rk-a">${esc(e.artist)}</div>
       </div>
       <div class="rk-side">
-        ${source === 'combined' ? `
-          <span class="rk-ranks">
-            ${e.appleRank ? `<span class="mini-rank apple" title="Apple Music 순위">A ${e.appleRank}</span>` : '<span class="mini-rank off">A −</span>'}
-            ${e.youtubeRank ? `<span class="mini-rank yt" title="YouTube 조회수 순위">Y ${e.youtubeRank}</span>` : '<span class="mini-rank off">Y −</span>'}
-          </span>` : ''}
+        ${badges}${move}
         ${e.ytViews ? `<span class="rk-views">${viewsTxt(e.ytViews)}회</span>` : ''}
         ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="뮤직비디오">${icon('i-ext')}</button>` : ''}
       </div>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }).join('')}</div>`;
 }
 
-async function loadChart(country: string, source: string) {
-  return api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
-}
+const loadChart = (country: string, source: string) =>
+  api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
 
-/** 차트 항목을 재생 가능한 트랙으로 해석 */
-async function chartPlayables(list: ChartRow[], from = 0, count = 30): Promise<PlayableTrack[]> {
-  const slice = list.slice(from, from + count);
+async function chartPlayables(list: ChartRow[], from = 0, count = 20): Promise<PlayableTrack[]> {
   const out: PlayableTrack[] = [];
-  for (const e of slice) {
+  for (const e of list.slice(from, from + count)) {
     const hit = await findCatalog(`${e.artist} ${e.title}`);
     out.push(hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork, youtubeId: e.youtubeId });
   }
@@ -435,10 +372,21 @@ function bindChartRows(container: HTMLElement, list: ChartRow[]) {
       const i = Number(row.dataset.i);
       toast('재생 목록을 준비하는 중…');
       const tracks = await chartPlayables(list, Math.max(0, i - 2), 20);
-      const idx = Math.min(i, 2);
-      playQueue(tracks, idx, `chart:${chCountry}`);
+      playQueue(tracks, Math.min(i, 2), `chart:${chCountry}`);
       container.querySelectorAll('.rk-row').forEach((r) => r.classList.remove('playing'));
       row.classList.add('playing');
+    }));
+}
+
+function bindCountryToggle(rerender: () => void) {
+  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
+    b.addEventListener('click', () => {
+      chCountry = b.dataset.c!;
+      localStorage.setItem('lilac.chartCountry', chCountry);
+      // 국가에 없는 소스면 통합으로 되돌린다
+      const seg = location.hash.split('/')[2] || 'combined';
+      if (!sourcesOf(chCountry).some((s) => s.k === seg)) { location.hash = '#/chart/combined'; return; }
+      rerender();
     }));
 }
 
@@ -452,7 +400,7 @@ export async function pageChart(sub?: string) {
         <h1 class="ch-title">실시간 차트</h1>
         <p class="ch-desc" id="chDesc">불러오는 중…</p>
         <div class="ch-controls">
-          <div class="seg">${SOURCES.map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
+          <div class="seg wrap">${sourcesOf(chCountry).map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
           <div class="seg country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
         </div>
       </div>
@@ -466,69 +414,61 @@ export async function pageChart(sub?: string) {
       <div id="chartBody">${skRows(10)}</div>
       <p class="ch-method" id="chMethod"></p>
     </section>`;
-
-  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
-    b.addEventListener('click', () => {
-      chCountry = b.dataset.c!; localStorage.setItem('lilac.chartCountry', chCountry); pageChart(source);
-    }));
+  bindCountryToggle(() => pageChart(source));
 
   const data = await loadChart(chCountry, source);
   const body = document.getElementById('chartBody');
-  if (!data || !body) { if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p><span>node backend/collect-charts.mjs 로 수집해 주세요</span></div>`; return; }
-
+  if (!data || !body) {
+    if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p><span>node backend/collect-charts.mjs 로 수집해 주세요</span></div>`;
+    return;
+  }
   const list = data.list as ChartRow[];
-  $('#chDesc').textContent = `${data.countryLabel} · ${SOURCES.find((s) => s.k === source)?.label} · ${list.length}곡`;
+  $('#chDesc').textContent = `${data.countryLabel} · ${labelOf(chCountry, source)} · ${list.length}곡`;
   $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
-  $('#chMethod').textContent = data.method;
+  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
   body.innerHTML = chartRowsHtml(list, source);
   bindChartRows(body, list);
   if (list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), list[0].artwork);
 
-  $('#chPlayAll').addEventListener('click', async () => {
+  const playFrom = async (shuffle: boolean) => {
     toast('재생 목록을 준비하는 중…');
     const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(tr, 0, `chart:${chCountry}`);
-  });
-  $('#chShuffle').addEventListener('click', async () => {
-    toast('재생 목록을 준비하는 중…');
-    const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(tr.sort(() => Math.random() - 0.5), 0, `chart:${chCountry}`);
-  });
+    if (tr.length) playQueue(shuffle ? tr.sort(() => Math.random() - 0.5) : tr, 0, `chart:${chCountry}`);
+  };
+  $('#chPlayAll').addEventListener('click', () => playFrom(false));
+  $('#chShuffle').addEventListener('click', () => playFrom(true));
 }
 
 /* ---- 플레이 모드 차트 (스포티파이 플리 구조) ---- */
 async function pageChartPlay(sub?: string) {
   const source = sub || 'combined';
-  const label = SOURCES.find((s) => s.k === source)?.label || '통합';
   root().innerHTML = `
     <section class="sp-page">
       <div id="chHead"></div>
       <div class="sp-actions">
         <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
         <button class="tbtn big-ghost" id="chShuffle" title="셔플">${icon('i-shuffle')}</button>
-        <div class="seg small">${SOURCES.map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
+        <div class="seg small wrap">${sourcesOf(chCountry).map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
         <div class="seg small country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
       </div>
       <div class="sp-body"><div id="chBody">${skRows(10)}</div><p class="ch-method" id="chMethod"></p></div>
     </section>`;
-
-  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
-    b.addEventListener('click', () => {
-      chCountry = b.dataset.c!; localStorage.setItem('lilac.chartCountry', chCountry); pageChartPlay(source);
-    }));
+  bindCountryToggle(() => pageChartPlay(source));
 
   const data = await loadChart(chCountry, source);
   const head = document.getElementById('chHead');
   const body = document.getElementById('chBody');
-  if (!data || !head || !body) { if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p></div>`; return; }
-
+  if (!data || !head || !body) {
+    if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p></div>`;
+    return;
+  }
   const list = data.list as ChartRow[];
-  const covers = list.slice(0, 4).map((e) => e.artwork).filter(Boolean) as string[];
+  const covers = list.slice(0, 8).map((e) => e.artwork).filter(Boolean) as string[];
   head.innerHTML = spHeader({
     label: `${data.countryLabel} 차트`,
-    title: `${label} 차트`,
-    meta: `<span class="live-badge on">수집</span>${data.method.slice(0, 46)}…<span class="sep">·</span>${list.length}곡`,
-    mosaic: covers.length >= 4 ? covers : undefined,
+    title: `${labelOf(chCountry, source)} 차트`,
+    meta: `<span class="live-badge on">수집</span>${list.length}곡<span class="sep">·</span>${new Date(data.updated).toLocaleDateString()} 기준`,
+    mosaic: covers.length >= 4 ? covers.slice(0, 4) : undefined,
     cover: covers[0],
   });
   if (covers[0]) void applyTone(document.querySelector('.sp-head'), covers[0]);
@@ -536,18 +476,15 @@ async function pageChartPlay(sub?: string) {
 
   body.innerHTML = chartRowsHtml(list, source);
   bindChartRows(body, list);
-  $('#chMethod').textContent = data.method;
+  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
 
-  $('#chPlayAll').addEventListener('click', async () => {
+  const playFrom = async (shuffle: boolean) => {
     toast('재생 목록을 준비하는 중…');
     const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(tr, 0, `chart:${chCountry}`);
-  });
-  $('#chShuffle').addEventListener('click', async () => {
-    toast('재생 목록을 준비하는 중…');
-    const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(tr.sort(() => Math.random() - 0.5), 0, `chart:${chCountry}`);
-  });
+    if (tr.length) playQueue(shuffle ? tr.sort(() => Math.random() - 0.5) : tr, 0, `chart:${chCountry}`);
+  };
+  $('#chPlayAll').addEventListener('click', () => playFrom(false));
+  $('#chShuffle').addEventListener('click', () => playFrom(true));
 }
 
 /* ================= 스토어 (BM: 일본 내수반 정식 공동구매) ================= */
