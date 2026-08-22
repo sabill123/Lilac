@@ -2,7 +2,19 @@ export interface CatalogTrack { id: number; title: string; artist: string; album
 export interface Artist { id: string; name: string; nameJa: string; genre: string; searchTerm: string; operator: string; official: string; }
 export interface SeedTrack { id: string; title: string; artist: string; artistId: string; tag: string; youtubeId: string | null; ytViews: number; searchTerm: string; }
 export interface Ev { id: string; type: string; title: string; artist: string; date: string; venue: string; note: string; }
-export interface Product { id: string; name: string; brand: string; price: number; badge: string; searchTerm: string; operator: string; officialUrl: string; towerUrl: string; desc: string; options: string[]; stock: number; }
+export interface Edition {
+  id: string; label: string; jpy: number; feeKind: string; real: boolean; digital?: boolean;
+  pricing: { jpy: number; rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number };
+}
+export interface Product {
+  id: string; name: string; brand: string; artistId: string;
+  size: 'single' | 'mini' | 'album'; sizeLabel: string; badge: string;
+  price: number; editions: Edition[];
+  rate: number; rateDate: string; rateLive: boolean;
+  releaseDate: string; trackCount: number; artwork: string; appleUrl: string;
+  digitalJpy: number | null; operator: string; officialUrl: string; towerUrl: string;
+  searchTerm: string; stock: number; desc: string;
+}
 export interface PlayableTrack { title: string; artist: string; album?: string; artwork?: string; preview?: string; youtubeId?: string | null; addedAt?: string; durationMs?: number; }
 export interface User { id: string; email: string; name: string; language: string; plan: { tier: string; name: string; renewsAt: string | null }; credits: number; createdAt: string; paymentMethods: { id: string; brand: string; last4: string }[]; }
 

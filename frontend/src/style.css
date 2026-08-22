@@ -1834,3 +1834,73 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .fatal-actions { margin: 24px 0 16px; }
 .fatal-actions .btn-pill { width: auto; padding: 12px 32px; }
 .fatal-hint { font-size: 12px; color: var(--ink-faint); }
+
+/* ============================================================
+   v1.5 — 스토어 실연동 (BM 기반 가격)
+   ============================================================ */
+.store-hero2 { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; background: #f6f6f7; padding: 34px 36px; margin-bottom: 26px; }
+.store-hero2 h2 { font-size: clamp(21px, 2.6vw, 30px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.35; color: var(--paper-ink); }
+.store-hero2 .sh-sub { font-size: 13.5px; color: #6b6d74; margin-top: 12px; max-width: 520px; line-height: 1.7; }
+.store-hero2 .sh-sub b { color: var(--paper-ink); }
+.fx-line { margin-top: 14px; font-size: 13px; color: var(--paper-ink); display: flex; align-items: center; gap: 8px; }
+.sh-stats { display: flex; gap: 26px; }
+.sh-stats div { text-align: center; }
+.sh-stats b { display: block; font-size: 26px; font-weight: 800; color: var(--paper-ink); font-variant-numeric: tabular-nums; }
+.sh-stats span { font-size: 11.5px; color: var(--paper-muted); }
+@media (max-width: 860px) { .store-hero2 { grid-template-columns: 1fr; padding: 22px; } .sh-stats { gap: 18px; } }
+
+.st-filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.st-filters .chips { margin-top: 0; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.st-filters .chips::-webkit-scrollbar { display: none; }
+body:not(.play-mode) .st-filters .chip { background: #f0f0f2; color: #55585f; }
+body:not(.play-mode) .st-filters .chip:hover { background: #e6e6e9; }
+body:not(.play-mode) .st-filters .chip.on { background: var(--paper-ink); color: #fff; }
+.st-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 12.5px; }
+body:not(.play-mode) .st-bar { color: var(--paper-muted); }
+.st-bar select { border: 1px solid #d9dade; background: #fff; color: var(--paper-ink); font-family: inherit; font-size: 12.5px; padding: 8px 12px; border-radius: 2px; }
+.st-more-wrap { display: flex; justify-content: center; margin: 30px 0 10px; }
+.st-more { min-width: 190px; justify-content: center; }
+
+/* 상품 카드 */
+.p-card .p-img { position: relative; aspect-ratio: 1; background: #f6f6f7; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.p-card .p-img img { width: 100%; height: 100%; object-fit: cover; box-shadow: none; }
+.p-badge.ltd { background: var(--accent); color: var(--accent-ink); }
+.p-stock { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,.72); color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.p-sub { font-size: 11.5px; color: var(--paper-muted); margin-top: 3px; }
+body.play-mode .p-sub { color: var(--ink-faint); }
+
+/* 상품 상세: 에디션 선택 + 가격 산출 */
+.pd-meta-line { font-size: 12.5px; color: var(--paper-muted); margin-top: 6px; }
+body.play-mode .pd-meta-line { color: var(--ink-faint); }
+.pd-ed { display: flex; flex-direction: column; gap: 8px; margin: 18px 0 6px; }
+.ed {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center;
+  border: 1px solid #d9dade; background: #fff; border-radius: 6px; padding: 13px 16px;
+  font-family: inherit; text-align: left; cursor: pointer; transition: all var(--dur-micro);
+}
+.ed:hover { border-color: #9c9ea4; }
+.ed.on { border-color: var(--paper-ink); box-shadow: inset 0 0 0 1px var(--paper-ink); }
+.ed-label { font-size: 13.5px; font-weight: 700; color: var(--paper-ink); display: flex; align-items: center; gap: 8px; }
+.ed-price { font-size: 15px; font-weight: 800; color: var(--paper-ink); font-variant-numeric: tabular-nums; }
+.ed-jpy { grid-column: 1 / -1; font-size: 11.5px; color: var(--paper-muted); }
+body.play-mode .ed { background: rgba(255,255,255,.04); border-color: var(--rule); }
+body.play-mode .ed:hover { border-color: var(--rule-strong); }
+body.play-mode .ed.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+body.play-mode .ed-label, body.play-mode .ed-price { color: var(--ink); }
+body.play-mode .ed-jpy { color: var(--ink-faint); }
+
+.pd-calc { margin-top: 22px; border-top: 1px solid var(--paper-rule); padding-top: 18px; }
+body.play-mode .pd-calc { border-top-color: var(--rule); }
+.calc-title { font-size: 12.5px; font-weight: 700; color: var(--paper-ink); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+body.play-mode .calc-title { color: var(--ink); }
+.calc-note { font-size: 11px; font-weight: 500; color: var(--paper-muted); }
+.calc-table { width: 100%; max-width: 520px; border-collapse: collapse; font-size: 12.5px; }
+.calc-table th { text-align: left; font-weight: 600; color: var(--paper-muted); padding: 7px 0; width: 110px; }
+.calc-table td { padding: 7px 0; color: var(--paper-ink); font-variant-numeric: tabular-nums; }
+.calc-table .calc-src { color: var(--paper-muted); font-size: 11.5px; text-align: right; }
+.calc-table .calc-total th, .calc-table .calc-total td { border-top: 1px solid var(--paper-rule); padding-top: 10px; font-weight: 800; font-size: 14px; color: var(--paper-ink); }
+body.play-mode .calc-table th, body.play-mode .calc-table .calc-src { color: var(--ink-faint); }
+body.play-mode .calc-table td { color: var(--ink); }
+body.play-mode .calc-table .calc-total th, body.play-mode .calc-table .calc-total td { border-top-color: var(--rule); color: var(--ink); }
+.pd-img img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 760px) { .calc-table { font-size: 11.5px; } .calc-table th { width: 84px; } }

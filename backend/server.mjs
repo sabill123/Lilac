@@ -29,7 +29,7 @@ const hash = (s) => createHash('sha256').update(s).digest('hex');
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.3' }));
 
 /* ================= 공개 컬렉션 ================= */
-const COLLECTIONS = new Set(['artists', 'tracks', 'events', 'products']);
+const COLLECTIONS = new Set(['artists', 'tracks', 'events', 'products', 'fx']);
 app.get('/api/db/:name', async (req, res) => {
   if (!COLLECTIONS.has(req.params.name)) return res.status(404).json({ error: 'unknown collection' });
   res.json(await readJson(req.params.name, []));
@@ -373,7 +373,10 @@ app.post('/api/orders', async (req, res) => {
   if (!product) return res.status(404).json({ error: 'product not found' });
   const user = await currentUser();
   if (!user) return res.status(401).json({ error: '로그인이 필요합니다' });
-  const total = product.price * (Number(qty) || 1);
+  // 선택한 사양(에디션)의 가격으로 결제
+  const edition = (product.editions || []).find((e) => e.label === option || e.id === option);
+  const unit = edition?.pricing?.total ?? product.price;
+  const total = unit * (Number(qty) || 1);
   const users = await readJson('users', []);
   const u = users.find((x) => x.id === user.id);
   if (u.credits < total) return res.status(402).json({ error: `크레딧이 부족합니다 (보유 ${u.credits.toLocaleString()} / 필요 ${total.toLocaleString()})` });
@@ -382,7 +385,9 @@ app.post('/api/orders', async (req, res) => {
   const orders = await readJson('user/orders', []);
   const order = {
     id: 'LO-' + Date.now().toString(36).toUpperCase(), productId, name: product.name, brand: product.brand,
-    option: option || product.options?.[0], qty: Number(qty) || 1, total,
+    option: edition?.label || option || '통상반', qty: Number(qty) || 1, unit, total,
+    artwork: product.artwork,
+    breakdown: edition?.pricing ? { ...edition.pricing, rateDate: product.rateDate } : null,
     status: '예약 접수', orderedAt: new Date().toISOString(),
   };
   orders.unshift(order);

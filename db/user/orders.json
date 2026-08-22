@@ -1,5 +1,28 @@
 [
   {
+    "id": "LO-MT4F745G",
+    "productId": "it-6793398195",
+    "name": "Monstruo - Single",
+    "brand": "Ado",
+    "option": "통상반 CD (싱글)",
+    "qty": 1,
+    "unit": 16200,
+    "total": 16200,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/aa/c4/ab/aac4ab69-4af5-db18-4ffd-0199ae43188c/26UMGIM92689.rgb.jpg/600x600bb.jpg",
+    "breakdown": {
+      "jpy": 1320,
+      "rate": 8.7224,
+      "base": 11514,
+      "feeRate": 0.1,
+      "fee": 1151,
+      "shipping": 3500,
+      "total": 16200,
+      "rateDate": "2026-08-21"
+    },
+    "status": "예약 접수",
+    "orderedAt": "2026-08-22T13:34:48.772Z"
+  },
+  {
     "id": "LO-MT2PSHBV",
     "productId": "p6",
     "name": "凡人 (통상반)",
