@@ -15,6 +15,23 @@ const skCards = (n = 6, round = false) => `<div class="shelf">${Array.from({ len
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 const root = () => $('#page');
+/** 플레이 모드 = 전 페이지 스포티파이 디자인 */
+const isPlay = () => document.body.classList.contains('play-mode');
+
+/** 스포티파이식 페이지 헤더 (플리/차트/스토어/일정 공용) */
+function spHeader(o: { label: string; title: string; meta: string; cover?: string; coverIcon?: string; mosaic?: string[] }) {
+  const cover = o.mosaic?.length
+    ? `<div class="sp-cover mosaic" data-tilt="9">${o.mosaic.map((a) => `<span style="background-image:url(${esc(a)})"></span>`).join('')}</div>`
+    : o.cover
+      ? `<div class="sp-cover" style="background-image:url(${esc(o.cover)})" data-tilt="9"></div>`
+      : `<div class="sp-cover empty" data-tilt="9">${icon(o.coverIcon || 'i-queue', 'ic ph-ic')}</div>`;
+  return `<div class="sp-head">${cover}
+    <div class="sp-info">
+      <p class="sp-label">${esc(o.label)}</p>
+      <h1 class="sp-title plain">${esc(o.title)}</h1>
+      <p class="sp-meta">${o.meta}</p>
+    </div></div>`;
+}
 
 let artists: Artist[] = [];
 let seeds: SeedTrack[] = [];
@@ -179,6 +196,7 @@ function fillEventArts(container: HTMLElement) {
 
 /* ================= 홈 ================= */
 export async function pageHome() {
+  if (isPlay()) return pageHomePlay();
   const feat = seeds.find((s) => s.id === 't5') ?? seeds[0];
   root().innerHTML = `
     <section class="billboard" id="bb">
@@ -281,7 +299,93 @@ export async function pageHome() {
 }
 
 /* ================= 차트 ================= */
+/* ---- 플레이 모드 홈 (스포티파이 홈) ---- */
+async function pageHomePlay() {
+  const hour = new Date().getHours();
+  const greet = hour < 6 ? '깊은 밤이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
+  root().innerHTML = `
+    <section class="sec home-play">
+      <h1 class="greet">${greet}</h1>
+      <div class="quick-grid" id="hQuick"></div>
+    </section>
+    <section class="sec"><div class="sec-head"><h2>최근 재생</h2><a class="sec-link" href="#/library/history">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hRecent">${skCards(6)}</div></section>
+    <section class="sec"><div class="sec-head"><h2>오늘의 추천</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hPicks">${skCards(6)}</div></section>
+    <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2></div><div id="hArtists">${skCards(7, true)}</div></section>
+    <section class="sec"><div class="sec-head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>`;
+
+  // 바로 가기
+  const [lists, likes, hist] = await Promise.all([
+    api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/history').catch(() => []),
+  ]);
+  const quick = [
+    ...(likes.length ? [{ name: t('lib.likes'), href: '#/library/likes', liked: true, art: '' }] : []),
+    ...lists.slice(0, 5).map((p: { id: string; name: string; tracks: PlayableTrack[] }) => ({ name: p.name, href: `#/playlist/${p.id}`, liked: false, art: p.tracks[0]?.artwork || '' })),
+  ].slice(0, 6);
+  $('#hQuick').innerHTML = quick.length ? quick.map((q) => `
+    <a class="quick" href="${q.href}">
+      <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
+      <b>${esc(q.name)}</b><span class="quick-play">${icon('i-play')}</span></a>`).join('')
+    : `<p class="loading">플레이리스트를 만들면 여기에 표시됩니다</p>`;
+
+  // 최근 재생
+  const recent: PlayableTrack[] = (hist as PlayableTrack[]).filter((h, i, arr) => arr.findIndex((x) => x.title === h.title) === i).slice(0, 6);
+  if (recent.length) {
+    $('#hRecent').innerHTML = `<div class="shelf">${recent.map((h, i) => `
+      <a class="card" href="javascript:void 0" data-r="${i}" data-tilt="8" data-expand>
+        <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
+          <button class="hover-play" data-play="${i}">${icon('i-play')}</button></div>
+        <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
+    $('#hRecent').querySelectorAll<HTMLElement>('[data-r]').forEach((el) =>
+      el.addEventListener('click', () => playQueue(recent, Number(el.dataset.r))));
+  } else {
+    $('#hRecent').innerHTML = `<div class="empty-box sm">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p></div>`;
+  }
+
+  // 오늘의 추천 (시드곡)
+  const hits = await Promise.all(seeds.slice(0, 6).map((s) => findCatalog(s.searchTerm)));
+  const picks = hits.map((h, i) => (h ? toPlayable(h, seeds[i].youtubeId) : null)).filter(Boolean) as PlayableTrack[];
+  const pickBox = document.getElementById('hPicks');
+  if (pickBox) {
+    pickBox.innerHTML = `<div class="shelf">${picks.map((h, i) => `
+      <a class="card" href="javascript:void 0" data-p="${i}" data-tilt="8" data-expand>
+        <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
+          <button class="hover-play" data-play="${i}">${icon('i-play')}</button></div>
+        <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
+    pickBox.querySelectorAll<HTMLElement>('[data-p]').forEach((el) =>
+      el.addEventListener('click', () => playQueue(picks, Number(el.dataset.p))));
+  }
+
+  // 아티스트
+  const ab = document.getElementById('hArtists');
+  if (ab) {
+    ab.innerHTML = shelf(artists.map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm })));
+    fillShelfArts(ab);
+  }
+
+  // 무드
+  const moods = [
+    { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' },
+    { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
+    { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' },
+    { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
+    { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' },
+    { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
+  ];
+  const mb = document.getElementById('hMoods');
+  if (mb) {
+    mb.innerHTML = moods.map((m) => `
+      <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-tilt="6">
+        <span class="mood-k">${m.k}</span><span class="mood-sq"></span></a>`).join('');
+    moods.forEach(async (m, i) => {
+      const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
+      const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
+      if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
+    });
+  }
+}
+
 export async function pageChart(sub?: string) {
+  if (isPlay()) return pageChartPlay(sub);
   const source = sub || 'combined';
   const desc: Record<string, string> = {
     combined: 'Apple Music 순위와 YouTube 조회수를 합산한 Lilac 종합 순위입니다.',
@@ -324,8 +428,81 @@ export async function pageChart(sub?: string) {
   });
 }
 
+/* ---- 플레이 모드 차트 (스포티파이 플리 페이지 구조) ---- */
+async function pageChartPlay(sub?: string) {
+  const source = sub || 'combined';
+  const label: Record<string, string> = { combined: '종합 차트', apple: 'Apple Music 차트', youtube: 'YouTube 차트' };
+  root().innerHTML = `
+    <section class="sp-page">
+      <div id="chHead"></div>
+      <div class="sp-actions">
+        <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
+        <button class="tbtn big-ghost" id="chShuffle" title="셔플">${icon('i-shuffle')}</button>
+        <div class="seg small">${(['combined', 'apple', 'youtube'] as const).map((s) => `<a class="seg-btn ${s === source ? 'on' : ''}" href="#/chart/${s}">${t('chart.' + s)}</a>`).join('')}</div>
+      </div>
+      <div class="sp-body"><div id="chBody">${skRows(8)}</div></div>
+    </section>`;
+
+  const data = await api(`/api/chart?source=${source}`).catch(() => null);
+  const head = document.getElementById('chHead');
+  if (!data || !head) { const b = document.getElementById('chBody'); if (b) b.innerHTML = '<p class="loading">차트를 불러오지 못했습니다</p>'; return; }
+
+  const entries = data.list as { rank: number; title: string; artist: string; artwork?: string; searchTerm?: string; youtubeId?: string | null; ytViews?: number }[];
+  const covers = entries.slice(0, 4).map((e) => e.artwork).filter(Boolean) as string[];
+  head.innerHTML = spHeader({
+    label: '차트',
+    title: label[source],
+    meta: `${data.live ? '<span class="live-badge on">실시간</span>' : ''}${esc(data.note)}<span class="sep">·</span>${entries.length}곡`,
+    mosaic: covers.length >= 4 ? covers : undefined,
+    cover: covers[0],
+  });
+  if (covers[0]) void applyTone(document.querySelector('.sp-head'), covers[0]);
+  bindTilt(root());
+
+  // 트랙 테이블로 렌더링 (스포티파이 동일)
+  const rows: PlayableTrack[] = entries.map((e) => ({
+    title: e.title, artist: e.artist, artwork: e.artwork,
+    album: e.ytViews ? `${(e.ytViews / 1e8).toFixed(2)}억 회` : '',
+  }));
+  const body = document.getElementById('chBody')!;
+  body.innerHTML = trackTable(rows, { album: true, date: false, sticky: true });
+  // 열 제목 교체
+  const alHead = body.querySelector('.t-head .t-al');
+  if (alHead) alHead.textContent = source === 'youtube' ? '조회수' : '지표';
+
+  // 재생 시 카탈로그에서 실제 프리뷰 해석
+  const resolveAll = async () => {
+    const out: PlayableTrack[] = [];
+    for (const e of entries) {
+      const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
+      out.push(hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork });
+    }
+    return out;
+  };
+  body.querySelectorAll<HTMLElement>('.t-row').forEach((row) => {
+    row.addEventListener('click', async (ev) => {
+      if ((ev.target as HTMLElement).closest('.t-a')) return;
+      const list = await resolveAll();
+      playQueue(list, Number(row.dataset.i));
+      body.querySelectorAll('.t-row').forEach((r) => r.classList.remove('playing'));
+      row.classList.add('playing');
+    });
+  });
+  $('#chPlayAll').addEventListener('click', async () => { const l = await resolveAll(); if (l.length) playQueue(l, 0); });
+  $('#chShuffle').addEventListener('click', async () => { const l = await resolveAll(); if (l.length) playQueue(l.sort(() => Math.random() - 0.5), 0); });
+
+  // 아트워크 없는 항목 보충
+  entries.forEach(async (e, i) => {
+    if (e.artwork) return;
+    const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
+    const img = document.querySelectorAll<HTMLImageElement>('#chBody .t-title img')[i];
+    if (hit && img) img.src = artUrl(hit, 100);
+  });
+}
+
 /* ================= 스토어 ================= */
 export async function pageStore() {
+  if (isPlay()) return pageStorePlay();
   const brands = [...new Set(products.map((p) => p.brand))];
   root().innerHTML = `
     <div class="store-wrap page-top full"><div class="store-inner">
@@ -360,6 +537,63 @@ export async function pageStore() {
     el.addEventListener('click', () => {
       document.querySelectorAll('.sn-item').forEach((x) => x.classList.remove('on'));
       el.classList.add('on'); filter = el.dataset.f!; render();
+    }));
+}
+
+/* ---- 플레이 모드 스토어 (다크 스포티파이 그리드) ---- */
+async function pageStorePlay() {
+  const brands = [...new Set(products.map((p) => p.brand))];
+  root().innerHTML = `
+    <section class="sp-page">
+      <div id="stHead"></div>
+      <div class="sp-actions">
+        <div class="chips" id="stChips">
+          <button class="chip on" data-f="all">전체</button>
+          ${brands.map((b) => `<button class="chip" data-f="${esc(b)}">${esc(b)}</button>`).join('')}
+        </div>
+        <select id="stSort" class="dark-select">
+          <option value="new">신상품순</option><option value="low">낮은 가격순</option><option value="high">높은 가격순</option>
+        </select>
+      </div>
+      <div class="sp-body"><div class="lib-grid2" id="stGrid"></div></div>
+    </section>`;
+  const hit = await findCatalog(products[0].searchTerm);
+  const head = document.getElementById('stHead');
+  if (head) {
+    head.innerHTML = spHeader({
+      label: '스토어', title: t('store.title'),
+      meta: `${t('store.sub')}<span class="sep">·</span>${products.length}개 상품`,
+      cover: hit ? artUrl(hit, 400) : undefined, coverIcon: 'i-bag',
+    });
+    if (hit) void applyTone(document.querySelector('.sp-head'), artUrl(hit, 200));
+  }
+  bindTilt(root());
+
+  let filter = 'all';
+  const render = () => {
+    let list = filter === 'all' ? [...products] : products.filter((p) => p.brand === filter);
+    const s = ($('#stSort') as HTMLSelectElement).value;
+    if (s === 'low') list.sort((a, b) => a.price - b.price);
+    if (s === 'high') list.sort((a, b) => b.price - a.price);
+    $('#stGrid').innerHTML = list.map((p) => `
+      <a class="lib-card" href="#/store/${p.id}" data-term="${esc(p.searchTerm)}" data-tilt="7">
+        <div class="lib-cover"><span class="card-badge">${esc(p.badge)}</span></div>
+        <div class="c-title">${esc(p.name)}</div>
+        <div class="c-sub">${esc(p.brand)} · ₩${p.price.toLocaleString()}</div>
+      </a>`).join('');
+    $('#stGrid').querySelectorAll<HTMLElement>('[data-term]').forEach(async (el) => {
+      const h = await findCatalog(el.dataset.term!);
+      const box = el.querySelector('.lib-cover');
+      if (h && box) box.insertAdjacentHTML('afterbegin', `<img src="${artUrl(h, 300)}" alt="" loading="lazy"/>`);
+    });
+    bindTilt($('#stGrid'));
+  };
+  render();
+  $('#stSort').addEventListener('change', render);
+  $('#stChips').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) =>
+    b.addEventListener('click', () => {
+      $('#stChips').querySelectorAll('.chip').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on'); filter = b.dataset.f!; render();
     }));
 }
 

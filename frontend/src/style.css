@@ -1589,3 +1589,73 @@ body:not(.play-mode) .quick-sec { display: none; }
 .sch-go.ext:hover { color: var(--ink); }
 .sch-top { flex-wrap: wrap; }
 .chart-live { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ============================================================
+   v1.2 — 플레이 모드 = 전 페이지 스포티파이 디자인
+   ============================================================ */
+
+/* 홈 */
+.home-play { padding-top: calc(var(--tb-h) + 16px); }
+.greet { font-size: clamp(26px, 3.4vw, 34px); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 20px; }
+.sp-title.plain { cursor: default; }
+.sp-title.plain:hover { text-decoration: none; }
+
+/* 세그먼트(작은 버전) · 다크 셀렉트 */
+.seg.small { margin-top: 0; margin-left: auto; padding: 3px; }
+.seg.small .seg-btn { padding: 7px 16px; font-size: 12.5px; }
+.dark-select { background: var(--bg-soft); border: none; color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 9px 14px; border-radius: 999px; margin-left: auto; }
+
+/* 스토어: 플레이 모드에선 다크 */
+body.play-mode .store-wrap { background: transparent; color: var(--ink); margin-top: 0; }
+body.play-mode .store-inner { padding: 0 var(--gutter) 40px; }
+body.play-mode .store-wrap.page-top { padding-top: 0; }
+body.play-mode .crumb { color: var(--ink-faint); }
+body.play-mode .pd-name, body.play-mode .pd-price, body.play-mode .dark-h { color: var(--ink); }
+body.play-mode .p-brand { color: var(--ink-faint); }
+body.play-mode .pd-desc { color: var(--ink-muted); }
+body.play-mode .pd-row { color: var(--ink); }
+body.play-mode .pd-row.dim { color: var(--ink-faint); }
+body.play-mode .pd-row select, body.play-mode .pd-row input {
+  background: var(--bg-soft); border-color: var(--rule-strong); color: var(--ink);
+}
+body.play-mode .pd-img { background: var(--bg-raised); border-radius: var(--radius-md); }
+body.play-mode .btn-buy { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 28px; font-weight: 800; }
+body.play-mode .btn-out { background: transparent; border-color: var(--rule-strong); color: var(--ink); border-radius: 999px; }
+body.play-mode .btn-out:hover { border-color: var(--ink); }
+body.play-mode .pd-note { color: var(--ink-faint); }
+body.play-mode .pd-tabs { border-bottom-color: var(--rule); }
+body.play-mode .pd-tab { color: var(--ink-muted); }
+body.play-mode .pd-tab:hover { color: var(--ink); }
+body.play-mode .pd-tab.on { color: var(--ink); border-bottom-color: var(--accent); }
+body.play-mode .pd-panel { color: var(--ink-muted); }
+body.play-mode .pd-spec { border-top-color: var(--rule); }
+body.play-mode .pd-spec th { background: rgba(255,255,255,.03); color: var(--ink-faint); border-bottom-color: var(--rule); }
+body.play-mode .pd-spec td { color: var(--ink); border-bottom-color: var(--rule); }
+body.play-mode .pd-ul li::before { background: var(--ink-faint); }
+body.play-mode .pd-ul li.dim { color: var(--ink-faint); }
+body.play-mode .p-card .p-img { background: var(--bg-raised); border-radius: var(--radius-sm); }
+body.play-mode .p-card .p-name { color: var(--ink); }
+body.play-mode .p-card .p-price { color: var(--ink); }
+body.play-mode .p-badge { background: rgba(0,0,0,.7); color: var(--ink); border-radius: 999px; }
+body.play-mode .on-light .rk-row { border-bottom-color: var(--rule); }
+body.play-mode .on-light .rk-row:hover { background: var(--bg-soft); }
+body.play-mode .on-light .rk-t { color: var(--ink); }
+body.play-mode .on-light .rk-a, body.play-mode .on-light .rk-n { color: var(--ink-muted); }
+body.play-mode .on-light .rk-tag { color: var(--ink-muted); border-color: var(--rule-strong); }
+body.play-mode.light-page .topbar.scrolled { background: rgba(22,23,28,.88); }
+body.play-mode .store-nav { border-bottom-color: var(--rule); }
+body.play-mode .sn-item { color: var(--ink-muted); }
+body.play-mode .sn-item.on { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* 일정: 플레이 모드는 스포티파이 톤 */
+body.play-mode .sch-row { background: rgba(255,255,255,.03); border-color: transparent; }
+body.play-mode .sch-row:hover { background: var(--bg-soft); transform: none; }
+body.play-mode .cal-cell { background: rgba(255,255,255,.03); }
+
+/* 계정: 플레이 모드에선 카드 톤 정리 */
+body.play-mode .mp-card { background: rgba(255,255,255,.04); border-color: transparent; }
+body.play-mode .mp-card.accent { background: linear-gradient(135deg, rgba(167,139,250,.2), rgba(255,255,255,.03)); }
+
+/* 플레이 모드 공통: 페이지 상단 여백 */
+body.play-mode .page-top { padding-top: 20px; }
+body.play-mode .lib-page { padding-top: 20px; }

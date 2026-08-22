@@ -53,11 +53,14 @@ function applyMode() {
   $('#btnMode').title = mode === 'play' ? '브라우즈 모드로' : '플레이 모드로';
 }
 export function toggleMode() {
-  if (PLAY_ROUTES.has(currentSeg())) { location.hash = '#/'; userMode = 'browse'; }
-  else userMode = userMode === 'play' ? 'browse' : 'play';
+  const onPlayRoute = PLAY_ROUTES.has(currentSeg());
+  userMode = userMode === 'play' ? 'browse' : 'play';
   localStorage.setItem('lilac.mode', userMode);
   applyMode();
   toast(userMode === 'play' ? '플레이 모드' : '브라우즈 모드');
+  // 모드마다 페이지 레이아웃이 다르므로 다시 렌더링
+  if (onPlayRoute && userMode === 'browse') location.hash = '#/';
+  else route();
 }
 
 /* ---------- 톱바 ---------- */
