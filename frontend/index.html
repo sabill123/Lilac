@@ -45,17 +45,26 @@
 
     <div class="app" id="app">
       <!-- 좌측 사이드바 -->
-      <aside class="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sb-top">
-          <a class="sb-brand" href="#/">Lilac</a>
           <nav class="sb-nav" id="sbNav"></nav>
         </div>
         <div class="sb-lib">
           <div class="sb-lib-head">
-            <span class="sb-lib-title"><svg class="ic"><use href="#i-lib"/></svg><b id="sbLibLabel">보관함</b></span>
-            <button class="sb-add" id="sbAdd" title="플레이리스트 만들기"><svg class="ic"><use href="#i-plus"/></svg></button>
+            <button class="sb-lib-title" id="sbCollapse" title="사이드바 접기">
+              <svg class="ic"><use href="#i-lib"/></svg><b id="sbLibLabel">내 보관함</b>
+            </button>
+            <span class="sb-head-btns">
+              <button class="sb-icon" id="sbAdd" title="플레이리스트 만들기"><svg class="ic"><use href="#i-plus"/></svg></button>
+              <a class="sb-icon" href="#/library/all" title="보관함 전체보기"><svg class="ic"><use href="#i-chev-r"/></svg></a>
+            </span>
           </div>
           <div class="sb-chips" id="sbChips"></div>
+          <div class="sb-tools">
+            <button class="sb-find-btn" id="sbFindBtn" title="보관함에서 찾기"><svg class="ic"><use href="#i-search"/></svg></button>
+            <input class="sb-find" id="sbFind" placeholder="보관함에서 찾기" />
+            <button class="sb-sort" id="sbSort">최근 순 <svg class="ic s"><use href="#i-rows"/></svg></button>
+          </div>
           <div class="sb-list" id="sbList"></div>
         </div>
       </aside>

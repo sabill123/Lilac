@@ -1,5 +1,5 @@
 import './style.css';
-import { api, me, refreshMe, esc, icon } from './api';
+import { api, me, refreshMe, esc, icon, findCatalog } from './api';
 import { initPlayer, loadLikes, toast, playerActions } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
 import type { Locale } from './i18n';
@@ -17,25 +17,77 @@ const NAV = [
 ];
 
 /* ---------- 사이드바 ---------- */
+type SbItem = { id: string; kind: 'likes' | 'playlist' | 'artist'; name: string; sub: string; art: string; href: string; at: string; n: number };
+let sbItems: SbItem[] = [];
+let sbFilter = 'all';
+let sbQuery = '';
+let sbSortMode: 'recent' | 'name' = 'recent';
+
 async function renderSidebar() {
   $('#sbNav').innerHTML = NAV.map((n) =>
-    `<a class="sb-item" data-r="${n.r}" href="${n.href}"><svg class="ic"><use href="#${n.ic}"/></svg><span>${t(n.k)}</span></a>`).join('');
+    `<a class="sb-item" data-r="${n.r}" href="${n.href}" title="${t(n.k)}"><svg class="ic"><use href="#${n.ic}"/></svg><span>${t(n.k)}</span></a>`).join('');
   $('#sbLibLabel').textContent = t('nav.library');
-  $('#sbChips').innerHTML = `
-    <a class="sb-chip" data-r="library" href="#/library/playlists">${t('lib.playlists')}</a>
-    <a class="sb-chip" href="#/library/likes">${t('lib.likes')}</a>
-    <a class="sb-chip" href="#/library/follows">${t('lib.follows')}</a>`;
-  const [lists, likes] = await Promise.all([api('/api/playlists').catch(() => []), api('/api/likes').catch(() => [])]);
-  $('#sbList').innerHTML = `
-    <a class="sb-row" href="#/library/likes">
-      <span class="sb-cover liked">${icon('i-heart-f', 'ic s')}</span>
-      <span class="sb-meta"><b>${t('lib.likes')}</b><i>플레이리스트 · ${likes.length}곡</i></span></a>
-    ${lists.map((p: { id: string; name: string; tracks: { artwork?: string }[] }) => `
-      <a class="sb-row" href="#/playlist/${p.id}" data-pl="${p.id}">
-        <span class="sb-cover" style="background-image:url(${esc(p.tracks[0]?.artwork || '')})">${p.tracks[0]?.artwork ? '' : icon('i-queue', 'ic s')}</span>
-        <span class="sb-meta"><b>${esc(p.name)}</b><i>플레이리스트 · ${p.tracks.length}곡</i></span></a>`).join('')}`;
+  const CHIPS = [
+    { k: 'all', label: '전체' },
+    { k: 'playlist', label: t('lib.playlists') },
+    { k: 'artist', label: t('lib.follows') },
+  ];
+  $('#sbChips').innerHTML = CHIPS.map((c) => `<button class="sb-chip ${c.k === sbFilter ? 'on' : ''}" data-f="${c.k}">${c.label}</button>`).join('');
+  $('#sbChips').querySelectorAll<HTMLButtonElement>('.sb-chip').forEach((b) =>
+    b.addEventListener('click', () => { sbFilter = b.dataset.f!; renderSidebar(); }));
+
+  const [lists, likes, oshi] = await Promise.all([
+    api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/oshi').catch(() => []),
+  ]);
+  sbItems = [
+    ...(likes.length ? [{ id: 'likes', kind: 'likes' as const, name: t('lib.likes'), sub: `플레이리스트 · ${likes.length}곡`, art: '', href: '#/library/likes', at: likes[0]?.likedAt || new Date().toISOString(), n: likes.length }] : []),
+    ...lists.map((p: { id: string; name: string; createdAt: string; tracks: { artwork?: string }[] }) => ({
+      id: p.id, kind: 'playlist' as const, name: p.name, sub: `플레이리스트 · ${p.tracks.length}곡`,
+      art: p.tracks[0]?.artwork || '', href: `#/playlist/${p.id}`, at: p.createdAt, n: p.tracks.length,
+    })),
+    ...oshi.map((o: { artistId: string; name: string; at: string }) => ({
+      id: o.artistId, kind: 'artist' as const, name: o.name, sub: '아티스트',
+      art: '', href: `#/artist/${o.artistId}`, at: o.at, n: 0,
+    })),
+  ];
+  paintSbList();
+}
+
+function paintSbList() {
+  let rows = sbItems.filter((i) => (sbFilter === 'all' ? true : i.kind === sbFilter || (sbFilter === 'playlist' && i.kind === 'likes')));
+  if (sbQuery) rows = rows.filter((i) => i.name.toLowerCase().includes(sbQuery.toLowerCase()));
+  rows.sort((a, b) => (sbSortMode === 'name' ? a.name.localeCompare(b.name) : (b.at || '').localeCompare(a.at || '')));
+
+  const box = $('#sbList');
+  if (!rows.length) {
+    box.innerHTML = `<div class="sb-empty">${icon('i-lib', 'ic')}<p>${sbQuery ? '검색 결과가 없습니다' : '항목이 없습니다'}</p>
+      ${sbQuery ? '' : `<button class="sb-empty-btn" id="sbEmptyNew">${t('lib.newPlaylist')}</button>`}</div>`;
+    document.getElementById('sbEmptyNew')?.addEventListener('click', () => $('#sbAdd').click());
+    return;
+  }
+  box.innerHTML = rows.map((i) => `
+    <a class="sb-row ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-key="${i.kind}:${i.id}" data-term="${i.kind === 'artist' ? esc(i.name) : ''}">
+      <span class="sb-cover ${i.kind === 'likes' ? 'liked' : ''}" ${i.art ? `style="background-image:url(${esc(i.art)})"` : ''}>
+        ${i.kind === 'likes' ? icon('i-heart-f', 'ic s') : i.art ? '' : icon(i.kind === 'artist' ? 'i-mic' : 'i-queue', 'ic s')}
+        <span class="sb-play">${icon('i-play')}</span>
+      </span>
+      <span class="sb-meta"><b>${esc(i.name)}</b><i>${esc(i.sub)}</i></span>
+      <span class="sb-eq"><span class="np-eq"><i></i><i></i><i></i></span></span>
+    </a>`).join('');
+
+  // 아티스트 커버 보충
+  box.querySelectorAll<HTMLElement>('.sb-row[data-term]').forEach(async (el) => {
+    if (!el.dataset.term) return;
+    const a = ARTIST_TERMS.get(el.dataset.term);
+    if (!a) return;
+    const hit = await findCatalog(a);
+    const cov = el.querySelector<HTMLElement>('.sb-cover');
+    if (hit && cov) cov.style.backgroundImage = `url(${hit.artwork.replace('400x400', '200x200')})`;
+  });
   markActive();
 }
+
+const ARTIST_TERMS = new Map<string, string>();
 
 /* ---------- 모드 (브라우즈 / 플레이) ---------- */
 type Mode = 'browse' | 'play';
@@ -82,8 +134,11 @@ function markActive() {
   const r = (location.hash.split('/')[1] || 'home').split('?')[0] || 'home';
   document.querySelectorAll('[data-r]').forEach((el) =>
     el.classList.toggle('on', (el as HTMLElement).dataset.r === r));
-  document.querySelectorAll<HTMLElement>('.sb-row[data-pl]').forEach((el) =>
-    el.classList.toggle('on', location.hash === `#/playlist/${el.dataset.pl}`));
+  document.querySelectorAll<HTMLElement>('.sb-row[data-key]').forEach((el) => {
+    const [kind, id] = (el.dataset.key || '').split(':');
+    const target = kind === 'playlist' ? `#/playlist/${id}` : kind === 'artist' ? `#/artist/${id}` : '#/library/likes';
+    el.classList.toggle('on', location.hash === target);
+  });
 }
 
 /* ---------- 지구본 ---------- */
@@ -160,6 +215,25 @@ async function boot() {
     await renderSidebar();
     location.hash = `#/playlist/${pl.id}`;
   });
+  // 사이드바 접기 / 검색 / 정렬
+  $('#sbCollapse').addEventListener('click', () => {
+    const c = document.body.classList.toggle('sb-collapsed');
+    localStorage.setItem('lilac.sbCollapsed', c ? '1' : '0');
+  });
+  if (localStorage.getItem('lilac.sbCollapsed') === '1') document.body.classList.add('sb-collapsed');
+  $('#sbFindBtn').addEventListener('click', () => {
+    document.querySelector('.sb-tools')!.classList.add('open');
+    ($('#sbFind') as HTMLInputElement).focus();
+  });
+  $('#sbFind').addEventListener('input', (e) => { sbQuery = (e.target as HTMLInputElement).value; paintSbList(); });
+  $('#sbFind').addEventListener('blur', () => {
+    if (!sbQuery) document.querySelector('.sb-tools')!.classList.remove('open');
+  });
+  $('#sbSort').addEventListener('click', () => {
+    sbSortMode = sbSortMode === 'recent' ? 'name' : 'recent';
+    $('#sbSort').firstChild!.textContent = sbSortMode === 'recent' ? '최근 순 ' : '이름순 ';
+    paintSbList();
+  });
 
   $('#connectApple').addEventListener('click', async () => {
     const kit = await initMusicKitIfConfigured();
@@ -199,6 +273,7 @@ async function boot() {
 
   applyMode();
   await Promise.all([loadData(), refreshMe(), loadLikes()]);
+  (await api('/api/db/artists').catch(() => [])).forEach((a: { name: string; searchTerm: string }) => ARTIST_TERMS.set(a.name, a.searchTerm));
   renderTopbar();
   await renderSidebar();
   await route();
