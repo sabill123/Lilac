@@ -85,6 +85,84 @@ app.get('/api/catalog/albums', async (req, res) => {
   } catch (e) { res.status(502).json({ error: 'itunes upstream failed', detail: String(e) }); }
 });
 
+/* ================= YouTube 실시간 통계 ================= */
+// 공개 watch 페이지에서 조회수·게시일을 읽는다 (API 키 불필요). 30분 캐시.
+const ytCache = new Map(); // id -> { at, views, publishDate, title }
+const YT_TTL = 30 * 60 * 1000;
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+async function ytStat(id) {
+  const hit = ytCache.get(id);
+  if (hit && Date.now() - hit.at < YT_TTL) return hit;
+  try {
+    const r = await fetch(`https://www.youtube.com/watch?v=${id}`, { headers: { 'user-agent': UA, 'accept-language': 'ja,en;q=0.8' } });
+    const html = await r.text();
+    const views = Number(html.match(/"viewCount":"(\d+)"/)?.[1] || 0);
+    const publishDate = html.match(/"publishDate":"([^"]+)"/)?.[1] || html.match(/"uploadDate":"([^"]+)"/)?.[1] || null;
+    const title = html.match(/<meta name="title" content="([^"]+)"/)?.[1] || null;
+    const rec = { at: Date.now(), views, publishDate, title, live: views > 0 };
+    if (views) ytCache.set(id, rec);
+    return rec;
+  } catch {
+    return { at: Date.now(), views: 0, publishDate: null, title: null, live: false };
+  }
+}
+
+app.get('/api/youtube/stats', async (req, res) => {
+  const ids = String(req.query.ids || '').split(',').map((s) => s.trim()).filter(Boolean).slice(0, 12);
+  if (!ids.length) return res.status(400).json({ error: 'ids required' });
+  const out = {};
+  await Promise.all(ids.map(async (id) => { out[id] = await ytStat(id); }));
+  res.json({ stats: out, cachedFor: '30m' });
+});
+
+/* ================= 실제 발매 일정 (iTunes releaseDate 기반) ================= */
+let releaseCache = { at: 0, data: null };
+app.get('/api/releases', async (_req, res) => {
+  if (Date.now() - releaseCache.at < 60 * 60 * 1000 && releaseCache.data) return res.json(releaseCache.data);
+  const artists = await readJson('artists', []);
+  const out = [];
+  await Promise.all(artists.map(async (a) => {
+    try {
+      const url = `https://itunes.apple.com/search?media=music&entity=album&country=jp&limit=6&term=${encodeURIComponent(a.searchTerm)}`;
+      const r = await fetch(url, { headers: { 'user-agent': 'lilac-demo/0.3' } });
+      const j = await r.json();
+      (j.results || [])
+        .filter((x) => x.artistName === a.searchTerm || x.artistName === a.name || x.artistName === a.nameJa)
+        .forEach((x) => out.push({
+          id: `rel-${x.collectionId}`, type: '발매', source: 'apple',
+          title: x.collectionName, artist: a.name, artistId: a.id,
+          date: (x.releaseDate || '').slice(0, 10),
+          venue: `${x.trackCount}곡 · ${x.collectionPrice > 0 ? `¥${x.collectionPrice}` : '스트리밍'}`,
+          note: 'Apple Music 카탈로그 기준 실제 발매일',
+          artwork: (x.artworkUrl100 || '').replace('100x100', '400x400'),
+          url: x.collectionViewUrl,
+        }));
+    } catch { /* skip */ }
+  }));
+  out.sort((x, y) => y.date.localeCompare(x.date));
+  const data = { updated: new Date().toISOString(), count: out.length, releases: out.slice(0, 40) };
+  releaseCache = { at: Date.now(), data };
+  res.json(data);
+});
+
+/* ================= 아티스트 실제 지표 ================= */
+app.get('/api/artist/:id/stats', async (req, res) => {
+  const artists = await readJson('artists', []);
+  const tracks = await readJson('tracks', []);
+  const a = artists.find((x) => x.id === req.params.id);
+  if (!a) return res.status(404).json({ error: 'artist not found' });
+  const mine = tracks.filter((t) => t.artistId === a.id && t.youtubeId);
+  const stats = await Promise.all(mine.map((t) => ytStat(t.youtubeId)));
+  const totalViews = stats.reduce((s, x) => s + (x.views || 0), 0);
+  const live = stats.some((x) => x.live);
+  res.json({
+    artistId: a.id, trackCount: mine.length, totalViews, live,
+    source: 'YouTube 공식 MV 누적 조회수 합산',
+    tracks: mine.map((t, i) => ({ title: t.title, youtubeId: t.youtubeId, views: stats[i].views, publishDate: stats[i].publishDate })),
+  });
+});
+
 /* ================= 차트 (Apple 실시간 + YouTube 조회수 + 합산) ================= */
 let appleChartCache = { at: 0, data: null };
 async function fetchAppleChart() {
@@ -106,11 +184,15 @@ const norm = (s) => String(s).toLowerCase().replace(/[\s()\[\]『』「」【】
 app.get('/api/chart', async (req, res) => {
   const source = String(req.query.source || 'combined');
   const seeds = await readJson('tracks', []);
-  const yt = seeds
-    .slice().sort((a, b) => b.ytViews - a.ytViews)
-    .map((t, i) => ({ rank: i + 1, title: t.title, artist: t.artist, ytViews: t.ytViews, youtubeId: t.youtubeId, searchTerm: t.searchTerm, tag: t.tag, source: 'youtube' }));
+  // 실시간 조회수를 가져오고, 실패 시에만 시드값으로 폴백
+  const liveStats = await Promise.all(seeds.map((t) => (t.youtubeId ? ytStat(t.youtubeId) : Promise.resolve({ views: 0, live: false }))));
+  const anyLive = liveStats.some((s) => s.live);
+  const withViews = seeds.map((t, i) => ({ ...t, views: liveStats[i].views || t.ytViews, live: liveStats[i].live }));
+  const yt = withViews
+    .slice().sort((a, b) => b.views - a.views)
+    .map((t, i) => ({ rank: i + 1, title: t.title, artist: t.artist, ytViews: t.views, youtubeId: t.youtubeId, searchTerm: t.searchTerm, tag: t.tag, source: 'youtube', live: t.live }));
   try {
-    if (source === 'youtube') return res.json({ source, updated: new Date().toISOString(), note: '공식 MV 누적 조회수 기준 (Lilac 큐레이션)', list: yt });
+    if (source === 'youtube') return res.json({ source, updated: new Date().toISOString(), note: anyLive ? '공식 MV 누적 조회수 (YouTube 실시간 수집)' : '공식 MV 누적 조회수 (캐시된 마지막 값)', live: anyLive, list: yt });
     const apple = await fetchAppleChart();
     if (source === 'apple') return res.json({ source, updated: new Date(appleChartCache.at).toISOString(), note: 'Apple Music 일본 최다 재생 (실시간 공식 피드)', list: apple });
     // combined: 랭크 포인트 합산 (apple: 26-rank, youtube: (11-rank)*2), 곡 매칭은 정규화 문자열

@@ -1574,3 +1574,18 @@ body:not(.play-mode) .quick-sec { display: none; }
 .pd-ul li.dim { color: var(--paper-muted); font-size: 12.5px; }
 .pd-panel .pd-actions { margin-top: 18px; }
 @media (max-width: 760px) { .pd-tabs { gap: 18px; margin-top: 34px; } .pd-tab { font-size: 13px; } .pd-spec th { width: 96px; } }
+
+/* ============================================================
+   v1.1 — 실데이터 연동 표기
+   ============================================================ */
+.src-badge { font-size: 10px; font-weight: 800; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.src-badge.real { background: rgba(103,232,249,.14); color: #67e8f9; }
+.src-badge.demo { background: rgba(255,255,255,.08); color: var(--ink-faint); }
+.live-badge { font-size: 10.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--ink-faint); margin-left: 6px; }
+.live-badge.on { background: rgba(229,72,77,.16); color: #ff6b6e; }
+.live-badge.on::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #ff6b6e; margin-right: 5px; vertical-align: middle; animation: pulse 1.6s ease-in-out infinite; }
+.stat-sk { display: inline-block; width: 190px; height: 13px; border-radius: 4px; background: linear-gradient(90deg, rgba(255,255,255,.06) 25%, rgba(255,255,255,.13) 37%, rgba(255,255,255,.06) 63%); background-size: 200% 100%; animation: shimmer 1.25s linear infinite; vertical-align: middle; }
+.sch-go.ext { display: flex; color: var(--ink-faint); text-decoration: none; }
+.sch-go.ext:hover { color: var(--ink); }
+.sch-top { flex-wrap: wrap; }
+.chart-live { display: inline-flex; align-items: center; gap: 6px; }

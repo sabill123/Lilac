@@ -303,7 +303,7 @@ export async function pageChart(sub?: string) {
     </section>`;
   const data = await api(`/api/chart?source=${source}`).catch(() => null);
   if (!data) { $('#chartBody').innerHTML = '<p class="loading">차트를 불러오지 못했습니다</p>'; return; }
-  $('#chUpdated').textContent = `${new Date(data.updated).toLocaleString()} 기준`;
+  $('#chUpdated').innerHTML = `<span class="chart-live">${data.live ? `<span class="live-badge on">실시간</span>` : ''}${new Date(data.updated).toLocaleString()} 기준</span>`;
   if (data.list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), data.list[0].artwork);
   $('#chartBody').innerHTML = rankList(data.list, { big: true });
   bindRank($('#chartBody'), data.list);
@@ -407,9 +407,11 @@ export async function pageProduct(id: string) {
       <table class="pd-spec"><tbody>
         <tr><th>상품명</th><td>${esc(p.name)}</td></tr>
         <tr><th>아티스트</th><td>${esc(p.brand)}</td></tr>
+        <tr id="pdRelease"><th>발매일</th><td class="dim">조회 중…</td></tr>
+        <tr id="pdTracksCnt"><th>수록곡 수</th><td class="dim">조회 중…</td></tr>
         <tr><th>사양</th><td>${p.options.map(esc).join(' / ')}</td></tr>
         <tr><th>공식 운영사</th><td>${esc(p.operator)}</td></tr>
-        <tr><th>재고</th><td>${p.stock}개</td></tr>
+        <tr><th>재고 · 가격</th><td>${p.stock}개 · <span class="dim">데모 값</span></td></tr>
       </tbody></table>`,
     ship: `<ul class="pd-ul">
         <li>예약 상품은 일본 발매일 이후 순차 발송됩니다(통상 2~3주).</li>
@@ -425,8 +427,26 @@ export async function pageProduct(id: string) {
         <a class="btn-out" href="${p.towerUrl}" target="_blank" rel="noopener">${t('store.tower')} ${icon('i-ext', 'ic s')}</a>
       </div>`,
   };
-  const paintPanel = (k: string) => { $('#pdPanel').innerHTML = panels[k]; };
+  let albumMeta: { year?: string; date?: string; trackCount?: number; url?: string } | null = null;
+  const fillMeta = () => {
+    if (!albumMeta) return;
+    const rel = document.getElementById('pdRelease');
+    const tc = document.getElementById('pdTracksCnt');
+    if (rel) rel.innerHTML = `<th>발매일</th><td>${albumMeta.date ? esc(albumMeta.date) : esc(albumMeta.year || '—')} <span class="src-badge real">Apple 실데이터</span></td>`;
+    if (tc) tc.innerHTML = `<th>수록곡 수</th><td>${albumMeta.trackCount ?? '—'}곡</td>`;
+  };
+  const paintPanel = (k: string) => { $('#pdPanel').innerHTML = panels[k]; if (k === 'info') fillMeta(); };
   paintPanel('info');
+
+  // 실제 앨범 메타 연동
+  api(`/api/catalog/search?term=${encodeURIComponent(p.searchTerm)}&entity=album&limit=5`).then((r) => {
+    const al = ((r.albums || []) as { title: string; artist: string; year: string; trackCount: number; appleUrl: string }[])[0];
+    if (!al) return;
+    albumMeta = { year: al.year, trackCount: al.trackCount, url: al.appleUrl };
+    fillMeta();
+    const sub = document.querySelector('.product .p-brand');
+    if (sub && al.year) sub.insertAdjacentHTML('beforeend', ` <span class="dim">· ${esc(al.year)}</span>`);
+  }).catch(() => {});
   $('#pdTabs').querySelectorAll<HTMLButtonElement>('.pd-tab').forEach((b) =>
     b.addEventListener('click', () => {
       $('#pdTabs').querySelectorAll('.pd-tab').forEach((x) => x.classList.remove('on'));
@@ -454,8 +474,19 @@ export async function pageProduct(id: string) {
 }
 
 /* ================= 일정 ================= */
+interface RelItem { id: string; type: string; source: string; title: string; artist: string; artistId: string; date: string; venue: string; note: string; artwork: string; url: string }
 export async function pageSchedule() {
-  const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
+  // 실데이터(Apple 발매일) + 데모 공연 일정 병합
+  const rel = await api('/api/releases').catch(() => ({ releases: [] }));
+  const realItems: Ev[] = ((rel.releases || []) as RelItem[]).map((r) => ({
+    id: r.id, type: r.type, title: r.title, artist: r.artist, date: r.date, venue: r.venue, note: r.note,
+  }));
+  const demoItems: Ev[] = events.map((e) => ({ ...e }));
+  const merged = [...realItems, ...demoItems];
+  const isDemo = (e: Ev) => !e.id.startsWith('rel-');
+  const artOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.artwork]));
+  const urlOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.url]));
+  const sorted = merged.sort((a, b) => a.date.localeCompare(b.date));
   const byMonth = new Map<string, Ev[]>();
   sorted.forEach((e) => {
     const k = e.date.slice(0, 7);
@@ -466,11 +497,13 @@ export async function pageSchedule() {
       <div class="page-head">
         <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
-        <p class="page-desc">${t('schedule.hint')} — 팔로우한 아티스트의 일정이 가장 위에 표시됩니다.</p>
+        <p class="page-desc">발매 일정은 <b>Apple Music 카탈로그에서 자동 수집한 실제 데이터</b>(${realItems.length}건)이며,
+          공연·응모 일정은 데모 데이터입니다.</p>
         <div class="sch-toolbar">
           <div class="chips" id="schFilters">
             <button class="chip on" data-f="all">전체</button>
             ${[...new Set(sorted.map((e) => e.type))].map((ty) => `<button class="chip" data-f="${esc(ty)}">${esc(ty)}</button>`).join('')}
+            <button class="chip" data-f="__real">실데이터만</button>
           </div>
           <div class="lib-tools">
             <button class="view-toggle on" id="schListBtn" title="리스트">${icon('i-rows', 'ic s')}</button>
@@ -481,10 +514,11 @@ export async function pageSchedule() {
       <div id="schBody"></div>
       <p class="pd-note" style="margin-top:24px">데모 일정입니다. 실서비스에서는 공식 발표·팬클럽 공지를 자동 수집합니다.</p>
     </section>`;
+  const matchF = (e: Ev, f: string) => (f === 'all' ? true : f === '__real' ? !isDemo(e) : e.type === f);
   const render = (f: string) => {
     const out: string[] = [];
     byMonth.forEach((list, month) => {
-      const rows = f === 'all' ? list : list.filter((e) => e.type === f);
+      const rows = list.filter((e) => matchF(e, f));
       if (!rows.length) return;
       const [y, m] = month.split('-');
       out.push(`<div class="sch-month"><div class="sch-mlabel"><b>${m}</b><span>${y}</span></div><div class="sch-rows">
@@ -492,26 +526,35 @@ export async function pageSchedule() {
           const { d, txt } = dday(e.date);
           const a = artists.find((x) => x.name === e.artist);
           const day = new Date(e.date);
+          const art = artOf.get(e.id);
+          const link = urlOf.get(e.id);
           return `<div class="sch-row" ${a ? `data-href="#/artist/${a.id}"` : ''}>
             <div class="sch-date"><b>${day.getDate()}</b><span>${['일','월','화','수','목','금','토'][day.getDay()]}</span></div>
-            <div class="sch-poster" data-artist="${esc(e.artist)}"></div>
+            <div class="sch-poster" ${art ? `style="background-image:url(${esc(art)})"` : `data-artist="${esc(e.artist)}"`}></div>
             <div class="sch-meta">
-              <div class="sch-top"><span class="sch-type">${esc(e.type)}</span><span class="sch-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span></div>
-              <div class="sch-title">${esc(e.title)}</div>
+              <div class="sch-top">
+                <span class="sch-type">${esc(e.type)}</span>
+                <span class="src-badge ${isDemo(e) ? 'demo' : 'real'}">${isDemo(e) ? '데모' : 'Apple 실데이터'}</span>
+                <span class="sch-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
+              </div>
+              <div class="sch-title">${esc(e.artist)} — ${esc(e.title)}</div>
               <div class="sch-sub">${esc(e.venue)} · ${esc(e.note)}</div>
             </div>
-            <span class="sch-go">${icon('i-chev-r')}</span>
+            ${link ? `<a class="sch-go ext" href="${link}" target="_blank" rel="noopener" title="Apple Music">${icon('i-ext')}</a>` : `<span class="sch-go">${icon('i-chev-r')}</span>`}
           </div>`;
         }).join('')}</div></div>`);
     });
     $('#schBody').innerHTML = out.join('') || '<p class="loading">해당 일정이 없습니다</p>';
     fillEventArts($('#schBody'));
     $('#schBody').querySelectorAll<HTMLElement>('.sch-row[data-href]').forEach((el) =>
-      el.addEventListener('click', () => { location.hash = el.dataset.href!; }));
+      el.addEventListener('click', (ev) => {
+        if ((ev.target as HTMLElement).closest('.sch-go.ext')) return;
+        location.hash = el.dataset.href!;
+      }));
   };
   // 캘린더 뷰 (라프텔식 월간 그리드)
   const renderCal = (f: string) => {
-    const rows = f === 'all' ? sorted : sorted.filter((e) => e.type === f);
+    const rows = sorted.filter((e) => matchF(e, f));
     const months = [...new Set(rows.map((e) => e.date.slice(0, 7)))];
     $('#schBody').innerHTML = months.map((month) => {
       const [y, m] = month.split('-').map(Number);
@@ -567,14 +610,14 @@ export async function pageArtist(id: string) {
   if (!a) return page404();
   const oshi = await api('/api/oshi').catch(() => []);
   const following = oshi.some((o: { artistId: string }) => o.artistId === a.id);
-  const listeners = (2_400_000 + a.name.length * 137_000).toLocaleString();
+  const fmtViews = (n: number) => (n >= 1e8 ? `${(n / 1e8).toFixed(1)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString());
   root().innerHTML = `
     <section class="ar-hero">
       <div class="ar-bg" id="arBg"></div><div class="ar-scrim"></div>
       <div class="ar-info">
         <p class="ar-verified">${icon('i-check', 'ic s')} 인증된 아티스트</p>
         <h1 class="ar-name">${esc(a.name)}</h1>
-        <p class="ar-stats">월간 청취자 ${listeners}명 · ${esc(a.nameJa)}</p>
+        <p class="ar-stats" id="arStats"><span class="stat-sk"></span> · ${esc(a.nameJa)}</p>
       </div>
     </section>
     <div class="ar-actionbar">
@@ -592,7 +635,7 @@ export async function pageArtist(id: string) {
       <div class="ar-about">
         <div class="ar-about-img" id="arAboutImg"></div>
         <div class="ar-about-txt">
-          <p class="ar-listeners">월간 청취자 <b>${listeners}</b>명</p>
+          <p class="ar-listeners" id="arListeners"><span class="stat-sk"></span></p>
           <p>${esc(a.name)}(${esc(a.nameJa)})는 ${esc(a.genre)} 아티스트입니다. 공식 운영사는 ${esc(a.operator)}이며,
             Lilac은 공식 유통망과 연결된 정보만 표시합니다.</p>
           <p class="dim">이 소개문은 데모용으로 생성된 텍스트입니다. 실서비스에서는 레이블 제공 프로필이 들어갑니다.</p>
@@ -642,6 +685,24 @@ export async function pageArtist(id: string) {
     $('#arGoods').innerHTML = goods.map(productCard).join('');
     fillProductArts($('#arGoods'));
   }
+  // 실제 지표 (YouTube 공식 MV 누적 조회수 합산)
+  api(`/api/artist/${a.id}/stats`).then((s: { totalViews: number; trackCount: number; live: boolean; source: string }) => {
+    const st = document.getElementById('arStats');
+    const ls = document.getElementById('arListeners');
+    if (!s.totalViews) {
+      if (st) st.innerHTML = `${esc(a.genre)} · ${esc(a.nameJa)}`;
+      if (ls) ls.innerHTML = `<span class="dim">공개 지표를 가져오지 못했습니다</span>`;
+      return;
+    }
+    const txt = `YouTube 공식 MV 누적 <b>${fmtViews(s.totalViews)}회</b>`;
+    if (st) st.innerHTML = `${txt.replace(/<\/?b>/g, '')} · ${esc(a.nameJa)}`;
+    if (ls) ls.innerHTML = `${txt} <span class="live-badge ${s.live ? 'on' : ''}">${s.live ? '실시간' : '캐시'}</span>
+      <span class="dim" style="display:block;font-size:12px;margin-top:4px">${esc(s.source)} · 등록곡 ${s.trackCount}개 기준</span>`;
+  }).catch(() => {
+    const st = document.getElementById('arStats');
+    if (st) st.textContent = `${a.genre} · ${a.nameJa}`;
+  });
+
   // 디스코그래피
   api(`/api/catalog/albums?term=${encodeURIComponent(a.searchTerm)}`).then((r) => {
     const albums = (r.albums || []) as { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }[];
