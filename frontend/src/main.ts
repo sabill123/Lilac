@@ -1,6 +1,6 @@
 import './style.css';
 import { api, me, refreshMe, esc, icon, findCatalog } from './api';
-import { initPlayer, loadLikes, toast, playerActions } from './player';
+import { initPlayer, loadLikes, toast, playerActions, getQueueContext } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
 import type { Locale } from './i18n';
 import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageArtist, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageSearch, page404 } from './pages';
@@ -65,8 +65,9 @@ function paintSbList() {
     document.getElementById('sbEmptyNew')?.addEventListener('click', () => $('#sbAdd').click());
     return;
   }
+  const ctx = getQueueContext();
   box.innerHTML = rows.map((i) => `
-    <a class="sb-row ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-key="${i.kind}:${i.id}" data-term="${i.kind === 'artist' ? esc(i.name) : ''}">
+    <a class="sb-row ${i.kind === 'artist' ? 'round' : ''} ${ctx === `${i.kind}:${i.id}` ? 'playing' : ''}" href="${i.href}" data-key="${i.kind}:${i.id}" data-term="${i.kind === 'artist' ? esc(i.name) : ''}">
       <span class="sb-cover ${i.kind === 'likes' ? 'liked' : ''}" ${i.art ? `style="background-image:url(${esc(i.art)})"` : ''}>
         ${i.kind === 'likes' ? icon('i-heart-f', 'ic s') : i.art ? '' : icon(i.kind === 'artist' ? 'i-mic' : 'i-queue', 'ic s')}
         <span class="sb-play">${icon('i-play')}</span>
@@ -267,11 +268,24 @@ async function boot() {
     like: () => $('#btnLike').click(),
   });
 
+  // 사이드바 재생 중 표시
+  document.addEventListener('lilac:context', (e) => {
+    const ctx = (e as CustomEvent<string>).detail;
+    document.querySelectorAll<HTMLElement>('.sb-row[data-key]').forEach((el) =>
+      el.classList.toggle('playing', !!ctx && el.dataset.key === ctx));
+  });
   document.addEventListener('lilac:me', () => { renderTopbar(); void renderSidebar(); });
   document.addEventListener('lilac:playlists', () => { void renderSidebar(); });
   window.addEventListener('hashchange', () => { navDepth++; route(); });
 
   applyMode();
+  // 백엔드 연결 확인 (실패 시 재시도 안내 화면)
+  try {
+    await api('/api/health');
+  } catch {
+    showBackendError();
+    return;
+  }
   await Promise.all([loadData(), refreshMe(), loadLikes()]);
   (await api('/api/db/artists').catch(() => [])).forEach((a: { name: string; searchTerm: string }) => ARTIST_TERMS.set(a.name, a.searchTerm));
   renderTopbar();
@@ -279,4 +293,26 @@ async function boot() {
   await route();
 }
 
-boot().catch((e) => { console.error(e); toast('백엔드 연결 실패 — npm run dev로 실행해 주세요'); });
+/* ---------- 백엔드 장애 화면 ---------- */
+function showBackendError() {
+  document.body.classList.remove('play-mode');
+  $('#page').innerHTML = `
+    <div class="fatal">
+      <svg class="ic fatal-ic"><use href="#i-info"/></svg>
+      <h2>서버에 연결할 수 없습니다</h2>
+      <p>Lilac 백엔드가 응답하지 않습니다. 터미널에서 <code>npm run dev</code>로 서버를 실행한 뒤 다시 시도해 주세요.</p>
+      <div class="fatal-actions">
+        <button class="btn-pill" id="fatalRetry">다시 시도</button>
+      </div>
+      <p class="fatal-hint">재시도 중에도 계속 안 되면 프록시 포트(vite.config.ts)와 백엔드 포트가 같은지 확인해 주세요.</p>
+    </div>`;
+  $('#sbList').innerHTML = '';
+  $('#fatalRetry').addEventListener('click', async () => {
+    const btn = $('#fatalRetry') as HTMLButtonElement;
+    btn.textContent = '확인 중…'; btn.disabled = true;
+    try { await api('/api/health'); location.reload(); }
+    catch { btn.textContent = '다시 시도'; btn.disabled = false; toast('아직 응답이 없습니다'); }
+  });
+}
+
+boot().catch((e) => { console.error(e); showBackendError(); });

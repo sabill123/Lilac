@@ -720,19 +720,23 @@ export async function pageSchedule() {
   const isDemo = (e: Ev) => !e.id.startsWith('rel-');
   const artOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.artwork]));
   const urlOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.url]));
-  const sorted = merged.sort((a, b) => a.date.localeCompare(b.date));
-  const byMonth = new Map<string, Ev[]>();
-  sorted.forEach((e) => {
-    const k = e.date.slice(0, 7);
-    byMonth.set(k, [...(byMonth.get(k) || []), e]);
-  });
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = merged.filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  const past = merged.filter((e) => e.date < today).sort((a, b) => b.date.localeCompare(a.date));
+  let showPast = false;
+  const sorted = upcoming;
+  const groupBy = (list: Ev[]) => {
+    const m = new Map<string, Ev[]>();
+    list.forEach((e) => { const k = e.date.slice(0, 7); m.set(k, [...(m.get(k) || []), e]); });
+    return m;
+  };
   root().innerHTML = `
     <section class="sec page-top">
       <div class="page-head">
         <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
-        <p class="page-desc">발매 일정은 <b>Apple Music 카탈로그에서 자동 수집한 실제 데이터</b>(${realItems.length}건)이며,
-          공연·응모 일정은 데모 데이터입니다.</p>
+        <p class="page-desc">다가오는 일정을 먼저 보여줍니다. 발매 일정은 <b>Apple Music 카탈로그 자동 수집 실데이터</b>(${realItems.length}건),
+          공연·응모는 데모 데이터입니다.</p>
         <div class="sch-toolbar">
           <div class="chips" id="schFilters">
             <button class="chip on" data-f="all">전체</button>
@@ -751,7 +755,8 @@ export async function pageSchedule() {
   const matchF = (e: Ev, f: string) => (f === 'all' ? true : f === '__real' ? !isDemo(e) : e.type === f);
   const render = (f: string) => {
     const out: string[] = [];
-    byMonth.forEach((list, month) => {
+    const source = showPast ? [...upcoming, ...past.slice().reverse()] : upcoming;
+    groupBy(source).forEach((list, month) => {
       const rows = list.filter((e) => matchF(e, f));
       if (!rows.length) return;
       const [y, m] = month.split('-');
@@ -778,7 +783,10 @@ export async function pageSchedule() {
           </div>`;
         }).join('')}</div></div>`);
     });
-    $('#schBody').innerHTML = out.join('') || '<p class="loading">해당 일정이 없습니다</p>';
+    const emptyMsg = `<div class="empty-box">${icon('i-cal', 'ic eb')}<p>예정된 일정이 없습니다</p><span>지난 일정을 펼쳐 확인해 보세요</span></div>`;
+    $('#schBody').innerHTML = (out.join('') || emptyMsg)
+      + `<button class="past-toggle" id="pastToggle">${showPast ? '지난 일정 접기' : `지난 일정 더보기 (${past.length})`} ${icon('i-chev-r', 'ic s')}</button>`;
+    document.getElementById('pastToggle')?.addEventListener('click', () => { showPast = !showPast; render(f); });
     fillEventArts($('#schBody'));
     $('#schBody').querySelectorAll<HTMLElement>('.sch-row[data-href]').forEach((el) =>
       el.addEventListener('click', (ev) => {
@@ -787,10 +795,16 @@ export async function pageSchedule() {
       }));
   };
   // 캘린더 뷰 (라프텔식 월간 그리드)
+  // 캘린더는 한 달씩 (이전/다음 네비게이션)
+  const now = new Date();
+  let calY = now.getFullYear();
+  let calM = now.getMonth() + 1;
   const renderCal = (f: string) => {
-    const rows = sorted.filter((e) => matchF(e, f));
-    const months = [...new Set(rows.map((e) => e.date.slice(0, 7)))];
-    $('#schBody').innerHTML = months.map((month) => {
+    const rows = merged.filter((e) => matchF(e, f));
+    const monthKey = `${calY}-${String(calM).padStart(2, '0')}`;
+    const counts = new Map<string, number>();
+    rows.forEach((e) => counts.set(e.date.slice(0, 7), (counts.get(e.date.slice(0, 7)) || 0) + 1));
+    $('#schBody').innerHTML = [monthKey].map((month) => {
       const [y, m] = month.split('-').map(Number);
       const first = new Date(y, m - 1, 1);
       const days = new Date(y, m, 0).getDate();
@@ -811,14 +825,22 @@ export async function pageSchedule() {
         </div>`);
       }
       return `<div class="cal-month">
-        <div class="cal-title">${y}년 ${m}월</div>
+        <div class="cal-nav">
+          <button class="cal-arrow" id="calPrev" title="이전 달">${icon('i-chev-l')}</button>
+          <div class="cal-title">${y}년 ${m}월 <span class="cal-count">${counts.get(month) || 0}건</span></div>
+          <button class="cal-arrow" id="calNext" title="다음 달">${icon('i-chev-r')}</button>
+          <button class="cal-today" id="calToday">오늘</button>
+        </div>
         <div class="cal-grid">
           ${['일','월','화','수','목','금','토'].map((w, i) => `<div class="cal-w ${i === 0 ? 'sun' : ''}">${w}</div>`).join('')}
           ${cells.join('')}
         </div></div>`;
-    }).join('') || '<p class="loading">해당 일정이 없습니다</p>';
+    }).join('');
     $('#schBody').querySelectorAll<HTMLElement>('.cal-ev[data-href]').forEach((el) =>
       el.addEventListener('click', () => { location.hash = el.dataset.href!; }));
+    document.getElementById('calPrev')?.addEventListener('click', () => { calM--; if (calM < 1) { calM = 12; calY--; } renderCal(f); });
+    document.getElementById('calNext')?.addEventListener('click', () => { calM++; if (calM > 12) { calM = 1; calY++; } renderCal(f); });
+    document.getElementById('calToday')?.addEventListener('click', () => { calY = now.getFullYear(); calM = now.getMonth() + 1; renderCal(f); });
   };
 
   let schView: 'list' | 'cal' = 'list';
@@ -1065,9 +1087,9 @@ export async function pageLibrary(sub?: string) {
       btn.addEventListener('click', async (e) => {
         e.preventDefault(); e.stopPropagation();
         const id = btn.dataset.play!;
-        if (id === 'likes') { if (likes.length) playQueue(likes, 0); return; }
+        if (id === 'likes') { if (likes.length) playQueue(likes, 0, 'likes:likes'); return; }
         const pl = lists.find((p: { id: string }) => p.id === id);
-        if (pl?.tracks?.length) playQueue(pl.tracks, 0);
+        if (pl?.tracks?.length) playQueue(pl.tracks, 0, `playlist:${id}`);
         else toast('재생할 곡이 없습니다');
       }));
     // 컨텍스트 메뉴
@@ -1121,7 +1143,7 @@ export async function pageLibrary(sub?: string) {
       <div id="likeTable"></div>`;
     $('#likeTable').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-heart', 'ic eb')}<p>저장한 곡이 없습니다</p><span>플레이어의 하트를 눌러 곡을 저장해 보세요</span></div>`;
     bindTable($('#likeTable'), rows);
-    $('#likePlay')?.addEventListener('click', () => rows.length && playQueue(rows, 0));
+    $('#likePlay')?.addEventListener('click', () => rows.length && playQueue(rows, 0, 'likes:likes'));
     bindTilt(body);
   } else if (filter === 'history') {
     const rows = hist.slice(0, 50).map((h: PlayableTrack & { playedAt?: string }) => ({ ...h, addedAt: h.playedAt }));
@@ -1233,8 +1255,8 @@ export async function pagePlaylist(id: string) {
   };
   paint();
 
-  $('#plPlayAll').addEventListener('click', () => rows.length && playQueue(rows, 0));
-  $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0));
+  $('#plPlayAll').addEventListener('click', () => rows.length && playQueue(rows, 0, `playlist:${id}`));
+  $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0, `playlist:${id}`));
   $('#plFind').addEventListener('input', (e) => paint((e.target as HTMLInputElement).value));
   const rename = async () => {
     const name = prompt('플레이리스트 이름', pl.name);

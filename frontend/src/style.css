@@ -1799,3 +1799,38 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .sb-list::-webkit-scrollbar { width: 8px; }
 .sb-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 8px; }
 .sb-list:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,.24); }
+
+/* ============================================================
+   v1.4 — QA 수정
+   ============================================================ */
+/* 1) 아티스트 히어로: 블러 배경 scale(1.06)이 패널 밖으로 나가 가로 스크롤 유발 */
+.ar-hero { overflow: hidden; }
+.billboard { overflow: hidden; }
+
+/* 2) 출처 배지 가독성 (10px -> 11px) */
+.src-badge { font-size: 11px; padding: 3px 9px; }
+.p-badge { font-size: 11px; }
+.card-badge { font-size: 11px; }
+
+/* 일정: 캘린더 월 네비게이션 · 지난 일정 토글 */
+.cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.cal-arrow { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--bg-soft); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; transition: all var(--dur-micro); }
+.cal-arrow:hover { color: var(--ink); background: var(--bg-hover); transform: scale(1.05); }
+.cal-arrow .ic { width: 17px; height: 17px; }
+.cal-nav .cal-title { margin-bottom: 0; display: flex; align-items: baseline; gap: 10px; }
+.cal-count { font-size: 12.5px; font-weight: 600; color: var(--ink-faint); }
+.cal-today { margin-left: auto; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 16px; border-radius: 999px; transition: border-color var(--dur-micro); }
+.cal-today:hover { border-color: var(--ink); }
+.past-toggle { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink-muted); font-family: inherit; font-size: 13px; font-weight: 700; padding: 10px 20px; border-radius: 999px; transition: all var(--dur-micro); }
+.past-toggle:hover { color: var(--ink); border-color: var(--ink); }
+@media (max-width: 760px) { .cal-today { display: none; } .cal-nav { gap: 6px; } }
+
+/* 백엔드 장애 화면 */
+.fatal { max-width: 520px; margin: 0 auto; padding: 18vh var(--gutter) 0; text-align: center; }
+.fatal-ic { width: 44px; height: 44px; color: var(--ink-faint); margin: 0 auto 20px; }
+.fatal h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+.fatal p { font-size: 14px; color: var(--ink-muted); line-height: 1.75; }
+.fatal code { background: var(--bg-soft); padding: 2px 8px; border-radius: 5px; font-size: 13px; }
+.fatal-actions { margin: 24px 0 16px; }
+.fatal-actions .btn-pill { width: auto; padding: 12px 32px; }
+.fatal-hint { font-size: 12px; color: var(--ink-faint); }

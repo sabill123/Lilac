@@ -69,8 +69,12 @@ function playCurrent() {
   void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
   startLyricsDemo();
 }
-export function playQueue(list: PlayableTrack[], idx = 0) {
+let queueContext = '';   // 재생을 시작한 출처 (playlist:<id> / likes / chart 등)
+export const getQueueContext = () => queueContext;
+export function playQueue(list: PlayableTrack[], idx = 0, context = '') {
   queue = list.filter(Boolean); queueIdx = Math.min(idx, queue.length - 1);
+  queueContext = context;
+  document.dispatchEvent(new CustomEvent('lilac:context', { detail: context }));
   playCurrent();
 }
 export function enqueue(tr: PlayableTrack) {

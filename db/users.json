@@ -7,11 +7,11 @@
     "language": "ko",
     "createdAt": "2026-08-21T08:55:16.671Z",
     "plan": {
-      "tier": "free",
-      "name": "Free",
-      "renewsAt": null
+      "tier": "premium",
+      "name": "Lilac Premium (데모)",
+      "renewsAt": "2026-09-21"
     },
-    "credits": 19000,
+    "credits": 69000,
     "paymentMethods": [],
     "addresses": []
   }
