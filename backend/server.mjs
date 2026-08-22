@@ -181,6 +181,26 @@ async function fetchAppleChart() {
 }
 const norm = (s) => String(s).toLowerCase().replace(/[\s()\[\]『』「」【】・,.'’!?~-]/g, '');
 
+/* 수집기(collect-charts.mjs)가 만든 3종 차트 — 국가별 */
+app.get('/api/charts', async (req, res) => {
+  const data = await readJson('charts', null);
+  if (!data) return res.status(503).json({ error: 'charts not collected yet', hint: 'node backend/collect-charts.mjs' });
+  const country = String(req.query.country || 'jp');
+  const source = String(req.query.source || 'combined');
+  const c = data.countries?.[country];
+  if (!c) return res.status(404).json({ error: 'unknown country' });
+  const list = c[source] || [];
+  res.json({
+    country, countryLabel: c.label, source, updated: data.updated, limit: data.limit,
+    counts: { apple: c.apple.length, youtube: c.youtube.length, combined: c.combined.length },
+    method: source === 'combined'
+      ? '공통 곡 풀(Apple Music 국가별 최다 재생)을 기준으로, Apple 순위와 공식 MV 조회수 순위를 각각 정규화해 50:50으로 합산합니다.'
+      : source === 'apple' ? 'Apple Music 공식 최다 재생 차트입니다.'
+      : '같은 곡 풀을 공식 뮤직비디오 누적 조회수로 재정렬한 순위입니다.',
+    list,
+  });
+});
+
 app.get('/api/chart', async (req, res) => {
   const source = String(req.query.source || 'combined');
   const seeds = await readJson('tracks', []);

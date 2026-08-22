@@ -370,119 +370,183 @@ async function pageHomePlay() {
   }
 }
 
+/* ================= 차트 =================
+   3종 차트가 같은 곡 풀(Apple 국가별 최다 재생)을 공유한다.
+   - apple    : Apple Music 공식 순위
+   - youtube  : 같은 풀을 공식 MV 누적 조회수로 재정렬
+   - combined : 두 순위를 정규화해 50:50 합산한 Lilac 통합 순위 */
+interface ChartRow {
+  rank: number; title: string; artist: string; artwork?: string; appleUrl?: string;
+  youtubeId?: string | null; ytViews?: number | null;
+  appleRank?: number | null; youtubeRank?: number | null; sources?: string[]; score?: number;
+  confidence?: string;
+}
+const SOURCES = [
+  { k: 'combined', label: '통합' }, { k: 'apple', label: 'Apple Music' }, { k: 'youtube', label: 'YouTube' },
+];
+const COUNTRY = [{ k: 'jp', label: '일본' }, { k: 'kr', label: '한국' }];
+let chCountry = (localStorage.getItem('lilac.chartCountry') || 'jp');
+
+const viewsTxt = (n?: number | null) =>
+  !n ? '' : n >= 1e8 ? `${(n / 1e8).toFixed(2)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString();
+
+function chartRowsHtml(list: ChartRow[], source: string) {
+  return `<div class="rank-list big">${list.map((e) => `
+    <div class="rk-row" data-i="${e.rank - 1}">
+      <span class="rk-n">${e.rank}</span>
+      <div class="rk-art">${e.artwork ? `<img src="${esc(e.artwork)}" loading="lazy" alt=""/>` : ''}<span class="rk-ov">${icon('i-play')}</span></div>
+      <div class="rk-meta">
+        <div class="rk-t">${esc(e.title)}</div>
+        <div class="rk-a">${esc(e.artist)}</div>
+      </div>
+      <div class="rk-side">
+        ${source === 'combined' ? `
+          <span class="rk-ranks">
+            ${e.appleRank ? `<span class="mini-rank apple" title="Apple Music 순위">A ${e.appleRank}</span>` : '<span class="mini-rank off">A −</span>'}
+            ${e.youtubeRank ? `<span class="mini-rank yt" title="YouTube 조회수 순위">Y ${e.youtubeRank}</span>` : '<span class="mini-rank off">Y −</span>'}
+          </span>` : ''}
+        ${e.ytViews ? `<span class="rk-views">${viewsTxt(e.ytViews)}회</span>` : ''}
+        ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="뮤직비디오">${icon('i-ext')}</button>` : ''}
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+async function loadChart(country: string, source: string) {
+  return api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
+}
+
+/** 차트 항목을 재생 가능한 트랙으로 해석 */
+async function chartPlayables(list: ChartRow[], from = 0, count = 30): Promise<PlayableTrack[]> {
+  const slice = list.slice(from, from + count);
+  const out: PlayableTrack[] = [];
+  for (const e of slice) {
+    const hit = await findCatalog(`${e.artist} ${e.title}`);
+    out.push(hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork, youtubeId: e.youtubeId });
+  }
+  return out;
+}
+
+function bindChartRows(container: HTMLElement, list: ChartRow[]) {
+  container.querySelectorAll<HTMLButtonElement>('.rk-mv').forEach((b) =>
+    b.addEventListener('click', (e) => { e.stopPropagation(); openYt(b.dataset.yt!); }));
+  container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) =>
+    row.addEventListener('click', async (e) => {
+      if ((e.target as HTMLElement).closest('.rk-mv')) return;
+      const i = Number(row.dataset.i);
+      toast('재생 목록을 준비하는 중…');
+      const tracks = await chartPlayables(list, Math.max(0, i - 2), 20);
+      const idx = Math.min(i, 2);
+      playQueue(tracks, idx, `chart:${chCountry}`);
+      container.querySelectorAll('.rk-row').forEach((r) => r.classList.remove('playing'));
+      row.classList.add('playing');
+    }));
+}
+
 export async function pageChart(sub?: string) {
   if (isPlay()) return pageChartPlay(sub);
   const source = sub || 'combined';
-  const desc: Record<string, string> = {
-    combined: 'Apple Music 순위와 YouTube 조회수를 합산한 Lilac 종합 순위입니다.',
-    apple: 'Apple Music 일본 스토어에서 가장 많이 재생된 곡을 실시간으로 가져옵니다.',
-    youtube: '공식 뮤직비디오의 누적 조회수를 기준으로 정렬한 순위입니다.',
-  };
   root().innerHTML = `
     <section class="chart-hero">
       <div class="ch-inner">
         <p class="sp-label">차트</p>
-        <h1 class="ch-title">${t('chart.title')}</h1>
-        <p class="ch-desc" id="chDesc">${desc[source]}</p>
-        <div class="seg">${(['combined', 'apple', 'youtube'] as const).map((s) => `<a class="seg-btn ${s === source ? 'on' : ''}" href="#/chart/${s}">${t('chart.' + s)}</a>`).join('')}</div>
+        <h1 class="ch-title">실시간 차트</h1>
+        <p class="ch-desc" id="chDesc">불러오는 중…</p>
+        <div class="ch-controls">
+          <div class="seg">${SOURCES.map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
+          <div class="seg country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
+        </div>
       </div>
     </section>
     <section class="sec chart-body">
-      <div class="ch-bar"><button class="play-big" id="chPlayAll">${icon('i-play')}</button><span class="ch-updated" id="chUpdated"></span></div>
-      <div id="chartBody">${skRows(8)}</div>
+      <div class="ch-bar">
+        <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
+        <button class="tbtn big-ghost" id="chShuffle">${icon('i-shuffle')}</button>
+        <span class="ch-updated" id="chUpdated"></span>
+      </div>
+      <div id="chartBody">${skRows(10)}</div>
+      <p class="ch-method" id="chMethod"></p>
     </section>`;
-  const data = await api(`/api/chart?source=${source}`).catch(() => null);
-  if (!data) { $('#chartBody').innerHTML = '<p class="loading">차트를 불러오지 못했습니다</p>'; return; }
-  $('#chUpdated').innerHTML = `<span class="chart-live">${data.live ? `<span class="live-badge on">실시간</span>` : ''}${new Date(data.updated).toLocaleString()} 기준</span>`;
-  if (data.list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), data.list[0].artwork);
-  $('#chartBody').innerHTML = rankList(data.list, { big: true });
-  bindRank($('#chartBody'), data.list);
-  data.list.forEach(async (e: { artwork?: string; searchTerm?: string; artist: string; title: string }, i: number) => {
-    if (!e.artwork) {
-      const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
-      const art = document.querySelectorAll('#chartBody .rk-art')[i];
-      if (hit && art) art.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 100)}" alt=""/>`);
-    }
-  });
+
+  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
+    b.addEventListener('click', () => {
+      chCountry = b.dataset.c!; localStorage.setItem('lilac.chartCountry', chCountry); pageChart(source);
+    }));
+
+  const data = await loadChart(chCountry, source);
+  const body = document.getElementById('chartBody');
+  if (!data || !body) { if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p><span>node backend/collect-charts.mjs 로 수집해 주세요</span></div>`; return; }
+
+  const list = data.list as ChartRow[];
+  $('#chDesc').textContent = `${data.countryLabel} · ${SOURCES.find((s) => s.k === source)?.label} · ${list.length}곡`;
+  $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
+  $('#chMethod').textContent = data.method;
+  body.innerHTML = chartRowsHtml(list, source);
+  bindChartRows(body, list);
+  if (list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), list[0].artwork);
+
   $('#chPlayAll').addEventListener('click', async () => {
-    const list: PlayableTrack[] = [];
-    for (const en of data.list.slice(0, 10)) {
-      const hit = await findCatalog(en.searchTerm || `${en.artist} ${en.title}`);
-      if (hit) list.push(toPlayable(hit, en.youtubeId));
-    }
-    if (list.length) playQueue(list, 0);
+    toast('재생 목록을 준비하는 중…');
+    const tr = await chartPlayables(list, 0, 20);
+    if (tr.length) playQueue(tr, 0, `chart:${chCountry}`);
+  });
+  $('#chShuffle').addEventListener('click', async () => {
+    toast('재생 목록을 준비하는 중…');
+    const tr = await chartPlayables(list, 0, 20);
+    if (tr.length) playQueue(tr.sort(() => Math.random() - 0.5), 0, `chart:${chCountry}`);
   });
 }
 
-/* ---- 플레이 모드 차트 (스포티파이 플리 페이지 구조) ---- */
+/* ---- 플레이 모드 차트 (스포티파이 플리 구조) ---- */
 async function pageChartPlay(sub?: string) {
   const source = sub || 'combined';
-  const label: Record<string, string> = { combined: '종합 차트', apple: 'Apple Music 차트', youtube: 'YouTube 차트' };
+  const label = SOURCES.find((s) => s.k === source)?.label || '통합';
   root().innerHTML = `
     <section class="sp-page">
       <div id="chHead"></div>
       <div class="sp-actions">
         <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
         <button class="tbtn big-ghost" id="chShuffle" title="셔플">${icon('i-shuffle')}</button>
-        <div class="seg small">${(['combined', 'apple', 'youtube'] as const).map((s) => `<a class="seg-btn ${s === source ? 'on' : ''}" href="#/chart/${s}">${t('chart.' + s)}</a>`).join('')}</div>
+        <div class="seg small">${SOURCES.map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
+        <div class="seg small country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
       </div>
-      <div class="sp-body"><div id="chBody">${skRows(8)}</div></div>
+      <div class="sp-body"><div id="chBody">${skRows(10)}</div><p class="ch-method" id="chMethod"></p></div>
     </section>`;
 
-  const data = await api(`/api/chart?source=${source}`).catch(() => null);
-  const head = document.getElementById('chHead');
-  if (!data || !head) { const b = document.getElementById('chBody'); if (b) b.innerHTML = '<p class="loading">차트를 불러오지 못했습니다</p>'; return; }
+  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
+    b.addEventListener('click', () => {
+      chCountry = b.dataset.c!; localStorage.setItem('lilac.chartCountry', chCountry); pageChartPlay(source);
+    }));
 
-  const entries = data.list as { rank: number; title: string; artist: string; artwork?: string; searchTerm?: string; youtubeId?: string | null; ytViews?: number }[];
-  const covers = entries.slice(0, 4).map((e) => e.artwork).filter(Boolean) as string[];
+  const data = await loadChart(chCountry, source);
+  const head = document.getElementById('chHead');
+  const body = document.getElementById('chBody');
+  if (!data || !head || !body) { if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p></div>`; return; }
+
+  const list = data.list as ChartRow[];
+  const covers = list.slice(0, 4).map((e) => e.artwork).filter(Boolean) as string[];
   head.innerHTML = spHeader({
-    label: '차트',
-    title: label[source],
-    meta: `${data.live ? '<span class="live-badge on">실시간</span>' : ''}${esc(data.note)}<span class="sep">·</span>${entries.length}곡`,
+    label: `${data.countryLabel} 차트`,
+    title: `${label} 차트`,
+    meta: `<span class="live-badge on">수집</span>${data.method.slice(0, 46)}…<span class="sep">·</span>${list.length}곡`,
     mosaic: covers.length >= 4 ? covers : undefined,
     cover: covers[0],
   });
   if (covers[0]) void applyTone(document.querySelector('.sp-head'), covers[0]);
   bindTilt(root());
 
-  // 트랙 테이블로 렌더링 (스포티파이 동일)
-  const rows: PlayableTrack[] = entries.map((e) => ({
-    title: e.title, artist: e.artist, artwork: e.artwork,
-    album: e.ytViews ? `${(e.ytViews / 1e8).toFixed(2)}억 회` : '',
-  }));
-  const body = document.getElementById('chBody')!;
-  body.innerHTML = trackTable(rows, { album: true, date: false, sticky: true });
-  // 열 제목 교체
-  const alHead = body.querySelector('.t-head .t-al');
-  if (alHead) alHead.textContent = source === 'youtube' ? '조회수' : '지표';
+  body.innerHTML = chartRowsHtml(list, source);
+  bindChartRows(body, list);
+  $('#chMethod').textContent = data.method;
 
-  // 재생 시 카탈로그에서 실제 프리뷰 해석
-  const resolveAll = async () => {
-    const out: PlayableTrack[] = [];
-    for (const e of entries) {
-      const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
-      out.push(hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork });
-    }
-    return out;
-  };
-  body.querySelectorAll<HTMLElement>('.t-row').forEach((row) => {
-    row.addEventListener('click', async (ev) => {
-      if ((ev.target as HTMLElement).closest('.t-a')) return;
-      const list = await resolveAll();
-      playQueue(list, Number(row.dataset.i));
-      body.querySelectorAll('.t-row').forEach((r) => r.classList.remove('playing'));
-      row.classList.add('playing');
-    });
+  $('#chPlayAll').addEventListener('click', async () => {
+    toast('재생 목록을 준비하는 중…');
+    const tr = await chartPlayables(list, 0, 20);
+    if (tr.length) playQueue(tr, 0, `chart:${chCountry}`);
   });
-  $('#chPlayAll').addEventListener('click', async () => { const l = await resolveAll(); if (l.length) playQueue(l, 0); });
-  $('#chShuffle').addEventListener('click', async () => { const l = await resolveAll(); if (l.length) playQueue(l.sort(() => Math.random() - 0.5), 0); });
-
-  // 아트워크 없는 항목 보충
-  entries.forEach(async (e, i) => {
-    if (e.artwork) return;
-    const hit = await findCatalog(e.searchTerm || `${e.artist} ${e.title}`);
-    const img = document.querySelectorAll<HTMLImageElement>('#chBody .t-title img')[i];
-    if (hit && img) img.src = artUrl(hit, 100);
+  $('#chShuffle').addEventListener('click', async () => {
+    toast('재생 목록을 준비하는 중…');
+    const tr = await chartPlayables(list, 0, 20);
+    if (tr.length) playQueue(tr.sort(() => Math.random() - 0.5), 0, `chart:${chCountry}`);
   });
 }
 
