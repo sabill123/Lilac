@@ -3,7 +3,7 @@ import { api, me, refreshMe, esc, icon, findCatalog } from './api';
 import { initPlayer, loadLikes, toast, playerActions, getQueueContext } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
 import type { Locale } from './i18n';
-import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageArtist, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageSearch, page404 } from './pages';
+import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404 } from './pages';
 import { initMusicKitIfConfigured } from './musickit';
 import { initRipple, initKeyboard, initContextMenu, bindParallax, bindReveal, bindTilt, bindHoverExpand } from './interactions';
 
@@ -93,7 +93,7 @@ const ARTIST_TERMS = new Map<string, string>();
 /* ---------- 모드 (브라우즈 / 플레이) ---------- */
 type Mode = 'browse' | 'play';
 const PLAY_ROUTES = new Set(['library', 'playlist']);
-const BROWSE_ONLY = new Set(['login', 'signup', 'account']); // 계정 화면은 항상 브라우즈
+const BROWSE_ONLY = new Set(['login', 'signup', 'account', 'orders', 'help']); // 계정 화면은 항상 브라우즈
 const LIGHT_ROUTES = new Set(['store']);                      // 화이트 배경 페이지
 let userMode: Mode = (localStorage.getItem('lilac.mode') as Mode) || 'browse';
 function currentSeg() { return (location.hash.split('/')[1] || 'home').split('?')[0] || 'home'; }
@@ -176,6 +176,9 @@ async function route() {
       case 'store': sub ? await pageProduct(sub) : await pageStore(); break;
       case 'schedule': await pageSchedule(); break;
       case 'artist': await pageArtist(sub); break;
+      case 'artists': await pageArtists(); break;
+      case 'orders': sub ? await pageOrderDetail(sub) : await pageOrders(); break;
+      case 'help': pageHelp(); break;
       case 'library': await pageLibrary(sub); break;
       case 'playlist': await pagePlaylist(sub); break;
       case 'login': pageLogin(); break;

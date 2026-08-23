@@ -202,7 +202,7 @@ export async function pageHome() {
         <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
-    <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2><a class="sec-link" href="#/library/follows">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
+    <section class="sec"><div class="sec-head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
     <section class="sec"><div class="sec-head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
     <section class="sec"><div class="sec-head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
     <section class="sec"><div class="sec-head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
@@ -1368,6 +1368,215 @@ export async function pagePlaylist(id: string) {
   }
 }
 
+/* ================= 아티스트 전체 목록 ================= */
+export async function pageArtists() {
+  const oshi = await api('/api/oshi').catch(() => []);
+  const followed = new Set(oshi.map((o: { artistId: string }) => o.artistId));
+  root().innerHTML = `
+    <section class="sec page-top">
+      <div class="page-head">
+        <p class="sp-label">아티스트</p>
+        <h1 class="page-title">전체 아티스트</h1>
+        <p class="page-desc">Lilac이 다루는 아티스트 ${artists.length}팀입니다. 팔로우하면 보관함과 사이드바에 추가됩니다.</p>
+        <div class="chips" id="arFilters">
+          <button class="chip on" data-g="all">전체</button>
+          ${[...new Set(artists.map((a) => a.genre))].map((g) => `<button class="chip" data-g="${esc(g)}">${esc(g)}</button>`).join('')}
+          <button class="chip" data-g="__following">팔로우 중</button>
+        </div>
+      </div>
+      <div class="artists-grid" id="arsGrid"></div>
+    </section>`;
+
+  const render = (f: string) => {
+    const list = artists.filter((a) => (f === 'all' ? true : f === '__following' ? followed.has(a.id) : a.genre === f));
+    const grid = $('#arsGrid');
+    if (!list.length) {
+      grid.innerHTML = `<div class="empty-box">${icon('i-mic', 'ic eb')}<p>해당 아티스트가 없습니다</p></div>`;
+      return;
+    }
+    grid.innerHTML = list.map((a) => `
+      <a class="ars-card" href="#/artist/${a.id}" data-term="${esc(a.searchTerm)}" data-tilt="7">
+        <div class="ars-cover"><div class="ph">${esc(a.name[0])}</div>
+          ${followed.has(a.id) ? `<span class="ars-follow">${icon('i-check', 'ic s')}</span>` : ''}</div>
+        <div class="ars-name">${esc(a.name)}</div>
+        <div class="ars-sub">${esc(a.nameJa)} · ${esc(a.genre)}</div>
+        <div class="ars-op">${esc(a.operator)}</div>
+      </a>`).join('');
+    grid.querySelectorAll<HTMLElement>('[data-term]').forEach(async (el) => {
+      const hit = await findCatalog(el.dataset.term!);
+      const cov = el.querySelector('.ars-cover');
+      if (hit && cov) cov.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 300)}" alt="" loading="lazy"/>`);
+    });
+    bindTilt(grid);
+  };
+  render('all');
+  $('#arFilters').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) =>
+    b.addEventListener('click', () => {
+      $('#arFilters').querySelectorAll('.chip').forEach((x) => x.classList.remove('on'));
+      b.classList.add('on'); render(b.dataset.g!);
+    }));
+}
+
+/* ================= 주문 내역 ================= */
+interface Order {
+  id: string; productId: string; name: string; brand: string; option: string;
+  qty: number; unit?: number; total: number; status: string; orderedAt: string;
+  artwork?: string; breakdown?: { jpy: number; rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number; rateDate?: string } | null;
+}
+const STATUS_STEPS = ['예약 접수', '현지 매입', '국제 배송', '배송 완료'];
+
+export async function pageOrders() {
+  await refreshMe();
+  if (!me) { location.hash = '#/login'; return; }
+  const orders = (await api('/api/orders').catch(() => [])) as Order[];
+  root().innerHTML = `
+    <section class="sec page-top narrow">
+      <div class="page-head">
+        <p class="sp-label">주문</p>
+        <h1 class="page-title">주문 내역</h1>
+        <p class="page-desc">예약 공구 주문 ${orders.length}건. 데모 환경이라 실제 결제·배송은 이루어지지 않습니다.</p>
+      </div>
+      <div id="ordBody"></div>
+    </section>`;
+  const body = $('#ordBody');
+  if (!orders.length) {
+    body.innerHTML = `<div class="empty-box">${icon('i-bag', 'ic eb')}<p>주문 내역이 없습니다</p><span>스토어에서 한정반을 예약해 보세요</span>
+      <a class="btn-pill" style="width:auto;margin-top:16px;padding:10px 24px" href="#/store">스토어 가기</a></div>`;
+    return;
+  }
+  body.innerHTML = `<div class="ord-list">${orders.map((o) => `
+    <a class="ord-card" href="#/orders/${o.id}">
+      <div class="ord-art" style="background-image:url(${esc(o.artwork || '')})">${o.artwork ? '' : icon('i-bag')}</div>
+      <div class="ord-meta">
+        <div class="ord-top"><span class="ord-id">${esc(o.id)}</span><span class="mp-status">${esc(o.status)}</span></div>
+        <div class="ord-name">${esc(o.name)}</div>
+        <div class="ord-sub">${esc(o.brand)} · ${esc(o.option)} · ${o.qty}개</div>
+      </div>
+      <div class="ord-right">
+        <div class="ord-total">₩${o.total.toLocaleString()}</div>
+        <div class="ord-date">${new Date(o.orderedAt).toLocaleDateString()}</div>
+      </div>
+      ${icon('i-chev-r', 'ic s ord-go')}
+    </a>`).join('')}</div>`;
+}
+
+export async function pageOrderDetail(id: string) {
+  await refreshMe();
+  if (!me) { location.hash = '#/login'; return; }
+  const orders = (await api('/api/orders').catch(() => [])) as Order[];
+  const o = orders.find((x) => x.id === id);
+  if (!o) return page404();
+  const stepIdx = Math.max(0, STATUS_STEPS.indexOf(o.status));
+  const b = o.breakdown;
+  root().innerHTML = `
+    <section class="sec page-top narrow">
+      <a class="crumb" href="#/orders">${icon('i-chev-r', 'ic s flip')} 주문 내역</a>
+      <div class="page-head">
+        <p class="sp-label">주문 상세</p>
+        <h1 class="page-title">${esc(o.name)}</h1>
+        <p class="page-desc">${esc(o.id)} · ${new Date(o.orderedAt).toLocaleString()}</p>
+      </div>
+
+      <div class="ord-steps">
+        ${STATUS_STEPS.map((s, i) => `
+          <div class="ord-step ${i <= stepIdx ? 'done' : ''} ${i === stepIdx ? 'cur' : ''}">
+            <span class="dot">${i <= stepIdx ? icon('i-check', 'ic s') : i + 1}</span>
+            <span class="lb">${s}</span>
+          </div>`).join('')}
+      </div>
+
+      <div class="ord-detail">
+        <div class="ord-detail-art" style="background-image:url(${esc(o.artwork || '')})"></div>
+        <table class="mp-table ord-table"><tbody>
+          <tr><th>상품</th><td>${esc(o.name)}</td></tr>
+          <tr><th>아티스트</th><td>${esc(o.brand)}</td></tr>
+          <tr><th>사양</th><td>${esc(o.option)}</td></tr>
+          <tr><th>수량</th><td>${o.qty}개</td></tr>
+          <tr><th>단가</th><td>₩${(o.unit ?? Math.round(o.total / o.qty)).toLocaleString()}</td></tr>
+          <tr><th>결제 금액</th><td><b>₩${o.total.toLocaleString()}</b> <span class="dim">(데모 크레딧)</span></td></tr>
+          <tr><th>상태</th><td><span class="mp-status">${esc(o.status)}</span></td></tr>
+        </tbody></table>
+      </div>
+
+      ${b ? `
+      <div class="mp-section">
+        <h3>가격 산출 내역</h3>
+        <table class="calc-table on-dark"><tbody>
+          <tr><th>일본 정가</th><td>¥${b.jpy.toLocaleString()}</td><td class="calc-src">주문 시점 기준</td></tr>
+          <tr><th>적용 환율</th><td>× ${b.rate}</td><td class="calc-src">${esc(b.rateDate || '')}</td></tr>
+          <tr><th>상품 원가</th><td>₩${b.base.toLocaleString()}</td><td class="calc-src"></td></tr>
+          <tr><th>대행 수수료</th><td>+ ₩${b.fee.toLocaleString()}</td><td class="calc-src">${Math.round(b.feeRate * 100)}%</td></tr>
+          <tr><th>국제배송 분담</th><td>+ ₩${b.shipping.toLocaleString()}</td><td class="calc-src">합배송</td></tr>
+          <tr class="calc-total"><th>단가</th><td>₩${b.total.toLocaleString()}</td><td class="calc-src"></td></tr>
+        </tbody></table>
+      </div>` : ''}
+
+      <div class="ord-actions">
+        <a class="btn-out" href="#/store/${esc(o.productId)}">상품 페이지</a>
+        <a class="btn-out" href="#/orders">목록으로</a>
+      </div>
+      <p class="pd-note">데모 주문입니다. 실제 결제·배송·취소는 이루어지지 않습니다.</p>
+    </section>`;
+}
+
+/* ================= 서비스 안내 ================= */
+export function pageHelp() {
+  root().innerHTML = `
+    <section class="sec page-top narrow">
+      <div class="page-head">
+        <p class="sp-label">안내</p>
+        <h1 class="page-title">Lilac 소개 · 데이터 출처</h1>
+        <p class="page-desc">이 데모가 어떤 데이터를 쓰고 무엇이 실제이며 무엇이 데모인지 정리했습니다.</p>
+      </div>
+
+      <div class="help-sec">
+        <h3>무엇을 하는 서비스인가요</h3>
+        <p>한국의 J-POP 팬과 일본의 K-POP 팬을 잇는 크로스보더 팬덤 플랫폼입니다.
+          음원 스트리밍만으로는 채워지지 않는 <b>정보 · 커머스 · 일정</b>을 한 곳에 모으고,
+          해외 배송이 지원되지 않는 현지 한정반을 정식 루트로 공동구매합니다.</p>
+      </div>
+
+      <div class="help-sec">
+        <h3>실제 데이터</h3>
+        <table class="help-table"><tbody>
+          <tr><th>차트</th><td>Apple Music 국가별 최다 재생 · Billboard JAPAN HOT 100 · 오리콘 주간 싱글 · YouTube 공식 MV 조회수</td></tr>
+          <tr><th>카탈로그</th><td>Apple Music 검색 API (제목 · 아티스트 · 앨범 · 아트워크 · 30초 미리듣기 · 재생시간)</td></tr>
+          <tr><th>상품</th><td>Apple Music 카탈로그 기반 실제 앨범 100종 (발매일 · 수록곡 수 · 디지털 정가)</td></tr>
+          <tr><th>환율</th><td>frankfurter.app 실시간 JPY→KRW</td></tr>
+          <tr><th>발매 일정</th><td>Apple Music 카탈로그 발매일 자동 수집</td></tr>
+          <tr><th>아티스트 지표</th><td>공식 뮤직비디오 누적 조회수 실측 합산</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="help-sec">
+        <h3>데모 데이터 (실제가 아닙니다)</h3>
+        <ul class="pd-ul">
+          <li>피지컬 CD 정가 — 일본 CD 시장 통상가 기준 <b>추정치</b>입니다.</li>
+          <li>재고 수량 · 결제(크레딧) · 배송 상태 — 데모 값이며 실제 거래가 일어나지 않습니다.</li>
+          <li>공연 · 응모 일정 4건 — 공개 API가 없어 예시로 넣은 데모입니다.</li>
+          <li>가사 — 라이선스 문제로 자체 제작 문구를 표시합니다.</li>
+        </ul>
+      </div>
+
+      <div class="help-sec">
+        <h3>판매가는 이렇게 계산됩니다</h3>
+        <p class="mono-ish">일본 정가(¥) × 실시간 환율 + 대행 수수료(싱글 10% / 앨범 12% / 한정반 15%) + 국제배송 분담 3,500원 → 100원 단위 올림</p>
+        <p class="dim">모든 상품 상세 페이지에서 이 계산 과정을 항목별로 확인할 수 있습니다.</p>
+      </div>
+
+      <div class="help-sec">
+        <h3>하지 않는 것</h3>
+        <p>티켓 재판매(암표)를 중개하지 않습니다. 일본은 2019년부터 입장권 부정전매를 법으로 금지하고 있어,
+          Lilac은 공식 유통·응모 창구와 연결하는 역할만 합니다.</p>
+      </div>
+
+      <div class="ord-actions">
+        <a class="btn-out" href="#/">홈으로</a>
+        <a class="btn-out" href="#/store">스토어</a>
+      </div>
+    </section>`;
+}
+
 /* ================= 인증 ================= */
 export function pageLogin() {
   root().innerHTML = `
@@ -1475,7 +1684,7 @@ export async function pageAccount() {
       </div>
 
       <div class="mp-section">
-        <h3>${t('acct.orders')}</h3>
+        <h3>${t('acct.orders')} <a class="sec-link" href="#/orders" style="margin-left:8px">전체보기</a></h3>
         ${orders.length ? `
         <table class="mp-table">
           <thead><tr><th>주문번호</th><th>상품</th><th>옵션</th><th>수량</th><th>결제</th><th>상태</th><th>주문일</th></tr></thead>

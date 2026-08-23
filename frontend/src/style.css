@@ -1938,3 +1938,128 @@ body.play-mode .calc-table .calc-total th, body.play-mode .calc-table .calc-tota
 .rk-ph .ic { width: 20px; height: 20px; }
 .ch-method { line-height: 1.8; }
 @media (max-width: 900px) { .rk-move { display: none; } }
+
+/* ============================================================
+   v1.8 — UI 깨짐 수정 (명암비·링크색 자동검사로 발견)
+   ============================================================ */
+
+/* 1) [치명] 앵커 기반 카드가 브라우저 기본 링크색(파랑)으로 렌더되던 문제
+      → 상품 가격, 일정 카드 제목 등이 파랗게 보였음 */
+:where(#page, .sidebar, .player, .right-dock) a { color: inherit; text-decoration: none; }
+:where(#page, .sidebar) a:visited { color: inherit; }
+/* 링크처럼 보여야 하는 것만 되살림 */
+.sec-link { color: var(--ink-faint); }
+.sec-link:hover { color: var(--ink); }
+.sec-link.dark { color: var(--paper-muted); }
+.sec-link.dark:hover { color: var(--paper-ink); }
+.auth-alt { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px; }
+.auth-alt:hover { color: var(--ink); }
+.sr-golink { color: var(--accent); }
+.p-card .p-price { color: var(--paper-ink); }
+body.play-mode .p-card .p-price, .store-dark-grid .p-price { color: var(--ink); }
+.ev-card { color: var(--ink); }
+.ev-card .ev-title, .ev-card .ev-info, .ev-card .ev-note { color: inherit; }
+.ev-card .ev-info { color: rgba(255,255,255,.78); }
+.ev-card .ev-note { color: rgba(255,255,255,.58); }
+
+/* 2) 차트 국가 토글의 선택 상태가 배경 없이 어두운 글씨라 안 보이던 문제 */
+.seg.country .seg-btn.on { background: var(--ink); color: var(--bg); }
+.seg .seg-btn.on { background: var(--ink); color: var(--bg); }
+
+/* 3) 플레이 모드에서 스토어(light-page) 진입 시 톱바가 라이트 테마로 바뀌어
+      다크 패널 위에 어두운 글씨가 얹히던 문제 → 플레이 모드에선 라이트 테마 해제 */
+body.play-mode.light-page .tb-item { color: var(--ink-muted); }
+body.play-mode.light-page .tb-item:hover { color: var(--ink); background: var(--rule); }
+body.play-mode.light-page .tb-item.on { color: var(--ink); background: var(--bg-soft); }
+body.play-mode.light-page .tb-search { background: var(--bg-soft); }
+body.play-mode.light-page .tb-search .ic { color: var(--ink-muted); }
+body.play-mode.light-page .tb-search input { color: var(--ink); }
+body.play-mode.light-page .tb-search:focus-within { box-shadow: 0 0 0 2px var(--ink); }
+body.play-mode.light-page .tb-connect { border-color: var(--rule-strong); color: var(--ink); }
+body.play-mode.light-page .tb-connect:hover { border-color: var(--ink); }
+body.play-mode.light-page .tb-icon, body.play-mode.light-page .tb-arrow { background: rgba(0,0,0,.4); color: var(--ink-muted); }
+body.play-mode.light-page .tb-icon:hover, body.play-mode.light-page .tb-arrow:hover { color: var(--ink); }
+body.play-mode.light-page .tb-link { color: var(--ink-muted); }
+body.play-mode.light-page .tb-signup { background: var(--ink); color: var(--bg); }
+body.play-mode.light-page .tb-user { background: rgba(0,0,0,.4); color: var(--ink); }
+body.play-mode.light-page .tb-credits { color: var(--ink-muted); }
+body.play-mode.light-page .locale-menu { background: var(--bg-soft); border-color: var(--rule); }
+body.play-mode.light-page .locale-menu button { color: var(--ink-muted); }
+body.play-mode.light-page .locale-menu button:hover { background: var(--bg-hover); color: var(--ink); }
+
+/* 4) 화이트 페이지에서 출처 배지(시안색)가 배경과 붙어 안 읽히던 문제 */
+body:not(.play-mode) .store-wrap .src-badge.real,
+body:not(.play-mode) .product .src-badge.real { background: #e6f7fb; color: #0d7490; }
+body:not(.play-mode) .store-wrap .src-badge.demo { background: #f0f0f2; color: #6b6d74; }
+
+/* v1.8b — 히스토리 내비게이션을 두 모드 모두에서 제공 */
+.tb-nav { display: flex; }
+body.play-mode .tb-nav { display: flex; }
+@media (max-width: 900px) { .tb-nav { display: none; } }
+
+/* ============================================================
+   v1.9 — 신규 페이지 (아티스트 목록 / 주문 / 안내)
+   ============================================================ */
+.footer-link { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px; }
+.footer-link:hover { color: var(--ink); }
+
+/* 아티스트 전체 */
+.artists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.ars-card { display: block; padding: 16px; border-radius: var(--radius-md); background: var(--bg-raised); text-align: center; transition: background var(--dur-short), transform var(--dur-short) var(--ease-out); }
+.ars-card:hover { background: var(--bg-soft); transform: translateY(-3px); }
+.ars-cover { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; border-radius: 50%; overflow: hidden; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+.ars-cover img { width: 100%; height: 100%; object-fit: cover; }
+.ars-cover .ph { font-size: 40px; font-weight: 800; color: var(--ink-faint); }
+.ars-follow { position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; }
+.ars-name { font-size: 15px; font-weight: 700; }
+.ars-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+.ars-op { font-size: 11px; color: var(--ink-faint); margin-top: 6px; }
+
+/* 주문 */
+.ord-list { display: flex; flex-direction: column; gap: 10px; }
+.ord-card { display: grid; grid-template-columns: 64px 1fr auto 18px; align-items: center; gap: 16px; padding: 14px 16px; background: var(--bg-raised); border: 1px solid var(--rule); border-radius: var(--radius-md); transition: border-color var(--dur-micro), transform var(--dur-short) var(--ease-out); }
+.ord-card:hover { border-color: var(--rule-strong); transform: translateX(3px); }
+.ord-art { width: 64px; height: 64px; border-radius: var(--radius-sm); background: var(--bg-soft); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.ord-top { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.ord-id { font-size: 11.5px; font-weight: 700; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.ord-name { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ord-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+.ord-right { text-align: right; }
+.ord-total { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ord-date { font-size: 11.5px; color: var(--ink-faint); margin-top: 3px; }
+.ord-go { color: var(--ink-faint); }
+.ord-steps { display: flex; align-items: center; gap: 6px; margin: 20px 0 28px; }
+.ord-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+.ord-step::before { content: ''; position: absolute; top: 15px; left: -50%; width: 100%; height: 2px; background: var(--rule); }
+.ord-step:first-child::before { display: none; }
+.ord-step.done::before { background: var(--accent); }
+.ord-step .dot { width: 32px; height: 32px; border-radius: 50%; background: var(--bg-soft); color: var(--ink-faint); display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 800; position: relative; z-index: 1; }
+.ord-step.done .dot { background: var(--accent); color: var(--accent-ink); }
+.ord-step.cur .dot { box-shadow: 0 0 0 4px rgba(167,139,250,.22); }
+.ord-step .lb { font-size: 12px; color: var(--ink-faint); }
+.ord-step.done .lb { color: var(--ink); }
+.ord-detail { display: grid; grid-template-columns: 200px 1fr; gap: 26px; align-items: start; margin-bottom: 30px; }
+.ord-detail-art { aspect-ratio: 1; border-radius: var(--radius-md); background: var(--bg-soft); background-size: cover; background-position: center; box-shadow: 0 14px 36px rgba(0,0,0,.5); }
+.ord-table th { width: 110px; color: var(--ink-muted); font-weight: 600; }
+.ord-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.calc-table.on-dark th, .calc-table.on-dark .calc-src { color: var(--ink-faint); }
+.calc-table.on-dark td { color: var(--ink); }
+.calc-table.on-dark .calc-total th, .calc-table.on-dark .calc-total td { border-top-color: var(--rule); color: var(--ink); }
+
+/* 안내 */
+.help-sec { margin-bottom: 34px; }
+.help-sec h3 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+.help-sec p { font-size: 14px; color: var(--ink-muted); line-height: 1.8; max-width: 720px; }
+.help-table { width: 100%; max-width: 760px; border-collapse: collapse; font-size: 13.5px; }
+.help-table th { text-align: left; width: 120px; padding: 11px 12px; color: var(--ink-faint); font-weight: 600; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.help-table td { padding: 11px 12px; color: var(--ink); border-bottom: 1px solid var(--rule); line-height: 1.65; }
+.mono-ish { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px !important; background: var(--bg-raised); padding: 14px 16px; border-radius: var(--radius-sm); line-height: 1.8 !important; }
+@media (max-width: 760px) {
+  .ord-card { grid-template-columns: 52px 1fr; }
+  .ord-right, .ord-go { display: none; }
+  .ord-detail { grid-template-columns: 1fr; }
+  .ord-detail-art { max-width: 180px; }
+  .ord-step .lb { font-size: 10.5px; }
+  .artists-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .ars-cover { width: 90px; height: 90px; }
+}
