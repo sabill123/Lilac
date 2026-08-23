@@ -85,6 +85,49 @@ app.get('/api/catalog/albums', async (req, res) => {
   } catch (e) { res.status(502).json({ error: 'itunes upstream failed', detail: String(e) }); }
 });
 
+
+/* ================= 통합 검색 ================= */
+// 곡(Apple 카탈로그) + 아티스트 + 상품 + 일정을 한 번에 찾는다.
+app.get('/api/search', async (req, res) => {
+  const q = String(req.query.q || '').trim().slice(0, 60);
+  if (!q) return res.status(400).json({ error: 'q required' });
+  const ql = q.toLowerCase();
+  const hit = (s) => String(s || '').toLowerCase().includes(ql);
+
+  const [artists, products, events, tracks] = await Promise.all([
+    readJson('artists', []), readJson('products', []), readJson('events', []), readJson('tracks', []),
+  ]);
+
+  const artistHits = artists.filter((a) => hit(a.name) || hit(a.nameJa) || hit(a.searchTerm) || hit(a.genre));
+  const productHits = products.filter((p) => hit(p.name) || hit(p.brand)).slice(0, 12);
+  const eventHits = events.filter((e) => hit(e.title) || hit(e.artist) || hit(e.type)).slice(0, 8);
+  const seedHits = tracks.filter((t) => hit(t.title) || hit(t.artist) || hit(t.tag)).slice(0, 8);
+
+  // 카탈로그(곡)는 외부 호출이라 병렬로
+  let catalog = [];
+  try {
+    const r = await fetch(`https://itunes.apple.com/search?media=music&entity=song&country=jp&limit=15&term=${encodeURIComponent(q)}`, {
+      headers: { 'user-agent': 'lilac-demo/0.3' },
+    });
+    const j = await r.json();
+    catalog = (j.results || []).map((t) => ({
+      id: t.trackId, title: t.trackName, artist: t.artistName, album: t.collectionName,
+      artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
+      preview: t.previewUrl, appleUrl: t.trackViewUrl, durationMs: t.trackTimeMillis || 0,
+    }));
+  } catch { /* 외부 실패는 무시하고 내부 결과만 */ }
+
+  res.json({
+    q,
+    counts: { tracks: catalog.length, artists: artistHits.length, products: productHits.length, events: eventHits.length },
+    tracks: catalog,
+    artists: artistHits,
+    products: productHits,
+    events: eventHits,
+    seedTracks: seedHits,
+  });
+});
+
 /* ================= YouTube 실시간 통계 ================= */
 // 공개 watch 페이지에서 조회수·게시일을 읽는다 (API 키 불필요). 30분 캐시.
 const ytCache = new Map(); // id -> { at, views, publishDate, title }

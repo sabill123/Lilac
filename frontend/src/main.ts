@@ -159,6 +159,76 @@ function initGlobe() {
   });
 }
 
+
+/* ---------- 페이지 타이틀 ---------- */
+const TITLES: Record<string, string> = {
+  home: '홈', chart: '차트', store: '스토어', schedule: '일정', artist: '아티스트',
+  artists: '아티스트', library: '보관함', playlist: '플레이리스트', account: '계정',
+  orders: '주문 내역', help: '서비스 안내', search: '검색', login: '로그인', signup: '가입',
+};
+function setTitle(seg: string) {
+  const base = TITLES[seg] || '';
+  document.title = base ? `${base} · Lilac` : 'Lilac';
+  const h = document.getElementById('srAnnounce');
+  if (h) h.textContent = `${base} 페이지로 이동했습니다`;
+}
+
+/* ---------- 스크롤 위치 복원 ---------- */
+const scrollMem = new Map<string, number>();
+let lastHash = location.hash;
+function rememberScroll() {
+  const p = document.querySelector('.main-panel');
+  if (p) scrollMem.set(lastHash, p.scrollTop);
+}
+function restoreScroll(hash: string) {
+  const p = document.querySelector('.main-panel');
+  if (!p) return;
+  const y = scrollMem.get(hash);
+  p.scrollTo({ top: y ?? 0 });
+}
+
+/* ---------- 첫 방문 온보딩 ---------- */
+function maybeOnboard() {
+  if (localStorage.getItem('lilac.onboarded')) return;
+  const el = document.getElementById('onboard');
+  if (!el) return;
+  el.classList.add('show');
+  const close = () => { el.classList.remove('show'); localStorage.setItem('lilac.onboarded', '1'); };
+  el.querySelector('#obStart')?.addEventListener('click', close);
+  el.querySelector('#obSkip')?.addEventListener('click', close);
+  el.querySelector('#obPlay')?.addEventListener('click', () => {
+    localStorage.setItem('lilac.mode', 'play');
+    close();
+    location.reload();
+  });
+}
+
+/* ---------- 모달 포커스 트랩 ---------- */
+function initFocusTrap() {
+  const SEL = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const open = document.querySelector<HTMLElement>('.modal.show, .np-full.show, .onboard.show');
+    if (!open) return;
+    const f = Array.from(open.querySelectorAll<HTMLElement>(SEL)).filter((x) => x.offsetParent !== null);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  // 모달이 열리면 첫 요소로 포커스 이동
+  const mo = new MutationObserver((ms) => {
+    ms.forEach((m) => {
+      const t = m.target as HTMLElement;
+      if (t.classList?.contains('show') && (t.classList.contains('modal') || t.classList.contains('np-full') || t.classList.contains('onboard'))) {
+        setTimeout(() => t.querySelector<HTMLElement>(SEL)?.focus(), 60);
+      }
+    });
+  });
+  document.querySelectorAll('.modal, .np-full, .onboard').forEach((m) =>
+    mo.observe(m, { attributes: true, attributeFilter: ['class'] }));
+}
+
 /* ---------- 라우터 ---------- */
 let navDepth = 0;
 async function route() {
@@ -166,9 +236,10 @@ async function route() {
   const [seg, sub] = hash.split('?')[0].split('/');
   const qs = new URLSearchParams(hash.split('?')[1] || '');
   const panel = $('#mainPanel');
-  panel.scrollTo({ top: 0 });
+  rememberScroll();
   applyMode();
   markActive();
+  setTitle(seg || 'home');
   try {
     switch (seg || 'home') {
       case 'home': await pageHome(); break;
@@ -190,6 +261,8 @@ async function route() {
   } catch (e) { console.error(e); page404(); }
   // 페이지 렌더 후 인터랙션 바인딩
   bindTilt(panel); bindHoverExpand(panel); bindReveal(panel, panel);
+  restoreScroll(location.hash);
+  lastHash = location.hash;
   onScroll();
 }
 function onScroll() {
@@ -294,6 +367,8 @@ async function boot() {
   renderTopbar();
   await renderSidebar();
   await route();
+  initFocusTrap();
+  maybeOnboard();
 }
 
 /* ---------- 백엔드 장애 화면 ---------- */

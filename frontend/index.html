@@ -43,11 +43,14 @@
       <symbol id="i-expand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></symbol>
     </svg>
 
+    <a class="skip-link" href="#page">본문으로 건너뛰기</a>
+    <div class="sr-only" id="srAnnounce" role="status" aria-live="polite"></div>
+
     <div class="app" id="app">
       <!-- 좌측 사이드바 -->
-      <aside class="sidebar" id="sidebar">
+      <aside class="sidebar" id="sidebar" aria-label="라이브러리">
         <div class="sb-top">
-          <nav class="sb-nav" id="sbNav"></nav>
+          <nav class="sb-nav" id="sbNav" aria-label="주요 메뉴"></nav>
         </div>
         <div class="sb-lib">
           <div class="sb-lib-head">
@@ -71,7 +74,7 @@
 
       <!-- 메인 패널 -->
       <div class="main-panel" id="mainPanel">
-        <header class="topbar" id="topbar">
+        <header class="topbar" id="topbar" role="banner">
           <a class="tb-brand" href="#/">Lilac</a>
           <nav class="tb-menu" id="tbMenu"></nav>
           <div class="tb-nav">
@@ -80,7 +83,7 @@
           </div>
           <div class="tb-search">
             <svg class="ic"><use href="#i-search"/></svg>
-            <input id="searchInput" type="text" autocomplete="off" spellcheck="false" />
+            <input id="searchInput" type="search" autocomplete="off" spellcheck="false" aria-label="검색" />
           </div>
           <div class="tb-right">
             <button id="connectApple" class="tb-connect"></button>
@@ -91,7 +94,7 @@
             <span class="tb-acct" id="gnbAcct"></span>
           </div>
         </header>
-        <main id="page"></main>
+        <main id="page" tabindex="-1"></main>
         <footer class="footer">
           <p>Lilac demo — Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a></p>
           <p>미리듣기는 Apple Music 카탈로그 30초 프리뷰, MV는 YouTube 공식 임베드로 재생됩니다. 상품·일정은 데모 데이터이며 가사 패널 문구는 자체 제작 예시입니다.</p>
@@ -118,10 +121,10 @@
     </div>
 
     <!-- 모바일 하단 네비 -->
-    <nav class="mnav" id="mnav"></nav>
+    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"></nav>
 
     <!-- 플레이어 -->
-    <div class="player" id="player">
+    <div class="player" id="player" role="region" aria-label="재생 플레이어">
       <div class="pl-left">
         <div class="pl-artwrap" id="plArtWrap">
           <span class="vinyl" id="vinyl"></span>
@@ -203,7 +206,36 @@
       </div>
     </div>
 
-    <div class="toast"></div>
+    <!-- 첫 방문 온보딩 -->
+    <div class="onboard" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+      <div class="ob-box">
+        <p class="ob-eyebrow">처음 오셨네요</p>
+        <h2 id="obTitle">Lilac은 두 가지 모드로 씁니다</h2>
+        <div class="ob-modes">
+          <div class="ob-mode">
+            <span class="ob-ic"></span>
+            <b>브라우즈 모드</b>
+            <p>차트·스토어·일정·아티스트를 둘러보는 팬덤 포털입니다. 지금 보고 계신 화면이에요.</p>
+          </div>
+          <div class="ob-mode">
+            <b>플레이 모드</b>
+            <p>보관함과 플레이리스트 중심의 음악 감상 화면으로 바뀝니다. 하단 플레이어의 <b>라이브러리 아이콘</b>으로 언제든 전환할 수 있어요.</p>
+          </div>
+        </div>
+        <ul class="ob-tips">
+          <li>상단 검색은 곡·아티스트·앨범·굿즈·일정을 한 번에 찾습니다</li>
+          <li>스토어 가격은 일본 정가 × 실시간 환율 + 대행 수수료로 자동 계산됩니다</li>
+          <li>단축키 — 스페이스 재생 / Q 대기열 / L 가사 / 슬래시 검색</li>
+        </ul>
+        <div class="ob-actions">
+          <button class="btn-pill" id="obStart">둘러보기 시작</button>
+          <button class="ob-link" id="obPlay">플레이 모드로 시작</button>
+        </div>
+        <button class="ob-skip" id="obSkip" aria-label="닫기">건너뛰기</button>
+      </div>
+    </div>
+
+    <div class="toast" role="status" aria-live="polite"></div>
     <script>
       window.__errs = [];
       addEventListener('error', (e) => window.__errs.push('ERR ' + ((e.error && e.error.stack) || e.message)));

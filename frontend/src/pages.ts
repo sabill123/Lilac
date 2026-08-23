@@ -1806,93 +1806,164 @@ export async function pageAccount() {
   });
 }
 
-/* ================= 검색 ================= */
-interface AlbumRes { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }
+/* ================= 통합 검색 =================
+   곡 · 아티스트 · 상품 · 일정을 한 화면에서 찾는다. */
+interface UniSearch {
+  q: string;
+  counts: { tracks: number; artists: number; products: number; events: number };
+  tracks: CatalogTrack[];
+  artists: Artist[];
+  products: Product[];
+  events: Ev[];
+  seedTracks: SeedTrack[];
+}
+const SR_TABS = [
+  { k: 'all', label: '전체' }, { k: 'tracks', label: '곡' }, { k: 'artists', label: '아티스트' },
+  { k: 'albums', label: '앨범' }, { k: 'products', label: '상품' }, { k: 'events', label: '일정' },
+];
+
 export async function pageSearch(q: string, tab = 'all') {
+  if (!q) {
+    root().innerHTML = `
+      <section class="sec page-top">
+        <div class="page-head"><p class="sp-label">검색</p><h1 class="page-title">무엇을 찾으세요?</h1>
+          <p class="page-desc">곡·아티스트·앨범·굿즈·일정을 한 번에 검색합니다.</p></div>
+        <div class="mood-grid" id="srBrowse"></div>
+      </section>`;
+    const moods = [
+      { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' }, { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
+      { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' }, { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
+      { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' }, { k: '한정반', c: '#ec4899,#831843', q: '限定' },
+    ];
+    $('#srBrowse').innerHTML = moods.map((m) => `
+      <a class="mood" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-tilt="6">
+        <span class="mood-k">${m.k}</span><span class="mood-sq"></span></a>`).join('');
+    bindTilt(root());
+    return;
+  }
+
   root().innerHTML = `
     <section class="sec page-top">
       <div class="page-head">
         <p class="sp-label">검색 결과</p>
         <h1 class="page-title">${esc(q)}</h1>
         <div class="chips" id="srTabs">
-          ${[['all', '전체'], ['songs', '곡'], ['artists', '아티스트'], ['albums', '앨범']].map(([k, l]) =>
-            `<button class="chip ${k === tab ? 'on' : ''}" data-t="${k}">${l}</button>`).join('')}
+          ${SR_TABS.map((s) => `<button class="chip ${s.k === tab ? 'on' : ''}" data-t="${s.k}">${s.label}</button>`).join('')}
         </div>
       </div>
-      <div id="srBody">${skRows(6)}</div>
+      <div id="srBody" aria-live="polite">${skRows(6)}</div>
     </section>`;
   $('#srTabs').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) =>
     b.addEventListener('click', () => pageSearch(q, b.dataset.t!)));
 
-  const [songRes, albumRes] = await Promise.all([
-    api(`/api/catalog/search?term=${encodeURIComponent(q)}&limit=20`).catch(() => ({ tracks: [] })),
-    api(`/api/catalog/search?term=${encodeURIComponent(q)}&entity=album&limit=12`).catch(() => ({ albums: [] })),
-  ]);
-  const tracks = (songRes.tracks || []) as CatalogTrack[];
-  const albums = (albumRes.albums || []) as AlbumRes[];
-  // 아티스트는 곡/앨범 결과에서 집계 (이름 빈도순)
-  const artistMap = new Map<string, number>();
-  [...tracks.map((t) => t.artist), ...albums.map((a) => a.artist)].forEach((n) => artistMap.set(n, (artistMap.get(n) || 0) + 1));
-  const artistList = [...artistMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name]) => name);
+  const d = (await api(`/api/search?q=${encodeURIComponent(q)}`).catch(() => null)) as UniSearch | null;
+  const body = document.getElementById('srBody');
+  if (!d || !body) return;
 
-  if (!tracks.length && !albums.length) {
-    $('#srBody').innerHTML = `<div class="empty-box">${icon('i-search', 'ic eb')}<p>‘${esc(q)}’ 결과가 없습니다</p><span>다른 검색어를 시도해 보세요</span></div>`;
+  // 탭 카운트 갱신
+  const albumRes = await api(`/api/catalog/search?term=${encodeURIComponent(q)}&entity=album&limit=12`).catch(() => ({ albums: [] }));
+  const albums = (albumRes.albums || []) as { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }[];
+  const counts: Record<string, number> = {
+    all: 0, tracks: d.tracks.length, artists: d.artists.length,
+    albums: albums.length, products: d.products.length, events: d.events.length,
+  };
+  $('#srTabs').querySelectorAll<HTMLButtonElement>('.chip').forEach((b) => {
+    const k = b.dataset.t!;
+    if (k !== 'all' && counts[k] === 0) b.classList.add('dim-chip');
+    if (k !== 'all') b.innerHTML = `${SR_TABS.find((s) => s.k === k)!.label} <span class="chip-n">${counts[k]}</span>`;
+  });
+
+  const total = d.tracks.length + d.artists.length + albums.length + d.products.length + d.events.length;
+  if (!total) {
+    body.innerHTML = `<div class="empty-box">${icon('i-search', 'ic eb')}<p>‘${esc(q)}’ 결과가 없습니다</p>
+      <span>아티스트명·곡명·앨범명으로 다시 시도해 보세요</span></div>`;
     return;
   }
 
-  const rows = tracks.map((c) => toPlayable(c));
-  const localArtist = artists.find((a) => a.name.toLowerCase().includes(q.toLowerCase()) || a.searchTerm.toLowerCase().includes(q.toLowerCase()) || a.nameJa.includes(q));
-  const top = tracks[0];
+  /* 섹션 빌더 */
+  const artistShelf = (list: Artist[]) => `<div class="shelf">${list.map((a) => `
+    <a class="card round" href="#/artist/${a.id}" data-term="${esc(a.searchTerm)}" data-tilt="8">
+      <div class="cover"><div class="ph">${esc(a.name[0])}</div><span class="glare"></span></div>
+      <div class="c-title">${esc(a.name)}</div><div class="c-sub">${esc(a.genre)}</div></a>`).join('')}</div>`;
 
-  const albumGrid = (list: AlbumRes[]) => `<div class="shelf">${list.map((a) => `
-    <a class="card" href="${a.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
-      <div class="cover"><img src="${esc(a.artwork)}" alt="" loading="lazy"/><span class="glare"></span></div>
-      <div class="c-title">${esc(a.title)}</div><div class="c-sub">${esc(a.year || '')} · ${esc(a.artist)}</div>
-    </a>`).join('')}</div>`;
-  const artistShelf = (names: string[]) => `<div class="shelf">${names.map((n) => {
-    const local = artists.find((a) => a.name === n || a.nameJa === n || a.searchTerm === n);
-    return `<a class="card round" href="${local ? `#/artist/${local.id}` : `#/search?q=${encodeURIComponent(n)}`}" data-term="${esc(n)}" data-tilt="8">
-      <div class="cover"><div class="ph">${esc(n[0] || '?')}</div><span class="glare"></span></div>
-      <div class="c-title">${esc(n)}</div><div class="c-sub">${t('artists')}</div></a>`;
+  const albumShelf = (list: typeof albums) => `<div class="shelf">${list.map((al) => `
+    <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
+      <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy" decoding="async"/><span class="glare"></span>
+        <span class="card-badge">${al.trackCount}곡</span></div>
+      <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · ${esc(al.artist)}</div></a>`).join('')}</div>`;
+
+  const productGrid = (list: Product[]) => `<div class="store-dark-grid">${list.map((p) => `
+    <a class="p-card" href="#/store/${p.id}" data-tilt="7">
+      <div class="p-img"><img src="${esc(p.artwork)}" alt="" loading="lazy" decoding="async"/><span class="p-badge">${esc(p.badge)}</span></div>
+      <div class="p-brand">${esc(p.brand)}</div><div class="p-name">${esc(p.name)}</div>
+      <div class="p-price">₩${p.price.toLocaleString()}</div></a>`).join('')}</div>`;
+
+  const eventList = (list: Ev[]) => `<div class="sch-rows">${list.map((e) => {
+    const dd = Math.ceil((new Date(e.date).getTime() - Date.now()) / 864e5);
+    return `<a class="sch-row" href="#/schedule">
+      <div class="sch-date"><b>${new Date(e.date).getDate()}</b><span>${e.date.slice(5, 7)}월</span></div>
+      <div class="sch-meta">
+        <div class="sch-top"><span class="sch-type">${esc(e.type)}</span><span class="sch-dday ${dd >= 0 && dd <= 14 ? 'urgent' : ''}">${dd > 0 ? `D-${dd}` : dd === 0 ? 'D-DAY' : '종료'}</span></div>
+        <div class="sch-title">${esc(e.artist)} — ${esc(e.title)}</div>
+        <div class="sch-sub">${esc(e.venue)}</div>
+      </div>
+      <span class="sch-go">${icon('i-chev-r')}</span></a>`;
   }).join('')}</div>`;
+
+  const trackRows = (list: CatalogTrack[]) => {
+    const rows = list.map((c) => toPlayable(c));
+    return { html: trackTable(rows, { album: true, date: false }), rows };
+  };
+
+  const sec = (title: string, count: number, inner: string, more?: string) => count ? `
+    <div class="sec-head sr-sec"><h2>${title}</h2><span class="sec-sub">${count}건</span>
+      ${more ? `<button class="sec-link" data-more="${more}">더보기 ${icon('i-chev-r', 'ic s')}</button>` : ''}</div>
+    ${inner}` : '';
 
   let html = '';
   if (tab === 'all') {
+    const top = d.tracks[0];
+    const localArtist = d.artists[0];
     html = `
       <div class="sr-top">
         ${top ? `<div class="sr-topcard" id="srTop" data-tilt="6">
           <p class="sr-toplabel">상위 결과</p>
-          <img src="${esc(artUrl(top, 300))}" alt=""/>
+          <img src="${esc(artUrl(top, 300))}" alt="" decoding="async"/>
           <h3>${esc(top.title)}</h3>
           <p>${esc(top.artist)}<span class="sr-kind">곡</span></p>
-          <button class="play-big" id="srTopPlay">${icon('i-play')}</button>
+          <button class="play-big" id="srTopPlay" aria-label="상위 결과 재생">${icon('i-play')}</button>
+          ${localArtist ? `<a class="sr-golink" href="#/artist/${localArtist.id}">아티스트 페이지 ${icon('i-chev-r', 'ic s')}</a>` : ''}
         </div>` : ''}
-        <div class="sr-songs">
-          <h3 class="sr-h">곡</h3>
-          <div id="srSongs"></div>
-        </div>
+        <div class="sr-songs"><h3 class="sr-h">곡</h3><div id="srSongs"></div></div>
       </div>
-      ${artistList.length ? `<div class="sec-head sr-sec"><h2>아티스트</h2></div>${artistShelf(artistList.slice(0, 6))}` : ''}
-      ${albums.length ? `<div class="sec-head sr-sec"><h2>앨범</h2></div>${albumGrid(albums.slice(0, 8))}` : ''}`;
-  } else if (tab === 'songs') html = '<div id="srSongs"></div>';
-  else if (tab === 'artists') html = artistList.length ? artistShelf(artistList) : `<p class="loading">아티스트 결과가 없습니다</p>`;
-  else html = albums.length ? albumGrid(albums) : `<p class="loading">앨범 결과가 없습니다</p>`;
+      ${sec('아티스트', d.artists.length, artistShelf(d.artists.slice(0, 6)), d.artists.length > 6 ? 'artists' : '')}
+      ${sec('앨범', albums.length, albumShelf(albums.slice(0, 6)), albums.length > 6 ? 'albums' : '')}
+      ${sec('상품', d.products.length, productGrid(d.products.slice(0, 4)), d.products.length > 4 ? 'products' : '')}
+      ${sec('일정', d.events.length, eventList(d.events.slice(0, 3)), d.events.length > 3 ? 'events' : '')}`;
+  } else if (tab === 'tracks') html = '<div id="srSongs"></div>';
+  else if (tab === 'artists') html = d.artists.length ? artistShelf(d.artists) : `<p class="loading">아티스트 결과가 없습니다</p>`;
+  else if (tab === 'albums') html = albums.length ? albumShelf(albums) : `<p class="loading">앨범 결과가 없습니다</p>`;
+  else if (tab === 'products') html = d.products.length ? productGrid(d.products) : `<p class="loading">상품 결과가 없습니다</p>`;
+  else html = d.events.length ? eventList(d.events) : `<p class="loading">일정 결과가 없습니다</p>`;
 
-  $('#srBody').innerHTML = html;
+  body.innerHTML = html;
 
   const songBox = document.getElementById('srSongs');
-  if (songBox) {
-    const list = tab === 'all' ? rows.slice(0, 5) : rows;
-    songBox.innerHTML = trackTable(list, { album: tab !== 'all', date: false });
-    bindTable(songBox, list);
+  if (songBox && d.tracks.length) {
+    const { html: th, rows } = trackRows(tab === 'all' ? d.tracks.slice(0, 5) : d.tracks);
+    songBox.innerHTML = th;
+    bindTable(songBox, rows);
   }
-  $('#srTopPlay')?.addEventListener('click', (e) => { e.stopPropagation(); if (top) playQueue([toPlayable(top)], 0); });
-  $('#srTop')?.addEventListener('click', () => { if (top) playQueue([toPlayable(top)], 0); });
-  if (localArtist) {
-    $('#srTop')?.insertAdjacentHTML('beforeend', `<a class="sr-golink" href="#/artist/${localArtist.id}">아티스트 페이지 ${icon('i-chev-r', 'ic s')}</a>`);
-  }
-  fillShelfArts($('#srBody'));
-  bindTilt($('#srBody'));
+  const top0 = d.tracks[0];
+  $('#srTopPlay')?.addEventListener('click', (e) => { e.stopPropagation(); if (top0) playQueue([toPlayable(top0)], 0); });
+  $('#srTop')?.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('.sr-golink')) return;
+    if (top0) playQueue([toPlayable(top0)], 0);
+  });
+  body.querySelectorAll<HTMLButtonElement>('[data-more]').forEach((b) =>
+    b.addEventListener('click', () => pageSearch(q, b.dataset.more!)));
+  fillShelfArts(body);
+  bindTilt(body);
 }
 
 export function page404() {

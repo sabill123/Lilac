@@ -1,9 +1,12 @@
 // 인터랙션 · 모션 유틸
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** 터치 기기: 호버 기반 인터랙션(틸트·확장·글레어)은 의미가 없고 성능만 먹는다 */
+export const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+if (isTouch) document.documentElement.classList.add('touch');
 
 /* ---------- 3D 틸트 (커서 추적 perspective) ---------- */
 export function bindTilt(scope: ParentNode = document) {
-  if (reduced) return;
+  if (reduced || isTouch) return;
   scope.querySelectorAll<HTMLElement>('[data-tilt]:not([data-tilt-on])').forEach((el) => {
     el.dataset.tiltOn = '1';
     const max = Number(el.dataset.tilt) || 10;
@@ -168,7 +171,7 @@ export function initKeyboard(handlers: {
 
 /* ---------- 넷플릭스식 호버 확장 ---------- */
 export function bindHoverExpand(scope: ParentNode = document) {
-  if (reduced) return;
+  if (reduced || isTouch) return;
   scope.querySelectorAll<HTMLElement>('.card[data-expand]:not([data-exp-on])').forEach((el) => {
     el.dataset.expOn = '1';
     let timer: number;
