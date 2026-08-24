@@ -2754,3 +2754,335 @@ body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circ
 }
 html.touch .d3-tilt { transform: none !important; }
 html.touch .d3-glare { display: none; }
+
+/* ── three.js 무대 ────────────────────────────────────────
+   캔버스는 배경 레이어로 깔고, 텍스트는 그 위에 얹는다.
+   3D가 뜨지 않는 환경에서는 기존 레이아웃이 그대로 유지된다. */
+
+.bb-stage {
+  position: absolute;
+  /* 히어로 오른쪽 절반을 차지하되, 원통이 잘리지 않게 여유를 둔다 */
+  inset: -6% -4% -6% 34%;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out);
+  mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 88%, transparent 100%);
+}
+.bb-stage canvas { opacity: 0.96; }
+body.has-3d-hero .bb-stage { opacity: 1; }
+/* 3D가 뜨면 기존 정적 카드는 자리를 내준다 */
+body.has-3d-hero .bb-card { opacity: 0; pointer-events: none; }
+/* 텍스트가 캔버스에 묻히지 않도록 */
+.billboard .bb-inner { position: relative; z-index: 2; }
+body.has-3d-hero .bb-content { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55); }
+
+.ch-stage {
+  position: absolute;
+  /* 컨트롤(소스·국가 선택)은 아래쪽 왼편에 있으므로 무대는 오른쪽 위로 제한한다 */
+  inset: -4% -2% 26% 46%;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out);
+  mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 92%, transparent 100%);
+}
+body.has-3d-chart .ch-stage { opacity: 1; }
+.chart-hero { position: relative; overflow: hidden; }
+.chart-hero .ch-inner { position: relative; z-index: 2; }
+/* 컨트롤 뒤에 옅은 판을 깔아 3D와 겹쳐도 읽히게 한다 */
+body.has-3d-chart .ch-controls {
+  position: relative;
+  z-index: 3;
+}
+body.has-3d-chart .ch-controls::before {
+  content: '';
+  position: absolute;
+  inset: -10px -16px;
+  z-index: -1;
+  border-radius: 18px;
+  background: linear-gradient(90deg, var(--page) 62%, transparent);
+}
+body.has-3d-chart .chart-hero { min-height: 460px; }
+
+/* 3D 열에서 현재 맨 앞에 온 곡 */
+.ch-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--hairline);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: chNowIn 380ms var(--ease-out) both;
+}
+@keyframes chNowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.ch-now-rank {
+  display: grid;
+  place-items: center;
+  min-width: 26px; height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px; font-weight: 800;
+}
+.ch-now-text { font-size: 13px; color: var(--ink); }
+
+/* 3D 조작 안내 — 처음 보는 사람은 드래그할 수 있다는 걸 모른다 */
+.stage-hint {
+  position: absolute;
+  right: 18px; bottom: 16px;
+  z-index: 3;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  animation: hintFade 5.5s ease-out both;
+}
+@keyframes hintFade {
+  0%, 62% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (max-width: 1100px) {
+  .bb-stage, .ch-stage { inset: 0; opacity: 0.42 !important; }
+}
+@media (max-width: 900px) {
+  .bb-stage, .ch-stage { display: none; }
+  body.has-3d-hero .bb-card { opacity: 1; pointer-events: auto; }
+  body.has-3d-chart .chart-hero { min-height: 0; }
+}
+
+/* ═══ 보관함 재설계 ═══════════════════════════════════════
+   기존에는 플레이리스트·아티스트·좋아요가 한 목록에 섞여 있어
+   "무엇이 있는지"는 보여도 "무엇을 할지"가 보이지 않았다.
+   목적이 다른 것을 섹션으로 나누고, 가장 자주 하는 행동(이어 듣기)을 맨 위에 둔다. */
+
+.lib2 { padding: 0 var(--gutter) 80px; max-width: 1500px; margin: 0 auto; }
+
+/* ── 헤더: 요약을 숫자로 먼저 보여준다 ── */
+.lib2-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 44px 0 26px;
+}
+.lib2-title { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.03em; margin: 6px 0 8px; }
+.lib2-sub { color: var(--ink-muted); font-size: 14px; }
+.lib2-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.lib2-stats > div {
+  min-width: 96px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+}
+.lib2-stats dt { font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+.lib2-stats dd { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+
+/* ── 툴바 ── */
+.lib2-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  background: linear-gradient(var(--page) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.lib2-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.lib2-tools { display: flex; align-items: center; gap: 8px; }
+
+/* ── 이어 듣기 ── */
+.lib2-sec { margin-top: 30px; }
+.sec-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+.lib2-continue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 10px;
+}
+.lc-cont {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 0 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out);
+}
+.lc-cont:hover { background: var(--bg-soft); }
+.lc-cont-art { flex: 0 0 auto; width: 62px; height: 62px; background: var(--bg-soft); }
+.lc-cont-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lc-cont-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lc-cont-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-cont-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-cont-play {
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  opacity: 0;
+  transform: scale(.82);
+  transition: opacity var(--dur-micro), transform var(--dur-micro) var(--ease-out);
+}
+.lc-cont:hover .lc-cont-play { opacity: 1; transform: none; }
+
+/* ── 플레이리스트 카드 ── */
+.lib2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 16px;
+}
+.lc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  transition: background var(--dur-short) var(--ease-out);
+}
+.lc-card:hover { background: var(--bg-soft); }
+.lc-art {
+  display: block;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-sm);
+}
+.lc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lc-mosaic { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; }
+.lc-mosaic img { width: 100%; height: 100%; object-fit: cover; }
+.lc-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
+.lc-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-sub { font-size: 12px; color: var(--ink-muted); }
+.lc-likes-art {
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, var(--accent), #6d4bd8);
+  color: #fff;
+}
+.lc-likes-art .ic { width: 40%; height: 40%; }
+
+/* ── 아티스트 ── */
+.lib2-artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 14px;
+}
+.la-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 16px 10px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  text-align: center;
+  transition: background var(--dur-short) var(--ease-out);
+}
+.la-card:hover { background: var(--bg-soft); }
+.la-art {
+  display: grid; place-items: center;
+  width: 84px; height: 84px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-soft);
+  font-size: 26px; font-weight: 800; color: var(--ink-faint);
+  box-shadow: var(--shadow-sm);
+}
+.la-art img { width: 100%; height: 100%; object-fit: cover; }
+.la-card b { font-size: 13px; font-weight: 600; }
+.la-card > span:last-child { font-size: 11px; color: var(--ink-muted); }
+
+/* ── 곡 목록 ── */
+.lib2-tracks { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.lt-row {
+  display: grid;
+  grid-template-columns: 28px 44px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--dur-micro);
+}
+.lt-row:hover { background: var(--bg-hover); }
+.lt-i { font-size: 13px; color: var(--ink-faint); text-align: right; font-variant-numeric: tabular-nums; }
+.lt-art { width: 44px; height: 44px; border-radius: 5px; overflow: hidden; background: var(--bg-soft); }
+.lt-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lt-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.lt-txt b { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-play { opacity: 0; color: var(--ink-muted); transition: opacity var(--dur-micro); }
+.lt-row:hover .lt-play { opacity: 1; }
+
+.lib2-more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.lib2-more:hover { color: var(--ink); }
+
+/* ── 빈 상태: 무엇을 하면 되는지 알려준다 ── */
+.lib2-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  border: 1px dashed var(--rule-strong);
+  border-radius: var(--radius-lg);
+  color: var(--ink-muted);
+  text-align: center;
+}
+.lib2-empty .eb { width: 34px; height: 34px; opacity: .5; }
+.lib2-empty p { font-size: 14px; }
+
+/* 호버가 없는 환경에서는 액션 버튼을 항상 보여준다 */
+@media (hover: none) {
+  .lc-cont-play, .lt-play { opacity: 1; transform: none; }
+}
+@media (max-width: 720px) {
+  .lib2-hero { padding-top: 28px; }
+  .lib2-stats > div { min-width: 78px; padding: 10px 12px; }
+  .lib2-stats dd { font-size: 18px; }
+  .lt-row { grid-template-columns: 22px 40px 1fr 30px; gap: 9px; }
+}

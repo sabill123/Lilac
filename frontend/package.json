@@ -15,5 +15,9 @@
   "overrides": {
     "esbuild": "npm:esbuild-wasm@^0.21.5",
     "rollup": "npm:@rollup/wasm-node@^4.24.0"
+  },
+  "dependencies": {
+    "@types/three": "^0.185.4",
+    "three": "^0.185.1"
   }
 }

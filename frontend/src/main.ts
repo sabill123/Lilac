@@ -9,6 +9,7 @@ import { initMusicKitIfConfigured } from './musickit';
 import { initRipple, initKeyboard, initContextMenu, bindParallax, bindReveal, bindTilt, bindHoverExpand } from './interactions';
 import { mountBackdrop } from './backdrop';
 import { mountMotion3D, playEnter } from './motion3d';
+import { disposeScene } from './three';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -252,6 +253,9 @@ async function route() {
   const qs = new URLSearchParams(hash.split('?')[1] || '');
   const panel = $('#mainPanel');
   rememberScroll();
+  // 이전 페이지의 3D 씬을 정리한다 (GPU 리소스·렌더 루프 누수 방지)
+  disposeScene();
+  document.body.classList.remove('has-3d-hero', 'has-3d-chart');
   applyMode();
   markActive();
   setTitle(seg || 'home');

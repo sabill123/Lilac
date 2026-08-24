@@ -1,5 +1,6 @@
 import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
 import { smartMatch } from './koja';
+import { mountHero3D, mountChart3D, can3D } from './three';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
 import { playQueue, openYt, toast, enqueue, openPlaylistPicker } from './player';
 import { applyTone } from './colors';
@@ -200,6 +201,7 @@ export async function pageHome() {
             <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
           </div>
         </div>
+        <div class="bb-stage" id="bbStage" aria-hidden="true"></div>
         <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
@@ -258,6 +260,22 @@ export async function pageHome() {
     const top = chart.list.slice(0, 5);
     $('#hChart').innerHTML = rankList(top);
     bindRank($('#hChart'), top);
+
+    /* 히어로 3D — 차트 상위 앨범을 원통형으로 세워 돌린다.
+       three.js 는 여기서 처음 필요해지므로 이 시점에 동적으로 불러온다. */
+    const stage = document.getElementById('bbStage');
+    if (stage && can3D()) {
+      const items = (chart.list as ChartRow[])
+        .filter((e) => e.artwork)
+        .slice(0, 14)
+        .map((e) => ({
+          title: e.title, artist: e.artist, artwork: e.artwork as string,
+          href: `#/search?q=${encodeURIComponent(e.title)}`,
+        }));
+      document.body.classList.add('has-3d-hero');
+      stage.insertAdjacentHTML('afterend', '<span class="stage-hint">드래그해서 돌려보세요</span>');
+      mountHero3D(stage, items).catch(() => document.body.classList.remove('has-3d-hero'));
+    }
   }
 
   // 무드 타일
@@ -502,11 +520,16 @@ export async function pageChart(sub?: string) {
   if (isPlay()) return pageChartPlay(sub);
   const source = sub || 'combined';
   root().innerHTML = `
-    <section class="chart-hero">
+    <section class="chart-hero" id="chHero">
+      <div class="ch-stage" id="chStage" aria-hidden="true"></div>
       <div class="ch-inner">
         <p class="sp-label">차트</p>
         <h1 class="ch-title">실시간 차트</h1>
         <p class="ch-desc" id="chDesc">불러오는 중…</p>
+        <div class="ch-now" id="chNow" hidden>
+          <span class="ch-now-rank"></span>
+          <span class="ch-now-text"></span>
+        </div>
         <div class="ch-controls">
           <div class="seg wrap">${sourcesOf(chCountry).map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
           <div class="seg country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
@@ -532,6 +555,31 @@ export async function pageChart(sub?: string) {
   }
   const list = data.list as ChartRow[];
   $('#chDesc').textContent = `${data.countryLabel} · ${labelOf(chCountry, source)} · ${list.length}곡`;
+
+  /* 차트 3D — 상위 곡을 앞뒤로 늘어세워 순위를 깊이로 표현한다.
+     휠·드래그로 열을 따라 이동하고, 카드를 누르면 재생한다. */
+  const stage = document.getElementById('chStage');
+  if (stage && can3D()) {
+    document.body.classList.add('has-3d-chart');
+    const items = list.filter((e) => e.artwork).slice(0, 20).map((e) => ({
+      rank: e.rank, title: e.title, artist: e.artist, artwork: e.artwork,
+      onPick: async () => {
+        // 3D 카드에서 바로 재생 — 카탈로그에서 원곡을 찾아 큐에 올린다
+        const hit = await findCatalog(`${e.artist} ${e.title}`);
+        playQueue([hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork || undefined }], 0);
+      },
+    }));
+    stage.addEventListener('chart3d:front', (ev) => {
+      const d = (ev as CustomEvent).detail as { rank: number; title: string; artist: string };
+      const now = document.getElementById('chNow');
+      if (!now || !d) return;
+      now.hidden = false;
+      now.querySelector('.ch-now-rank')!.textContent = String(d.rank);
+      now.querySelector('.ch-now-text')!.textContent = `${d.title} · ${d.artist}`;
+    });
+    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">스크롤·드래그로 순위를 넘겨보세요</span>');
+    mountChart3D(stage, items).catch(() => document.body.classList.remove('has-3d-chart'));
+  }
   $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
   $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
   body.innerHTML = chartRowsHtml(list, source);
@@ -1207,8 +1255,6 @@ export async function pageArtist(id: string) {
    레퍼런스: 스포티파이 라이브러리(필터 칩·정렬·그리드/리스트 토글)
    + 라프텔(태그 필터 감각) + 넷플릭스(행 단위 큐레이션) */
 type LibFilter = 'all' | 'playlists' | 'artists' | 'likes' | 'history';
-let libView: 'grid' | 'list' = (localStorage.getItem('lilac.libView') as 'grid' | 'list') || 'grid';
-let libSort: 'recent' | 'name' | 'count' = (localStorage.getItem('lilac.libSort') as never) || 'recent';
 
 export async function pageLibrary(sub?: string) {
   const filter = (sub || 'all') as LibFilter;
@@ -1217,160 +1263,204 @@ export async function pageLibrary(sub?: string) {
     api('/api/history').catch(() => []), api('/api/oshi').catch(() => []),
   ]);
 
-  const FILTERS: { k: LibFilter; label: string }[] = [
-    { k: 'all', label: '전체' }, { k: 'playlists', label: t('lib.playlists') },
-    { k: 'artists', label: t('lib.follows') }, { k: 'likes', label: t('lib.likes') }, { k: 'history', label: t('lib.history') },
+  type PL = { id: string; name: string; tracks: PlayableTrack[]; createdAt: string };
+  const playlists = lists as PL[];
+  const oshiList = oshi as { artistId: string; name: string; at: string }[];
+  const likeList = likes as (PlayableTrack & { likedAt?: string })[];
+  const histList = hist as PlayableTrack[];
+
+  /* 최근 들은 곡 — 같은 곡이 반복되므로 중복을 접는다 */
+  const recent = histList.filter((h, i, arr) => arr.findIndex((x) => x.title === h.title && x.artist === h.artist) === i);
+
+  const totalTracks = playlists.reduce((n, p) => n + p.tracks.length, 0) + likeList.length;
+
+  /** 플레이리스트 커버 — 수록곡 4장을 모자이크로 */
+  const mosaic = (p: PL) => {
+    const arts = p.tracks.map((t) => t.artwork).filter(Boolean).slice(0, 4) as string[];
+    if (!arts.length) return `<div class="lc-ph">${icon('i-music', 'ic')}</div>`;
+    if (arts.length < 4) return `<img src="${esc(sized(arts[0], 300))}" alt="" loading="lazy" decoding="async"/>`;
+    return `<div class="lc-mosaic">${arts.map((a) => `<img src="${esc(sized(a, 160))}" alt="" loading="lazy" decoding="async"/>`).join('')}</div>`;
+  };
+
+  const SECTIONS: { k: LibFilter; label: string }[] = [
+    { k: 'all', label: '전체' },
+    { k: 'playlists', label: t('lib.playlists') },
+    { k: 'artists', label: t('lib.follows') },
+    { k: 'likes', label: t('lib.likes') },
+    { k: 'history', label: t('lib.history') },
   ];
 
   root().innerHTML = `
-    <section class="lib-page">
-      <div class="lib-head">
-        <div class="lib-title-row">
-          <h1 class="page-title">${t('nav.library')}</h1>
+    <section class="lib2">
+      <header class="lib2-hero" data-d3="head">
+        <div class="lib2-hero-main">
+          <p class="sp-label">${t('nav.library')}</p>
+          <h1 class="lib2-title">내 보관함</h1>
+          <p class="lib2-sub">저장한 플레이리스트와 팔로우한 아티스트를 한곳에서 봅니다.</p>
+        </div>
+        <dl class="lib2-stats">
+          <div><dt>플레이리스트</dt><dd>${playlists.length}</dd></div>
+          <div><dt>팔로우</dt><dd>${oshiList.length}</dd></div>
+          <div><dt>좋아요</dt><dd>${likeList.length}</dd></div>
+          <div><dt>보관 곡</dt><dd>${totalTracks}</dd></div>
+        </dl>
+      </header>
+
+      <div class="lib2-bar">
+        <nav class="lib2-tabs" aria-label="보관함 분류">
+          ${SECTIONS.map((f) => `<a class="chip ${f.k === filter ? 'on' : ''}" href="#/library/${f.k}">${f.label}</a>`).join('')}
+        </nav>
+        <div class="lib2-tools">
+          <div class="lib-find">${icon('i-search', 'ic s')}<input id="libFind" placeholder="보관함에서 찾기" aria-label="보관함 검색" /></div>
           <button class="lib-newbtn" id="libNew">${icon('i-plus', 'ic s')} ${t('lib.newPlaylist')}</button>
         </div>
-        <div class="lib-filters">
-          ${FILTERS.map((f) => `<a class="chip ${f.k === filter ? 'on' : ''}" href="#/library/${f.k}">${f.label}</a>`).join('')}
-        </div>
-        <div class="lib-toolbar">
-          <div class="lib-find">${icon('i-search', 'ic s')}<input id="libFind" placeholder="보관함에서 찾기" /></div>
-          <div class="lib-tools">
-            <select id="libSort">
-              <option value="recent" ${libSort === 'recent' ? 'selected' : ''}>최근 추가순</option>
-              <option value="name" ${libSort === 'name' ? 'selected' : ''}>이름순</option>
-              <option value="count" ${libSort === 'count' ? 'selected' : ''}>곡 많은순</option>
-            </select>
-            <button class="view-toggle ${libView === 'grid' ? 'on' : ''}" id="libGrid" title="그리드">${icon('i-grid', 'ic s')}</button>
-            <button class="view-toggle ${libView === 'list' ? 'on' : ''}" id="libList" title="리스트">${icon('i-rows', 'ic s')}</button>
-          </div>
-        </div>
       </div>
+
       <div id="libBody"></div>
     </section>`;
 
-  type Item = { id: string; kind: 'playlist' | 'artist' | 'likes'; name: string; sub: string; art?: string; term?: string; href: string; count: number; at: string };
-  const items: Item[] = [];
-  if (filter === 'all' || filter === 'likes') {
-    items.push({ id: 'likes', kind: 'likes', name: t('lib.likes'), sub: `플레이리스트 · ${likes.length}곡`, href: '#/library/likes', count: likes.length, at: likes[0]?.likedAt || '' });
-  }
-  if (filter === 'all' || filter === 'playlists') {
-    lists.forEach((p: { id: string; name: string; tracks: PlayableTrack[]; createdAt: string }) =>
-      items.push({ id: p.id, kind: 'playlist', name: p.name, sub: `플레이리스트 · ${p.tracks.length}곡`, art: p.tracks[0]?.artwork, href: `#/playlist/${p.id}`, count: p.tracks.length, at: p.createdAt }));
-  }
-  if (filter === 'all' || filter === 'artists') {
-    oshi.forEach((o: { artistId: string; name: string; at: string }) => {
-      const a = artists.find((x) => x.id === o.artistId);
-      items.push({ id: o.artistId, kind: 'artist', name: o.name, sub: `아티스트 · ${a?.genre ?? ''}`, term: a?.searchTerm, href: `#/artist/${o.artistId}`, count: 0, at: o.at });
-    });
-  }
-
   const body = $('#libBody');
-  const renderItems = (q = '') => {
-    if (filter === 'likes' && sub === 'likes') { /* 전용 뷰 아래에서 처리 */ }
-    let rows = items.filter((i) => smartMatch(i.name, q));
-    if (libSort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
-    else if (libSort === 'count') rows.sort((a, b) => b.count - a.count);
-    else rows.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
 
-    if (!rows.length) {
-      body.innerHTML = `<div class="empty-box">${icon('i-lib', 'ic eb')}<p>항목이 없습니다</p><span>플레이리스트를 만들거나 아티스트를 팔로우해 보세요</span></div>`;
-      return;
-    }
-    if (libView === 'grid') {
-      body.innerHTML = `<div class="lib-grid2">${rows.map((i) => `
-        <a class="lib-card ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-id="${i.id}" data-kind="${i.kind}" data-term="${esc(i.term || '')}" data-tilt="7">
-          <div class="lib-cover ${i.kind === 'likes' ? 'liked' : ''}">
-            ${i.kind === 'likes' ? icon('i-heart-f', 'ic lt') : i.art ? `<img src="${esc(i.art)}" alt="" loading="lazy"/>` : `<span class="ph">${esc(i.name[0])}</span>`}
-            <button class="hover-play" data-play="${i.id}">${icon('i-play')}</button>
-          </div>
-          <div class="c-title">${esc(i.name)}</div><div class="c-sub">${esc(i.sub)}</div>
-        </a>`).join('')}</div>`;
-    } else {
-      body.innerHTML = `<div class="lib-rows">${rows.map((i) => `
-        <a class="lib-row ${i.kind === 'artist' ? 'round' : ''}" href="${i.href}" data-id="${i.id}" data-kind="${i.kind}" data-term="${esc(i.term || '')}">
-          <span class="lib-rcover ${i.kind === 'likes' ? 'liked' : ''}">
-            ${i.kind === 'likes' ? icon('i-heart-f', 'ic s') : i.art ? `<img src="${esc(i.art)}" alt="" loading="lazy"/>` : `<span class="ph">${esc(i.name[0])}</span>`}</span>
-          <span class="lib-rmeta"><b>${esc(i.name)}</b><i>${esc(i.sub)}</i></span>
-          <span class="lib-rdate">${i.at ? new Date(i.at).toLocaleDateString() : '—'}</span>
-        </a>`).join('')}</div>`;
-    }
-    // 아티스트 커버 채우기
-    body.querySelectorAll<HTMLElement>('[data-term]').forEach(async (el) => {
-      if (!el.dataset.term) return;
-      const hit = await findCatalog(el.dataset.term);
-      const box = el.querySelector('.lib-cover, .lib-rcover');
-      if (hit && box) box.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 300)}" alt="" loading="lazy"/>`);
-    });
-    // 재생 버튼
-    body.querySelectorAll<HTMLButtonElement>('[data-play]').forEach((btn) =>
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault(); e.stopPropagation();
-        const id = btn.dataset.play!;
-        if (id === 'likes') { if (likes.length) playQueue(likes, 0, 'likes:likes'); return; }
-        const pl = lists.find((p: { id: string }) => p.id === id);
-        if (pl?.tracks?.length) playQueue(pl.tracks, 0, `playlist:${id}`);
-        else toast('재생할 곡이 없습니다');
-      }));
-    // 컨텍스트 메뉴
-    body.querySelectorAll<HTMLElement>('[data-kind]').forEach((el) =>
-      el.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        const kind = el.dataset.kind, id = el.dataset.id!;
-        const menu: { label: string; icon?: string; danger?: boolean; run: () => void }[] = [
-          { label: '열기', icon: 'i-ext', run: () => { location.hash = el.getAttribute('href')!; } },
-        ];
-        if (kind === 'playlist') {
-          menu.push({ label: '이름 바꾸기', icon: 'i-mic', run: async () => {
-            const pl = lists.find((p: { id: string; name: string }) => p.id === id);
-            const name = prompt('플레이리스트 이름', pl?.name || '');
-            if (!name) return;
-            await api(`/api/playlists/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
-            document.dispatchEvent(new CustomEvent('lilac:playlists'));
-            pageLibrary(sub);
-          } });
-          menu.push({ label: '삭제', icon: 'i-close', danger: true, run: async () => {
-            if (!confirm('플레이리스트를 삭제할까요?')) return;
-            await api(`/api/playlists/${id}`, { method: 'DELETE' });
-            document.dispatchEvent(new CustomEvent('lilac:playlists'));
-            pageLibrary(sub);
-          } });
-        }
-        if (kind === 'artist') {
-          menu.push({ label: '팔로우 해제', icon: 'i-close', danger: true, run: async () => {
-            await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: id, name: el.querySelector('b,.c-title')?.textContent }) });
-            pageLibrary(sub);
-          } });
-        }
-        openContextMenu(e.clientX, e.clientY, menu);
-      }));
-    bindTilt(body);
+  /* ---- 섹션 렌더러 ---- */
+
+  const emptyBox = (msg: string, cta?: { label: string; href: string }) => `
+    <div class="lib2-empty">
+      ${icon('i-music', 'ic eb')}
+      <p>${esc(msg)}</p>
+      ${cta ? `<a class="btn-out" href="${cta.href}">${esc(cta.label)}</a>` : ''}
+    </div>`;
+
+  const secContinue = () => {
+    if (!recent.length) return '';
+    return `
+      <section class="lib2-sec">
+        <div class="sec-head" data-d3="head"><h2>이어 듣기</h2></div>
+        <div class="lib2-continue">
+          ${recent.slice(0, 6).map((h, i) => `
+            <button class="lc-cont" data-play-recent="${i}" data-d3-tilt="6">
+              <span class="lc-cont-art">${h.artwork ? `<img src="${esc(sized(h.artwork, 140))}" alt="" loading="lazy" decoding="async"/>` : ''}</span>
+              <span class="lc-cont-txt">
+                <b>${esc(h.title)}</b>
+                <span>${esc(h.artist)}</span>
+              </span>
+              <span class="lc-cont-play">${icon('i-play', 'ic s')}</span>
+            </button>`).join('')}
+        </div>
+      </section>`;
   };
 
-  // 좋아요/최근재생 전용 트랙 뷰
-  if (filter === 'likes') {
-    const rows = likes.map((l: PlayableTrack & { likedAt?: string }) => ({ ...l, addedAt: l.likedAt }));
-    body.innerHTML = `
-      <div class="liked-hero">
-        <div class="liked-tile" data-tilt="10">${icon('i-heart-f', 'ic lt')}</div>
-        <div>
-          <p class="sp-label">플레이리스트</p>
-          <h2 class="liked-title">${t('lib.likes')}</h2>
-          <p class="sp-meta">${esc(me?.name || 'Lilac 유저')}<span class="sep">·</span>${rows.length}곡</p>
-          <div class="sp-actions inline"><button class="play-big" id="likePlay" ${rows.length ? '' : 'disabled'}>${icon('i-play')}</button></div>
+  const secPlaylists = (q: string) => {
+    const rows = playlists.filter((p) => smartMatch(p.name, q));
+    return `
+      <section class="lib2-sec">
+        <div class="sec-head" data-d3="head">
+          <h2>플레이리스트 <span class="sec-count">${rows.length}</span></h2>
+          ${filter === 'all' && playlists.length > 6 ? '<a class="sec-link" href="#/library/playlists">전체 보기</a>' : ''}
         </div>
-      </div>
-      <div id="likeTable"></div>`;
-    $('#likeTable').innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-heart', 'ic eb')}<p>저장한 곡이 없습니다</p><span>플레이어의 하트를 눌러 곡을 저장해 보세요</span></div>`;
-    bindTable($('#likeTable'), rows);
-    $('#likePlay')?.addEventListener('click', () => rows.length && playQueue(rows, 0, 'likes:likes'));
-    bindTilt(body);
-  } else if (filter === 'history') {
-    const rows = hist.slice(0, 50).map((h: PlayableTrack & { playedAt?: string }) => ({ ...h, addedAt: h.playedAt }));
-    body.innerHTML = rows.length ? trackTable(rows) : `<div class="empty-box">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p><span>곡을 재생하면 여기에 쌓입니다</span></div>`;
-    bindTable(body, rows);
-  } else {
-    renderItems();
-  }
+        ${rows.length ? `<div class="lib2-grid">
+          <a class="lc-card lc-likes" href="#/library/likes" data-d3="rise" data-d3-tilt="7">
+            <span class="lc-art lc-likes-art">${icon('i-heart', 'ic')}</span>
+            <b class="lc-name">${t('lib.likes')}</b>
+            <span class="lc-sub">${likeList.length}곡</span>
+          </a>
+          ${rows.slice(0, filter === 'all' ? 6 : rows.length).map((p) => `
+            <a class="lc-card" href="#/playlist/${p.id}" data-d3="rise" data-d3-tilt="7">
+              <span class="lc-art">${mosaic(p)}</span>
+              <b class="lc-name">${esc(p.name)}</b>
+              <span class="lc-sub">${p.tracks.length}곡</span>
+            </a>`).join('')}
+        </div>` : emptyBox('아직 만든 플레이리스트가 없습니다', { label: '차트에서 곡 담기', href: '#/chart' })}
+      </section>`;
+  };
+
+  const secArtists = (q: string) => {
+    const rows = oshiList.filter((o) => smartMatch(o.name, q));
+    return `
+      <section class="lib2-sec">
+        <div class="sec-head" data-d3="head"><h2>팔로우한 아티스트 <span class="sec-count">${rows.length}</span></h2></div>
+        ${rows.length ? `<div class="lib2-artists">
+          ${rows.map((o) => {
+            const a = artists.find((x) => x.id === o.artistId);
+            return `<a class="la-card" href="#/artist/${o.artistId}" data-d3="rise" data-d3-tilt="8">
+              <span class="la-art">${a?.artwork ? `<img src="${esc(sized(a.artwork, 200))}" alt="" loading="lazy" decoding="async"/>` : esc(o.name[0])}</span>
+              <b>${esc(o.name)}</b>
+              <span>${esc(a?.genre || '아티스트')}</span>
+            </a>`;
+          }).join('')}
+        </div>` : emptyBox('팔로우한 아티스트가 없습니다', { label: '아티스트 둘러보기', href: '#/artists' })}
+      </section>`;
+  };
+
+  const secLikes = (q: string) => {
+    const rows = likeList.filter((l) => smartMatch(`${l.title} ${l.artist}`, q));
+    const shown = filter === 'all' ? rows.slice(0, 5) : rows;
+    return `
+      <section class="lib2-sec">
+        <div class="sec-head" data-d3="head">
+          <h2>${t('lib.likes')} <span class="sec-count">${rows.length}</span></h2>
+          ${rows.length ? `<button class="sec-link" id="likesPlay">${icon('i-play', 'ic s')} 전체 재생</button>` : ''}
+        </div>
+        ${shown.length ? `<ol class="lib2-tracks">
+          ${shown.map((l, i) => `
+            <li class="lt-row" data-like="${i}">
+              <span class="lt-i">${i + 1}</span>
+              <span class="lt-art">${l.artwork ? `<img src="${esc(sized(l.artwork, 100))}" alt="" loading="lazy" decoding="async"/>` : ''}</span>
+              <span class="lt-txt"><b>${esc(l.title)}</b><span>${esc(l.artist)}</span></span>
+              <span class="lt-play">${icon('i-play', 'ic s')}</span>
+            </li>`).join('')}
+        </ol>` : emptyBox('좋아요한 곡이 없습니다', { label: '차트 보러 가기', href: '#/chart' })}
+        ${filter === 'all' && rows.length > 5 ? '<a class="lib2-more" href="#/library/likes">좋아요 전체 보기</a>' : ''}
+      </section>`;
+  };
+
+  const secHistory = (q: string) => {
+    const rows = recent.filter((h) => smartMatch(`${h.title} ${h.artist}`, q));
+    return `
+      <section class="lib2-sec">
+        <div class="sec-head" data-d3="head"><h2>${t('lib.history')} <span class="sec-count">${rows.length}</span></h2></div>
+        ${rows.length ? `<ol class="lib2-tracks">
+          ${rows.slice(0, filter === 'all' ? 5 : 50).map((h, i) => `
+            <li class="lt-row" data-hist="${i}">
+              <span class="lt-i">${i + 1}</span>
+              <span class="lt-art">${h.artwork ? `<img src="${esc(sized(h.artwork, 100))}" alt="" loading="lazy" decoding="async"/>` : ''}</span>
+              <span class="lt-txt"><b>${esc(h.title)}</b><span>${esc(h.artist)}</span></span>
+              <span class="lt-play">${icon('i-play', 'ic s')}</span>
+            </li>`).join('')}
+        </ol>` : emptyBox('재생 기록이 없습니다')}
+      </section>`;
+  };
+
+  const render = (q = '') => {
+    const parts: string[] = [];
+    if (filter === 'all') {
+      parts.push(secContinue(), secPlaylists(q), secArtists(q), secLikes(q));
+    } else if (filter === 'playlists') parts.push(secPlaylists(q));
+    else if (filter === 'artists') parts.push(secArtists(q));
+    else if (filter === 'likes') parts.push(secLikes(q));
+    else if (filter === 'history') parts.push(secHistory(q));
+
+    const html = parts.filter(Boolean).join('');
+    body.innerHTML = html || emptyBox('보관함이 비어 있습니다', { label: '둘러보기', href: '#/' });
+    bindBody();
+  };
+
+  /* ---- 상호작용 ---- */
+  const bindBody = () => {
+    body.querySelectorAll<HTMLElement>('[data-play-recent]').forEach((el) =>
+      el.addEventListener('click', () => playQueue(recent, Number(el.dataset.playRecent))));
+
+    body.querySelectorAll<HTMLElement>('[data-like]').forEach((el) =>
+      el.addEventListener('click', () => playQueue(likeList, Number(el.dataset.like))));
+
+    body.querySelectorAll<HTMLElement>('[data-hist]').forEach((el) =>
+      el.addEventListener('click', () => playQueue(recent, Number(el.dataset.hist))));
+
+    document.getElementById('likesPlay')?.addEventListener('click', () => {
+      if (likeList.length) playQueue(likeList, 0);
+    });
+  };
+
+  render();
 
   $('#libNew').addEventListener('click', async () => {
     const name = prompt(t('lib.newPlaylist'), 'My Mix');
@@ -1379,26 +1469,16 @@ export async function pageLibrary(sub?: string) {
     document.dispatchEvent(new CustomEvent('lilac:playlists'));
     location.hash = `#/playlist/${pl.id}`;
   });
+
+  let findTimer = 0;
   $('#libFind')?.addEventListener('input', (e) => {
-    if (filter === 'likes' || filter === 'history') return;
-    renderItems((e.target as HTMLInputElement).value);
+    // 입력마다 전체를 다시 그리면 낭비라 잠깐 모아서 처리한다
+    clearTimeout(findTimer);
+    const v = (e.target as HTMLInputElement).value;
+    findTimer = window.setTimeout(() => render(v), 120);
   });
-  $('#libSort')?.addEventListener('change', (e) => {
-    libSort = (e.target as HTMLSelectElement).value as never;
-    localStorage.setItem('lilac.libSort', libSort);
-    if (filter !== 'likes' && filter !== 'history') renderItems(($('#libFind') as HTMLInputElement)?.value || '');
-  });
-  const setView = (v: 'grid' | 'list') => {
-    libView = v; localStorage.setItem('lilac.libView', v);
-    $('#libGrid').classList.toggle('on', v === 'grid');
-    $('#libList').classList.toggle('on', v === 'list');
-    if (filter !== 'likes' && filter !== 'history') renderItems(($('#libFind') as HTMLInputElement)?.value || '');
-  };
-  $('#libGrid')?.addEventListener('click', () => setView('grid'));
-  $('#libList')?.addEventListener('click', () => setView('list'));
 }
 
-/* ================= 플레이리스트 상세 (스포티파이 심화) ================= */
 export async function pagePlaylist(id: string) {
   const lists = await api('/api/playlists').catch(() => []);
   const pl = lists.find((p: { id: string }) => p.id === id);
