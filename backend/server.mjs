@@ -6,6 +6,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID, createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { expandQuery, phoneticMatch, phoneticKey, hasHangul, hangulToKatakana } from './lib/ko-ja.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_DIR = path.join(__dirname, '..', 'db');
@@ -26,6 +27,19 @@ const writeJson = async (name, data) => {
 };
 const hash = (s) => createHash('sha256').update(s).digest('hex');
 
+/** iTunes는 간헐적으로 빈/절단 응답을 준다 — 재시도 후 JSON 검증 */
+async function fetchJsonRetry(url, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': 'lilac-demo/0.3' } });
+      const txt = await r.text();
+      if (txt.trim().startsWith('{')) return JSON.parse(txt);
+    } catch { /* 다음 시도 */ }
+    await new Promise((s) => setTimeout(s, 220 * (i + 1)));
+  }
+  return null;
+}
+
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.3' }));
 
 /* ================= 공개 컬렉션 ================= */
@@ -44,9 +58,11 @@ app.get('/api/catalog/search', async (req, res) => {
   const entity = ENTITIES[String(req.query.entity || 'song')] || 'song';
   if (!term) return res.status(400).json({ error: 'term required' });
   try {
-    const url = `https://itunes.apple.com/search?media=music&entity=${entity}&country=${country}&limit=${limit}&term=${encodeURIComponent(term)}`;
-    const r = await fetch(url, { headers: { 'user-agent': 'lilac-demo/0.3' } });
-    const data = await r.json();
+    // 한글이면 가타카나로 바꿔 질의 (일본 카탈로그는 일본어 표기로만 검색됨)
+    const q2 = hasHangul(term) ? (hangulToKatakana(term) || term) : term;
+    const url = `https://itunes.apple.com/search?media=music&entity=${entity}&country=${country}&limit=${limit}&term=${encodeURIComponent(q2)}`;
+    const data = await fetchJsonRetry(url);
+    if (!data) return res.status(502).json({ error: 'itunes unavailable' });
     res.json({
       term, country,
       tracks: (data.results || []).map((t) => ({
@@ -88,39 +104,91 @@ app.get('/api/catalog/albums', async (req, res) => {
 
 /* ================= 통합 검색 ================= */
 // 곡(Apple 카탈로그) + 아티스트 + 상품 + 일정을 한 번에 찾는다.
+app.get('/api/aliases', async (_req, res) => {
+  const a = await readJson('aliases', { artists: {}, tracks: {} });
+  res.json({ ...(a.artists || {}), ...(a.tracks || {}) });
+});
+
 app.get('/api/search', async (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 60);
   if (!q) return res.status(400).json({ error: 'q required' });
-  const ql = q.toLowerCase();
-  const hit = (s) => String(s || '').toLowerCase().includes(ql);
 
-  const [artists, products, events, tracks] = await Promise.all([
-    readJson('artists', []), readJson('products', []), readJson('events', []), readJson('tracks', []),
+  const [artists, products, events, tracks, aliasDb] = await Promise.all([
+    readJson('artists', []), readJson('products', []), readJson('events', []),
+    readJson('tracks', []), readJson('aliases', { artists: {}, tracks: {} }),
   ]);
+  const allAliases = { ...(aliasDb.artists || {}), ...(aliasDb.tracks || {}) };
 
-  const artistHits = artists.filter((a) => hit(a.name) || hit(a.nameJa) || hit(a.searchTerm) || hit(a.genre));
-  const productHits = products.filter((p) => hit(p.name) || hit(p.brand)).slice(0, 12);
-  const eventHits = events.filter((e) => hit(e.title) || hit(e.artist) || hit(e.type)).slice(0, 8);
-  const seedHits = tracks.filter((t) => hit(t.title) || hit(t.artist) || hit(t.tag)).slice(0, 8);
+  // 한글 질의를 가타카나·로마자·별칭으로 확장
+  const queries = expandQuery(q, allAliases);
+  const ql = q.toLowerCase();
 
-  // 카탈로그(곡)는 외부 호출이라 병렬로
-  let catalog = [];
-  try {
-    const r = await fetch(`https://itunes.apple.com/search?media=music&entity=song&country=jp&limit=15&term=${encodeURIComponent(q)}`, {
-      headers: { 'user-agent': 'lilac-demo/0.3' },
-    });
-    const j = await r.json();
-    catalog = (j.results || []).map((t) => ({
-      id: t.trackId, title: t.trackName, artist: t.artistName, album: t.collectionName,
-      artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
-      preview: t.previewUrl, appleUrl: t.trackViewUrl, durationMs: t.trackTimeMillis || 0,
-    }));
-  } catch { /* 외부 실패는 무시하고 내부 결과만 */ }
+  /** 문자열이 질의와 맞는지 — 직접 포함 또는 음가 일치 */
+  const match = (s) => {
+    if (!s) return false;
+    const t = String(s).toLowerCase();
+    if (t.includes(ql)) return true;
+    return queries.some((cand) => t.includes(String(cand).toLowerCase())) || phoneticMatch(s, q);
+  };
+
+  const artistHits = artists.filter((a) =>
+    match(a.name) || match(a.nameJa) || match(a.searchTerm) || match(a.genre) ||
+    (a.aliases || []).some((x) => match(x)));
+  const productHits = products.filter((p) => match(p.name) || match(p.brand)).slice(0, 12);
+  const eventHits = events.filter((e) => match(e.title) || match(e.artist) || match(e.type)).slice(0, 8);
+  const seedHits = tracks.filter((t) => match(t.title) || match(t.artist) || match(t.tag)).slice(0, 8);
+
+  // 외부 카탈로그: 확장 질의를 순차 시도해 합침
+  const seen = new Set();
+  const catalog = [];
+  // 후보 하나가 결과를 독점하지 않도록 후보별 상한을 둔다
+  const PER_CAND = 6;
+  for (let ci = 0; ci < queries.length; ci++) {
+    const cand = queries[ci];
+    if (catalog.length >= 15) break;
+    try {
+      const j = await fetchJsonRetry(`https://itunes.apple.com/search?media=music&entity=song&country=jp&limit=${PER_CAND}&term=${encodeURIComponent(cand)}`);
+      if (!j) continue;
+      (j.results || []).slice(0, PER_CAND).forEach((t) => {
+        if (seen.has(t.trackId)) return;
+        seen.add(t.trackId);
+        catalog.push({
+          id: t.trackId, title: t.trackName, artist: t.artistName, album: t.collectionName,
+          artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
+          preview: t.previewUrl, appleUrl: t.trackViewUrl, durationMs: t.trackTimeMillis || 0,
+          matchedBy: cand === q ? 'direct' : 'transliterated', candIdx: ci, via: cand,
+        });
+      });
+    } catch { /* 개별 질의 실패는 무시 */ }
+  }
+
+  // 원 질의와의 음가 유사도로 재정렬 — 후보 순서에 좌우되지 않도록
+  const qk = phoneticKey(q);
+  const score = (t) => {
+    const tk = phoneticKey(t.title);
+    const ak = phoneticKey(t.artist);
+    let s = 0;
+    if (tk === qk) s = 100;                          // 제목 정확 일치
+    else if (ak === qk) s = 90;                      // 아티스트 정확 일치
+    else if (qk.length >= 3 && tk.startsWith(qk)) s = 80;
+    else if (qk.length >= 3 && tk.includes(qk)) s = 70;
+    else if (qk.length >= 3 && ak.includes(qk)) s = 60;
+    else if (tk.length >= 3 && qk.includes(tk)) s = 50;
+    // 앞선 후보(별칭 사전·가타카나)로 찾은 결과에 가중치 — 동음이곡보다 우선
+    // 앞선 후보(별칭 사전 → 가타카나 → 로마자 → 원문)일수록 신뢰도가 높다.
+    // 한자 제목은 음가 계산이 안 되므로(晴る 등) 별칭 후보에 충분한 가중을 준다.
+    const ci = t.candIdx ?? queries.length;
+    s += ci === 0 ? 130 : Math.max(0, (queries.length - ci)) * 20;
+    return s;
+  };
+  catalog.sort((a, b) => score(b) - score(a));
 
   res.json({
     q,
+    queries,                                   // 어떤 질의로 찾았는지 노출 (디버깅·UI 표기용)
+    translated: hasHangul(q) ? hangulToKatakana(q) : null,
     counts: { tracks: catalog.length, artists: artistHits.length, products: productHits.length, events: eventHits.length },
-    tracks: catalog,
+    tracks: catalog.slice(0, 15),
     artists: artistHits,
     products: productHits,
     events: eventHits,

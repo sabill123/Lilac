@@ -1,4 +1,5 @@
 import './style.css';
+import { smartMatch, loadAliases } from './koja';
 import { api, me, refreshMe, esc, icon, findCatalog } from './api';
 import { initPlayer, loadLikes, toast, playerActions, getQueueContext } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
@@ -55,7 +56,7 @@ async function renderSidebar() {
 
 function paintSbList() {
   let rows = sbItems.filter((i) => (sbFilter === 'all' ? true : i.kind === sbFilter || (sbFilter === 'playlist' && i.kind === 'likes')));
-  if (sbQuery) rows = rows.filter((i) => i.name.toLowerCase().includes(sbQuery.toLowerCase()));
+  if (sbQuery) rows = rows.filter((i) => smartMatch(i.name, sbQuery));
   rows.sort((a, b) => (sbSortMode === 'name' ? a.name.localeCompare(b.name) : (b.at || '').localeCompare(a.at || '')));
 
   const box = $('#sbList');
@@ -392,5 +393,7 @@ function showBackendError() {
     catch { btn.textContent = '다시 시도'; btn.disabled = false; toast('아직 응답이 없습니다'); }
   });
 }
+
+loadAliases();
 
 boot().catch((e) => { console.error(e); showBackendError(); });

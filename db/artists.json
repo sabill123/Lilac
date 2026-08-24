@@ -1,12 +1,132 @@
 [
-  { "id": "yoasobi", "name": "YOASOBI", "nameJa": "ヨアソビ", "genre": "J-POP", "searchTerm": "YOASOBI", "operator": "Sony Music Entertainment Japan", "official": "https://www.yoasobi-music.jp/" },
-  { "id": "ado", "name": "Ado", "nameJa": "アド", "genre": "J-POP", "searchTerm": "Ado", "operator": "Universal Music Japan", "official": "https://www.universal-music.co.jp/ado/" },
-  { "id": "imase", "name": "imase", "nameJa": "イマセ", "genre": "J-POP", "searchTerm": "imase", "operator": "Universal Music Japan (EMI)", "official": "https://imase.jp/" },
-  { "id": "yorushika", "name": "요루시카", "nameJa": "ヨルシカ", "genre": "J-ROCK", "searchTerm": "ヨルシカ", "operator": "Universal Music Japan", "official": "https://yorushika.com/" },
-  { "id": "mga", "name": "Mrs. GREEN APPLE", "nameJa": "ミセスグリーンアップル", "genre": "J-POP", "searchTerm": "Mrs. GREEN APPLE", "operator": "Universal Music Japan (EMI)", "official": "https://mrsgreenapple.com/" },
-  { "id": "kenshi", "name": "요네즈 켄시", "nameJa": "米津玄師", "genre": "J-POP", "searchTerm": "米津玄師", "operator": "Sony Music Entertainment Japan", "official": "https://reissuerecords.net/" },
-  { "id": "aimyon", "name": "아이묭", "nameJa": "あいみょん", "genre": "J-POP", "searchTerm": "あいみょん", "operator": "Warner Music Japan (unBORDE)", "official": "https://www.aimyong.net/" },
-  { "id": "radwimps", "name": "RADWIMPS", "nameJa": "ラッドウィンプス", "genre": "J-ROCK", "searchTerm": "RADWIMPS", "operator": "Universal Music Japan (EMI)", "official": "https://radwimps.jp/" },
-  { "id": "vaundy", "name": "Vaundy", "nameJa": "バウンディ", "genre": "J-POP", "searchTerm": "Vaundy", "operator": "SDR / 독립 레이블", "official": "https://vaundy.jp/" },
-  { "id": "higedan", "name": "Official髭男dism", "nameJa": "ヒゲダン", "genre": "J-POP", "searchTerm": "Official髭男dism", "operator": "Pony Canyon (IRORI Records)", "official": "https://higedan.com/" }
+  {
+    "id": "yoasobi",
+    "name": "YOASOBI",
+    "nameJa": "ヨアソビ",
+    "genre": "J-POP",
+    "searchTerm": "YOASOBI",
+    "operator": "Sony Music Entertainment Japan",
+    "official": "https://www.yoasobi-music.jp/",
+    "aliases": [
+      "요아소비"
+    ]
+  },
+  {
+    "id": "ado",
+    "name": "Ado",
+    "nameJa": "アド",
+    "genre": "J-POP",
+    "searchTerm": "Ado",
+    "operator": "Universal Music Japan",
+    "official": "https://www.universal-music.co.jp/ado/",
+    "aliases": [
+      "아도"
+    ]
+  },
+  {
+    "id": "imase",
+    "name": "imase",
+    "nameJa": "イマセ",
+    "genre": "J-POP",
+    "searchTerm": "imase",
+    "operator": "Universal Music Japan (EMI)",
+    "official": "https://imase.jp/",
+    "aliases": [
+      "이마세"
+    ]
+  },
+  {
+    "id": "yorushika",
+    "name": "요루시카",
+    "nameJa": "ヨルシカ",
+    "genre": "J-ROCK",
+    "searchTerm": "ヨルシカ",
+    "operator": "Universal Music Japan",
+    "official": "https://yorushika.com/",
+    "aliases": [
+      "요루시카",
+      "요루시까"
+    ]
+  },
+  {
+    "id": "mga",
+    "name": "Mrs. GREEN APPLE",
+    "nameJa": "ミセスグリーンアップル",
+    "genre": "J-POP",
+    "searchTerm": "Mrs. GREEN APPLE",
+    "operator": "Universal Music Japan (EMI)",
+    "official": "https://mrsgreenapple.com/",
+    "aliases": [
+      "미세스그린애플",
+      "미세스",
+      "그린애플"
+    ]
+  },
+  {
+    "id": "kenshi",
+    "name": "요네즈 켄시",
+    "nameJa": "米津玄師",
+    "genre": "J-POP",
+    "searchTerm": "米津玄師",
+    "operator": "Sony Music Entertainment Japan",
+    "official": "https://reissuerecords.net/",
+    "aliases": [
+      "요네즈켄시",
+      "요네즈 켄시",
+      "켄시"
+    ]
+  },
+  {
+    "id": "aimyon",
+    "name": "아이묭",
+    "nameJa": "あいみょん",
+    "genre": "J-POP",
+    "searchTerm": "あいみょん",
+    "operator": "Warner Music Japan (unBORDE)",
+    "official": "https://www.aimyong.net/",
+    "aliases": [
+      "아이묭",
+      "아이몬"
+    ]
+  },
+  {
+    "id": "radwimps",
+    "name": "RADWIMPS",
+    "nameJa": "ラッドウィンプス",
+    "genre": "J-ROCK",
+    "searchTerm": "RADWIMPS",
+    "operator": "Universal Music Japan (EMI)",
+    "official": "https://radwimps.jp/",
+    "aliases": [
+      "라드윔프스",
+      "래드윔프스"
+    ]
+  },
+  {
+    "id": "vaundy",
+    "name": "Vaundy",
+    "nameJa": "バウンディ",
+    "genre": "J-POP",
+    "searchTerm": "Vaundy",
+    "operator": "SDR / 독립 레이블",
+    "official": "https://vaundy.jp/",
+    "aliases": [
+      "바운디",
+      "바운디"
+    ]
+  },
+  {
+    "id": "higedan",
+    "name": "Official髭男dism",
+    "nameJa": "ヒゲダン",
+    "genre": "J-POP",
+    "searchTerm": "Official髭男dism",
+    "operator": "Pony Canyon (IRORI Records)",
+    "official": "https://higedan.com/",
+    "aliases": [
+      "히게단",
+      "오피셜히게단디즘",
+      "히게단디즘"
+    ]
+  }
 ]

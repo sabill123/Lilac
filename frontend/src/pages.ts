@@ -1,4 +1,5 @@
 import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
+import { smartMatch } from './koja';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
 import { playQueue, openYt, toast, enqueue, openPlaylistPicker } from './player';
 import { applyTone } from './colors';
@@ -1188,7 +1189,7 @@ export async function pageLibrary(sub?: string) {
   const body = $('#libBody');
   const renderItems = (q = '') => {
     if (filter === 'likes' && sub === 'likes') { /* 전용 뷰 아래에서 처리 */ }
-    let rows = items.filter((i) => !q || i.name.toLowerCase().includes(q.toLowerCase()));
+    let rows = items.filter((i) => smartMatch(i.name, q));
     if (libSort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name));
     else if (libSort === 'count') rows.sort((a, b) => b.count - a.count);
     else rows.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
@@ -1361,7 +1362,7 @@ export async function pagePlaylist(id: string) {
   bindTilt(root());
 
   const paint = (q = '') => {
-    const view = q ? rows.filter((r) => (r.title + r.artist).toLowerCase().includes(q.toLowerCase())) : rows;
+    const view = q ? rows.filter((r) => smartMatch(r.title + ' ' + r.artist, q)) : rows;
     $('#plTracks').innerHTML = view.length
       ? trackTable(view, { album: true, date: true, sticky: true })
       : `<div class="empty-box">${icon('i-queue', 'ic eb')}<p>${q ? '검색 결과가 없습니다' : '아직 곡이 없습니다'}</p><span>${q ? '다른 검색어를 시도해 보세요' : '아래 추천에서 곡을 추가해 보세요'}</span></div>`;
@@ -1810,6 +1811,8 @@ export async function pageAccount() {
    곡 · 아티스트 · 상품 · 일정을 한 화면에서 찾는다. */
 interface UniSearch {
   q: string;
+  queries?: string[];
+  translated?: string | null;
   counts: { tracks: number; artists: number; products: number; events: number };
   tracks: CatalogTrack[];
   artists: Artist[];
@@ -1859,6 +1862,13 @@ export async function pageSearch(q: string, tab = 'all') {
   const d = (await api(`/api/search?q=${encodeURIComponent(q)}`).catch(() => null)) as UniSearch | null;
   const body = document.getElementById('srBody');
   if (!d || !body) return;
+
+  // 한글로 검색했을 때 어떤 일본어 표기로 찾았는지 알려준다
+  const jaCands = (d.queries || []).filter((x) => /[ぁ-んァ-ヶ一-龥]/.test(x));
+  if (jaCands.length) {
+    document.querySelector('.page-head .page-title')?.insertAdjacentHTML('afterend',
+      `<p class="sr-translit">일본어 표기 <b>${jaCands.slice(0, 2).map(esc).join('</b> · <b>')}</b> 로도 함께 검색했습니다</p>`);
+  }
 
   // 탭 카운트 갱신
   const albumRes = await api(`/api/catalog/search?term=${encodeURIComponent(q)}&entity=album&limit=12`).catch(() => ({ albums: [] }));

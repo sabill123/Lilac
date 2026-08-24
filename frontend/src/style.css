@@ -2152,3 +2152,7 @@ html.touch .glare { display: none; }
 html.touch .card.expanded .cover { transform: none; box-shadow: none; }
 html.touch .pl-title.marquee { animation: none; transform: none; }
 html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; transform: none; }
+
+/* 한글 검색 → 일본어 표기 안내 */
+.sr-translit { font-size: 13px; color: var(--ink-muted); margin-top: 8px; }
+.sr-translit b { color: var(--accent); font-weight: 700; }
