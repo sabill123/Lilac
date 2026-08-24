@@ -52,6 +52,27 @@ async function refreshIndex() {
   }
 }
 
+const INDEX_MAX_AGE_H = Number(process.env.INDEX_MAX_AGE_H || 24);
+
+/**
+ * 색인 자동 갱신
+ *  신곡은 발매 후 차트에 오르고, 차트가 갱신되면 색인 대상 아티스트도 바뀐다.
+ *  하루 한 번 다시 만들어 두면 사람 손을 타지 않고도 최신 곡이 한글로 검색된다.
+ */
+function scheduleIndexRefresh() {
+  const ageH = searchIndex.builtAt
+    ? (Date.now() - new Date(searchIndex.builtAt).getTime()) / 36e5
+    : Infinity;
+
+  if (ageH > INDEX_MAX_AGE_H) {
+    // 기동 직후엔 요청 처리를 우선하고, 잠시 뒤 백그라운드로 재구축
+    console.log(`[lilac] 색인이 ${ageH === Infinity ? '없음' : Math.round(ageH) + '시간 경과'} — 곧 갱신합니다`);
+    setTimeout(() => { refreshIndex().catch(() => {}); }, 30_000).unref?.();
+  }
+  // 이후 주기적 갱신
+  setInterval(() => { refreshIndex().catch(() => {}); }, INDEX_MAX_AGE_H * 36e5).unref?.();
+}
+
 /** 한글 질의의 음가와 일치하는 일본어 원표기들을 색인에서 찾는다 */
 function lookupIndex(q, limit = 3) {
   const qk = phoneticKey(q);
@@ -160,6 +181,16 @@ app.get('/api/catalog/albums', async (req, res) => {
 
 /* ================= 통합 검색 ================= */
 // 곡(Apple 카탈로그) + 아티스트 + 상품 + 일정을 한 번에 찾는다.
+app.get('/api/index/status', (_req, res) => {
+  const ageH = searchIndex.builtAt ? (Date.now() - new Date(searchIndex.builtAt).getTime()) / 36e5 : null;
+  res.json({
+    count: searchIndex.entries?.length || 0,
+    builtAt: searchIndex.builtAt || null,
+    ageHours: ageH === null ? null : Math.round(ageH * 10) / 10,
+    maxAgeHours: INDEX_MAX_AGE_H,
+  });
+});
+
 app.post('/api/index/rebuild', async (_req, res) => {
   await refreshIndex();
   res.json({ ok: true, count: searchIndex.count || searchIndex.entries?.length || 0 });
@@ -641,9 +672,9 @@ app.post('/api/orders', async (req, res) => {
 
 app.listen(PORT, async () => {
   console.log(`[lilac] backend v0.3 on http://localhost:${PORT}`);
-  // 기동 시엔 만들어 둔 색인을 읽기만 한다.
-  // 재구축은 수집기(collect-*.mjs)가 끝날 때 또는 /api/index/rebuild 로 수행한다.
+  // 기동 시엔 만들어 둔 색인을 읽기만 한다 (재구축은 외부 API 호출이라 1~2분 걸린다)
   const n = await loadIndex();
   if (n) console.log(`[lilac] 검색 색인 ${n}건 로드`);
   else { console.log('[lilac] 색인이 없어 새로 만듭니다...'); await refreshIndex(); }
+  scheduleIndexRefresh();
 });

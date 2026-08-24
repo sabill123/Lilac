@@ -1607,6 +1607,16 @@ export async function pageOrderDetail(id: string) {
 
 /* ================= 서비스 안내 ================= */
 export function pageHelp() {
+  // 색인 규모는 자동 갱신되므로 하드코딩하지 않고 서버에 물어본다
+  setTimeout(async () => {
+    const el = document.getElementById('idxCount');
+    if (!el) return;
+    try {
+      const s = await api('/api/index/status') as { count: number; ageHours: number | null };
+      el.textContent = `${s.count.toLocaleString()}개 표기 · ${s.ageHours === null ? '갱신 이력 없음' : s.ageHours < 1 ? '방금 갱신' : `${Math.round(s.ageHours)}시간 전 갱신`}`;
+    } catch { el.textContent = '조회 실패'; }
+  }, 0);
+
   root().innerHTML = `
     <section class="sec page-top narrow">
       <div class="page-head">
@@ -1631,7 +1641,17 @@ export function pageHelp() {
           <tr><th>환율</th><td>frankfurter.app 실시간 JPY→KRW</td></tr>
           <tr><th>발매 일정</th><td>Apple Music 카탈로그 발매일 자동 수집</td></tr>
           <tr><th>아티스트 지표</th><td>공식 뮤직비디오 누적 조회수 실측 합산</td></tr>
+          <tr><th>한글 검색</th><td>일본어 표기의 읽기를 형태소 분석으로 자동 생성해 색인 (<span id="idxCount">…</span>)</td></tr>
         </tbody></table>
+
+        <h2>한글로 일본곡을 찾는 방법</h2>
+        <p class="help-note">「ライラック」을 <b>라일락</b>, 「群青」을 <b>군조</b>로 검색할 수 있습니다. 세 단계로 처리합니다.</p>
+        <table class="help-table"><tbody>
+          <tr><th>1. 음역</th><td>한글을 로마자를 거쳐 가타카나로 변환합니다. ㄹ받침↔ラ행, 시↔shi, 삽입모음 '으', 유·무성 차이를 흡수합니다. <b>라일락 → ライラック</b></td></tr>
+          <tr><th>2. 읽기 색인</th><td>차트·상품·아티스트 디스코그래피의 일본어 표기를 형태소 분석해 읽기를 만들어 둡니다. 하루 한 번 자동 갱신되므로 신곡도 별도 등록 없이 검색됩니다. <b>群青 → グンジョウ → 군조</b></td></tr>
+          <tr><th>3. 수동 예외</th><td>발음이 아니라 뜻으로 부르는 곡(<b>봄도둑 = 春泥棒</b>)과 사전형과 다른 특수 읽기(<b>晴る는 ハレル이 아닌 ハル</b>)만 사람이 등록합니다.</td></tr>
+        </tbody></table>
+        <p class="help-note">한계: 추적 아티스트 밖의 한자 제목은 읽기를 정확히 입력해야 찾을 수 있고, 뜻으로 부르는 곡은 등록된 것만 검색됩니다.</p>
       </div>
 
       <div class="help-sec">

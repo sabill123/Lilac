@@ -37,28 +37,72 @@ async function getJson(url, tries = 3) {
 }
 
 /**
- * 추적 중인 아티스트의 전체 디스코그래피를 가져온다.
- * 색인 커버리지를 결정하는 가장 중요한 소스 — 신곡이 발매되면 다음 실행에서 자동 편입된다.
+ * 색인 대상 아티스트를 정한다.
+ *  고정 목록이 아니라 차트에 실제로 오른 아티스트를 따라간다.
+ *  인기 아티스트가 바뀌면 색인 대상도 자동으로 바뀐다.
  */
-async function fetchDiscographies(artists) {
-  const out = [];
-  for (const a of artists) {
-    const term = a.searchTerm || a.nameJa || a.name;
-    if (!term) continue;
-    try {
-      let artistId = a.appleArtistId;
-      if (!artistId) {
-        const s = await getJson(`https://itunes.apple.com/search?media=music&entity=musicArtist&country=jp&limit=1&term=${encodeURIComponent(term)}`);
-        artistId = s?.results?.[0]?.artistId;
+function resolveArtistTerms(artists, charts, max = 60) {
+  const freq = new Map();
+  for (const bucket of Object.values(charts.countries || {})) {
+    if (!bucket || typeof bucket !== 'object') continue;
+    for (const list of Object.values(bucket)) {
+      if (!Array.isArray(list)) continue;
+      for (const e of list) {
+        const name = String(e?.artist || '').trim();
+        if (!name || name.length > 40) continue;
+        // "A & B", "A feat. B" 같은 합작 표기는 대표명만 남긴다
+        const main = name.split(/\s*(?:&|feat\.|ft\.|,|×|x )\s*/i)[0].trim();
+        if (main.length < 2) continue;
+        freq.set(main, (freq.get(main) || 0) + 1);
       }
-      if (!artistId) { console.warn(`  [skip] ${term}: 아티스트 ID 없음`); continue; }
+    }
+  }
+  const tracked = artists.map((a) => a.searchTerm || a.nameJa || a.name).filter(Boolean);
+  const fromChart = [...freq.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n);
+  // 추적 아티스트는 항상 포함, 나머지는 차트 노출 순
+  const seen = new Set();
+  const out = [];
+  for (const t of [...tracked, ...fromChart]) {
+    const k = t.toLowerCase().replace(/\s+/g, '');
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(t);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/**
+ * 아티스트 전체 디스코그래피를 가져온다.
+ * 색인 커버리지를 결정하는 가장 중요한 소스 — 신곡이 발매되면 다음 실행에서 자동 편입된다.
+ * 아티스트 ID는 캐시해 재조회를 피한다.
+ */
+async function fetchDiscographies(terms) {
+  const idCachePath = path.join(DB, 'artist-ids.json');
+  let idCache = {};
+  try { idCache = JSON.parse(await fs.readFile(idCachePath, 'utf-8')); } catch { /* 최초 실행 */ }
+
+  const out = [];
+  let ok = 0, skipped = 0;
+  for (const term of terms) {
+    try {
+      let artistId = idCache[term];
+      if (artistId === undefined) {
+        const s = await getJson(`https://itunes.apple.com/search?media=music&entity=musicArtist&country=jp&limit=1&term=${encodeURIComponent(term)}`);
+        artistId = s?.results?.[0]?.artistId ?? null;
+        idCache[term] = artistId;          // null 도 캐시해 매번 재시도하지 않는다
+        await new Promise((s2) => setTimeout(s2, 200));
+      }
+      if (!artistId) { skipped++; continue; }
       const d = await getJson(`https://itunes.apple.com/lookup?id=${artistId}&entity=song&limit=200&country=jp`);
       const tracks = (d?.results || []).filter((x) => x.wrapperType === 'track');
       for (const t of tracks) out.push({ title: t.trackName, artist: t.artistName });
-      console.log(`  ${term}: ${tracks.length}곡`);
-      await new Promise((s) => setTimeout(s, 350));   // 예의상 간격
+      if (tracks.length) ok++;
+      await new Promise((s2) => setTimeout(s2, 300));
     } catch (e) { console.warn(`  [실패] ${term}: ${e.message}`); }
   }
+  await fs.writeFile(idCachePath, JSON.stringify(idCache, null, 2));
+  console.log(`  아티스트 ${ok}팀 / 곡 ${out.length}건 (ID 미확인 ${skipped}팀)`);
   return out;
 }
 
@@ -98,8 +142,9 @@ export async function buildIndex() {
   for (const p of products) { add(p.name, 'product', { id: p.id }); add(p.brand, 'artist'); }
   // 추적 아티스트 디스코그래피 (색인의 주력 소스)
   if (process.env.SKIP_DISCO !== '1') {
-    console.log('[index] 디스코그래피 수집...');
-    for (const t of await fetchDiscographies(artists)) {
+    const terms = resolveArtistTerms(artists, charts, Number(process.env.INDEX_ARTISTS || 60));
+    console.log(`[index] 디스코그래피 수집 (${terms.length}팀)...`);
+    for (const t of await fetchDiscographies(terms)) {
       add(t.title, 'track', { artist: t.artist });
       add(t.artist, 'artist');
     }
