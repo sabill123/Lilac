@@ -33,8 +33,87 @@ const COUNTRIES = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const norm = (s) => String(s || '').toLowerCase().replace(/[\s()\[\]『』「」【】・,.'’!?~\-–—/]/g, '');
 
+/* ---------- 한국 대표 차트 ---------- */
+
+/** 멜론 TOP100 — 국내 최대 음원 플랫폼 실시간 차트 */
+async function melonKR() {
+  const html = await fetchText('https://www.melon.com/chart/index.htm');
+  const titles = [...html.matchAll(/class="ellipsis rank01">\s*<span>\s*<a[^>]*>([^<]+)<\/a>/g)].map((m) => strip(m[1]));
+  const artists = [...html.matchAll(/class="ellipsis rank02">\s*<a[^>]*>([^<]+)<\/a>/g)].map((m) => strip(m[1]));
+  if (!titles.length) throw new Error('멜론 파싱 실패 — 마크업이 바뀌었을 수 있음');
+  return titles.map((t, i) => ({
+    rank: i + 1,
+    title: decodeHtml(t),
+    artist: decodeHtml(artists[i] || ''),
+  })).filter((x) => x.title && x.artist);
+}
+
+/** 지니 TOP200 — 멜론과 이용자층이 달라 교차 검증에 쓴다 */
+async function genieKR() {
+  const html = await fetchText('https://www.genie.co.kr/chart/top200');
+  const titles = [...html.matchAll(/class="title ellipsis"[^>]*>\s*([^<]+?)\s*</g)].map((m) => strip(m[1]));
+  const artists = [...html.matchAll(/class="artist ellipsis"[^>]*>\s*([^<]+?)\s*</g)].map((m) => strip(m[1]));
+  if (!titles.length) throw new Error('지니 파싱 실패 — 마크업이 바뀌었을 수 있음');
+  return titles.map((t, i) => ({
+    rank: i + 1,
+    title: decodeHtml(t).replace(/^(TITLE|19금)\s*/i, ''),
+    artist: decodeHtml(artists[i] || ''),
+  })).filter((x) => x.title && x.artist);
+}
+
+/* ---------- 공용 ---------- */
+
+/** Apple 공식 마케팅 RSS — 스크래핑이 아닌 정식 피드라 가장 안정적이다 */
+async function appleRss(country, limit = 50) {
+  const j = await fetchJson(`https://rss.applemarketingtools.com/api/v2/${country}/music/most-played/${limit}/songs.json`);
+  return (j?.feed?.results || []).map((x, i) => ({
+    rank: i + 1,
+    title: x.name,
+    artist: x.artistName,
+    artwork: (x.artworkUrl100 || '').replace('100x100', '400x400'),
+    appleUrl: x.url,
+  }));
+}
+
 /* ---------- 일본 대표 차트 ---------- */
 const strip = (s) => String(s || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+const HTML_ENT = { '&nbsp;': ' ', '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&apos;': "'" };
+const decodeHtml = (s) => String(s || '')
+  .replace(/&nbsp;|&amp;|&lt;|&gt;|&quot;|&#39;|&apos;/g, (m) => HTML_ENT[m])
+  .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+  .replace(/\s+/g, ' ').trim();
+
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+
+/** 재시도 포함 텍스트 요청 */
+async function fetchText(url, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': BROWSER_UA, 'accept-language': 'ko,ja;q=0.8,en;q=0.6' } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const t = await r.text();
+      if (t.length > 500) return t;
+      throw new Error(`응답이 너무 짧음(${t.length}B)`);
+    } catch (e) { lastErr = e; await sleep(700 * (i + 1)); }
+  }
+  throw lastErr;
+}
+
+/** 재시도 포함 JSON 요청 */
+async function fetchJson(url, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': BROWSER_UA } });
+      const t = await r.text();
+      if (t.trim().startsWith('{')) return JSON.parse(t);
+      throw new Error('JSON 아님');
+    } catch (e) { lastErr = e; await sleep(500 * (i + 1)); }
+  }
+  throw lastErr;
+}
 
 /** Billboard JAPAN HOT 100 — 스트리밍·다운로드·CD·라디오·동영상·노래방 합산 종합 차트 */
 async function billboardJP() {
@@ -176,9 +255,23 @@ async function resolveMV(artist, title, hl) {
 
 /* ---------- 통합 ----------
    가중치: 일본은 종합차트(Billboard)를 가장 높게, CD 판매(Oricon)는 팬덤 편중이 커서 낮게 둔다. */
+/* 종합 차트 가중치 — 양국 모두 '현지 대표 + 글로벌 스트리밍 + 영상' 구조로 맞춘다.
+   현지 종합차트에 가장 큰 비중을 두고, 나머지를 균형 있게 배분한다. */
 const WEIGHTS = {
-  jp: { billboard: 0.35, apple: 0.25, youtube: 0.25, oricon: 0.15 },
-  kr: { apple: 0.5, youtube: 0.5 },
+  jp: { billboard: 0.30, apple: 0.20, appleRss: 0.15, youtube: 0.20, oricon: 0.15 },
+  kr: { melon: 0.30, apple: 0.20, appleRss: 0.15, youtube: 0.20, genie: 0.15 },
+};
+
+/** 화면에 표기할 소스 이름 — 무엇을 근거로 만든 순위인지 숨기지 않는다 */
+const SOURCE_LABELS = {
+  jp: {
+    billboard: 'Billboard JAPAN HOT 100', oricon: '오리콘 주간 싱글',
+    apple: 'Apple Music 일본', appleRss: 'Apple 공식 RSS', youtube: 'YouTube 공식 MV 조회수',
+  },
+  kr: {
+    melon: '멜론 TOP 100', genie: '지니 차트',
+    apple: 'Apple Music 한국', appleRss: 'Apple 공식 RSS', youtube: 'YouTube 공식 MV 조회수',
+  },
 };
 const keyOf = (t, a) => `${norm(t).slice(0, 12)}|${norm(a).slice(0, 6)}`;
 
@@ -215,24 +308,42 @@ async function buildCountry(c) {
   const apple = await appleChart(c.code);
   console.log(`Apple 차트 ${apple.length}곡 수집`);
 
-  // 일본은 현지 대표 차트를 추가 수집
-  let billboard = [], oricon = [];
+  // Apple 공식 RSS — 스크래핑이 아니라 가장 안정적인 소스
+  const rss = await appleRss(c.code, 50).catch((e) => { console.log(`  Apple RSS 실패: ${e.message}`); return []; });
+  console.log(`Apple RSS ${rss.length}곡 수집`);
+
+  /* 현지 대표 차트 — 양국 대칭으로 2종씩 수집한다.
+     일본: Billboard JAPAN(종합) + 오리콘(피지컬 판매)
+     한국: 멜론(최대 음원 플랫폼) + 지니(이용자층이 달라 교차검증) */
+  let local1 = [], local2 = [], local1Name = '', local2Name = '';
   if (c.code === 'jp') {
-    billboard = await billboardJP().catch(() => []);
-    console.log(`Billboard JAPAN HOT100 ${billboard.length}곡 수집`);
-    oricon = await oriconJP(3).catch(() => []);
-    console.log(`오리콘 주간 싱글 ${oricon.length}곡 수집`);
+    local1Name = 'billboard'; local2Name = 'oricon';
+    local1 = await billboardJP().catch((e) => { console.log(`  Billboard JAPAN 실패: ${e.message}`); return []; });
+    console.log(`Billboard JAPAN HOT100 ${local1.length}곡 수집`);
+    local2 = await oriconJP(3).catch((e) => { console.log(`  오리콘 실패: ${e.message}`); return []; });
+    console.log(`오리콘 주간 싱글 ${local2.length}곡 수집`);
+  } else {
+    local1Name = 'melon'; local2Name = 'genie';
+    local1 = await melonKR().catch((e) => { console.log(`  멜론 실패: ${e.message}`); return []; });
+    console.log(`멜론 TOP100 ${local1.length}곡 수집`);
+    local2 = await genieKR().catch((e) => { console.log(`  지니 실패: ${e.message}`); return []; });
+    console.log(`지니 차트 ${local2.length}곡 수집`);
   }
 
-  // MV 해석 풀 = Apple ∪ Billboard 상위 (중복 제거)
+  /* MV 해석 풀 = Apple ∪ RSS ∪ 현지차트 상위 (중복 제거)
+     해석은 곡당 2초 안팎이 걸리므로 상한을 둔다 */
+  const MV_POOL_MAX = Number(process.env.MV_POOL_MAX || 70);
   const poolMap = new Map();
-  apple.forEach((e) => poolMap.set(keyOf(e.title, e.artist), { title: e.title, artist: e.artist, artwork: e.artwork, appleUrl: e.appleUrl }));
-  billboard.slice(0, LIMIT).forEach((e) => {
+  const addPool = (list, n) => list.slice(0, n).forEach((e) => {
     const k = keyOf(e.title, e.artist);
-    if (!poolMap.has(k)) poolMap.set(k, { title: e.title, artist: e.artist, artwork: null, appleUrl: null });
+    if (!poolMap.has(k)) poolMap.set(k, { title: e.title, artist: e.artist, artwork: e.artwork || null, appleUrl: e.appleUrl || null });
   });
-  const pool = [...poolMap.values()];
-  console.log(`MV 해석 풀 ${pool.length}곡 (Apple ${apple.length} + Billboard 추가 ${pool.length - apple.length})`);
+  addPool(apple, 50);
+  addPool(rss, 50);
+  addPool(local1, LIMIT);
+  addPool(local2, 30);
+  const pool = [...poolMap.values()].slice(0, MV_POOL_MAX);
+  console.log(`MV 해석 풀 ${pool.length}곡 (상한 ${MV_POOL_MAX})`);
 
   const resolved = [];
   for (let i = 0; i < pool.length; i++) {
@@ -266,12 +377,24 @@ async function buildCountry(c) {
   });
 
   const appleOut = withMV(apple);
-  const billboardOut = withMV(billboard);
-  const oriconOut = withMV(oricon);
+  const rssOut = withMV(rss);
+  const local1Out = withMV(local1);
+  const local2Out = withMV(local2);
   const weights = WEIGHTS[c.code] || WEIGHTS.kr;
-  const combined = buildCombined({ apple: appleOut, youtube, billboard: billboardOut, oricon: oriconOut }, weights);
 
-  return { apple: appleOut, youtube, billboard: billboardOut, oricon: oriconOut, combined, weights };
+  const sources = { apple: appleOut, appleRss: rssOut, youtube, [local1Name]: local1Out, [local2Name]: local2Out };
+  const combined = buildCombined(sources, weights);
+
+  return { ...sources, combined, weights, sourceLabels: SOURCE_LABELS[c.code] };
+}
+
+/** 색인 재구축 — 수집 완료 후에만 호출한다 */
+async function rebuildIndex() {
+  try {
+    const mod = await import('./build-index.mjs');
+    const r = await mod.buildIndex();
+    console.log(`[index] 검색 색인 ${r.count}건 갱신`);
+  } catch (e) { console.error('[index] 색인 갱신 실패:', e.message); }
 }
 
 async function main() {
@@ -293,16 +416,16 @@ async function main() {
   console.log('\n[완료] db/charts.json 저장');
   for (const c of COUNTRIES) {
     const d = out.countries[c.code];
-    console.log(`  ${c.label}: apple ${d.apple.length} / youtube ${d.youtube.length} / billboard ${d.billboard.length} / oricon ${d.oricon.length} / combined ${d.combined.length}`);
-    console.log(`    통합 1위: ${d.combined[0]?.artist} - ${d.combined[0]?.title} (score ${d.combined[0]?.score}, 소스 ${d.combined[0]?.sources.join("+")})`);
+    if (!d) continue;
+    const counts = Object.entries(d).filter(([, v]) => Array.isArray(v)).map(([k, v]) => `${k} ${v.length}`).join(' / ');
+    console.log(`  ${c.label}: ${counts}`);
+    console.log(`    통합 1위: ${d.combined?.[0]?.artist} - ${d.combined?.[0]?.title} (score ${d.combined?.[0]?.score}, 소스 ${d.combined?.[0]?.sources?.join('+')})`);
   }
+
+  // 수집이 끝난 뒤 색인을 다시 만든다 — 새 곡이 즉시 한글로 검색된다
+  await rebuildIndex();
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
 
-// 수집이 끝나면 검색 색인을 다시 만든다 — 새로 들어온 곡이 즉시 한글로 검색된다
-try {
-  const { buildIndex } = await import('./build-index.mjs');
-  const r = await buildIndex();
-  console.log(`[index] 검색 색인 ${r.count}건 갱신`);
-} catch (e) { console.error('[index] 색인 갱신 실패:', e.message); }
+

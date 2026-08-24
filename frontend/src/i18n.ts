@@ -6,6 +6,7 @@ const dict: Record<string, Record<Locale, string>> = {
   'nav.chart': { ko: '차트', ja: 'チャート', en: 'Charts', zh: '排行榜' },
   'nav.store': { ko: '스토어', ja: 'ストア', en: 'Store', zh: '商店' },
   'nav.schedule': { ko: '일정', ja: 'スケジュール', en: 'Schedule', zh: '日程' },
+  'nav.focus': { ko: '워크 모드', ja: 'ワークモード', en: 'Work mode', zh: '工作模式' },
   'nav.library': { ko: '보관함', ja: 'ライブラリ', en: 'Library', zh: '收藏库' },
   'search.ph': { ko: '어떤 음악을 찾으세요?', ja: '何を聴きたいですか？', en: 'What do you want to listen to?', zh: '想听什么音乐？' },
   'connect': { ko: 'Apple Music 연동', ja: 'Apple Music連携', en: 'Connect Apple Music', zh: '关联 Apple Music' },

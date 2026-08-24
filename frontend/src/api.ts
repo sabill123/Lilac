@@ -1,18 +1,52 @@
 export interface CatalogTrack { id: number; title: string; artist: string; album: string; artwork: string; preview: string; appleUrl: string; durationMs?: number; releaseDate?: string; }
-export interface Artist { id: string; name: string; nameJa: string; genre: string; searchTerm: string; operator: string; official: string; }
+export interface Artist {
+  id: string; name: string;
+  nameJa: string | null;
+  /** 로마자·원표기 (K-POP 팀은 한글명이 대표) */
+  nameOriginal?: string;
+  country?: 'jp' | 'kr';
+  genre: string; appleGenre?: string;
+  searchTerm: string;
+  operator: string | null; official: string | null;
+  appleArtistId?: number; artwork?: string | null;
+  chartHits?: number; bestRank?: number | null;
+  aliases?: string[];
+}
 export interface SeedTrack { id: string; title: string; artist: string; artistId: string; tag: string; youtubeId: string | null; ytViews: number; searchTerm: string; }
-export interface Ev { id: string; type: string; title: string; artist: string; date: string; venue: string; note: string; }
+export interface Ev {
+  id: string; type: string; title: string; artist: string;
+  artistId?: string; country?: 'jp' | 'kr';
+  date: string; venue: string; note?: string;
+  artwork?: string; appleUrl?: string; trackCount?: number;
+  /** 실제 발매일(false)인지 예시 공연 일정(true)인지 */
+  isDemo?: boolean; source?: string;
+}
 export interface Edition {
-  id: string; label: string; jpy: number; feeKind: string; real: boolean; digital?: boolean;
-  pricing: { jpy: number; rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number };
+  id: string; label: string; feeKind: string; real: boolean; digital?: boolean;
+  /** 현지 통화 기준 정가 (구버전 데이터는 jpy 필드를 쓴다) */
+  amount?: number; jpy?: number;
+  localCurrency?: 'KRW' | 'JPY';
+  pricing: {
+    localAmount?: number; localCurrency?: string; jpy?: number;
+    rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number;
+    buyerCurrency?: 'KRW' | 'JPY';
+  };
 }
 export interface Product {
   id: string; name: string; brand: string; artistId: string;
+  /** 원산지 — 일본반(jp)은 한국으로, 한국반(kr)은 일본으로 보낸다 */
+  origin?: 'jp' | 'kr';
+  originLabel?: string; routeLabel?: string; genre?: string;
   size: 'single' | 'mini' | 'album'; sizeLabel: string; badge: string;
-  price: number; editions: Edition[];
+  price: number;
+  /** 구매자가 지불하는 통화 (일본반→KRW, 한국반→JPY) */
+  priceCurrency?: 'KRW' | 'JPY';
+  editions: Edition[];
   rate: number; rateDate: string; rateLive: boolean;
   releaseDate: string; trackCount: number; artwork: string; appleUrl: string;
-  digitalJpy: number | null; operator: string; officialUrl: string; towerUrl: string;
+  digitalJpy?: number | null; digitalLocal?: number | null;
+  operator: string | null; officialUrl: string | null;
+  towerUrl?: string; shopUrl?: string; shopLabel?: string;
   searchTerm: string; stock: number; desc: string;
 }
 export interface PlayableTrack { title: string; artist: string; album?: string; artwork?: string; preview?: string; youtubeId?: string | null; addedAt?: string; durationMs?: number; }

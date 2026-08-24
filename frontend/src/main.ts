@@ -4,9 +4,10 @@ import { api, me, refreshMe, esc, icon, findCatalog } from './api';
 import { initPlayer, loadLikes, toast, playerActions, getQueueContext } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
 import type { Locale } from './i18n';
-import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404 } from './pages';
+import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageFocus, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404 , pageStatus } from './pages';
 import { initMusicKitIfConfigured } from './musickit';
 import { initRipple, initKeyboard, initContextMenu, bindParallax, bindReveal, bindTilt, bindHoverExpand } from './interactions';
+import { mountBackdrop } from './backdrop';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -94,15 +95,23 @@ const ARTIST_TERMS = new Map<string, string>();
 /* ---------- 모드 (브라우즈 / 플레이) ---------- */
 type Mode = 'browse' | 'play';
 const PLAY_ROUTES = new Set(['library', 'playlist']);
-const BROWSE_ONLY = new Set(['login', 'signup', 'account', 'orders', 'help']); // 계정 화면은 항상 브라우즈
+const BROWSE_ONLY = new Set(['login', 'signup', 'account', 'orders', 'help', 'work', 'focus']); // 계정·워크 화면은 항상 브라우즈
 const LIGHT_ROUTES = new Set(['store']);                      // 화이트 배경 페이지
 let userMode: Mode = (localStorage.getItem('lilac.mode') as Mode) || 'browse';
 function currentSeg() { return (location.hash.split('/')[1] || 'home').split('?')[0] || 'home'; }
 function applyMode() {
   const seg = currentSeg();
+  const onWork = seg === 'work' || seg === 'focus';
   const mode: Mode = BROWSE_ONLY.has(seg) ? 'browse' : PLAY_ROUTES.has(seg) ? 'play' : userMode;
   document.body.classList.toggle('play-mode', mode === 'play');
   document.body.classList.toggle('light-page', LIGHT_ROUTES.has(seg));
+  document.body.classList.toggle('work-page', onWork);
+  const workLinks = [$('#tbWorkMode') as HTMLAnchorElement, $('#mWorkMode') as HTMLAnchorElement];
+  workLinks.forEach((link) => {
+    link.href = onWork ? '#/' : '#/work';
+    link.dataset.r = onWork ? 'home' : 'work';
+    link.querySelector('span')!.textContent = onWork ? 'J‑POP 둘러보기' : t('nav.focus');
+  });
   $('#btnMode').classList.toggle('on', mode === 'play');
   $('#btnMode').title = mode === 'play' ? '브라우즈 모드로' : '플레이 모드로';
 }
@@ -122,13 +131,16 @@ function renderTopbar() {
   $('#tbMenu').innerHTML = NAV.map((n) =>
     `<a class="tb-item" data-r="${n.r}" href="${n.href}">${t(n.k)}</a>`).join('')
     + `<a class="tb-item" data-r="library" href="#/library">${t('nav.library')}</a>`;
+  $('#tbWorkMode').querySelector('span')!.textContent = t('nav.focus');
+  $('#mWorkMode').querySelector('span')!.textContent = t('nav.focus');
   ($('#searchInput') as HTMLInputElement).placeholder = t('search.ph');
   $('#connectApple').textContent = $('#connectApple').classList.contains('connected') ? t('connected') : t('connect');
   const acct = $('#gnbAcct');
   acct.innerHTML = me
     ? `<a class="tb-user" href="#/account" title="${t('account')}"><span class="tb-avatar">${esc(me.name[0])}</span><span class="tb-credits">${me.credits.toLocaleString()}C</span></a>`
     : `<a class="tb-link" href="#/login">${t('login')}</a><a class="tb-signup" href="#/signup">${t('signup')}</a>`;
-  $('#mnav').innerHTML = [...NAV, { r: 'library', href: '#/library', k: 'nav.library', ic: 'i-lib' }]
+  const mobileNav = [NAV[0], NAV[1], NAV[2], NAV[3], { r: 'library', href: '#/library', k: 'nav.library', ic: 'i-lib' }];
+  $('#mnav').innerHTML = mobileNav
     .map((n) => `<a data-r="${n.r}" href="${n.href}"><svg class="ic"><use href="#${n.ic}"/></svg><span>${t(n.k)}</span></a>`).join('');
   markActive();
 }
@@ -164,6 +176,7 @@ function initGlobe() {
 /* ---------- 페이지 타이틀 ---------- */
 const TITLES: Record<string, string> = {
   home: '홈', chart: '차트', store: '스토어', schedule: '일정', artist: '아티스트',
+  work: '워크 모드', focus: '워크 모드', status: '서비스 상태',
   artists: '아티스트', library: '보관함', playlist: '플레이리스트', account: '계정',
   orders: '주문 내역', help: '서비스 안내', search: '검색', login: '로그인', signup: '가입',
 };
@@ -247,10 +260,13 @@ async function route() {
       case 'chart': await pageChart(sub); break;
       case 'store': sub ? await pageProduct(sub) : await pageStore(); break;
       case 'schedule': await pageSchedule(); break;
+      case 'work': await pageFocus(); break;
+      case 'focus': location.replace('#/work'); return;
       case 'artist': await pageArtist(sub); break;
       case 'artists': await pageArtists(); break;
       case 'orders': sub ? await pageOrderDetail(sub) : await pageOrders(); break;
-      case 'help': pageHelp(); break;
+      case 'status': return pageStatus();
+    case 'help': pageHelp(); break;
       case 'library': await pageLibrary(sub); break;
       case 'playlist': await pagePlaylist(sub); break;
       case 'login': pageLogin(); break;
@@ -273,6 +289,7 @@ function onScroll() {
 
 /* ---------- 부트 ---------- */
 async function boot() {
+  mountBackdrop();
   initPlayer();
   initGlobe();
   initRipple();

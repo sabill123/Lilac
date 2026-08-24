@@ -371,42 +371,49 @@ async function pageHomePlay() {
 }
 
 /* ================= 차트 =================
-   일본은 현지 대표 차트(Billboard JAPAN, 오리콘)까지 함께 반영한다.
-   - billboard : Billboard JAPAN HOT 100 (스트리밍·DL·CD·라디오·동영상·노래방 종합)
-   - oricon    : 오리콘 주간 싱글 (CD 판매)
-   - apple     : Apple Music 최다 재생
-   - youtube   : 공식 MV 누적 조회수
-   - combined  : 위 순위를 정규화해 가중 합산 */
+   양국 모두 '현지 대표 2종 + 글로벌 스트리밍 + 영상' 구조로 5개 소스를 모은다.
+     일본 : Billboard JAPAN HOT 100 / 오리콘 주간 싱글
+     한국 : 멜론 TOP 100 / 지니 차트
+     공통 : Apple Music 차트, Apple 공식 RSS, YouTube 공식 MV 조회수
+   combined 는 위 순위를 정규화해 가중 합산한 Lilac 자체 집계다(공식 차트 아님). */
 interface ChartRow {
   rank: number; title: string; artist: string; artwork?: string; appleUrl?: string;
   youtubeId?: string | null; ytViews?: number | null;
   appleRank?: number | null; youtubeRank?: number | null; sources?: string[]; score?: number;
   ranks?: Record<string, number>; move?: string; lastRank?: number | null;
 }
-const SOURCES_BY_COUNTRY: Record<string, { k: string; label: string }[]> = {
-  jp: [
-    { k: 'combined', label: '통합' },
-    { k: 'billboard', label: 'Billboard JAPAN' },
-    { k: 'oricon', label: '오리콘' },
-    { k: 'apple', label: 'Apple Music' },
-    { k: 'youtube', label: 'YouTube' },
-  ],
-  kr: [
-    { k: 'combined', label: '통합' },
-    { k: 'apple', label: 'Apple Music' },
-    { k: 'youtube', label: 'YouTube' },
-  ],
+/* 소스 구성은 서버가 국가별로 내려준다.
+   화면에 쓰는 짧은 라벨만 여기서 관리한다. */
+const SOURCE_LABEL: Record<string, string> = {
+  combined: '통합',
+  billboard: 'Billboard JAPAN',
+  oricon: '오리콘',
+  melon: '멜론',
+  genie: '지니',
+  apple: 'Apple Music',
+  appleRss: 'Apple RSS',
+  youtube: 'YouTube',
 };
-const sourcesOf = (c: string) => SOURCES_BY_COUNTRY[c] || SOURCES_BY_COUNTRY.kr;
-const labelOf = (c: string, k: string) => sourcesOf(c).find((s) => s.k === k)?.label || '통합';
+/** 국가별 사용 가능한 소스 — 차트를 불러오면 서버 응답으로 갱신된다 */
+const chSources: Record<string, string[]> = {
+  jp: ['combined', 'billboard', 'oricon', 'apple', 'appleRss', 'youtube'],
+  kr: ['combined', 'melon', 'genie', 'apple', 'appleRss', 'youtube'],
+};
+const sourcesOf = (c: string) =>
+  (chSources[c] || chSources.kr).map((k) => ({ k, label: SOURCE_LABEL[k] || k }));
+const labelOf = (_c: string, k: string) => SOURCE_LABEL[k] || '통합';
 const COUNTRY = [{ k: 'jp', label: '일본' }, { k: 'kr', label: '한국' }];
 let chCountry = localStorage.getItem('lilac.chartCountry') || 'jp';
 
+/* 통합 순위에서 각 곡이 어느 소스에 올랐는지 보여주는 배지 */
 const RANK_BADGES: [string, string, string][] = [
   ['billboard', 'B', 'Billboard JAPAN'],
-  ['apple', 'A', 'Apple Music'],
-  ['youtube', 'Y', 'YouTube 조회수'],
   ['oricon', 'O', '오리콘'],
+  ['melon', 'M', '멜론'],
+  ['genie', 'G', '지니'],
+  ['apple', 'A', 'Apple Music'],
+  ['appleRss', 'R', 'Apple 공식 RSS'],
+  ['youtube', 'Y', 'YouTube 조회수'],
 ];
 const viewsTxt = (n?: number | null) =>
   !n ? '' : n >= 1e8 ? `${(n / 1e8).toFixed(2)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString();
@@ -437,8 +444,17 @@ function chartRowsHtml(list: ChartRow[], source: string) {
   }).join('')}</div>`;
 }
 
-const loadChart = (country: string, source: string) =>
-  api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
+const loadChart = async (country: string, source: string) => {
+  const d = await api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
+  // 소스 구성은 수집 결과에 따라 달라지므로 서버 응답을 신뢰한다
+  if (d?.sources?.length) {
+    // 현지 대표 차트를 앞에, 글로벌 소스를 뒤에 둔다 (사용자가 먼저 찾는 순서)
+    const PRIORITY = ['billboard', 'oricon', 'melon', 'genie', 'apple', 'appleRss', 'youtube'];
+    const ordered = [...d.sources].sort((x: string, y: string) => PRIORITY.indexOf(x) - PRIORITY.indexOf(y));
+    chSources[country] = ['combined', ...ordered];
+  }
+  return d;
+};
 
 async function chartPlayables(list: ChartRow[], from = 0, count = 20): Promise<PlayableTrack[]> {
   const out: PlayableTrack[] = [];
@@ -574,19 +590,27 @@ async function pageChartPlay(sub?: string) {
 }
 
 /* ================= 스토어 (BM: 일본 내수반 정식 공동구매) ================= */
-const won = (n: number) => `₩${n.toLocaleString()}`;
+/** 구매자 통화에 맞춰 표기 — 한국 구매자는 원, 일본 구매자는 엔 */
+/** 아티스트 보조 표기 — 일본 팀은 원표기, 한국 팀은 로마자를 쓴다 (없으면 빈 문자열) */
+const artistSub = (a: Artist) => a.nameJa || a.nameOriginal || (a.searchTerm !== a.name ? a.searchTerm : '') || '';
+/** 국가 라벨 */
+const countryLabel = (c?: string) => (c === 'kr' ? '한국' : '일본');
+
+const money = (n: number, cur?: string) => (cur === 'JPY' ? `¥${n.toLocaleString()}` : `₩${n.toLocaleString()}`);
 const SIZE_FILTERS = [
   { k: 'all', label: '전체' }, { k: 'limited', label: '한정반' },
   { k: 'album', label: '정규 앨범' }, { k: 'mini', label: '미니 앨범' }, { k: 'single', label: '싱글' },
 ];
 let stFilterSize = 'all';
 let stFilterArtist = 'all';
+let stFilterOrigin = 'all';     // 전체 / jp(일본반) / kr(한국반)
 let stSort: 'new' | 'low' | 'high' | 'name' = 'new';
 let stPage = 1;
 const PAGE_SIZE = 24;
 
 function storeFiltered() {
   let list = products.slice();
+  if (stFilterOrigin !== 'all') list = list.filter((p) => (p.origin || 'jp') === stFilterOrigin);
   if (stFilterSize === 'limited') list = list.filter((p) => p.editions.some((e) => e.id === 'limited'));
   else if (stFilterSize !== 'all') list = list.filter((p) => p.size === stFilterSize);
   if (stFilterArtist !== 'all') list = list.filter((p) => p.brand === stFilterArtist);
@@ -604,21 +628,42 @@ function productCard(p: Product) {
       <span class="p-badge ${hasLtd ? 'ltd' : ''}">${esc(p.badge)}</span>
       ${p.stock <= 10 ? `<span class="p-stock">잔여 ${p.stock}</span>` : ''}
     </div>
-    <div class="p-brand">${esc(p.brand)}</div>
+    <div class="p-brand"><span class="p-flag ${p.origin === 'kr' ? 'kr' : 'jp'}">${p.origin === 'kr' ? '한국반' : '일본반'}</span>${esc(p.brand)}</div>
     <div class="p-name">${esc(p.name)}</div>
-    <div class="p-price">${won(p.price)}</div>
+    <div class="p-price">${money(p.price, p.priceCurrency)}</div>
     <div class="p-sub">${esc(p.releaseDate?.slice(0, 4) || '')} · ${p.trackCount}곡</div>
   </a>`;
 }
 
+const ORIGIN_FILTERS = [
+  { k: 'all', label: '전체' },
+  { k: 'jp', label: '일본반 → 한국' },
+  { k: 'kr', label: '한국반 → 일본' },
+];
+
 function storeToolbar(dark: boolean) {
-  const brands = [...new Set(products.map((p) => p.brand))];
+  // 선택된 원산지에 해당하는 아티스트만 칩으로 노출한다.
+  // 44팀을 한 줄에 늘어놓으면 고를 수 없으므로 국가별로 묶는다.
+  const scope = stFilterOrigin === 'all' ? products : products.filter((p) => (p.origin || 'jp') === stFilterOrigin);
+  const byOrigin = new Map<string, Set<string>>();
+  for (const p of scope) {
+    const o = p.origin || 'jp';
+    if (!byOrigin.has(o)) byOrigin.set(o, new Set());
+    byOrigin.get(o)!.add(p.brand);
+  }
+  const group = (o: string, label: string) => {
+    const names = [...(byOrigin.get(o) || [])].sort();
+    if (!names.length) return '';
+    return `<div class="chip-group"><span class="chip-group-label">${label}</span>${names
+      .map((b) => `<button class="chip ${stFilterArtist === b ? 'on' : ''}" data-artist="${esc(b)}">${esc(b)}</button>`).join('')}</div>`;
+  };
   return `
     <div class="st-filters">
+      <div class="chips origin-chips">${ORIGIN_FILTERS.map((f) => `<button class="chip strong ${f.k === stFilterOrigin ? 'on' : ''}" data-origin="${f.k}">${f.label}</button>`).join('')}</div>
       <div class="chips">${SIZE_FILTERS.map((f) => `<button class="chip ${f.k === stFilterSize ? 'on' : ''}" data-size="${f.k}">${f.label}</button>`).join('')}</div>
       <div class="chips artist-chips">
         <button class="chip ${stFilterArtist === 'all' ? 'on' : ''}" data-artist="all">모든 아티스트</button>
-        ${brands.map((b) => `<button class="chip ${stFilterArtist === b ? 'on' : ''}" data-artist="${esc(b)}">${esc(b)}</button>`).join('')}
+        ${group('jp', 'J-POP')}${group('kr', 'K-POP')}
       </div>
     </div>
     <div class="st-bar">
@@ -633,6 +678,25 @@ function storeToolbar(dark: boolean) {
 }
 
 function bindStoreToolbar(render: () => void) {
+  document.querySelectorAll<HTMLButtonElement>('[data-origin]').forEach((b) =>
+    b.addEventListener('click', () => {
+      stFilterOrigin = b.dataset.origin!;
+      stFilterArtist = 'all';        // 원산지가 바뀌면 아티스트 선택은 무효가 된다
+      stPage = 1;
+      // 아티스트 칩 목록이 원산지에 종속되므로 툴바를 통째로 다시 그린다
+      const host = b.closest('.st-filters')?.parentElement;
+      const dark = !!document.querySelector('.sp-wrap');
+      if (host) {
+        const bar = host.querySelector('.st-bar');
+        const html = storeToolbar(dark);
+        host.querySelector('.st-filters')?.remove();
+        bar?.remove();
+        const grid = host.querySelector('.store-grid, .sp-grid');
+        grid?.insertAdjacentHTML('beforebegin', html);
+        bindStoreToolbar(render);
+      }
+      render();
+    }));
   document.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((b) =>
     b.addEventListener('click', () => {
       stFilterSize = b.dataset.size!; stPage = 1;
@@ -660,13 +724,15 @@ export async function pageStore() {
       <div class="store-hero2">
         <div>
           <p class="sh-eyebrow">LILAC STORE</p>
-          <h2>일본 내수 한정반,<br/>정식 루트로 받아보세요</h2>
-          <p class="sh-sub">해외 배송이 지원되지 않는 상품을 현지에서 매입해 합배송으로 전달합니다.
-            판매가는 <b>일본 정가 × 실시간 환율 + 대행 수수료 + 배송 분담</b>으로 자동 산출됩니다.</p>
-          ${fx ? `<p class="fx-line">적용 환율 <b>1엔 = ${fx.rate}원</b> <span class="src-badge real">${fx.date} 실시간</span></p>` : ''}
+          <h2>양국 한정반,<br/>정식 루트로 받아보세요</h2>
+          <p class="sh-sub">현지에서만 유통되는 반을 매입해 합배송으로 전달합니다.
+            <b>일본반은 한국으로</b>, <b>한국반은 일본으로</b> 보냅니다.
+            판매가는 <b>현지 정가 × 실시간 환율 + 대행 수수료 + 배송 분담</b>으로 자동 산출됩니다.</p>
+          ${fx ? `<p class="fx-line">적용 환율 <b>1엔 = ${fx.jpyKrw ?? fx.rate}원</b> · <b>1원 = ${fx.krwJpy ?? '—'}엔</b> <span class="src-badge ${fx.live ? 'real' : 'demo'}">${fx.date} ${fx.live ? '실시간' : '폴백'}</span></p>` : ''}
         </div>
         <div class="sh-stats">
-          <div><b>${products.length}</b><span>취급 상품</span></div>
+          <div><b>${products.filter((p) => (p.origin || 'jp') === 'jp').length}</b><span>일본반</span></div>
+          <div><b>${products.filter((p) => p.origin === 'kr').length}</b><span>한국반</span></div>
           <div><b>${products.filter((p) => p.editions.some((e) => e.id === 'limited')).length}</b><span>한정반</span></div>
           <div><b>${[...new Set(products.map((p) => p.brand))].length}</b><span>아티스트</span></div>
         </div>
@@ -705,7 +771,7 @@ async function pageStorePlay() {
   if (head) {
     head.innerHTML = spHeader({
       label: '스토어', title: t('store.title'),
-      meta: `${products.length}개 상품<span class="sep">·</span>${fx ? `1엔 = ${fx.rate}원 <span class="src-badge real">실시간</span>` : ''}`,
+      meta: `${products.length}개 상품<span class="sep">·</span>${fx ? `1엔 = ${fx.jpyKrw ?? fx.rate}원 <span class="src-badge real">실시간</span>` : ''}`,
       mosaic: products.slice(0, 4).map((p) => p.artwork),
     });
     if (products[0]) void applyTone(document.querySelector('.sp-head'), products[0].artwork);
@@ -720,7 +786,7 @@ async function pageStorePlay() {
         <div class="lib-cover"><img src="${esc(p.artwork)}" alt="" loading="lazy"/>
           <span class="card-badge">${esc(p.badge)}</span></div>
         <div class="c-title">${esc(p.name)}</div>
-        <div class="c-sub">${esc(p.brand)} · ${won(p.price)}</div>
+        <div class="c-sub">${esc(p.brand)} · ${money(p.price, p.priceCurrency)}</div>
       </a>`).join('') || `<div class="empty-box">${icon('i-bag', 'ic eb')}<p>조건에 맞는 상품이 없습니다</p></div>`;
     const more = document.getElementById('stMore') as HTMLButtonElement;
     if (more) more.style.display = list.length > shown.length ? '' : 'none';
@@ -746,20 +812,20 @@ export async function pageProduct(id: string) {
           <p class="p-brand">${esc(p.brand)} · ${esc(p.sizeLabel)}</p>
           <h2 class="pd-name">${esc(p.name)}</h2>
           <p class="pd-meta-line">${esc(p.releaseDate)} 발매 · ${p.trackCount}곡 · 재고 ${p.stock}개</p>
-          <p class="pd-price" id="pdPrice">${won(p.editions[0].pricing.total)}</p>
+          <p class="pd-price" id="pdPrice">${money(p.editions[0].pricing.total, p.priceCurrency)}</p>
           <div class="pd-ed" id="pdEd">
             ${p.editions.map((e, i) => `
               <button class="ed ${i === 0 ? 'on' : ''}" data-e="${i}">
                 <span class="ed-label">${esc(e.label)}${e.real ? ' <span class="src-badge real">Apple 실정가</span>' : ''}</span>
-                <span class="ed-price">${won(e.pricing.total)}</span>
-                <span class="ed-jpy">일본 정가 ¥${e.jpy.toLocaleString()}</span>
+                <span class="ed-price">${money(e.pricing.total, e.pricing.buyerCurrency ?? p.priceCurrency)}</span>
+                <span class="ed-jpy">현지 정가 ${e.localCurrency === 'KRW' || p.origin === 'kr' ? '₩' : '¥'}${(e.amount ?? e.jpy ?? 0).toLocaleString()}</span>
               </button>`).join('')}
           </div>
           <div class="pd-row"><span>${t('store.qty')}</span><input id="pdQty" type="number" min="1" max="${p.stock}" value="1" /></div>
           <div class="pd-actions">
             <button class="btn-buy" id="pdOrder">${t('store.reserve')}</button>
             <a class="btn-out" href="${p.appleUrl}" target="_blank" rel="noopener">Apple Music ${icon('i-ext', 'ic s')}</a>
-            <a class="btn-out" href="${p.towerUrl}" target="_blank" rel="noopener">${t('store.tower')} ${icon('i-ext', 'ic s')}</a>
+            ${(p.shopUrl || p.towerUrl) ? `<a class="btn-out" href="${esc(p.shopUrl || p.towerUrl || '')}" target="_blank" rel="noopener">${esc(p.shopLabel || t('store.tower'))} ${icon('i-ext', 'ic s')}</a>` : ''}
           </div>
           <div class="pd-calc" id="pdCalc"></div>
         </div>
@@ -777,16 +843,16 @@ export async function pageProduct(id: string) {
 
   const paintPrice = () => {
     const e = p.editions[edIdx];
-    $('#pdPrice').textContent = won(e.pricing.total);
+    $('#pdPrice').textContent = money(e.pricing.total, e.pricing.buyerCurrency ?? p.priceCurrency);
     $('#pdCalc').innerHTML = `
       <p class="calc-title">가격은 이렇게 계산됩니다 ${e.digital ? '<span class="calc-note">디지털 상품은 배송비가 없지만 데모에서는 동일 공식을 적용합니다</span>' : ''}</p>
       <table class="calc-table"><tbody>
-        <tr><th>일본 정가</th><td>¥${e.jpy.toLocaleString()}</td><td class="calc-src">${e.real ? 'Apple Music 실데이터' : '일본 CD 시장 통상가 기준 추정'}</td></tr>
+        <tr><th>현지 정가</th><td>${p.origin === 'kr' ? '₩' : '¥'}${(e.amount ?? e.jpy ?? 0).toLocaleString()}</td><td class="calc-src">${e.real ? 'Apple Music 실데이터' : `${p.origin === 'kr' ? '한국' : '일본'} CD 시장 통상가 기준 추정`}</td></tr>
         <tr><th>적용 환율</th><td>× ${e.pricing.rate}</td><td class="calc-src">${esc(p.rateDate)} ${p.rateLive ? '실시간' : '캐시'}</td></tr>
-        <tr><th>상품 원가</th><td>${won(e.pricing.base)}</td><td class="calc-src"></td></tr>
-        <tr><th>대행 수수료</th><td>+ ${won(e.pricing.fee)}</td><td class="calc-src">${Math.round(e.pricing.feeRate * 100)}% (Lilac 마진)</td></tr>
-        <tr><th>국제배송 분담</th><td>+ ${won(e.pricing.shipping)}</td><td class="calc-src">합배송 기준</td></tr>
-        <tr class="calc-total"><th>최종 판매가</th><td>${won(e.pricing.total)}</td><td class="calc-src">100원 단위 올림</td></tr>
+        <tr><th>상품 원가</th><td>${money(e.pricing.base, e.pricing.buyerCurrency ?? p.priceCurrency)}</td><td class="calc-src"></td></tr>
+        <tr><th>대행 수수료</th><td>+ ${money(e.pricing.fee, e.pricing.buyerCurrency ?? p.priceCurrency)}</td><td class="calc-src">${Math.round(e.pricing.feeRate * 100)}% (Lilac 마진)</td></tr>
+        <tr><th>국제배송 분담</th><td>+ ${money(e.pricing.shipping, e.pricing.buyerCurrency ?? p.priceCurrency)}</td><td class="calc-src">합배송 기준</td></tr>
+        <tr class="calc-total"><th>최종 판매가</th><td>${money(e.pricing.total, e.pricing.buyerCurrency ?? p.priceCurrency)}</td><td class="calc-src">100원 단위 올림</td></tr>
       </tbody></table>`;
   };
   paintPrice();
@@ -830,7 +896,7 @@ export async function pageProduct(id: string) {
       <p class="dim">Lilac은 티켓 재판매를 취급하지 않으며, 공식 유통채널에서 매입한 상품만 중개합니다.</p>
       <div class="pd-actions">
         <a class="btn-out" href="${p.officialUrl}" target="_blank" rel="noopener">아티스트 공식 사이트 ${icon('i-ext', 'ic s')}</a>
-        <a class="btn-out" href="${p.towerUrl}" target="_blank" rel="noopener">${t('store.tower')} ${icon('i-ext', 'ic s')}</a>
+        ${(p.shopUrl || p.towerUrl) ? `<a class="btn-out" href="${esc(p.shopUrl || p.towerUrl || '')}" target="_blank" rel="noopener">${esc(p.shopLabel || t('store.tower'))} ${icon('i-ext', 'ic s')}</a>` : ''}
       </div>`,
   };
   const paintPanel = (k: string) => { $('#pdPanel').innerHTML = panels[k]; };
@@ -849,18 +915,14 @@ export async function pageProduct(id: string) {
 }
 
 /* ================= 일정 ================= */
-interface RelItem { id: string; type: string; source: string; title: string; artist: string; artistId: string; date: string; venue: string; note: string; artwork: string; url: string }
 export async function pageSchedule() {
-  // 실데이터(Apple 발매일) + 데모 공연 일정 병합
-  const rel = await api('/api/releases').catch(() => ({ releases: [] }));
-  const realItems: Ev[] = ((rel.releases || []) as RelItem[]).map((r) => ({
-    id: r.id, type: r.type, title: r.title, artist: r.artist, date: r.date, venue: r.venue, note: r.note,
-  }));
-  const demoItems: Ev[] = events.map((e) => ({ ...e }));
-  const merged = [...realItems, ...demoItems];
-  const isDemo = (e: Ev) => !e.id.startsWith('rel-');
-  const artOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.artwork]));
-  const urlOf = new Map(((rel.releases || []) as RelItem[]).map((r) => [r.id, r.url]));
+  /* events.json 하나로 통합했다.
+     수집기가 실발매일(isDemo=false)과 예시 공연(isDemo=true)을 함께 넣어준다. */
+  const merged: Ev[] = events.map((e) => ({ ...e }));
+  const realItems = merged.filter((e) => !e.isDemo);
+  const isDemo = (e: Ev) => e.isDemo === true;
+  const artOf = new Map(merged.map((e) => [e.id, e.artwork]));
+  const urlOf = new Map(merged.map((e) => [e.id, e.appleUrl]));
   const today = new Date().toISOString().slice(0, 10);
   const upcoming = merged.filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
   const past = merged.filter((e) => e.date < today).sort((a, b) => b.date.localeCompare(a.date));
@@ -877,10 +939,12 @@ export async function pageSchedule() {
         <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
         <p class="page-desc">다가오는 일정을 먼저 보여줍니다. 발매 일정은 <b>Apple Music 카탈로그 자동 수집 실데이터</b>(${realItems.length}건),
-          공연·응모는 데모 데이터입니다.</p>
+          공연·응모는 데모 데이터(${merged.length - realItems.length}건)입니다.</p>
         <div class="sch-toolbar">
           <div class="chips" id="schFilters">
             <button class="chip on" data-f="all">전체</button>
+            <button class="chip" data-f="__jp">J-POP <b class="cnt">${merged.filter((e) => (e.country || 'jp') === 'jp').length}</b></button>
+            <button class="chip" data-f="__kr">K-POP <b class="cnt">${merged.filter((e) => e.country === 'kr').length}</b></button>
             ${[...new Set(sorted.map((e) => e.type))].map((ty) => `<button class="chip" data-f="${esc(ty)}">${esc(ty)}</button>`).join('')}
             <button class="chip" data-f="__real">실데이터만</button>
           </div>
@@ -891,9 +955,14 @@ export async function pageSchedule() {
         </div>
       </div>
       <div id="schBody"></div>
-      <p class="pd-note" style="margin-top:24px">데모 일정입니다. 실서비스에서는 공식 발표·팬클럽 공지를 자동 수집합니다.</p>
+      <p class="pd-note" style="margin-top:24px">발매 일정은 Apple Music 카탈로그에서 자동 수집한 실제 발매일입니다. 공연·응모 일정은 공식 티켓 데이터 계약 전이라 예시로 표시됩니다.</p>
     </section>`;
-  const matchF = (e: Ev, f: string) => (f === 'all' ? true : f === '__real' ? !isDemo(e) : e.type === f);
+  const matchF = (e: Ev, f: string) =>
+    f === 'all' ? true
+    : f === '__real' ? !isDemo(e)
+    : f === '__jp' ? (e.country || 'jp') === 'jp'
+    : f === '__kr' ? e.country === 'kr'
+    : e.type === f;
   const render = (f: string) => {
     const out: string[] = [];
     const source = showPast ? [...upcoming, ...past.slice().reverse()] : upcoming;
@@ -1014,14 +1083,14 @@ export async function pageArtist(id: string) {
       <div class="ar-info">
         <p class="ar-verified">${icon('i-check', 'ic s')} 인증된 아티스트</p>
         <h1 class="ar-name">${esc(a.name)}</h1>
-        <p class="ar-stats" id="arStats"><span class="stat-sk"></span> · ${esc(a.nameJa)}</p>
+        <p class="ar-stats" id="arStats"><span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
       </div>
     </section>
     <div class="ar-actionbar">
       <button class="play-big" id="arPlay">${icon('i-play')}</button>
       <button class="tbtn big-ghost ${following ? 'on' : ''}" id="arFollow">${following ? '팔로잉' : '팔로우'}</button>
-      <a class="tbtn big-ghost" href="${a.official}" target="_blank" rel="noopener" title="공식 사이트">${icon('i-ext')}</a>
-      <span class="ar-op">${t('store.operator')} · ${esc(a.operator)}</span>
+      ${a.official ? `<a class="tbtn big-ghost" href="${esc(a.official)}" target="_blank" rel="noopener" title="공식 사이트">${icon('i-ext')}</a>` : ''}
+      <span class="ar-op">${a.operator ? `${t('store.operator')} · ${esc(a.operator)}` : `${countryLabel(a.country)} · ${esc(a.genre)}`}</span>
     </div>
     <section class="sec"><div class="sec-head"><h2>인기</h2></div><div id="arTracks">${skRows(5)}</div></section>
     <section class="sec" id="arDiscSec"><div class="sec-head"><h2>디스코그래피</h2><span class="sec-sub">Apple Music 카탈로그</span></div><div id="arDisc">${skCards(6)}</div></section>
@@ -1033,10 +1102,10 @@ export async function pageArtist(id: string) {
         <div class="ar-about-img" id="arAboutImg"></div>
         <div class="ar-about-txt">
           <p class="ar-listeners" id="arListeners"><span class="stat-sk"></span></p>
-          <p>${esc(a.name)}(${esc(a.nameJa)})는 ${esc(a.genre)} 아티스트입니다. 공식 운영사는 ${esc(a.operator)}이며,
+          <p>${esc(a.name)}${artistSub(a) ? `(${esc(artistSub(a))})` : ''}는 ${countryLabel(a.country)}의 ${esc(a.genre)} 아티스트입니다.${a.operator ? ` 공식 운영사는 ${esc(a.operator)}이며,` : ''}
             Lilac은 공식 유통망과 연결된 정보만 표시합니다.</p>
           <p class="dim">이 소개문은 데모용으로 생성된 텍스트입니다. 실서비스에서는 레이블 제공 프로필이 들어갑니다.</p>
-          <a class="btn-out" href="${a.official}" target="_blank" rel="noopener">공식 사이트 ${icon('i-ext', 'ic s')}</a>
+          ${a.official ? `<a class="btn-out" href="${esc(a.official)}" target="_blank" rel="noopener">공식 사이트 ${icon('i-ext', 'ic s')}</a>` : ''}
         </div>
       </div>
     </section>`;
@@ -1087,17 +1156,17 @@ export async function pageArtist(id: string) {
     const st = document.getElementById('arStats');
     const ls = document.getElementById('arListeners');
     if (!s.totalViews) {
-      if (st) st.innerHTML = `${esc(a.genre)} · ${esc(a.nameJa)}`;
+      if (st) st.innerHTML = `${esc(a.genre)}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
       if (ls) ls.innerHTML = `<span class="dim">공개 지표를 가져오지 못했습니다</span>`;
       return;
     }
     const txt = `YouTube 공식 MV 누적 <b>${fmtViews(s.totalViews)}회</b>`;
-    if (st) st.innerHTML = `${txt.replace(/<\/?b>/g, '')} · ${esc(a.nameJa)}`;
+    if (st) st.innerHTML = `${txt.replace(/<\/?b>/g, '')}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
     if (ls) ls.innerHTML = `${txt} <span class="live-badge ${s.live ? 'on' : ''}">${s.live ? '실시간' : '캐시'}</span>
       <span class="dim" style="display:block;font-size:12px;margin-top:4px">${esc(s.source)} · 등록곡 ${s.trackCount}개 기준</span>`;
   }).catch(() => {
     const st = document.getElementById('arStats');
-    if (st) st.textContent = `${a.genre} · ${a.nameJa}`;
+    if (st) st.textContent = `${a.genre}${artistSub(a) ? ` · ${artistSub(a)}` : ''}`;
   });
 
   // 디스코그래피
@@ -1463,30 +1532,37 @@ export async function pageArtists() {
       <div class="page-head">
         <p class="sp-label">아티스트</p>
         <h1 class="page-title">전체 아티스트</h1>
-        <p class="page-desc">Lilac이 다루는 아티스트 ${artists.length}팀입니다. 팔로우하면 보관함과 사이드바에 추가됩니다.</p>
+        <p class="page-desc">한국과 일본 양국 차트에서 자동으로 추린 ${artists.length}팀입니다.
+          팔로우하면 보관함과 사이드바에 추가됩니다.</p>
         <div class="chips" id="arFilters">
-          <button class="chip on" data-g="all">전체</button>
-          ${[...new Set(artists.map((a) => a.genre))].map((g) => `<button class="chip" data-g="${esc(g)}">${esc(g)}</button>`).join('')}
-          <button class="chip" data-g="__following">팔로우 중</button>
+          <button class="chip on" data-g="all">전체 <b class="cnt">${artists.length}</b></button>
+          ${['J-POP', 'K-POP'].filter((g) => artists.some((a) => a.genre === g)).map((g) =>
+            `<button class="chip" data-g="${esc(g)}">${esc(g)} <b class="cnt">${artists.filter((a) => a.genre === g).length}</b></button>`).join('')}
+          <button class="chip" data-g="__following">팔로우 중 <b class="cnt">${followed.size}</b></button>
         </div>
       </div>
       <div class="artists-grid" id="arsGrid"></div>
     </section>`;
 
   const render = (f: string) => {
-    const list = artists.filter((a) => (f === 'all' ? true : f === '__following' ? followed.has(a.id) : a.genre === f));
+    const list = artists
+      .filter((a) => (f === 'all' ? true : f === '__following' ? followed.has(a.id) : a.genre === f))
+      .slice()
+      .sort((x, y) => (y.chartHits || 0) - (x.chartHits || 0));
     const grid = $('#arsGrid');
     if (!list.length) {
       grid.innerHTML = `<div class="empty-box">${icon('i-mic', 'ic eb')}<p>해당 아티스트가 없습니다</p></div>`;
       return;
     }
     grid.innerHTML = list.map((a) => `
-      <a class="ars-card" href="#/artist/${a.id}" data-term="${esc(a.searchTerm)}" data-tilt="7">
-        <div class="ars-cover"><div class="ph">${esc(a.name[0])}</div>
+      <a class="ars-card" href="#/artist/${a.id}" ${a.artwork ? '' : `data-term="${esc(a.searchTerm)}"`} data-tilt="7">
+        <div class="ars-cover">
+          ${a.artwork ? `<img src="${esc(a.artwork)}" alt="" loading="lazy"/>` : ''}
+          <div class="ph">${esc(a.name[0])}</div>
           ${followed.has(a.id) ? `<span class="ars-follow">${icon('i-check', 'ic s')}</span>` : ''}</div>
         <div class="ars-name">${esc(a.name)}</div>
-        <div class="ars-sub">${esc(a.nameJa)} · ${esc(a.genre)}</div>
-        <div class="ars-op">${esc(a.operator)}</div>
+        <div class="ars-sub">${artistSub(a) ? `${esc(artistSub(a))} · ` : ''}${esc(a.genre)}</div>
+        <div class="ars-op">${esc(a.operator || countryLabel(a.country))}</div>
       </a>`).join('');
     grid.querySelectorAll<HTMLElement>('[data-term]').forEach(async (el) => {
       const hit = await findCatalog(el.dataset.term!);
@@ -1605,6 +1681,258 @@ export async function pageOrderDetail(id: string) {
     </section>`;
 }
 
+/* ================= Focus Desk ================= */
+type FocusMix = {
+  id: string; title: string; creator: string; videoId: string; tone: string;
+  energy: number; vocal: boolean; bestFor: string[]; color: string;
+};
+type FocusSession = {
+  mixId: string; title: string; reason: string;
+  plan: { minute: number; label: string }[];
+};
+
+let focusTimerId: number | undefined;
+let focusEndsAt = 0;
+let focusNativeHandler: ((event: Event) => void) | null = null;
+
+function focusPostNative(message: Record<string, unknown>) {
+  const bridge = (window as unknown as { webkit?: { messageHandlers?: { lilac?: { postMessage: (v: unknown) => void } } } }).webkit;
+  bridge?.messageHandlers?.lilac?.postMessage(message);
+}
+
+function focusPlayerCommand(func: string, args: unknown[] = []) {
+  const frame = document.getElementById('focusPlayer') as HTMLIFrameElement | null;
+  frame?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args }), 'https://www.youtube-nocookie.com');
+}
+
+function focusSetVolume(volume: number, restoreAfter = 0) {
+  focusPlayerCommand('setVolume', [Math.max(0, Math.min(100, volume))]);
+  document.querySelector('.focus-shell')?.classList.toggle('ducking', volume < 50);
+  if (restoreAfter) window.setTimeout(() => {
+    focusPlayerCommand('setVolume', [72]);
+    document.querySelector('.focus-shell')?.classList.remove('ducking');
+  }, restoreAfter);
+}
+
+function focusClock(seconds: number) {
+  const s = Math.max(0, seconds);
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+export async function pageFocus() {
+  clearInterval(focusTimerId);
+  if (focusNativeHandler) window.removeEventListener('lilac:native-command', focusNativeHandler);
+  const data = await api('/api/focus/mixes').catch(() => ({ mixes: [], aiConfigured: false, model: 'gpt-5.4' }));
+  const mixes = data.mixes as FocusMix[];
+  const initial = mixes[0];
+  if (!initial) throw new Error('focus mixes unavailable');
+
+  root().innerHTML = `
+    <section class="focus-shell work-shell page-top" style="--focus-tone:${esc(initial.color)}">
+      <div class="focus-aurora" aria-hidden="true"></div>
+      <header class="work-head">
+        <div>
+          <h1>워크 모드</h1>
+          <p>할 일과 시간을 정하면 음악 선택부터 알림 볼륨까지 한 흐름으로 이어집니다.</p>
+        </div>
+        <div class="work-protection"><span class="focus-status-dot"></span><b>스마트 볼륨 사용 중</b><small>Slack · 미팅 · 개발 도구 알림 감지</small></div>
+      </header>
+
+      <div class="focus-grid work-grid">
+        <section class="focus-player-card work-player-card">
+          <div class="focus-video">
+            <iframe id="focusPlayer" title="${esc(initial.title)}" src="https://www.youtube-nocookie.com/embed/${esc(initial.videoId)}?enablejsapi=1&playsinline=1&rel=0&origin=${encodeURIComponent(location.origin)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            <div class="focus-duck-pill"><span></span> 알림이 지나갈 때까지 볼륨을 낮췄어요</div>
+          </div>
+          <div class="focus-now">
+            <div><h2 id="focusNowTitle">${esc(initial.title)}</h2><p id="focusNowCreator">${esc(initial.creator)} · YouTube</p></div>
+            <div class="focus-session-clock"><span id="focusClock">45:00</span><small id="focusClockLabel">시작 전</small></div>
+          </div>
+          <div class="focus-actions">
+            <button class="focus-primary" id="focusStart">45분 작업 시작</button>
+            <button class="focus-quiet" id="focusTestDuck">스마트 볼륨 확인</button>
+          </div>
+        </section>
+
+        <aside class="focus-curator work-setup">
+          <h2>오늘 끝낼 일</h2>
+          <p class="focus-curator-copy">업무를 적으면 GPT-5.4가 검증된 믹스와 시간 흐름을 골라줍니다.</p>
+          <textarea id="focusTask" maxlength="240" placeholder="예: 투자자 피치덱 초안을 45분 안에 정리하기"></textarea>
+          <label>작업 흐름</label>
+          <div class="focus-mode-row" role="group" aria-label="작업 흐름">
+            <button data-focus-mode="deep">차분하게</button>
+            <button class="on" data-focus-mode="balanced">균형 있게</button>
+            <button data-focus-mode="energy">빠르게</button>
+          </div>
+          <label>작업 시간</label>
+          <div class="focus-duration-row" role="group" aria-label="작업 시간">
+            ${[25, 45, 60, 90].map((m) => `<button class="${m === 45 ? 'on' : ''}" data-focus-minutes="${m}">${m}분</button>`).join('')}
+          </div>
+          <button class="focus-ai-btn" id="focusCurate"><span>✦</span> 내 작업에 맞추기</button>
+          <div class="focus-ai-result" id="focusAiResult">
+            <small>${data.aiConfigured ? `Letsur · ${esc(data.model)} 연결됨` : '기본 추천으로 바로 사용할 수 있어요'}</small>
+            <p>입력한 업무는 추천을 만드는 데만 사용합니다.</p>
+          </div>
+        </aside>
+      </div>
+
+      <section class="focus-mixes-sec work-mixes-sec">
+        <div class="focus-sec-head"><div><h2>바로 재생하기</h2><p>업무 중 오래 들어도 흐름을 끊지 않는 YouTube 믹스입니다.</p></div></div>
+        <div class="focus-mix-grid">
+          ${mixes.map((m, i) => `<button class="focus-mix ${i === 0 ? 'on' : ''}" data-focus-mix="${esc(m.id)}" style="--mix:${esc(m.color)}">
+            <span class="focus-mix-art" style="background-image:url(https://i.ytimg.com/vi/${esc(m.videoId)}/hqdefault.jpg)"><i>${m.vocal ? '보컬 있음' : '보컬 없음'}</i></span>
+            <span class="focus-mix-meta"><b>${esc(m.title)}</b><small>${esc(m.creator)}</small><em>${m.bestFor.map(esc).join(' · ')}</em></span>
+            <span class="focus-energy"><i style="width:${m.energy}%"></i></span>
+          </button>`).join('')}
+        </div>
+      </section>
+
+      <section class="focus-native-sec work-native-sec">
+        <div class="focus-native-copy">
+          <h2>Mac에서는<br/>더 자연스럽게</h2>
+          <p>컴퓨터를 켜면 메뉴바에서 바로 재생하고, 회의나 업무 알림이 오면 음악이 먼저 자리를 비웁니다.</p>
+        </div>
+        <div class="focus-menubar-demo">
+          <div class="fmd-top"><b>Lilac</b><span>⌁</span></div>
+          <div class="fmd-track"><span class="fmd-art"></span><div><b id="focusMenuTitle">${esc(initial.title)}</b><p id="focusMenuCreator">${esc(initial.creator)}</p></div></div>
+          <div class="fmd-controls"><button>이전</button><button class="main">▶</button><button>다음</button></div>
+          <div class="fmd-rule"><span>업무 알림에 맞춰 볼륨 낮추기</span><i>켬</i></div>
+          <div class="fmd-rule"><span>Mac을 켤 때 함께 시작</span><i>켬</i></div>
+        </div>
+        <div class="focus-native-points">
+          <div><span>⌁</span><b>열어둘 필요 없이</b><p>메뉴바에서 재생과 세션을 제어합니다.</p></div>
+          <div><span>◒</span><b>알림은 놓치지 않게</b><p>회의와 업무 앱이 활성화되면 볼륨을 낮춥니다.</p></div>
+          <div><span>↗</span><b>업무로 바로 돌아오게</b><p>알림이 끝나면 원래 볼륨으로 복원합니다.</p></div>
+        </div>
+      </section>
+    </section>`;
+
+  let selected = initial;
+  let selectedMode = 'balanced';
+  let selectedMinutes = 45;
+  let focusIsPlaying = false;
+
+  const selectMix = (mix: FocusMix, autoplay = true) => {
+    selected = mix;
+    document.querySelectorAll('.focus-mix').forEach((el) => el.classList.toggle('on', (el as HTMLElement).dataset.focusMix === mix.id));
+    const shell = document.querySelector<HTMLElement>('.focus-shell');
+    if (shell) shell.style.setProperty('--focus-tone', mix.color);
+    $('#focusNowTitle').textContent = mix.title;
+    $('#focusNowCreator').textContent = `${mix.creator} · YouTube`;
+    $('#focusMenuTitle').textContent = mix.title;
+    $('#focusMenuCreator').textContent = mix.creator;
+    const frame = $('#focusPlayer') as HTMLIFrameElement;
+    frame.title = mix.title;
+    frame.src = `https://www.youtube-nocookie.com/embed/${mix.videoId}?enablejsapi=1&playsinline=1&rel=0&origin=${encodeURIComponent(location.origin)}${autoplay ? '&autoplay=1' : ''}`;
+    focusIsPlaying = autoplay;
+    focusPostNative({ type: 'nowPlaying', title: mix.title, artist: mix.creator, playing: autoplay });
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-focus-mix]').forEach((button) => button.addEventListener('click', () => {
+    const mix = mixes.find((m) => m.id === button.dataset.focusMix);
+    if (mix) selectMix(mix);
+  }));
+  document.querySelectorAll<HTMLButtonElement>('[data-focus-mode]').forEach((button) => button.addEventListener('click', () => {
+    selectedMode = button.dataset.focusMode || 'balanced';
+    document.querySelectorAll('[data-focus-mode]').forEach((el) => el.classList.toggle('on', el === button));
+  }));
+  document.querySelectorAll<HTMLButtonElement>('[data-focus-minutes]').forEach((button) => button.addEventListener('click', () => {
+    selectedMinutes = Number(button.dataset.focusMinutes) || 45;
+    $('#focusClock').textContent = focusClock(selectedMinutes * 60);
+    $('#focusStart').textContent = `${selectedMinutes}분 작업 시작`;
+    document.querySelectorAll('[data-focus-minutes]').forEach((el) => el.classList.toggle('on', el === button));
+  }));
+
+  const startSession = () => {
+    focusEndsAt = Date.now() + selectedMinutes * 60_000;
+    $('#focusClockLabel').textContent = '작업 중';
+    $('#focusStart').textContent = '세션 종료';
+    $('#focusStart').classList.add('running');
+    focusPlayerCommand('playVideo');
+    focusIsPlaying = true;
+    focusPostNative({ type: 'session', minutes: selectedMinutes, title: selected.title });
+    clearInterval(focusTimerId);
+    focusTimerId = window.setInterval(() => {
+      const clock = document.getElementById('focusClock');
+      if (!clock) return clearInterval(focusTimerId);
+      const left = Math.max(0, Math.ceil((focusEndsAt - Date.now()) / 1000));
+      clock.textContent = focusClock(left);
+      if (!left) {
+        clearInterval(focusTimerId);
+        $('#focusClockLabel').textContent = '완료';
+        $('#focusStart').textContent = `${selectedMinutes}분 다시 시작`;
+        $('#focusStart').classList.remove('running');
+        focusPlayerCommand('pauseVideo');
+        focusIsPlaying = false;
+        toast('작업 세션을 마쳤습니다');
+        focusPostNative({ type: 'sessionComplete' });
+      }
+    }, 1000);
+  };
+
+  $('#focusStart').addEventListener('click', () => {
+    if ($('#focusStart').classList.contains('running')) {
+      clearInterval(focusTimerId); focusEndsAt = 0;
+      $('#focusClock').textContent = focusClock(selectedMinutes * 60);
+      $('#focusClockLabel').textContent = '시작 전';
+      $('#focusStart').textContent = `${selectedMinutes}분 작업 시작`;
+      $('#focusStart').classList.remove('running');
+      focusPlayerCommand('pauseVideo');
+      focusIsPlaying = false;
+      focusPostNative({ type: 'sessionStopped' });
+    } else startSession();
+  });
+  $('#focusTestDuck').addEventListener('click', () => {
+    focusSetVolume(18, 2600);
+    toast('알림 중에는 18%로 낮추고 자동 복원합니다');
+  });
+
+  $('#focusCurate').addEventListener('click', async () => {
+    const button = $('#focusCurate') as HTMLButtonElement;
+    const task = ($('#focusTask') as HTMLTextAreaElement).value.trim();
+    button.disabled = true; button.innerHTML = '<span>✦</span> 세션 구성 중…';
+    try {
+      const result = await api('/api/ai/focus-session', { method: 'POST', body: JSON.stringify({ task, mode: selectedMode, minutes: selectedMinutes }) });
+      const session = result.session as FocusSession;
+      const mix = mixes.find((m) => m.id === session.mixId) || selected;
+      selectMix(mix, false);
+      $('#focusAiResult').innerHTML = `
+        <small>${result.source === 'letsur' ? `Letsur · ${esc(result.model || 'gpt-5.4')}` : '기본 추천'}</small>
+        <h3>${esc(session.title.replace('집중 세션', '작업 세션'))}</h3><p>${esc(session.reason)}</p>
+        <ol>${session.plan.map((p) => `<li><b>${p.minute}분</b><span>${esc(p.label)}</span></li>`).join('')}</ol>`;
+      toast('작업 세션이 준비됐습니다');
+    } catch (error) { toast((error as Error).message || '추천을 만들지 못했습니다'); }
+    finally { button.disabled = false; button.innerHTML = '<span>✦</span> 다시 맞추기'; }
+  });
+
+  focusNativeHandler = (event: Event) => {
+    const command = String((event as CustomEvent<string>).detail || '');
+    if (command === 'toggle') {
+      focusPlayerCommand(focusIsPlaying ? 'pauseVideo' : 'playVideo');
+      focusIsPlaying = !focusIsPlaying;
+      focusPostNative({ type: 'nowPlaying', title: selected.title, artist: selected.creator, playing: focusIsPlaying });
+    }
+    else if (command === 'pause') {
+      focusPlayerCommand('pauseVideo'); focusIsPlaying = false;
+      focusPostNative({ type: 'nowPlaying', title: selected.title, artist: selected.creator, playing: false });
+    }
+    else if (command === 'prev' || command === 'next') {
+      const i = mixes.findIndex((m) => m.id === selected.id);
+      const offset = command === 'next' ? 1 : -1;
+      selectMix(mixes[(i + offset + mixes.length) % mixes.length]);
+    }
+    else if (command.startsWith('duck:')) focusSetVolume(Number(command.split(':')[1]) || 18);
+    else if (command === 'restore') focusSetVolume(72);
+    else if (command.startsWith('session:')) {
+      selectedMinutes = Number(command.split(':')[1]) || 45;
+      $('#focusClock').textContent = focusClock(selectedMinutes * 60);
+      startSession();
+    }
+  };
+  window.addEventListener('lilac:native-command', focusNativeHandler);
+  focusPostNative({ type: 'ready', title: initial.title, artist: initial.creator });
+}
+
 /* ================= 서비스 안내 ================= */
 export function pageHelp() {
   // 색인 규모는 자동 갱신되므로 하드코딩하지 않고 서버에 물어본다
@@ -1642,6 +1970,7 @@ export function pageHelp() {
           <tr><th>발매 일정</th><td>Apple Music 카탈로그 발매일 자동 수집</td></tr>
           <tr><th>아티스트 지표</th><td>공식 뮤직비디오 누적 조회수 실측 합산</td></tr>
           <tr><th>한글 검색</th><td>일본어 표기의 읽기를 형태소 분석으로 자동 생성해 색인 (<span id="idxCount">…</span>)</td></tr>
+          <tr><th>수집 현황</th><td><a href="#/status">서비스 상태 페이지</a>에서 각 소스의 마지막 수집 시각을 확인할 수 있습니다.</td></tr>
         </tbody></table>
 
         <h2>한글로 일본곡을 찾는 방법</h2>
@@ -1998,4 +2327,82 @@ export async function pageSearch(q: string, tab = 'all') {
 
 export function page404() {
   root().innerHTML = `<section class="sec page-top"><div class="page-head"><h1 class="page-title">페이지를 찾을 수 없습니다</h1></div><a class="btn-pill" href="#/">${t('nav.home')}</a></section>`;
+}
+
+
+/* ================= 서비스 상태 =================
+   외부 소스에 의존하는 서비스라 "지금 살아 있는가, 언제 수집한 데이터인가"가
+   신뢰의 핵심이다. 낡았으면 낡았다고 그대로 표시한다. */
+
+interface SvcRow {
+  id: string; name: string; kind: string; ok: boolean;
+  updatedAt: string | null; ageHours: number | null; detail: string;
+  sources?: { country: string; source: string; count: number; ok: boolean }[];
+}
+interface StatusResp {
+  now: string; uptimeSec: number; healthy: boolean; services: SvcRow[];
+}
+
+/** 경과 시간을 신선도로 환산 — 소스 종류마다 기대 주기가 다르다 */
+function freshness(kind: string, ageHours: number | null): { level: 'fresh' | 'stale' | 'old' | 'na'; label: string } {
+  if (ageHours === null) return { level: 'na', label: '상시' };
+  const limit = kind === '실시간 API' ? 24 : 48;
+  if (ageHours <= limit) return { level: 'fresh', label: `${ageHours < 1 ? '방금' : `${Math.round(ageHours)}시간 전`}` };
+  if (ageHours <= limit * 3) return { level: 'stale', label: `${Math.round(ageHours / 24)}일 전` };
+  return { level: 'old', label: `${Math.round(ageHours / 24)}일 전 (갱신 필요)` };
+}
+
+export async function pageStatus() {
+  root().innerHTML = `
+    <section class="sec page-top narrow">
+      <div class="page-head">
+        <p class="sp-label">시스템</p>
+        <h1 class="page-title">서비스 상태</h1>
+        <p class="page-desc">Lilac은 외부 차트·카탈로그·환율에 의존합니다.
+          각 소스가 마지막으로 언제 수집됐는지 그대로 보여줍니다.</p>
+      </div>
+      <div id="stBody"><div class="sk-block" style="height:220px"></div></div>
+    </section>`;
+
+  const d = (await api('/api/status').catch(() => null)) as StatusResp | null;
+  const body = document.getElementById('stBody');
+  if (!body) return;
+  if (!d) {
+    body.innerHTML = `<div class="empty-box">${icon('i-alert', 'ic eb')}<p>상태를 불러오지 못했습니다. 백엔드가 실행 중인지 확인해 주세요.</p></div>`;
+    return;
+  }
+
+  const up = d.uptimeSec;
+  const upTxt = up < 60 ? `${up}초` : up < 3600 ? `${Math.floor(up / 60)}분` : `${Math.floor(up / 3600)}시간 ${Math.floor((up % 3600) / 60)}분`;
+
+  body.innerHTML = `
+    <div class="svc-head ${d.healthy ? 'ok' : 'bad'}">
+      <span class="svc-dot"></span>
+      <div>
+        <b>${d.healthy ? '모든 서비스 정상' : '일부 서비스 점검 필요'}</b>
+        <span>백엔드 가동 ${upTxt} · ${new Date(d.now).toLocaleString('ko-KR')} 기준</span>
+      </div>
+    </div>
+    <div class="svc-list">
+      ${d.services.map((s) => {
+        const f = freshness(s.kind, s.ageHours);
+        return `<div class="svc-row ${s.ok ? '' : 'bad'}">
+          <div class="svc-name">
+            <span class="svc-state ${s.ok ? 'ok' : 'bad'}">${s.ok ? '정상' : '이상'}</span>
+            <b>${esc(s.name)}</b>
+            <span class="svc-kind">${esc(s.kind)}</span>
+          </div>
+          <div class="svc-detail">${esc(s.detail)}</div>
+          <div class="svc-age ${f.level}">${esc(f.label)}</div>
+        </div>
+        ${s.sources?.length ? `<div class="svc-sub">${s.sources.map((x) =>
+          `<span class="svc-chip ${x.ok ? '' : 'bad'}">${x.country === 'jp' ? '일본' : '한국'} ${esc(x.source)} <b>${x.count}</b></span>`).join('')}</div>` : ''}`;
+      }).join('')}
+    </div>
+    <div class="svc-note">
+      <h3>데이터가 낡으면 어떻게 되나요</h3>
+      <p>수집기가 실패해도 이전 데이터를 유지합니다. 화면이 비는 대신 낡은 값이 보이므로,
+        이 페이지에서 <b>마지막 수집 시각</b>을 함께 확인해 주세요.
+        차트·상품은 하루 1회, 검색 색인은 수집 직후 자동 갱신됩니다.</p>
+    </div>`;
 }

@@ -1,8 +1,9 @@
 {
-  "rate": 8.7224,
   "date": "2026-08-21",
   "source": "frankfurter.app",
   "live": true,
-  "collectedAt": "2026-08-22T13:29:50.693Z",
-  "count": 100
+  "jpyKrw": 8.7224,
+  "krwJpy": 0.114647,
+  "collectedAt": "2026-08-24T08:29:19.303Z",
+  "count": 450
 }

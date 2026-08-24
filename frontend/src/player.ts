@@ -6,6 +6,11 @@ import { applyTone } from './colors';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
+function postNative(message: Record<string, unknown>) {
+  const bridge = (window as unknown as { webkit?: { messageHandlers?: { lilac?: { postMessage: (v: unknown) => void } } } }).webkit;
+  bridge?.messageHandlers?.lilac?.postMessage(message);
+}
+
 let toastTimer: number;
 export function toast(msg: string) {
   const el = $('.toast');
@@ -34,6 +39,8 @@ const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).p
 function setPlayIcon(playing: boolean) {
   $('#playIcon').innerHTML = `<use href="#${playing ? 'i-pause' : 'i-play'}"/>`;
   document.body.classList.toggle('playing', playing);
+  const tr = nowPlaying();
+  if (tr) postNative({ type: 'nowPlaying', title: tr.title, artist: tr.artist, playing });
 }
 
 function renderNow() {
@@ -308,4 +315,17 @@ export function initPlayer() {
   $('#ytModal').addEventListener('click', (e) => { if (e.target === $('#ytModal')) { $('#ytModal').classList.remove('show'); $('#ytFrameWrap').innerHTML = ''; } });
   $('#plPicker').addEventListener('click', (e) => { if (e.target === $('#plPicker')) $('#plPicker').classList.remove('show'); });
   $('#plPickerClose').addEventListener('click', () => $('#plPicker').classList.remove('show'));
+
+  // macOS 메뉴바 셸에서 전달하는 공통 명령. Focus Desk의 YouTube 명령은
+  // pages.ts가 같은 이벤트를 받아 별도로 처리한다.
+  window.addEventListener('lilac:native-command', (event) => {
+    const command = String((event as CustomEvent<string>).detail || '');
+    const focusRoute = location.hash.startsWith('#/focus');
+    if (!focusRoute && command === 'toggle') playerActions.toggle();
+    else if (!focusRoute && command === 'pause') audio?.pause();
+    else if (!focusRoute && command === 'prev') playerActions.prev();
+    else if (!focusRoute && command === 'next') playerActions.next();
+    else if (command.startsWith('duck:') && audio) audio.volume = Math.max(0, Math.min(1, (Number(command.split(':')[1]) || 18) / 100));
+    else if (command === 'restore' && audio) audio.volume = 0.7;
+  });
 }

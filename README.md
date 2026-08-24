@@ -22,6 +22,7 @@
 | `#/search?q=` | 검색 — 상위 결과 카드 + 탭(전체/곡/아티스트/앨범) |
 | `#/store` · `#/store/:id` | 스토어 목록 · 상품 상세(공식 운영사 표기 + 공식 스토어/타워레코드 외부 링크 + 크레딧 예약 주문) |
 | `#/schedule` | 일정 — 내한 · 발매 · 응모 D-day |
+| `#/focus` | Focus Desk — YouTube 업무 믹스 · 집중 타이머 · AI 큐레이터 · 스마트 볼륨 |
 | `#/artist/:id` | 아티스트 — 팔로우 · 인기곡 · 관련 일정/국즈 · 공식 사이트 링크 |
 | `#/library/{likes\|playlists\|history\|follows}` | 보관함 — 좋아요 · 플레이리스트 · 최근 재생 · 팔로우 |
 | `#/playlist/:id` | 플레이리스트 상세 (전체 재생/곱 삭제) |
@@ -72,6 +73,30 @@ npm run dev:fe
 ```
 
 접속: http://localhost:5180
+
+### macOS 앱
+
+```bash
+# 네이티브 메뉴바 앱 빌드
+npm run build:mac
+
+# 빌드 후 실행
+npm run run:mac
+```
+
+`macos/.build/Lilac.app`이 생성됩니다. 전체 웹은 WebKit 창으로 열고, 메뉴바에서는 재생·집중 세션·자동 실행·업무 앱 볼륨 완화를 제어합니다. 자세한 내용은 `macos/README.md`를 참고하세요.
+
+### Letsur GPT-5.4 연결
+
+Focus Desk는 키 없이 로컬 추천으로 동작합니다. GPT-5.4 큐레이터를 켜려면 브라우저가 아니라 백엔드 프로세스에만 환경변수를 설정합니다.
+
+```bash
+export LETSUR_API_KEY='새로 발급한 키'
+export LETSUR_MODEL_CODE='gpt-5.4'
+npm run dev
+```
+
+키를 소스·`.env` 커밋·프론트엔드 코드에 넣지 마세요.
 
 ## 구조
 

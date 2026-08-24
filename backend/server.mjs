@@ -119,6 +119,111 @@ async function fetchJsonRetry(url, tries = 3) {
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.3' }));
 
+/* ================= Focus Desk / AI 큐레이터 =================
+   YouTube ID는 사람이 확인한 허용 목록만 사용한다. LLM은 URL을 만들지 않고
+   이 목록 안에서 세션에 맞는 믹스를 고르는 역할만 한다. */
+const FOCUS_MIXES = [
+  {
+    id: 'lilac-lofi', title: 'Best of Lofi Hip Hop', creator: 'Lofi Girl',
+    videoId: 'n61ULEU7CO0', tone: 'calm', energy: 32, vocal: false,
+    bestFor: ['문서 작성', '코딩', '독서'], color: '#b58cff',
+  },
+  {
+    id: 'night-drive', title: 'Chillhop Essentials · Spring', creator: 'Chillhop Music',
+    videoId: 'HFQibg2OJkU', tone: 'drive', energy: 68, vocal: false,
+    bestFor: ['반복 작업', '디자인', '야간 작업'], color: '#7c5cff',
+  },
+  {
+    id: 'asian-focus', title: 'Flow of Time · Japanese Lofi', creator: 'Deebu',
+    videoId: 'EtD7_8kCMHA', tone: 'soft', energy: 44, vocal: false,
+    bestFor: ['기획', '리서치', '메일 정리'], color: '#d39af7',
+  },
+];
+
+function localFocusSession({ task = '', mode = 'balanced', minutes = 45 } = {}) {
+  const q = `${task} ${mode}`.toLowerCase();
+  const mix = /디자인|design|반복|야간|에너지|drive|high/.test(q)
+    ? FOCUS_MIXES[1]
+    : /기획|리서치|메일|research|admin|soft/.test(q)
+      ? FOCUS_MIXES[2]
+      : FOCUS_MIXES[0];
+  const total = Math.max(15, Math.min(Number(minutes) || 45, 120));
+  return {
+    mixId: mix.id,
+    title: task ? `${String(task).slice(0, 28)} 집중 세션` : `${total}분 집중 세션`,
+    reason: `${mix.title}은(는) 보컬 간섭이 적고 ${mix.bestFor.slice(0, 2).join('·')} 흐름에 맞습니다.`,
+    plan: [
+      { minute: 0, label: '작업 범위 한 줄로 고정' },
+      { minute: Math.max(10, Math.round(total * 0.55)), label: '진행 상태 빠르게 확인' },
+      { minute: Math.max(14, total - 3), label: '마무리와 다음 행동 기록' },
+    ],
+  };
+}
+
+app.get('/api/focus/mixes', (_req, res) => res.json({
+  mixes: FOCUS_MIXES,
+  aiConfigured: Boolean(process.env.LETSUR_API_KEY),
+  model: process.env.LETSUR_MODEL_CODE || 'gpt-5.4',
+}));
+
+app.post('/api/ai/focus-session', async (req, res) => {
+  const task = String(req.body?.task || '').trim().slice(0, 240);
+  const mode = ['deep', 'balanced', 'energy'].includes(req.body?.mode) ? req.body.mode : 'balanced';
+  const minutes = Math.max(15, Math.min(Number(req.body?.minutes) || 45, 120));
+  const fallback = localFocusSession({ task, mode, minutes });
+  const apiKey = process.env.LETSUR_API_KEY;
+  if (!apiKey) return res.json({ session: fallback, source: 'local', model: null });
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20_000);
+  try {
+    const catalog = FOCUS_MIXES.map(({ id, title, tone, energy, bestFor }) => ({ id, title, tone, energy, bestFor }));
+    const upstream = await fetch('https://gw.letsur.ai/v1/chat/completions', {
+      method: 'POST', signal: controller.signal,
+      headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: process.env.LETSUR_MODEL_CODE || 'gpt-5.4',
+        temperature: 0.35,
+        max_tokens: 520,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Lilac Focus Curator. Pick exactly one mixId from the supplied catalog. Never invent music, artists, URLs, or IDs. Return JSON only with keys mixId, title, reason, plan. plan is an array of 3 objects with integer minute and short Korean label.',
+          },
+          {
+            role: 'user',
+            content: JSON.stringify({ task, mode, minutes, catalog }),
+          },
+        ],
+      }),
+    });
+    const data = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) throw new Error(data?.error?.message || data?.detail || `Letsur ${upstream.status}`);
+    const raw = String(data?.choices?.[0]?.message?.content || '');
+    const start = raw.indexOf('{'), end = raw.lastIndexOf('}');
+    if (start < 0 || end <= start) throw new Error('invalid AI response');
+    const parsed = JSON.parse(raw.slice(start, end + 1));
+    const selected = FOCUS_MIXES.find((m) => m.id === parsed.mixId);
+    if (!selected) throw new Error('AI selected unknown mix');
+    const plan = Array.isArray(parsed.plan) ? parsed.plan.slice(0, 3).map((p) => ({
+      minute: Math.max(0, Math.min(Number(p.minute) || 0, minutes)),
+      label: String(p.label || '').slice(0, 60),
+    })) : fallback.plan;
+    res.json({
+      session: {
+        mixId: selected.id,
+        title: String(parsed.title || fallback.title).slice(0, 80),
+        reason: String(parsed.reason || fallback.reason).slice(0, 240),
+        plan,
+      },
+      source: 'letsur', model: data.model || process.env.LETSUR_MODEL_CODE || 'gpt-5.4',
+    });
+  } catch (error) {
+    console.warn('[lilac] Focus AI fallback:', error?.message || String(error));
+    res.json({ session: fallback, source: 'local-fallback', model: null });
+  } finally { clearTimeout(timer); }
+});
+
 /* ================= 공개 컬렉션 ================= */
 const COLLECTIONS = new Set(['artists', 'tracks', 'events', 'products', 'fx']);
 app.get('/api/db/:name', async (req, res) => {
@@ -181,6 +286,74 @@ app.get('/api/catalog/albums', async (req, res) => {
 
 /* ================= 통합 검색 ================= */
 // 곡(Apple 카탈로그) + 아티스트 + 상품 + 일정을 한 번에 찾는다.
+/* ---------- 서비스 상태 ----------
+   무엇이 살아 있고 무엇이 낡았는지 숨기지 않고 보여준다.
+   외부 소스에 의존하는 서비스라 '언제 수집한 데이터인가'가 신뢰의 핵심이다. */
+app.get('/api/status', async (_req, res) => {
+  const now = Date.now();
+  const ageH = (iso) => (iso ? Math.round(((now - new Date(iso).getTime()) / 36e5) * 10) / 10 : null);
+  const [charts, products, artists, events, fx] = await Promise.all([
+    readJson('charts', null), readJson('products', []), readJson('artists', []),
+    readJson('events', []), readJson('fx', null),
+  ]);
+
+  const chartSources = [];
+  for (const [code, c] of Object.entries(charts?.countries || {})) {
+    for (const [k, v] of Object.entries(c)) {
+      if (!Array.isArray(v)) continue;
+      chartSources.push({ country: code, source: k, count: v.length, ok: v.length > 0 });
+    }
+  }
+
+  const services = [
+    {
+      id: 'charts', name: '차트 수집', kind: '외부 수집',
+      ok: !!charts && chartSources.every((s) => s.ok),
+      updatedAt: charts?.updated || null, ageHours: ageH(charts?.updated),
+      detail: chartSources.length ? `${chartSources.length}개 소스 · ${chartSources.reduce((a, b) => a + b.count, 0)}건` : '수집 이력 없음',
+      sources: chartSources,
+    },
+    {
+      id: 'products', name: '스토어 상품', kind: '외부 수집',
+      ok: products.length > 0,
+      updatedAt: fx?.collectedAt || null, ageHours: ageH(fx?.collectedAt),
+      detail: `${products.length}건 (일본반 ${products.filter((p) => (p.origin || 'jp') === 'jp').length} · 한국반 ${products.filter((p) => p.origin === 'kr').length})`,
+    },
+    {
+      id: 'artists', name: '아티스트 로스터', kind: '외부 수집',
+      ok: artists.length > 0, updatedAt: null, ageHours: null,
+      detail: `${artists.length}팀 (J-POP ${artists.filter((a) => a.country === 'jp').length} · K-POP ${artists.filter((a) => a.country === 'kr').length})`,
+    },
+    {
+      id: 'events', name: '일정', kind: '외부 수집 + 데모',
+      ok: events.length > 0, updatedAt: null, ageHours: null,
+      detail: `${events.length}건 (실발매 ${events.filter((e) => !e.isDemo).length} · 데모 ${events.filter((e) => e.isDemo).length})`,
+    },
+    {
+      id: 'fx', name: '환율', kind: '실시간 API',
+      ok: !!fx?.live, updatedAt: fx?.collectedAt || null, ageHours: ageH(fx?.collectedAt),
+      detail: fx ? `1엔 = ${fx.jpyKrw ?? fx.rate}원 (${fx.source})` : '없음',
+    },
+    {
+      id: 'search-index', name: '한글 검색 색인', kind: '자동 생성',
+      ok: (searchIndex.entries?.length || 0) > 0,
+      updatedAt: searchIndex.builtAt || null, ageHours: ageH(searchIndex.builtAt),
+      detail: `${(searchIndex.entries?.length || 0).toLocaleString()}개 표기`,
+    },
+    {
+      id: 'catalog', name: 'Apple 카탈로그 검색', kind: '실시간 API',
+      ok: true, updatedAt: null, ageHours: null, detail: '요청 시 조회 (캐시 없음)',
+    },
+  ];
+
+  res.json({
+    now: new Date().toISOString(),
+    uptimeSec: Math.round(process.uptime()),
+    healthy: services.every((s) => s.ok),
+    services,
+  });
+});
+
 app.get('/api/index/status', (_req, res) => {
   const ageH = searchIndex.builtAt ? (Date.now() - new Date(searchIndex.builtAt).getTime()) / 36e5 : null;
   res.json({
@@ -442,16 +615,30 @@ app.get('/api/charts', async (req, res) => {
   const c = data.countries?.[country];
   if (!c) return res.status(404).json({ error: 'unknown country' });
   const list = c[source] || [];
+
+  // 국가마다 소스 구성이 다르다(일본: 빌보드·오리콘 / 한국: 멜론·지니)
+  const counts = {};
+  for (const [k, v] of Object.entries(c)) if (Array.isArray(v)) counts[k] = v.length;
+
+  /** 각 소스가 무엇을 근거로 만든 순위인지 그대로 밝힌다 */
+  const METHOD = {
+    combined: '국가별 5개 소스를 각각 순위 정규화한 뒤 가중 합산한 Lilac 자체 집계입니다. 공식 차트가 아닙니다.',
+    apple: 'Apple Music 국가별 최다 재생 차트입니다.',
+    appleRss: 'Apple 공식 마케팅 RSS 피드의 인기곡 순위입니다.',
+    youtube: '같은 곡 풀을 공식 뮤직비디오 누적 조회수로 재정렬한 순위입니다.',
+    billboard: 'Billboard JAPAN HOT 100 — 스트리밍·다운로드·CD·라디오·동영상·노래방을 합산한 일본 종합 차트입니다.',
+    oricon: '오리콘 주간 싱글 랭킹 — 일본 CD 판매량 기준 차트입니다.',
+    melon: '멜론 TOP100 — 국내 최대 음원 플랫폼의 실시간 차트입니다.',
+    genie: '지니 차트 — 멜론과 이용자층이 달라 교차 검증에 사용합니다.',
+  };
+
   res.json({
     country, countryLabel: c.label, source, updated: data.updated, limit: data.limit,
-    counts: { apple: c.apple?.length || 0, youtube: c.youtube?.length || 0, billboard: c.billboard?.length || 0, oricon: c.oricon?.length || 0, combined: c.combined?.length || 0 },
+    counts,
+    sources: Object.keys(counts).filter((k) => k !== 'combined'),
+    sourceLabels: c.sourceLabels || null,
     weights: c.weights || null,
-    method: source === 'combined'
-      ? '공통 곡 풀(Apple Music 국가별 최다 재생)을 기준으로, Apple 순위와 공식 MV 조회수 순위를 각각 정규화해 50:50으로 합산합니다.'
-      : source === 'apple' ? 'Apple Music 공식 최다 재생 차트입니다.'
-      : source === 'billboard' ? 'Billboard JAPAN HOT 100 — 스트리밍·다운로드·CD·라디오·동영상·노래방을 합산한 일본 종합 차트입니다.'
-      : source === 'oricon' ? '오리콘 주간 싱글 랭킹 — 일본 CD 판매량 기준 차트입니다.'
-      : '같은 곡 풀을 공식 뮤직비디오 누적 조회수로 재정렬한 순위입니다.',
+    method: METHOD[source] || METHOD.combined,
     list,
   });
 });
