@@ -158,3 +158,10 @@ async function main() {
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
+
+// 수집이 끝나면 검색 색인을 다시 만든다 — 새로 들어온 곡이 즉시 한글로 검색된다
+try {
+  const { buildIndex } = await import('./build-index.mjs');
+  const r = await buildIndex();
+  console.log(`[index] 검색 색인 ${r.count}건 갱신`);
+} catch (e) { console.error('[index] 색인 갱신 실패:', e.message); }

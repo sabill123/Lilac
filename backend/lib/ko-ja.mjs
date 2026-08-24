@@ -61,6 +61,11 @@ export function kanaToRomaji(s) {
 }
 
 const R2K = {
+  // 한국어 로마자화에서 나오는 y-계열 (슈=syu, 쟈=jya 등)
+  sya: 'シャ', syu: 'シュ', syo: 'ショ', sye: 'シェ',
+  jya: 'ジャ', jyu: 'ジュ', jyo: 'ジョ', jye: 'ジェ',
+  tya: 'チャ', tyu: 'チュ', tyo: 'チョ',
+  chya: 'チャ', chyu: 'チュ', chyo: 'チョ',
   kya: 'キャ', kyu: 'キュ', kyo: 'キョ', sha: 'シャ', shu: 'シュ', sho: 'ショ', cha: 'チャ', chu: 'チュ', cho: 'チョ',
   nya: 'ニャ', nyu: 'ニュ', nyo: 'ニョ', hya: 'ヒャ', hyu: 'ヒュ', hyo: 'ヒョ', mya: 'ミャ', myu: 'ミュ', myo: 'ミョ',
   rya: 'リャ', ryu: 'リュ', ryo: 'リョ', gya: 'ギャ', gyu: 'ギュ', gyo: 'ギョ', ja: 'ジャ', ju: 'ジュ', jo: 'ジョ',
@@ -114,6 +119,43 @@ export function phoneticKey(s) {
     .replace(/g/g, 'k').replace(/z/g, 's').replace(/d/g, 't').replace(/b/g, 'p').replace(/j/g, 'c')
     .replace(/(.)\1+/g, '$1')
     .replace(/[uo]$/, '');
+}
+
+/**
+ * 영어 제목의 한글 표기용 느슨한 키
+ *  "킥백" ↔ "KICK BACK" 처럼 한국어가 영어를 음차한 경우를 맞춘다.
+ *  한국어는 자음 뒤에 '으'를 넣고(브랜드=brand), ㅐ/ㅔ로 a를 받는다.
+ */
+export function looseKey(s) {
+  let t = String(s || '');
+  if (hasKana(t)) t = kanaToRomaji(t);
+  else if (hasHangul(t)) t = hangulToRomaji(t);
+  return t.toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .replace(/ck/g, 'k').replace(/gh/g, '').replace(/ph/g, 'f')
+    .replace(/sh/g, 's').replace(/ch/g, 'c').replace(/ts/g, 'c')
+    .replace(/eu/g, '')        // 한국어 삽입 모음 제거 (브랜드 → brand)
+    .replace(/eo/g, 'u')       // ㅓ가 영어 schwa/u를 받는다 (서브 → sub)
+    .replace(/ae/g, 'a')       // ㅐ → a
+    .replace(/l/g, 'r')
+    .replace(/g/g, 'k').replace(/z/g, 's').replace(/d/g, 't').replace(/b/g, 'p').replace(/j/g, 'c')
+    .replace(/(.)\1+/g, '$1')
+    .replace(/[aeiou]+$/, '');
+}
+
+/** 편집 거리 (근사 매칭용) */
+export function editDistance(a, b) {
+  const m = a.length, n = b.length;
+  if (!m || !n) return Math.max(m, n);
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[n];
 }
 
 /** 두 문자열이 언어가 달라도 같은 발음인지 */

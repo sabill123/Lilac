@@ -1,12 +1,14 @@
 // Lilac demo backend v0.3
 // DB = 로컬 폴더(../db)의 JSON 파일. 데모용 단순 구현 (실서비스 보안 아님)
 import express from 'express';
+import { gzipSync } from 'node:zlib';
 import cors from 'cors';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { randomUUID, createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { expandQuery, phoneticMatch, phoneticKey, hasHangul, hangulToKatakana } from './lib/ko-ja.mjs';
+import { expandQuery, phoneticMatch, phoneticKey, looseKey, editDistance, hasHangul, hangulToKatakana } from './lib/ko-ja.mjs';
+import { buildIndex } from './build-index.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_DIR = path.join(__dirname, '..', 'db');
@@ -26,6 +28,60 @@ const writeJson = async (name, data) => {
   await writeFile(p, JSON.stringify(data, null, 2));
 };
 const hash = (s) => createHash('sha256').update(s).digest('hex');
+
+/* ---------- 한글 검색용 읽기 색인 ----------
+   수집된 실데이터의 일본어 표기를 형태소 분석해 읽기를 만들어 둔 것.
+   덕분에 「群青」을 '군조'로 쳐도 찾을 수 있다(장음 표기 차이를 음가로 흡수). */
+let searchIndex = { entries: [] };
+
+async function loadIndex() {
+  searchIndex = await readJson('search-index', { entries: [] });
+  return searchIndex.entries.length;
+}
+
+/** 색인 재구축 — 수집기가 돌 때나 수동 요청 시에만. 외부 API를 호출하므로 느리다(~20초) */
+async function refreshIndex() {
+  try {
+    const r = await buildIndex();
+    searchIndex = r;
+    console.log(`[lilac] 검색 색인 ${r.count}건 재구축 완료`);
+    return r.count;
+  } catch (e) {
+    console.error('[lilac] 색인 재구축 실패, 기존 색인 유지:', e.message);
+    return searchIndex.entries?.length || 0;
+  }
+}
+
+/** 한글 질의의 음가와 일치하는 일본어 원표기들을 색인에서 찾는다 */
+function lookupIndex(q, limit = 3) {
+  const qk = phoneticKey(q);
+  const ql = looseKey(q);           // 영어 제목의 한글 음차 대응
+  // 3글자 이하 음가는 변별력이 없어 엉뚱한 곡을 끌어온다("하루"→旅は道連れ 사례)
+  if (qk.length < 4 && ql.length < 4) return [];
+  /* 색인은 후보를 '확신할 때만' 내놓아야 한다.
+     느슨하게 맞추면 1000건 넘는 색인에서 엉뚱한 곡이 상위 후보가 되어
+     오히려 정확도가 떨어진다(실측: 느슨 16/28 → 엄격 상향). */
+  const scored = [];
+  for (const e of searchIndex.entries || []) {
+    let best = 0;
+    for (const k of e.keys) {
+      if (k === qk || k === ql) { best = Math.max(best, 100); break; }
+      // 접두 일치는 장음·조사 정도의 짧은 꼬리만 허용
+      if (qk.length >= 4 && k.startsWith(qk) && k.length - qk.length <= 2) best = Math.max(best, 82);
+      else if (ql.length >= 4 && k.startsWith(ql) && k.length - ql.length <= 2) best = Math.max(best, 80);
+      // 편집거리는 긴 질의에서만 (영어 음차의 표기 흔들림 흡수)
+      else if (ql.length >= 7 && Math.abs(k.length - ql.length) <= 2 && editDistance(k, ql) <= 2) {
+        best = Math.max(best, 74);
+      }
+      else if (qk.length >= 6 && Math.abs(k.length - qk.length) <= 1 && editDistance(k, qk) === 1) {
+        best = Math.max(best, 72);
+      }
+    }
+    if (best >= 72) scored.push({ ja: e.ja, score: best });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.ja);
+}
 
 /** iTunes는 간헐적으로 빈/절단 응답을 준다 — 재시도 후 JSON 검증 */
 async function fetchJsonRetry(url, tries = 3) {
@@ -104,9 +160,46 @@ app.get('/api/catalog/albums', async (req, res) => {
 
 /* ================= 통합 검색 ================= */
 // 곡(Apple 카탈로그) + 아티스트 + 상품 + 일정을 한 번에 찾는다.
+app.post('/api/index/rebuild', async (_req, res) => {
+  await refreshIndex();
+  res.json({ ok: true, count: searchIndex.count || searchIndex.entries?.length || 0 });
+});
+
 app.get('/api/aliases', async (_req, res) => {
   const a = await readJson('aliases', { artists: {}, tracks: {} });
   res.json({ ...(a.artists || {}), ...(a.tracks || {}) });
+});
+
+/* 로컬 목록 필터(보관함·플레이리스트)용 역색인.
+   음가 키 → 일본어 표기들. 클라이언트가 하드코딩 없이 한글 필터를 할 수 있게 한다. */
+let readingsCache = null;   // { etag, gz }
+
+app.get('/api/readings', async (req, res) => {
+  // 색인이 커지면 응답도 커진다(수천 키) — 압축해서 캐시해 둔다
+  if (readingsCache && readingsCache.builtFrom === (searchIndex.builtAt || '')) {
+    if (req.headers['if-none-match'] === readingsCache.etag) return res.status(304).end();
+    res.set({ 'content-type': 'application/json', 'content-encoding': 'gzip',
+      etag: readingsCache.etag, 'cache-control': 'public, max-age=600' });
+    return res.end(readingsCache.gz);
+  }
+  const rev = {};
+  for (const e of searchIndex.entries || []) {
+    for (const k of e.keys) {
+      if (k.length < 2) continue;
+      (rev[k] ||= []).push(e.ja);
+    }
+  }
+  // 수동 예외도 같은 형태로 합친다
+  const a = await readJson('aliases', { artists: {}, tracks: {} });
+  for (const [ko, ja] of Object.entries({ ...(a.artists || {}), ...(a.tracks || {}) })) {
+    const k = phoneticKey(ko);
+    if (k.length >= 2) (rev[k] ||= []).push(ja);
+  }
+  const gz = gzipSync(Buffer.from(JSON.stringify(rev)));
+  readingsCache = { gz, etag: '"' + hash(gz.toString('base64')).slice(0, 16) + '"', builtFrom: searchIndex.builtAt || '' };
+  res.set({ 'content-type': 'application/json', 'content-encoding': 'gzip',
+    etag: readingsCache.etag, 'cache-control': 'public, max-age=600' });
+  res.end(readingsCache.gz);
 });
 
 app.get('/api/search', async (req, res) => {
@@ -119,8 +212,17 @@ app.get('/api/search', async (req, res) => {
   ]);
   const allAliases = { ...(aliasDb.artists || {}), ...(aliasDb.tracks || {}) };
 
-  // 한글 질의를 가타카나·로마자·별칭으로 확장
-  const queries = expandQuery(q, allAliases);
+  /* 질의 확장 순서
+     1) 수동 예외 사전 — 형태소 분석기가 틀리는 특수 읽기(晴る=ハル 등)를 바로잡는 최소한의 장치
+     2) 자동 색인 — 수집된 실데이터의 읽기. 신곡은 여기로 자동 편입된다
+     3) 가타카나 음역 — 색인에 없는 곡을 위한 실시간 경로
+     4) 원 한글 질의 — 마지막 폴백 */
+  const manual = Object.entries(allAliases)
+    .filter(([ko]) => ko.trim().toLowerCase() === q.toLowerCase())
+    .map(([, ja]) => ja);
+  const indexHits = hasHangul(q) ? lookupIndex(q) : [];
+  const expanded = expandQuery(q, allAliases);
+  const queries = [...new Set([...manual, ...indexHits, ...expanded])].slice(0, 5);
   const ql = q.toLowerCase();
 
   /** 문자열이 질의와 맞는지 — 직접 포함 또는 음가 일치 */
@@ -163,6 +265,10 @@ app.get('/api/search', async (req, res) => {
   }
 
   // 원 질의와의 음가 유사도로 재정렬 — 후보 순서에 좌우되지 않도록
+  // 수동 예외는 사람이 확인한 것이라 신뢰도가 높고, 색인 힌트는 추정이므로 가산점을 낮춘다
+  const normJa = (x) => String(x).toLowerCase().replace(/\s*-\s*(single|ep|album)$/i, '').trim();
+  const manualSet = new Set(manual.map(normJa));
+  const indexSet = new Set(indexHits.map(normJa));
   const qk = phoneticKey(q);
   const score = (t) => {
     const tk = phoneticKey(t.title);
@@ -175,10 +281,14 @@ app.get('/api/search', async (req, res) => {
     else if (qk.length >= 3 && ak.includes(qk)) s = 60;
     else if (tk.length >= 3 && qk.includes(tk)) s = 50;
     // 앞선 후보(별칭 사전·가타카나)로 찾은 결과에 가중치 — 동음이곡보다 우선
-    // 앞선 후보(별칭 사전 → 가타카나 → 로마자 → 원문)일수록 신뢰도가 높다.
-    // 한자 제목은 음가 계산이 안 되므로(晴る 등) 별칭 후보에 충분한 가중을 준다.
+    // 앞선 후보(수동 예외 → 색인 → 가타카나 → 원문)일수록 신뢰도가 높다.
+    // 한자 제목은 음가 계산이 안 되므로(晴る 등) 상위 후보에 충분한 가중을 준다.
     const ci = t.candIdx ?? queries.length;
     s += ci === 0 ? 130 : Math.max(0, (queries.length - ci)) * 20;
+    // 확인된 표기와 제목이 일치하면 가산 — 동음이곡(風神 vs 婦人倶楽部)에서 실제 보유 곡을 고른다
+    const tn = normJa(t.title);
+    if (manualSet.has(tn)) s += 90;
+    else if (indexSet.has(tn)) s += 40;
     return s;
   };
   catalog.sort((a, b) => score(b) - score(a));
@@ -529,4 +639,11 @@ app.post('/api/orders', async (req, res) => {
   res.json({ order, credits: u.credits });
 });
 
-app.listen(PORT, () => console.log(`[lilac] backend v0.3 on http://localhost:${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`[lilac] backend v0.3 on http://localhost:${PORT}`);
+  // 기동 시엔 만들어 둔 색인을 읽기만 한다.
+  // 재구축은 수집기(collect-*.mjs)가 끝날 때 또는 /api/index/rebuild 로 수행한다.
+  const n = await loadIndex();
+  if (n) console.log(`[lilac] 검색 색인 ${n}건 로드`);
+  else { console.log('[lilac] 색인이 없어 새로 만듭니다...'); await refreshIndex(); }
+});

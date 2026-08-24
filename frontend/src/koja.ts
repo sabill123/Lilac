@@ -68,24 +68,32 @@ export function phoneticKey(s: string): string {
  * 별칭 사전 (한국 팬이 쓰는 검색어 → 일본어 원표기)
  * 한자 제목(하루→晴る)이나 영어 제목(킥백→KICK BACK)은 음역으로 못 잡으므로 사전이 필요하다.
  */
-let ALIASES: Record<string, string> = {};
+/**
+ * 음가 키 → 일본어 표기 역색인.
+ * 서버가 수집 데이터에서 자동 생성하므로(형태소 분석 기반) 신곡도 자동 반영된다.
+ */
+let READINGS: Record<string, string[]> = {};
 
 export async function loadAliases(): Promise<void> {
   try {
-    const r = await fetch('/api/aliases');
-    if (r.ok) ALIASES = await r.json();
-  } catch { /* 사전 없이도 음역 매칭은 동작한다 */ }
+    const r = await fetch('/api/readings');
+    if (r.ok) READINGS = await r.json();
+  } catch { /* 색인 없이도 음역 매칭은 동작한다 */ }
 }
 
-/** 질의에 대응하는 일본어 표기들 */
+/** 질의 음가에 대응하는 일본어 표기들 */
 function aliasFor(q: string): string[] {
-  const key = q.trim().toLowerCase();
-  const out: string[] = [];
-  for (const [ko, ja] of Object.entries(ALIASES)) {
-    const k = ko.toLowerCase();
-    if (k === key || k.replace(/\s+/g, '') === key.replace(/\s+/g, '')) out.push(ja);
+  const qk = phoneticKey(q);
+  if (qk.length < 2) return [];
+  const out = new Set<string>(READINGS[qk] || []);
+  // 장음·조사 표기 차이를 고려해 접두 일치도 본다
+  if (qk.length >= 3) {
+    for (const [k, list] of Object.entries(READINGS)) {
+      if (k !== qk && (k.startsWith(qk) || qk.startsWith(k))) list.forEach((x) => out.add(x));
+      if (out.size > 30) break;
+    }
   }
-  return out;
+  return [...out];
 }
 
 /**

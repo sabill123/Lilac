@@ -8,5 +8,8 @@
     "dev:fe": "npm --prefix frontend run dev",
     "dev": "node backend/server.mjs & npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build"
+  },
+  "dependencies": {
+    "kuromoji": "^0.1.2"
   }
 }
