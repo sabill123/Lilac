@@ -83,8 +83,8 @@ export function mountBackdrop(opts: Partial<BackdropOptions> = {}): void {
 
   // 모션 최소화를 켠 사용자에게는 움직이는 배경을 주지 않는다
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  // 터치 기기는 배터리·발열 부담이 커서 생략한다
-  if (navigator.maxTouchPoints > 0 && window.innerWidth < 900) return;
+  // 좁은 화면·터치 기기는 배터리와 발열 부담이 커서 생략한다
+  if (window.innerWidth <= 900 || navigator.maxTouchPoints > 0) return;
 
   const o = { ...DEFAULTS, ...opts };
   const canvas = document.createElement('canvas');

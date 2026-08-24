@@ -2629,3 +2629,128 @@ body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circ
   .svc-row { grid-template-columns: 1fr auto; }
   .svc-detail { grid-column: 1 / -1; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   3D 모션 레이어
+
+   원칙
+     · transform / opacity 만 쓴다 (레이아웃·페인트를 유발하지 않는다)
+     · 스크롤 연동은 CSS scroll-driven animation 으로 컴포지터에 맡긴다
+       → 프레임마다 JS가 도는 구조가 아니므로 스크롤 성능에 영향이 없다
+     · 모션 최소화 설정과 터치 기기에서는 전부 끈다
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* 원근 컨테이너 — 자식이 3D 공간을 공유하게 한다 */
+  .d3-stage {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+  }
+
+  /* ── 스크롤 진입 3D 등장 ────────────────────────────────
+     뷰포트에 들어오는 동안 Z축 뒤에서 앞으로 세워지며 나타난다 */
+  @supports (animation-timeline: view()) {
+    .d3-rise {
+      animation: d3Rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 62%;
+      transform-origin: 50% 100%;
+    }
+    @keyframes d3Rise {
+      from { opacity: 0; transform: perspective(900px) translate3d(0, 28px, -90px) rotateX(9deg); }
+      to   { opacity: 1; transform: perspective(900px) translate3d(0, 0, 0) rotateX(0deg); }
+    }
+
+    /* 가로 셸프는 옆에서 밀려들어오게 */
+    .d3-slide {
+      animation: d3Slide linear both;
+      animation-timeline: view(inline);
+      animation-range: entry 0% entry 50%;
+    }
+    @keyframes d3Slide {
+      from { opacity: .35; transform: perspective(800px) translate3d(40px, 0, -60px) rotateY(-7deg); }
+      to   { opacity: 1;   transform: none; }
+    }
+
+    /* 히어로 — 스크롤에 따라 뒤로 물러나며 흐려진다 */
+    .d3-hero {
+      animation: d3Hero linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+      transform-origin: 50% 0%;
+    }
+    @keyframes d3Hero {
+      from { transform: perspective(1000px) translateZ(0) rotateX(0deg); opacity: 1; }
+      to   { transform: perspective(1000px) translateZ(-120px) rotateX(4deg); opacity: .55; }
+    }
+
+    /* 섹션 제목 — 살짝 늦게 따라온다 */
+    .d3-head {
+      animation: d3Head linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    @keyframes d3Head {
+      from { opacity: 0; transform: translate3d(0, 14px, 0); }
+      to   { opacity: 1; transform: none; }
+    }
+  }
+
+  /* ── 포인터 3D 틸트 ──────────────────────────────────────
+     JS는 --rx / --ry 변수만 갱신하고, 실제 변환은 CSS가 처리한다 */
+  .d3-tilt {
+    transform: perspective(var(--d3-persp, 760px))
+               rotateX(var(--rx, 0deg))
+               rotateY(var(--ry, 0deg))
+               translateZ(var(--tz, 0px));
+    transition: transform 420ms var(--ease-out);
+    transform-style: preserve-3d;
+  }
+  .d3-tilt.is-tilting { transition: transform 90ms linear; }
+
+  /* 카드 안쪽 요소를 Z축으로 띄워 실제 깊이를 만든다 */
+  .d3-tilt .d3-layer-1 { transform: translateZ(18px); }
+  .d3-tilt .d3-layer-2 { transform: translateZ(34px); }
+
+  /* 광택 — 기울인 방향을 따라 빛이 흐른다 */
+  .d3-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 260ms var(--ease-out);
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.08) 32%,
+      transparent 62%);
+  }
+  .d3-tilt.is-tilting .d3-glare { opacity: 1; }
+
+  /* ── 차트 순위 3D 스택 ──────────────────────────────────
+     상위권일수록 앞으로 나와 보이게 한다 */
+  .d3-stack { transform-style: preserve-3d; }
+  .d3-stack > * { transition: transform 320ms var(--ease-out); }
+  .d3-stack > *:hover { transform: translateZ(22px) scale(1.012); }
+
+  /* ── 페이지 전환 ────────────────────────────────────────*/
+  .d3-enter { animation: d3Enter 420ms var(--ease-out) both; }
+  @keyframes d3Enter {
+    from { opacity: 0; transform: perspective(1200px) translate3d(0, 10px, -40px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* 3D를 끄는 조건
+     · 모션 최소화 설정
+     · 호버가 없는 기기(터치)
+     · 좁은 화면 — 작은 화면에서 3D는 읽기를 방해하고 배터리만 먹는다 */
+@media (prefers-reduced-motion: reduce), (hover: none), (max-width: 900px) {
+  .d3-rise, .d3-slide, .d3-hero, .d3-head, .d3-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .d3-tilt { transform: none !important; }
+  .d3-glare { display: none; }
+}
+html.touch .d3-tilt { transform: none !important; }
+html.touch .d3-glare { display: none; }

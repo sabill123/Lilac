@@ -8,6 +8,7 @@ import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pa
 import { initMusicKitIfConfigured } from './musickit';
 import { initRipple, initKeyboard, initContextMenu, bindParallax, bindReveal, bindTilt, bindHoverExpand } from './interactions';
 import { mountBackdrop } from './backdrop';
+import { mountMotion3D, playEnter } from './motion3d';
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -278,6 +279,9 @@ async function route() {
   } catch (e) { console.error(e); page404(); }
   // 페이지 렌더 후 인터랙션 바인딩
   bindTilt(panel); bindHoverExpand(panel); bindReveal(panel, panel);
+  // 3D 모션 — 스크롤 연동은 CSS가 처리하므로 클래스만 붙인다
+  mountMotion3D(panel);
+  playEnter(document.getElementById('page'));
   restoreScroll(location.hash);
   lastHash = location.hash;
   onScroll();

@@ -60,17 +60,54 @@ export const api = (path: string, init?: RequestInit) =>
   });
 
 const catalogCache = new Map<string, CatalogTrack | null>();
-export async function findCatalog(term: string): Promise<CatalogTrack | null> {
-  if (catalogCache.has(term)) return catalogCache.get(term)!;
+/* 아트워크 조회 배칭
+   한 화면에서 수십 개 카드가 각자 요청을 보내면 요청 수 자체가 병목이 된다.
+   같은 틱에 들어온 요청을 모아 한 번에 보낸다. */
+let batchQueue: { term: string; resolve: (v: CatalogTrack | null) => void }[] = [];
+let batchTimer: number | null = null;
+
+async function flushBatch() {
+  const queue = batchQueue;
+  batchQueue = [];
+  batchTimer = null;
+  if (!queue.length) return;
+
+  const terms = [...new Set(queue.map((q) => q.term))];
   try {
-    const { tracks } = await api(`/api/catalog/search?term=${encodeURIComponent(term)}&limit=3`);
-    const hit = (tracks as CatalogTrack[]).find((t) => t.preview) ?? (tracks as CatalogTrack[])[0] ?? null;
-    catalogCache.set(term, hit);
-    return hit;
-  } catch { return null; }
+    const r = await fetch('/api/catalog/batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ terms }),
+    });
+    const { results } = await r.json();
+    queue.forEach((q) => {
+      const hit = (results?.[q.term] ?? null) as CatalogTrack | null;
+      catalogCache.set(q.term, hit);
+      q.resolve(hit);
+    });
+  } catch {
+    queue.forEach((q) => q.resolve(null));
+  }
 }
-export const artUrl = (t: { artwork?: string } | null, size = 400) =>
-  t?.artwork ? t.artwork.replace('400x400', `${size}x${size}`) : '';
+
+export function findCatalog(term: string): Promise<CatalogTrack | null> {
+  if (catalogCache.has(term)) return Promise.resolve(catalogCache.get(term)!);
+  return new Promise((resolve) => {
+    batchQueue.push({ term, resolve });
+    // 40개가 모이면 즉시, 아니면 다음 프레임에 전송
+    if (batchQueue.length >= 40) flushBatch();
+    else if (batchTimer === null) batchTimer = window.setTimeout(flushBatch, 16);
+  });
+}
+/** 표시 크기에 맞는 아트워크 URL — Apple CDN은 임의 크기를 지원한다.
+ *  원본(600px)을 썸네일에 쓰면 대역폭과 디코딩 비용이 그대로 낭비된다. */
+export const artUrl = (t: { artwork?: string } | null, size = 400) => {
+  if (!t?.artwork) return '';
+  // 고밀도 화면에서도 2배를 넘기지 않는다 (그 이상은 육안 차이가 없다)
+  const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2);
+  const px = Math.min(Math.round(size * dpr), 1200);
+  return t.artwork.replace(/\/\d+x\d+bb\.(jpg|png|webp)/, `/${px}x${px}bb.$1`);
+};
 
 // 세션 상태 (모듈 전역)
 export let me: User | null = null;

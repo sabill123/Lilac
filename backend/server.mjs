@@ -3,7 +3,7 @@
 import express from 'express';
 import { gzipSync } from 'node:zlib';
 import cors from 'cors';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { randomUUID, createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -289,6 +289,48 @@ app.get('/api/catalog/albums', async (req, res) => {
 /* ---------- 서비스 상태 ----------
    무엇이 살아 있고 무엇이 낡았는지 숨기지 않고 보여준다.
    외부 소스에 의존하는 서비스라 '언제 수집한 데이터인가'가 신뢰의 핵심이다. */
+/* 여러 검색어를 한 번에 처리한다.
+   홈 화면은 아트워크를 채우려고 60번 가까이 개별 요청을 보내고 있었다.
+   요청 수 자체가 병목이라 배치로 묶는다. */
+const catalogMemo = new Map();   // term → { at, hit }
+const CATALOG_TTL = 30 * 60 * 1000;
+
+async function lookupOne(term) {
+  const key = term.toLowerCase();
+  const c = catalogMemo.get(key);
+  if (c && Date.now() - c.at < CATALOG_TTL) return c.hit;
+  const q = hasHangul(term) ? (hangulToKatakana(term) || term) : term;
+  const j = await fetchJsonRetry(`https://itunes.apple.com/search?media=music&entity=song&country=jp&limit=3&term=${encodeURIComponent(q)}`, 2);
+  const t = (j?.results || [])[0];
+  const hit = t ? {
+    id: t.trackId, title: t.trackName, artist: t.artistName, album: t.collectionName,
+    artwork: (t.artworkUrl100 || '').replace('100x100', '400x400'),
+    preview: t.previewUrl, appleUrl: t.trackViewUrl, durationMs: t.trackTimeMillis || 0,
+  } : null;
+  catalogMemo.set(key, { at: Date.now(), hit });
+  return hit;
+}
+
+app.post('/api/catalog/batch', async (req, res) => {
+  const terms = Array.isArray(req.body?.terms) ? req.body.terms.slice(0, 40) : [];
+  if (!terms.length) return res.json({ results: {} });
+  // 캐시된 것은 즉시, 나머지만 병렬로 (동시 6개까지)
+  const results = {};
+  const pending = [];
+  for (const term of terms) {
+    const c = catalogMemo.get(String(term).toLowerCase());
+    if (c && Date.now() - c.at < CATALOG_TTL) results[term] = c.hit;
+    else pending.push(term);
+  }
+  const CONCURRENCY = 6;
+  for (let i = 0; i < pending.length; i += CONCURRENCY) {
+    const slice = pending.slice(i, i + CONCURRENCY);
+    const hits = await Promise.all(slice.map((t) => lookupOne(t).catch(() => null)));
+    slice.forEach((t, k) => { results[t] = hits[k]; });
+  }
+  res.json({ results });
+});
+
 app.get('/api/status', async (_req, res) => {
   const now = Date.now();
   const ageH = (iso) => (iso ? Math.round(((now - new Date(iso).getTime()) / 36e5) * 10) / 10 : null);
@@ -607,14 +649,40 @@ async function fetchAppleChart() {
 const norm = (s) => String(s).toLowerCase().replace(/[\s()\[\]『』「」【】・,.'’!?~-]/g, '');
 
 /* 수집기(collect-charts.mjs)가 만든 3종 차트 — 국가별 */
+/* 차트 파일은 256KB가 넘는다. 매 요청마다 읽고 파싱하면 그 자체가 병목이라
+   파일 수정 시각을 키로 메모리에 캐시한다. */
+let chartCache = { mtime: 0, data: null };
+async function loadCharts() {
+  try {
+    const p = path.join(DB_DIR, 'charts.json');
+    const { mtimeMs } = await stat(p);
+    if (chartCache.data && chartCache.mtime === mtimeMs) return chartCache.data;
+    const data = JSON.parse(await readFile(p, 'utf-8'));
+    chartCache = { mtime: mtimeMs, data };
+    return data;
+  } catch { return null; }
+}
+
 app.get('/api/charts', async (req, res) => {
-  const data = await readJson('charts', null);
+  const data = await loadCharts();
   if (!data) return res.status(503).json({ error: 'charts not collected yet', hint: 'node backend/collect-charts.mjs' });
   const country = String(req.query.country || 'jp');
   const source = String(req.query.source || 'combined');
   const c = data.countries?.[country];
   if (!c) return res.status(404).json({ error: 'unknown country' });
-  const list = c[source] || [];
+
+  /* 전체를 그대로 내보내면 응답이 수백 KB가 되어 파싱만 2초 넘게 걸린다.
+     화면이 실제로 쓰는 필드만, 요청한 개수만 보낸다. */
+  const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 300);
+  const slim = (e) => ({
+    rank: e.rank, title: e.title, artist: e.artist,
+    artwork: e.artwork || null, appleUrl: e.appleUrl || null,
+    youtubeId: e.youtubeId || null, ytViews: e.ytViews || null,
+    ranks: e.ranks || null, sources: e.sources || null, score: e.score,
+    move: e.move || null, lastRank: e.lastRank ?? null,
+  });
+  const full = c[source] || [];
+  const list = full.slice(0, limit).map(slim);
 
   // 국가마다 소스 구성이 다르다(일본: 빌보드·오리콘 / 한국: 멜론·지니)
   const counts = {};
@@ -633,7 +701,8 @@ app.get('/api/charts', async (req, res) => {
   };
 
   res.json({
-    country, countryLabel: c.label, source, updated: data.updated, limit: data.limit,
+    country, countryLabel: c.label, source, updated: data.updated,
+    limit, total: full.length,
     counts,
     sources: Object.keys(counts).filter((k) => k !== 'combined'),
     sourceLabels: c.sourceLabels || null,
