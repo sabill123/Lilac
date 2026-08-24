@@ -1,15 +1,17 @@
 /**
- * 홈 히어로 3D 앨범 캐러셀 (three.js)
+ * 홈 히어로 — 레코드 갤러리 월 (three.js)
  *
- * 실제 차트 상위 앨범 아트를 원통형으로 배치해 천천히 회전시킨다.
- * 마우스를 따라 시점이 기울고, 클릭하면 해당 곡으로 이동한다.
+ * 레퍼런스: 벽에 선반을 달아 LP 재킷을 세워두는 진열 방식(The Vinyl Wall),
+ *          그리고 작품이 벽에 걸린 갤러리.
  *
- * 성능 원칙
- *   · three.js 는 이 모듈에서만 쓰고 동적 import 로 불러온다
- *     → 홈에 들어가지 않으면 다운로드조차 하지 않는다
- *   · 화면 밖 / 백그라운드 탭에서는 렌더 루프를 멈춘다
- *   · 모션 최소화 · 좁은 화면 · WebGL 미지원이면 아예 만들지 않는다
- *   · 텍스처는 200px 로 받아 GPU 메모리를 아낀다
+ * 회전하는 캐러셀은 시선을 흐트러뜨리고 정보가 읽히지 않는다.
+ * 여기서는 앨범을 벽에 가지런히 걸고, 카메라가 아주 느리게 옆으로 흐르게 한다.
+ * 움직임은 '조용한 드리프트' 수준으로만 두고, 재킷 자체가 주인공이 되게 한다.
+ *
+ * 성능
+ *   · 지오메트리·머티리얼을 공유하고 인스턴스마다 텍스처만 교체
+ *   · 화면 밖 / 백그라운드 탭이면 렌더 정지
+ *   · 텍스처는 표시 크기에 맞춰 400px로 요청
  */
 import * as THREE from 'three';
 
@@ -22,12 +24,13 @@ export interface HeroItem {
 
 interface Handle { destroy(): void; }
 
-/* 구도
-   원통 반지름을 키우고 카메라를 뒤로 빼면 한 번에 더 많은 앨범이 보인다.
-   카메라를 살짝 위에서 내려다보게 두면 바닥 원판과 함께 깊이가 산다. */
-const RADIUS = 5.6;
-const CARD_W = 1.72;
-const CARD_H = 1.72;
+/* 벽 구성 — 재킷 한 변 1.0 기준 */
+const TILE = 1.0;
+const GAP_X = 0.26;
+const GAP_Y = 0.42;      // 선반 두께만큼 세로 간격을 더 준다
+const ROWS = 3;
+const COL_W = TILE + GAP_X;
+const ROW_H = TILE + GAP_Y;
 
 export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | null {
   if (!items.length) return null;
@@ -39,87 +42,128 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(34, host.clientWidth / Math.max(1, host.clientHeight), 0.1, 100);
-  camera.position.set(0, 1.5, 13.4);
-  camera.lookAt(0, -0.15, 0);
 
-  // 은은한 조명 — 앨범 아트 자체가 밝으므로 과하지 않게
-  scene.add(new THREE.AmbientLight(0xffffff, 1.25));
-  const key = new THREE.DirectionalLight(0xc9b6ff, 0.9);
-  key.position.set(3, 4, 6);
-  scene.add(key);
+  /* 카메라
+     벽을 정면에서 보되 아주 살짝 각도를 줘 재킷의 두께와 그림자가 읽히게 한다. */
+  const camera = new THREE.PerspectiveCamera(30, host.clientWidth / Math.max(1, host.clientHeight), 0.1, 60);
+  camera.position.set(0, 0, 7.4);
+  camera.lookAt(0, 0, 0);
 
-  const group = new THREE.Group();
-  scene.add(group);
+  /* 조명 — 갤러리 스포트 느낌.
+     위에서 비스듬히 떨어지는 빛 하나 + 전체를 살짝 띄우는 환경광 */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+  const spot = new THREE.DirectionalLight(0xffffff, 1.15);
+  spot.position.set(-2.2, 4.4, 3.6);
+  scene.add(spot);
+  const fill = new THREE.DirectionalLight(0xa78bfa, 0.32);
+  fill.position.set(3.4, -1.4, 2.2);
+  scene.add(fill);
+
+  const wall = new THREE.Group();
+  scene.add(wall);
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
 
-  const use = items.slice(0, 16);
-  const meshes: THREE.Mesh[] = [];
-  const geo = new THREE.PlaneGeometry(CARD_W, CARD_H, 1, 1);
+  /* 재킷은 얇은 판이 아니라 살짝 두께가 있는 상자로 만든다.
+     옆면이 보여야 '벽에 걸린 물건'처럼 읽힌다. */
+  const tileGeo = new THREE.BoxGeometry(TILE, TILE, 0.045);
+  const sideMat = new THREE.MeshStandardMaterial({ color: 0x0d0e12, roughness: 0.9, metalness: 0 });
 
-  use.forEach((it, i) => {
-    const angle = (i / use.length) * Math.PI * 2;
-    // 텍스처가 도착하기 전에도 자리를 잡도록 먼저 판을 세운다
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x1a1b20, roughness: 0.62, metalness: 0.08,
+  /* 벽은 좌우로 이어져야 하므로 화면 폭보다 넉넉히 넓게 만든다.
+     자료가 모자라면 앞에서부터 다시 걸어 반복시킨다(실제 진열장도 그렇게 채운다). */
+  const MIN_COLS = 14;
+  const cols = Math.max(MIN_COLS, Math.ceil(items.length / ROWS));
+  const totalW = cols * COL_W;
+  const filled: HeroItem[] = [];
+  for (let i = 0; i < ROWS * cols; i++) filled.push(items[i % items.length]);
+
+  interface TileData { mesh: THREE.Mesh; item: HeroItem; baseZ: number; }
+  const tiles: TileData[] = [];
+
+  filled.forEach((it, i) => {
+    const col = Math.floor(i / ROWS);
+    const row = i % ROWS;
+
+    const faceMat = new THREE.MeshStandardMaterial({
+      color: 0x16171c, roughness: 0.52, metalness: 0.04,
       transparent: true, opacity: 0.001,
     });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(Math.sin(angle) * RADIUS, 0, Math.cos(angle) * RADIUS);
-    mesh.lookAt(0, 0, 0);
-    mesh.rotateY(Math.PI);              // 바깥을 보게 뒤집는다
-    mesh.userData = { index: i, angle, item: it };
-    group.add(mesh);
-    meshes.push(mesh);
+    // BoxGeometry 면 순서: +x, -x, +y, -y, +z(앞), -z
+    const mats = [sideMat, sideMat, sideMat, sideMat, faceMat, sideMat];
+    const mesh = new THREE.Mesh(tileGeo, mats);
 
-    const url = it.artwork?.replace(/\/\d+x\d+bb\./, '/300x300bb.');
-    if (!url) return;
+    // 행마다 살짝 어긋나게 걸어 기계적인 격자를 피한다
+    const stagger = (row % 2) * (COL_W * 0.34);
+    mesh.position.set(
+      col * COL_W - totalW / 2 + stagger,
+      (ROWS - 1) / 2 * ROW_H - row * ROW_H,
+      0,
+    );
+    mesh.userData = { item: it, faceMat };
+    wall.add(mesh);
+    tiles.push({ mesh, item: it, baseZ: 0 });
+
+    const url = it.artwork?.replace(/\/\d+x\d+bb\./, '/400x400bb.');
+    if (!url) { faceMat.opacity = 0.16; return; }
     loader.load(
       url,
       (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        mat.map = tex;
-        mat.color.set(0xffffff);
-        mat.needsUpdate = true;
-        // 도착한 순서대로 부드럽게 나타나게 한다
-        mesh.userData.fadeIn = true;
+        faceMat.map = tex;
+        faceMat.color.set(0xffffff);
+        faceMat.needsUpdate = true;
+        mesh.userData.ready = true;
       },
       undefined,
-      () => { mat.opacity = 0.14; mat.color.set(0x2a2b33); },
+      () => { faceMat.opacity = 0.12; },
     );
   });
 
-  // 바닥 반사 느낌의 은은한 원판
-  const floorGeo = new THREE.CircleGeometry(RADIUS + 1.6, 48);
-  const floorMat = new THREE.MeshBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.05 });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.35;
-  scene.add(floor);
+  /* 선반 — 각 행 아래에 얇은 판을 대 '걸려 있는' 느낌을 만든다 */
+  const shelfGeo = new THREE.BoxGeometry(totalW + COL_W * 2, 0.045, 0.2);
+  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x2a2b33, roughness: 0.86, metalness: 0.05 });
+  for (let r = 0; r < ROWS; r++) {
+    const shelf = new THREE.Mesh(shelfGeo, shelfMat);
+    shelf.position.set(0, (ROWS - 1) / 2 * ROW_H - r * ROW_H - TILE / 2 - 0.06, 0.08);
+    wall.add(shelf);
+  }
 
-  /* ---- 상호작용 ---- */
-  let targetRotY = 0;      // 드래그·스크롤로 조정되는 목표 회전
-  let curRotY = 0;
-  let autoSpin = 0.0016;
-  let tiltX = 0, tiltTargetX = 0;
-  let dragging = false, lastX = 0, dragMoved = 0;
+  /* 벽면 — 아주 어두운 판. 재킷 뒤로 공간이 있다는 걸 알려준다 */
+  const backGeo = new THREE.PlaneGeometry(totalW + 14, ROWS * ROW_H + 10);
+  const backMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0e, roughness: 1, metalness: 0 });
+  const back = new THREE.Mesh(backGeo, backMat);
+  back.position.z = -0.6;
+  wall.add(back);
+
+  /* ---- 상호작용 ----
+     느린 가로 드리프트 + 마우스에 따른 미세한 시차. 그 이상은 하지 않는다. */
+  let driftX = 0;
+  let targetX = 0;
+  let curX = 0;
+  let parX = 0, parY = 0, parTX = 0, parTY = 0;
+  let dragging = false, lastPX = 0, dragMoved = 0;
+  let hovered: THREE.Mesh | null = null;
+
+  const loopW = cols * COL_W;   // 한 바퀴 폭 — 끝나면 이어 붙인다
 
   const onPointerDown = (e: PointerEvent) => {
-    dragging = true; dragMoved = 0; lastX = e.clientX;
+    dragging = true; dragMoved = 0; lastPX = e.clientX;
     renderer.domElement.style.cursor = 'grabbing';
     renderer.domElement.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e: PointerEvent) => {
     const r = host.getBoundingClientRect();
-    tiltTargetX = ((e.clientY - r.top) / Math.max(1, r.height) - 0.5) * 0.34;
+    parTX = ((e.clientX - r.left) / Math.max(1, r.width) - 0.5) * 0.5;
+    parTY = ((e.clientY - r.top) / Math.max(1, r.height) - 0.5) * 0.32;
+    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     if (!dragging) return;
-    const dx = e.clientX - lastX;
-    lastX = e.clientX;
+    const dx = e.clientX - lastPX;
+    lastPX = e.clientX;
     dragMoved += Math.abs(dx);
-    targetRotY += dx * 0.006;
+    targetX -= dx * 0.011;
   };
   const onPointerUp = (e: PointerEvent) => {
     dragging = false;
@@ -127,17 +171,12 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
     try { renderer.domElement.releasePointerCapture(e.pointerId); } catch { /* 무시 */ }
   };
 
-  // 클릭(드래그가 아닌 경우)한 앨범으로 이동
   const ray = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  const onClick = (e: MouseEvent) => {
-    if (dragMoved > 6) return;                 // 드래그였으면 무시
-    const r = host.getBoundingClientRect();
-    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-    ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(meshes, false)[0];
-    const href = (hit?.object as THREE.Mesh | undefined)?.userData?.item?.href;
+  const ndc = new THREE.Vector2(999, 999);
+
+  const onClick = () => {
+    if (dragMoved > 6) return;
+    const href = hovered?.userData?.item?.href;
     if (href) location.hash = href;
   };
 
@@ -145,36 +184,54 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
   window.addEventListener('pointermove', onPointerMove, { passive: true });
   window.addEventListener('pointerup', onPointerUp);
   renderer.domElement.addEventListener('click', onClick);
+  renderer.domElement.addEventListener('pointerleave', () => { ndc.set(999, 999); });
 
   /* ---- 렌더 루프 ---- */
-  let frame = 0;
-  let visible = true;
+  let frame = 0, visible = true;
 
   const resize = () => {
     const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    // 세로가 짧으면 벽이 잘리므로 카메라를 뒤로 뺀다
+    // 3행이 세로에 여유 있게 들어오도록 거리 계산 (위아래 약간의 여백 포함)
+    const needH = (ROWS * ROW_H + 0.6) / (2 * Math.tan((camera.fov * Math.PI) / 360));
+    camera.position.z = Math.max(6.0, needH);
     camera.updateProjectionMatrix();
   };
 
   const tick = () => {
-    curRotY += (targetRotY - curRotY) * 0.08;
-    if (!dragging) targetRotY += autoSpin;
-    tiltX += (tiltTargetX - tiltX) * 0.06;
+    if (!dragging) driftX += 0.0016;          // 아주 느린 흐름
+    curX += ((targetX + driftX) - curX) * 0.06;
 
-    group.rotation.y = curRotY;
-    group.rotation.x = tiltX;
+    // 벽을 무한히 이어 붙인다 — 끝에 다다르면 반대편에서 이어진다
+    const shift = ((curX % loopW) + loopW) % loopW;
+    wall.position.x = -shift;
 
-    // 앞쪽에 온 앨범을 살짝 키우고 또렷하게
-    for (const m of meshes) {
-      const world = new THREE.Vector3();
-      m.getWorldPosition(world);
-      const front = (world.z + RADIUS) / (RADIUS * 2);      // 0(뒤) ~ 1(앞)
-      const mat = m.material as THREE.MeshStandardMaterial;
-      const targetOpacity = mat.map ? 0.34 + front * 0.66 : mat.opacity;
-      if (m.userData.fadeIn) mat.opacity += (targetOpacity - mat.opacity) * 0.12;
-      const s = 0.8 + front * 0.4;
-      m.scale.setScalar(s);
+    parX += (parTX - parX) * 0.05;
+    parY += (parTY - parY) * 0.05;
+    camera.position.x = parX;
+    camera.position.y = parY;
+    camera.lookAt(parX * 0.35, parY * 0.35, 0);
+
+    // 마우스가 얹힌 재킷만 벽에서 살짝 떠오른다
+    ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(tiles.map((t) => t.mesh), false)[0];
+    const next = (hit?.object as THREE.Mesh) || null;
+    if (next !== hovered) {
+      hovered = next;
+      renderer.domElement.style.cursor = hovered ? 'pointer' : 'grab';
+      host.dispatchEvent(new CustomEvent('wall:hover', { detail: hovered?.userData?.item ?? null }));
+    }
+
+    for (const t of tiles) {
+      const mat = t.mesh.userData.faceMat as THREE.MeshStandardMaterial;
+      if (t.mesh.userData.ready) mat.opacity += (1 - mat.opacity) * 0.08;
+      const lift = t.mesh === hovered ? 0.34 : 0;
+      t.mesh.position.z += (lift - t.mesh.position.z) * 0.16;
+      const s = t.mesh === hovered ? 1.045 : 1;
+      t.mesh.scale.x += (s - t.mesh.scale.x) * 0.16;
+      t.mesh.scale.y = t.mesh.scale.x;
     }
 
     renderer.render(scene, camera);
@@ -205,12 +262,13 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
       window.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('click', onClick);
-      meshes.forEach((m) => {
-        const mat = m.material as THREE.MeshStandardMaterial;
-        mat.map?.dispose();
-        mat.dispose();
+      tiles.forEach((t) => {
+        const mat = t.mesh.userData.faceMat as THREE.MeshStandardMaterial;
+        mat.map?.dispose(); mat.dispose();
       });
-      geo.dispose(); floorGeo.dispose(); floorMat.dispose();
+      tileGeo.dispose(); sideMat.dispose();
+      shelfGeo.dispose(); shelfMat.dispose();
+      backGeo.dispose(); backMat.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     },

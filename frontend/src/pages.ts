@@ -189,6 +189,7 @@ export async function pageHome() {
   root().innerHTML = `
     <section class="billboard" id="bb">
       <div class="bb-blur" id="bbBlur" data-parallax="0.34"></div>
+      <div class="bb-stage" id="bbStage" aria-hidden="true"></div>
       <div class="bb-scrim"></div>
       <div class="bb-inner">
         <div class="bb-content">
@@ -201,7 +202,6 @@ export async function pageHome() {
             <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
           </div>
         </div>
-        <div class="bb-stage" id="bbStage" aria-hidden="true"></div>
         <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
@@ -265,15 +265,26 @@ export async function pageHome() {
        three.js 는 여기서 처음 필요해지므로 이 시점에 동적으로 불러온다. */
     const stage = document.getElementById('bbStage');
     if (stage && can3D()) {
-      const items = (chart.list as ChartRow[])
-        .filter((e) => e.artwork)
-        .slice(0, 14)
-        .map((e) => ({
-          title: e.title, artist: e.artist, artwork: e.artwork as string,
-          href: `#/search?q=${encodeURIComponent(e.title)}`,
-        }));
+      // 벽이 화면 폭을 채우려면 열이 충분해야 한다 (3행 기준 12열 = 36장)
+      const pool = (chart.list as ChartRow[]).filter((e) => e.artwork).slice(0, 45);
+      const items = pool.map((e) => ({
+        title: e.title, artist: e.artist, artwork: e.artwork as string,
+        href: `#/search?q=${encodeURIComponent(e.title)}`,
+      }));
       document.body.classList.add('has-3d-hero');
-      stage.insertAdjacentHTML('afterend', '<span class="stage-hint">드래그해서 돌려보세요</span>');
+      stage.insertAdjacentHTML('afterend', '<span class="stage-hint">드래그해서 넘겨보세요 · 재킷을 누르면 이동합니다</span>');
+      // 재킷에 마우스를 얹으면 히어로 제목이 그 곡으로 바뀐다
+      const hTitle = document.querySelector('.bb-title');
+      const hMeta = document.querySelector('.bb-meta');
+      const hTag = document.querySelector('.bb-tag');
+      const orig = { t: hTitle?.textContent || '', m: hMeta?.textContent || '', g: hTag?.textContent || '' };
+      stage.addEventListener('wall:hover', (ev) => {
+        const d = (ev as CustomEvent).detail as { title: string; artist: string } | null;
+        if (!hTitle || !hMeta) return;
+        hTitle.textContent = d ? d.title : orig.t;
+        hMeta.textContent = d ? d.artist : orig.m;
+        if (hTag) hTag.textContent = d ? '차트 상위' : orig.g;
+      });
       mountHero3D(stage, items).catch(() => document.body.classList.remove('has-3d-hero'));
     }
   }
@@ -577,7 +588,7 @@ export async function pageChart(sub?: string) {
       now.querySelector('.ch-now-rank')!.textContent = String(d.rank);
       now.querySelector('.ch-now-text')!.textContent = `${d.title} · ${d.artist}`;
     });
-    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">스크롤·드래그로 순위를 넘겨보세요</span>');
+    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">스크롤·드래그로 복도를 따라 이동합니다</span>');
     mountChart3D(stage, items).catch(() => document.body.classList.remove('has-3d-chart'));
   }
   $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;

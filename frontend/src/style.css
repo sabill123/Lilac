@@ -2759,32 +2759,62 @@ html.touch .d3-glare { display: none; }
    캔버스는 배경 레이어로 깔고, 텍스트는 그 위에 얹는다.
    3D가 뜨지 않는 환경에서는 기존 레이아웃이 그대로 유지된다. */
 
+/* 3D 무대는 히어로를 통째로 채운다.
+   작게 넣으면 3D인지도 알아보기 어렵고 오히려 어설퍼 보인다. */
 .bb-stage {
   position: absolute;
-  /* 히어로 오른쪽 절반을 차지하되, 원통이 잘리지 않게 여유를 둔다 */
-  inset: -6% -4% -6% 34%;
+  inset: 0;
   z-index: 1;
   pointer-events: auto;
   opacity: 0;
-  transition: opacity 900ms var(--ease-out);
-  mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 88%, transparent 100%);
+  transition: opacity 1100ms var(--ease-out);
 }
 .bb-stage canvas { opacity: 0.96; }
 body.has-3d-hero .bb-stage { opacity: 1; }
-/* 3D가 뜨면 기존 정적 카드는 자리를 내준다 */
+/* 3D가 뜨면 기존 정적 레이어는 자리를 내준다.
+   블러 배경과 스크림을 그대로 두면 3D가 뿌옇게 묻힌다. */
 body.has-3d-hero .bb-card { opacity: 0; pointer-events: none; }
+body.has-3d-hero .bb-blur { opacity: 0.14; filter: blur(80px) saturate(1.4); }
+body.has-3d-hero .bb-scrim {
+  background: linear-gradient(to top, var(--page) 0%, rgba(5, 6, 8, 0.2) 16%, transparent 38%);
+}
 /* 텍스트가 캔버스에 묻히지 않도록 */
 .billboard .bb-inner { position: relative; z-index: 2; }
-body.has-3d-hero .bb-content { text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55); }
+/* 텍스트가 앨범 위에서도 읽히도록 왼쪽에 그라데이션 막을 깐다 */
+/* 텍스트 뒤에만 어둡게 깔고, 재킷은 최대한 살린다.
+   전체를 덮으면 갤러리 벽이 통째로 묻혀 3D를 넣은 의미가 없어진다. */
+body.has-3d-hero .bb-inner::before {
+  content: '';
+  position: absolute;
+  inset: -24% -10% -24% -12%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(72% 62% at 16% 50%, rgba(5, 6, 8, 0.9) 0%, rgba(5, 6, 8, 0.62) 42%, transparent 76%);
+}
+body.has-3d-hero .bb-content { text-shadow: 0 2px 28px rgba(0, 0, 0, 0.7); }
+/* 3D가 뜨면 히어로를 화면 높이만큼 키워 몰입감을 준다 */
+body.has-3d-hero .billboard {
+  min-height: min(86vh, 780px);
+  align-items: center;
+}
+/* 아래로 이어지는 섹션과 자연스럽게 연결 */
+body.has-3d-hero .billboard::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
 
+/* 차트 무대도 히어로 전체를 쓴다. 텍스트는 왼쪽 막 위에 얹는다. */
 .ch-stage {
   position: absolute;
-  /* 컨트롤(소스·국가 선택)은 아래쪽 왼편에 있으므로 무대는 오른쪽 위로 제한한다 */
-  inset: -4% -2% 26% 46%;
+  inset: 0;
   z-index: 1;
   opacity: 0;
-  transition: opacity 900ms var(--ease-out);
-  mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 92%, transparent 100%);
+  transition: opacity 1100ms var(--ease-out);
 }
 body.has-3d-chart .ch-stage { opacity: 1; }
 .chart-hero { position: relative; overflow: hidden; }
@@ -2802,7 +2832,26 @@ body.has-3d-chart .ch-controls::before {
   border-radius: 18px;
   background: linear-gradient(90deg, var(--page) 62%, transparent);
 }
-body.has-3d-chart .chart-hero { min-height: 460px; }
+body.has-3d-chart .chart-hero { min-height: min(78vh, 700px); display: flex; align-items: center; }
+body.has-3d-chart .ch-inner::before {
+  content: '';
+  position: absolute;
+  inset: -40% -18% -40% -14%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(100deg, var(--page) 4%, rgba(5, 6, 8, 0.88) 28%, rgba(5, 6, 8, 0.36) 50%, transparent 66%),
+    radial-gradient(120% 90% at 6% 50%, rgba(5, 6, 8, 0.7) 0%, transparent 60%);
+}
+body.has-3d-chart .chart-hero::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 26%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
 
 /* 3D 열에서 현재 맨 앞에 온 곡 */
 .ch-now {
