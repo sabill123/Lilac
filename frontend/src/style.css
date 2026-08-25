@@ -3141,3 +3141,25 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
   height: auto !important;
   min-height: 0 !important;
 }
+
+/* ── 이름 입력 모달 (prompt 대체) ─────────────────────── */
+.name-modal { display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); position: fixed; inset: 0; z-index: 300; }
+.nm-card {
+  width: min(92vw, 380px);
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline), var(--shadow-lg);
+}
+.nm-title { font-size: 15px; margin-bottom: 14px; }
+.nm-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+}
+.nm-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.nm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }

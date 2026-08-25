@@ -185,6 +185,45 @@ function startLyricsDemo() {
 }
 
 /* ---------- 플레이리스트 피커 ---------- */
+/**
+ * 이름 입력 모달
+ * prompt() 는 브라우저·환경에 따라 차단되거나(iframe, 자동화, 일부 브라우저 설정)
+ * 스타일도 제어할 수 없다. 접근성 있는 인라인 모달로 대체한다.
+ */
+export function askName(title: string, defaultValue = ''): Promise<string | null> {
+  return new Promise((resolve) => {
+    document.getElementById('nameModal')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'nameModal';
+    wrap.className = 'modal show name-modal';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = `
+      <div class="modal-card nm-card">
+        <h3 class="nm-title"></h3>
+        <input class="nm-input" type="text" maxlength="40" />
+        <div class="nm-actions">
+          <button class="btn-out nm-cancel" type="button">취소</button>
+          <button class="btn-pill nm-ok" type="button">확인</button>
+        </div>
+      </div>`;
+    wrap.querySelector('.nm-title')!.textContent = title;
+    const input = wrap.querySelector('.nm-input') as HTMLInputElement;
+    input.value = defaultValue;
+    document.body.appendChild(wrap);
+
+    const done = (v: string | null) => { wrap.remove(); resolve(v); };
+    wrap.querySelector('.nm-ok')!.addEventListener('click', () => done(input.value.trim() || null));
+    wrap.querySelector('.nm-cancel')!.addEventListener('click', () => done(null));
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) done(null); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') done(input.value.trim() || null);
+      if (e.key === 'Escape') done(null);
+    });
+    requestAnimationFrame(() => { input.focus(); input.select(); });
+  });
+}
+
 export async function openPlaylistPicker(tr: PlayableTrack) {
   const lists = await api('/api/playlists').catch(() => []);
   const box = $('#plPickerBody');
@@ -202,7 +241,8 @@ export async function openPlaylistPicker(tr: PlayableTrack) {
       toast('플레이리스트에 추가했습니다');
     }));
   $('#ppNew').addEventListener('click', async () => {
-    const name = prompt(t('lib.newPlaylist'), 'My Mix') || 'My Mix';
+    const name = await askName(t('lib.newPlaylist'), 'My Mix');
+    if (!name) return;
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
     await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify(payload) });
     $('#plPicker').classList.remove('show');
@@ -300,7 +340,8 @@ export function initPlayer() {
   $('#lyricsClose').addEventListener('click', () => { $('#lyricsPanel').classList.remove('show'); $('#btnLyrics').classList.remove('on'); syncDock(); });
   $('#queueSave').addEventListener('click', async () => {
     if (!queue.length) return;
-    const name = prompt(t('queue.saveAsPl'), 'Queue Mix') || 'Queue Mix';
+    const name = await askName(t('queue.saveAsPl'), 'Queue Mix');
+    if (!name) return;
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
     for (const tr of queue) await api(`/api/playlists/${pl.id}/tracks`, { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) });
     document.dispatchEvent(new CustomEvent('lilac:playlists'));

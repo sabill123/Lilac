@@ -908,15 +908,28 @@ app.post('/api/orders', async (req, res) => {
   const edition = (product.editions || []).find((e) => e.label === option || e.id === option);
   const unit = edition?.pricing?.total ?? product.price;
   const total = unit * (Number(qty) || 1);
+
+  /* 크레딧은 원화 기준이다.
+     한국반 주문은 엔화 가격이므로 환율로 환산해 차감한다.
+     (그동안 ¥1,990을 크레딧 1,990으로 1:1 차감하던 버그가 있었다) */
+  const buyerCurrency = edition?.pricing?.buyerCurrency
+    ?? (product.priceCurrency ?? (product.origin === 'kr' ? 'JPY' : 'KRW'));
+  let chargeKrw = total;
+  if (buyerCurrency === 'JPY') {
+    const fxData = await readJson('fx', null);
+    const jpyKrw = fxData?.jpyKrw ?? 8.7;
+    chargeKrw = Math.round(total * jpyKrw);
+  }
   const users = await readJson('users', []);
   const u = users.find((x) => x.id === user.id);
-  if (u.credits < total) return res.status(402).json({ error: `크레딧이 부족합니다 (보유 ${u.credits.toLocaleString()} / 필요 ${total.toLocaleString()})` });
-  u.credits -= total;
+  if (u.credits < chargeKrw) return res.status(402).json({ error: `크레딧이 부족합니다 (보유 ${u.credits.toLocaleString()} / 필요 ${chargeKrw.toLocaleString()})` });
+  u.credits -= chargeKrw;
   await writeJson('users', users);
   const orders = await readJson('user/orders', []);
   const order = {
     id: 'LO-' + Date.now().toString(36).toUpperCase(), productId, name: product.name, brand: product.brand,
     option: edition?.label || option || '통상반', qty: Number(qty) || 1, unit, total,
+    buyerCurrency, chargedKrw: chargeKrw,
     artwork: product.artwork,
     breakdown: edition?.pricing ? { ...edition.pricing, rateDate: product.rateDate } : null,
     status: '예약 접수', orderedAt: new Date().toISOString(),

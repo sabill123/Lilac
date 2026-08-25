@@ -2,7 +2,7 @@ import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
 import { smartMatch } from './koja';
 import { mountHero3D, mountChart3D, can3D } from './three';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
-import { playQueue, openYt, toast, enqueue, openPlaylistPicker } from './player';
+import { playQueue, openYt, toast, enqueue, openPlaylistPicker, askName } from './player';
 import { applyTone } from './colors';
 import { openContextMenu, bindTilt, bindDragReorder } from './interactions';
 import { t } from './i18n';
@@ -1494,7 +1494,7 @@ export async function pageLibrary(sub?: string) {
   render();
 
   $('#libNew').addEventListener('click', async () => {
-    const name = prompt(t('lib.newPlaylist'), 'My Mix');
+    const name = await askName(t('lib.newPlaylist'), 'My Mix');
     if (!name) return;
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
     document.dispatchEvent(new CustomEvent('lilac:playlists'));
@@ -1589,7 +1589,7 @@ export async function pagePlaylist(id: string) {
   $('#plShuffle').addEventListener('click', () => rows.length && playQueue([...rows].sort(() => Math.random() - 0.5), 0, `playlist:${id}`));
   $('#plFind').addEventListener('input', (e) => paint((e.target as HTMLInputElement).value));
   const rename = async () => {
-    const name = prompt('플레이리스트 이름', pl.name);
+    const name = await askName('플레이리스트 이름', pl.name);
     if (!name || name === pl.name) return;
     await api(`/api/playlists/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
     document.dispatchEvent(new CustomEvent('lilac:playlists'));
@@ -2269,7 +2269,7 @@ export async function pageAccount() {
     await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me')); pageAccount();
   });
   $('#acAddCard').addEventListener('click', async () => {
-    const last4 = prompt('카드 마지막 4자리 (데모)', '4242') || '4242';
+    const last4 = (await askName('카드 마지막 4자리 (데모)', '4242')) || '4242';
     await api('/api/me', { method: 'PATCH', body: JSON.stringify({ action: 'addCard', brand: 'VISA', last4 }) });
     pageAccount();
   });

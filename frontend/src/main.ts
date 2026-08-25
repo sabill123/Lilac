@@ -1,7 +1,7 @@
 import './style.css';
 import { smartMatch, loadAliases } from './koja';
 import { api, me, refreshMe, esc, icon, findCatalog } from './api';
-import { initPlayer, loadLikes, toast, playerActions, getQueueContext } from './player';
+import { initPlayer, loadLikes, toast, playerActions, getQueueContext, askName } from './player';
 import { t, setLocale, getLocale, LOCALES } from './i18n';
 import type { Locale } from './i18n';
 import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageFocus, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404 , pageStatus } from './pages';
@@ -312,7 +312,7 @@ async function boot() {
   $('#btnMode').addEventListener('click', toggleMode);
 
   $('#sbAdd').addEventListener('click', async () => {
-    const name = prompt(t('lib.newPlaylist'), 'My Mix');
+    const name = await askName(t('lib.newPlaylist'), 'My Mix');
     if (!name) return;
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
     await renderSidebar();
