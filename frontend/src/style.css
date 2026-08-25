@@ -2857,10 +2857,12 @@ body.has-3d-chart .ch-controls {
 }
 /* 컨트롤과 무대가 겹치지 않으므로 별도 배경이 필요 없다 */
 body.has-3d-chart .chart-hero {
-  min-height: min(62vh, 560px);
+  /* 1위 한 점만 전시하므로 히어로가 클 필요가 없다.
+     예전엔 여러 작품을 걸어 62vh를 썼는데, 지금은 컨트롤 아래 빈 공간만 생긴다. */
+  min-height: min(48vh, 430px);
   display: flex;
   align-items: center;
-  padding-top: 32px;
+  padding-top: 28px;
 }
 /* 무대가 오른쪽에만 있으므로 텍스트를 덮는 막은 두지 않는다 */
 body.has-3d-chart .chart-hero::after {
@@ -3245,3 +3247,10 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 
 /* 실시간 소스 배지 — 수집(주기)과 구분 */
 .live-badge.rt { background: rgba(46, 204, 113, 0.16); color: #2ecc71; }
+
+/* 아티스트 카드 — 이미지가 로드되면 이니셜 플레이스홀더를 가린다.
+   원형 마스크 밖으로 글자가 비쳐 보이던 문제. */
+.ars-cover { position: relative; }
+.ars-cover img { position: relative; z-index: 1; }
+.ars-cover:has(img) .ph { display: none; }
+.la-art:has(img) { font-size: 0; }

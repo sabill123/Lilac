@@ -283,11 +283,30 @@ export async function pageHome() {
        three.js 는 여기서 처음 필요해지므로 이 시점에 동적으로 불러온다. */
     const stage = document.getElementById('bbStage');
     if (stage && can3D()) {
-      // 벽이 화면 폭을 채우려면 열이 충분해야 한다 (3행 기준 12열 = 36장)
-      const pool = (chart.list as ChartRow[]).filter((e) => e.artwork).slice(0, 45);
-      const items = pool.map((e) => ({
-        title: e.title, artist: e.artist, artwork: e.artwork as string,
-        href: `#/search?q=${encodeURIComponent(e.title)}`,
+      /* 벽 소스는 상품(아티스트 로스터 기반)을 쓴다.
+         차트 원본 풀에는 한국 Apple 차트의 서구 아티스트가 섞여 있어
+         '한일 팬덤 포털'의 첫 화면에 Justin Bieber가 걸리는 문제가 있었다.
+         상품은 로스터에서 파생되므로 한일 아티스트만 남는다. */
+      /* 아티스트별로 라운드로빈해 같은 팀이 연달아 걸리지 않게 한다 */
+      const byArtist = new Map<string, typeof products>();
+      for (const p of products) {
+        if (!p.artwork) continue;
+        if (!byArtist.has(p.brand)) byArtist.set(p.brand, []);
+        byArtist.get(p.brand)!.push(p);
+      }
+      const buckets = [...byArtist.values()];
+      const pool: typeof products = [];
+      for (let round = 0; pool.length < 45 && round < 12; round++) {
+        for (const b of buckets) {
+          if (b[round]) pool.push(b[round]);
+          if (pool.length >= 45) break;
+        }
+      }
+      const items = pool.map((p) => ({
+        title: p.name.replace(/ - (Single|EP)$/i, ''),
+        artist: p.brand,
+        artwork: p.artwork,
+        href: `#/store/${p.id}`,
       }));
       document.body.classList.add('has-3d-hero');
       stage.insertAdjacentHTML('afterend', '<span class="stage-hint">드래그해서 넘겨보세요 · 재킷을 누르면 이동합니다</span>');
@@ -349,13 +368,22 @@ export async function pageHome() {
     bindTilt(host); bindHoverExpand(host);
   }).catch(() => { document.getElementById('hEditorial')?.closest('section')?.remove(); });
 
-  $('#hEvents').innerHTML = events.slice(0, 4).map((ev) => {
+  /* '다가오는 일정'이므로 오늘 이후만, 가까운 순으로 고른다.
+     예전에는 events 앞 4개를 그대로 써서 1982년 발매가 '종료' 배지와 함께 떴다. */
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = events
+    .filter((e) => e.date >= todayStr)
+    .sort((x, y) => x.date.localeCompare(y.date))
+    .slice(0, 4);
+  $('#hEvents').innerHTML = upcomingEvents.map((ev) => {
     const { d, txt } = dday(ev.date);
+    // 수집 단계에서 확보한 아트워크를 우선 쓴다 (아티스트명 재조회는 중복·오매칭을 부른다)
+    const art = ev.artwork ? `background-image:url(${esc(sized(ev.artwork, 400))})` : '';
     return `<a class="ev-card d3-tilt" href="#/schedule" data-d3-tilt="6" data-d3="rise">
-      <div class="ev-bg" data-artist="${esc(ev.artist)}"></div><div class="ev-scrim"></div>
+      <div class="ev-bg" ${ev.artwork ? `style="${art}"` : `data-artist="${esc(ev.artist)}"`}></div><div class="ev-scrim"></div>
       <span class="ev-type">${esc(ev.type)}</span><span class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
       <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info">${ev.date} · ${esc(ev.venue)}</div></div></a>`;
-  }).join('');
+  }).join('') || `<p class="dim" style="padding:8px 0">예정된 일정이 없습니다</p>`;
   fillEventArts($('#hEvents'));
 
   $('#hStore').innerHTML = products.slice(0, 4).map(productCard).join('');
