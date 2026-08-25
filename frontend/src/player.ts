@@ -309,9 +309,24 @@ export function initPlayer() {
     $('#btnRepeat').classList.toggle('on', repeat !== 'off');
     $('#repeatOne').style.display = repeat === 'one' ? 'block' : 'none';
   });
+  /* 진행바는 rAF로 그린다.
+     timeupdate는 초당 4회 남짓이라 막대가 눈에 띄게 계단처럼 움직인다.
+     CSS 트랜지션으로 메우면 실제 재생 위치보다 뒤처지고, 매 프레임
+     레이아웃을 다시 계산하게 된다. 프레임마다 직접 그리는 편이 정확하다. */
+  let rafId = 0;
+  const paintProgress = () => {
+    const dur = audio.duration || 30;
+    const fill = $('#progressFill') as HTMLElement | null;
+    if (fill) fill.style.width = `${Math.min(100, (audio.currentTime / dur) * 100)}%`;
+    rafId = requestAnimationFrame(paintProgress);
+  };
+  const stopPaint = () => { if (rafId) { cancelAnimationFrame(rafId); rafId = 0; } };
+  audio.addEventListener('play', () => { if (!rafId) paintProgress(); });
+  audio.addEventListener('pause', stopPaint);
+  audio.addEventListener('ended', stopPaint);
+
   audio.addEventListener('timeupdate', () => {
     const d = audio.duration || 30;
-    $('#progressFill').style.width = `${(audio.currentTime / d) * 100}%`;
     $('#tCur').textContent = fmt(audio.currentTime);
     $('#tDur').textContent = fmt(d);
   });

@@ -54,7 +54,7 @@ function dday(date: string) {
   return { d, txt: d > 0 ? `D-${d}` : d === 0 ? 'D-DAY' : '종료' };
 }
 function relDate(iso?: string) {
-  if (!iso) return '—';
+  if (!iso) return '·';
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 864e5);
   return d <= 0 ? '오늘' : d === 1 ? '어제' : d < 30 ? `${d}일 전` : new Date(iso).toLocaleDateString();
 }
@@ -73,7 +73,7 @@ function trackTable(rows: PlayableTrack[], opts: { date?: boolean; album?: boole
     <div class="t-row" data-i="${i}" draggable="false">
       <span class="t-num"><span class="n">${i + 1}</span><span class="p">${icon('i-play')}</span></span>
       <span class="t-title"><img src="${esc(r.artwork || '')}" loading="lazy" alt=""/><span class="tt"><b>${esc(r.title)}</b><i>${esc(r.artist)}</i></span></span>
-      ${opts.album === false ? '' : `<span class="t-al">${esc(r.album || '—')}</span>`}
+      ${opts.album === false ? '' : `<span class="t-al">${esc(r.album || '·')}</span>`}
       ${opts.date === false ? '' : `<span class="t-dt">${relDate(r.addedAt)}</span>`}
       <span class="t-du">${dur(r.durationMs)}</span>
       <span class="t-acts">
@@ -665,7 +665,7 @@ export async function pageChart(sub?: string) {
   $('#chUpdated').innerHTML = data.live
     ? `<span class="live-badge on rt">실시간</span>조회 시점 데이터 · Apple 공식 피드`
     : `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
-  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
+  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
   body.innerHTML = chartRowsHtml(list, source);
   bindChartRows(body, list);
   if (list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), list[0].artwork);
@@ -716,7 +716,7 @@ async function pageChartPlay(sub?: string) {
 
   body.innerHTML = chartRowsHtml(list, source);
   bindChartRows(body, list);
-  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
+  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
 
   const playFrom = async (shuffle: boolean) => {
     toast('재생 목록을 준비하는 중…');
@@ -1132,7 +1132,7 @@ export async function pageSchedule() {
                 <span class="src-badge ${isDemo(e) ? 'demo' : 'real'}">${isDemo(e) ? '데모' : 'Apple 실데이터'}</span>
                 <span class="sch-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
               </div>
-              <div class="sch-title">${esc(e.artist)} — ${esc(e.title)}</div>
+              <div class="sch-title">${esc(e.artist)} · ${esc(e.title)}</div>
               <div class="sch-sub">${esc(e.venue)} · ${esc(e.note)}</div>
             </div>
             ${link ? `<a class="sch-go ext" href="${link}" target="_blank" rel="noopener" title="Apple Music">${icon('i-ext')}</a>` : `<span class="sch-go">${icon('i-chev-r')}</span>`}
@@ -2186,10 +2186,10 @@ export function pageHelp() {
       <div class="help-sec">
         <h3>데모 데이터 (실제가 아닙니다)</h3>
         <ul class="pd-ul">
-          <li>피지컬 CD 정가 — 일본 CD 시장 통상가 기준 <b>추정치</b>입니다.</li>
-          <li>재고 수량 · 결제(크레딧) · 배송 상태 — 데모 값이며 실제 거래가 일어나지 않습니다.</li>
-          <li>공연 · 응모 일정 4건 — 공개 API가 없어 예시로 넣은 데모입니다.</li>
-          <li>가사 — 라이선스 문제로 자체 제작 문구를 표시합니다.</li>
+          <li>피지컬 CD 정가: 일본 CD 시장 통상가 기준 <b>추정치</b>입니다.</li>
+          <li>재고 수량 · 결제(크레딧) · 배송 상태: 데모 값이며 실제 거래가 일어나지 않습니다.</li>
+          <li>공연 · 응모 일정 4건: 공개 API가 없어 예시로 넣은 데모입니다.</li>
+          <li>가사: 라이선스 문제로 자체 제작 문구를 표시합니다.</li>
         </ul>
       </div>
 
@@ -2488,7 +2488,7 @@ export async function pageSearch(q: string, tab = 'all') {
       <div class="sch-date"><b>${new Date(e.date).getDate()}</b><span>${e.date.slice(5, 7)}월</span></div>
       <div class="sch-meta">
         <div class="sch-top"><span class="sch-type">${esc(e.type)}</span><span class="sch-dday ${dd >= 0 && dd <= 14 ? 'urgent' : ''}">${dd > 0 ? `D-${dd}` : dd === 0 ? 'D-DAY' : '종료'}</span></div>
-        <div class="sch-title">${esc(e.artist)} — ${esc(e.title)}</div>
+        <div class="sch-title">${esc(e.artist)} · ${esc(e.title)}</div>
         <div class="sch-sub">${esc(e.venue)}</div>
       </div>
       <span class="sch-go">${icon('i-chev-r')}</span></a>`;

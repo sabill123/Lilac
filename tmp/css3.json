@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "file": "tmp/style-wrap3.html",
+      "pass": false,
+      "issues": [
+        "[visual/heavy-box-shadow] 1x: A heavy or stacked drop-shadow (multi-layer ambient, or a single blurred layer at alpha > 0.30) under a routine card: the 'puffy floating card' generated-UI signature. (e.g. stacked / heavy drop-shadow)",
+        "[visual/repeating-gradient-stripe] 2x: Repeating-gradient stripes used as surface decoration are a recurring generated-UI signature. (e.g. repeating-*-gradient(); repeating-*-gradient())",
+        "[visual/redundant-border] 26x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card; border on a filled card; border on a filled card)",
+        "[color/safe-green-default] [advisory] 1x: Tailwind emerald as the fallback personality: the accent models retreat to once purple is denied, the second-order version of the same non-choice. (e.g. Tailwind emerald accent hex)",
+        "[type/wide-body-tracking] 2x: Body-size text tracked out to 0.08em+ without the uppercase that would justify it: airy-looking, exhausting to read. (e.g. letter-spacing >= 0.08em on mixed-case text; letter-spacing >= 0.08em on mixed-case text)",
+        "[motion/layout-prop-animation] 1x: Transitions on layout properties (width/height/top/left/margin/padding): every frame reflows the page, and the motion stutters exactly where it wants to impress. (e.g. transition on a layout property)",
+        "[motion/hover-scale-image] [advisory] 3x: The reflex zoom: transform scale on image/card hover, applied to everything because it is the one hover effect everyone has seen. (e.g. scale() on image hover; scale() on image hover; scale() on image hover)"
+      ],
+      "severity": 11,
+      "counts": {
+        "byRule": {
+          "heavy-box-shadow": 1,
+          "repeating-gradient-stripe": 2,
+          "redundant-border": 26,
+          "safe-green-default": 1,
+          "wide-body-tracking": 2,
+          "layout-prop-animation": 1,
+          "hover-scale-image": 3
+        },
+        "total": 36
+      }
+    }
+  ]
+}

@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lilac · 한국과 일본의 음악을 한 곳에서</title>
+<meta name="description" content="한글로 일본 곡을 찾고, 양국 차트를 나란히 보고, 일본반과 한국반을 함께 살 수 있는 한일 음악 서비스." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23CBA6D8'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-weight='800' font-size='18' fill='%230b0c0f' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     Lilac 랜딩
+     팔레트는 앱 본체(style.css)와 같은 라일락 토큰을 쓴다.
+     색상 284도 / 채도 39% — 브랜드명과 맞는, 직접 고른 라일락.
+     ============================================================ */
+  :root {
+    --bg: #0b0c0f;
+    --bg-raised: #15161c;
+    --bg-soft: #1c1d25;
+    --ink: #f2f2f4;
+    --ink-muted: #a8a9b4;
+    --ink-faint: #74757f;
+    --rule: rgba(255, 255, 255, 0.055);
+    --accent: #CBA6D8;
+    --accent-rgb: 203 166 216;
+    --accent-hover: #D9BCE3;
+    --accent-deep: #8A5FA6;
+    --maxw: 1180px;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Pretendard Variable', Pretendard, 'Noto Sans JP', system-ui, sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  p { text-wrap: pretty; margin: 0; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- 상단 바 ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(11, 12, 15, 0.82);
+    backdrop-filter: blur(18px) saturate(1.5);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  }
+  .nav-in { display: flex; align-items: center; gap: 20px; height: 66px; }
+  .mark { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; color: var(--accent); }
+  .nav-links { margin-left: auto; display: flex; align-items: center; gap: 26px; }
+  .nav-links a { font-size: 14.5px; color: var(--ink-muted); transition: color 160ms var(--ease); }
+  .nav-links a:hover { color: var(--ink); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 42px; padding: 0 20px; border-radius: 999px;
+    font-size: 14.5px; font-weight: 700; cursor: pointer;
+    border: none; font-family: inherit;
+    transition: background-color 160ms var(--ease), color 160ms var(--ease), opacity 160ms var(--ease);
+  }
+  .btn-fill { background: var(--accent); color: #0b0c0f; }
+  .btn-fill:hover { background: var(--accent-hover); }
+  .btn-line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); }
+  .btn-line:hover { background: rgba(255,255,255,.06); }
+  .btn-lg { height: 52px; padding: 0 28px; font-size: 16px; }
+
+  /* ---------- 히어로 ---------- */
+  .hero { padding: 96px 0 72px; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ''; position: absolute; inset: -30% 30% 40% -20%;
+    background: radial-gradient(closest-side, rgb(var(--accent-rgb) / .13), transparent);
+    pointer-events: none;
+  }
+  .hero-in { position: relative; display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 64px; align-items: center; }
+  .hero h1 { font-size: clamp(40px, 5.4vw, 68px); line-height: 1.08; letter-spacing: -0.035em; font-weight: 800; }
+  .hero-sub { margin-top: 22px; font-size: 18px; color: var(--ink-muted); max-width: 30em; }
+  .hero-cta { margin-top: 34px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-note { margin-top: 18px; font-size: 13.5px; color: var(--ink-faint); }
+
+  /* 히어로 오른쪽: 실제 차트에서 가져온 앨범 격자 */
+  .grid9 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid9 figure { margin: 0; position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--bg-soft); }
+  .grid9 img { width: 100%; height: 100%; object-fit: cover; }
+  .grid9 figcaption {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 10px 8px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.82));
+    font-size: 11.5px; line-height: 1.35; color: #fff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ---------- 섹션 ---------- */
+  section { padding: 88px 0; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
+  .sec-head { max-width: 44em; }
+  .sec-head h2 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.18; letter-spacing: -0.028em; font-weight: 800; }
+  .sec-head p { margin-top: 16px; font-size: 17px; color: var(--ink-muted); }
+
+  /* 검색 예시 */
+  .xlist { margin-top: 40px; display: grid; gap: 1px; background: var(--rule, rgba(255,255,255,0.055)); border-radius: 14px; overflow: hidden; }
+  .xrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; padding: 20px 24px; background: var(--bg-raised); }
+  .xq { font-size: 19px; font-weight: 700; }
+  .xa { font-size: 19px; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; color: var(--accent); }
+  .xarrow { color: var(--ink-faint); flex-shrink: 0; }
+  .xmeta { font-size: 13.5px; color: var(--ink-faint); grid-column: 1 / -1; margin-top: -6px; }
+
+  /* 지표 나열 */
+  .facts { margin-top: 44px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; }
+  .fact dt { font-size: 13.5px; color: var(--ink-faint); }
+  .fact dd { margin: 8px 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .fact small { display: block; margin-top: 6px; font-size: 13px; color: var(--ink-faint); font-weight: 400; letter-spacing: 0; }
+
+  /* 두 나라 나란히 */
+  .two { margin-top: 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  /* min-width:0 이 없으면 그리드 칸이 내용(긴 곡 제목)만큼 벌어져
+     페이지에 가로 스크롤이 생긴다. 1fr 은 min-content 아래로 못 줄어든다. */
+  .panel { background: var(--bg-raised); border-radius: 16px; padding: 28px; min-width: 0; }
+  .panel h3 { font-size: 18px; font-weight: 700; }
+  .panel > p { margin-top: 10px; font-size: 14.5px; color: var(--ink-muted); }
+  .plist { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+  .plist li { display: flex; align-items: center; gap: 14px; font-size: 14.5px; min-width: 0; }
+  .plist img, .plist .noart { width: 44px; height: 44px; border-radius: 7px; object-fit: cover; flex-shrink: 0; background: var(--bg-soft); }
+  .pl-t { min-width: 0; }
+  .pl-t b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl-t span { display: block; color: var(--ink-faint); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl-n { margin-left: auto; color: var(--ink-faint); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+  /* 정직성 */
+  .badges { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .bdg { font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 999px; background: var(--bg-soft); color: var(--ink-muted); }
+  .bdg.rt { background: rgba(95, 201, 140, .14); color: #7FD9A6; }
+  .bdg.ac { background: rgb(var(--accent-rgb) / .16); color: var(--accent); }
+
+  /* 마무리 */
+  .end { text-align: center; padding: 104px 0; }
+  .end h2 { font-size: clamp(30px, 3.8vw, 46px); letter-spacing: -0.03em; font-weight: 800; }
+  .end p { margin-top: 16px; color: var(--ink-muted); font-size: 17px; }
+  .end .hero-cta { justify-content: center; margin-top: 32px; }
+
+  footer { border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); padding: 40px 0 60px; }
+  .foot { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; font-size: 13.5px; color: var(--ink-faint); }
+  .foot a { color: var(--ink-faint); }
+  .foot a:hover { color: var(--ink-muted); }
+  .foot .sp { margin-left: auto; }
+
+  .loading { color: var(--ink-faint); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .hero-in, .two { grid-template-columns: 1fr; gap: 40px; }
+    .facts { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .xrow { grid-template-columns: 1fr; gap: 6px; }
+    .xarrow { display: none; }
+    .hero { padding: 56px 0 48px; }
+    section { padding: 64px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="mark" href="/landing.html">Lilac</a>
+    <nav class="nav-links">
+      <a href="#search">한글 검색</a>
+      <a href="#charts">차트</a>
+      <a href="#store">굿즈</a>
+      <a href="#honesty">데이터 출처</a>
+      <a class="btn btn-fill" href="/#/">앱 열기</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="border-top:none">
+    <div class="wrap hero-in">
+      <div>
+        <h1>한국과 일본의 음악을,<br />같은 화면에서.</h1>
+        <p class="hero-sub">
+          한글로 일본 곡을 찾고, 양국 차트를 나란히 보고,
+          일본반과 한국반을 한 장바구니에 담습니다.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-fill btn-lg" href="/#/">앱 열기</a>
+          <a class="btn btn-line btn-lg" href="#search">한글 검색 보기</a>
+        </div>
+        <p class="hero-note">로그인 없이 둘러볼 수 있습니다.</p>
+      </div>
+      <div class="grid9" id="heroGrid">
+        <p class="loading">차트를 불러오는 중입니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="search">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>한글로 적어도 일본 곡이 나옵니다.</h2>
+        <p>
+          일본 곡을 찾으려면 보통 가나를 입력해야 합니다. Lilac은 한글 발음을
+          가나와 로마자로 되돌려 함께 조회합니다. 아래는 실제로 동작하는 예시입니다.
+        </p>
+      </div>
+      <div class="xlist">
+        <div class="xrow">
+          <span class="xq">라일락</span>
+          <svg class="xarrow" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-5-6 6 6-6 6"/></svg>
+          <span class="xa">ライラック</span>
+          <span class="xmeta">Mrs. GREEN APPLE · 애니메이션 『망각 배터리』 오프닝</span>
+        </div>
+        <div class="xrow">
+          <span class="xq">요아소비</span>
+          <svg class="xarrow" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-5-6 6 6-6 6"/></svg>
+          <span class="xa">YOASOBI · ヨアソビ</span>
+          <span class="xmeta">아티스트명은 로마자 표기와 가나 표기를 함께 조회합니다.</span>
+        </div>
+        <div class="xrow">
+          <span class="xq">아이돌</span>
+          <svg class="xarrow" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-5-6 6 6-6 6"/></svg>
+          <span class="xa">アイドル</span>
+          <span class="xmeta">뜻이 같은 낱말은 의미로도 이어 둡니다.</span>
+        </div>
+      </div>
+      <dl class="facts" id="factList">
+        <div class="fact"><dt>색인된 표기</dt><dd id="fIdx">·</dd><small>차트에 오른 팀에서 자동으로 뽑습니다.</small></div>
+        <div class="fact"><dt>등록 아티스트</dt><dd id="fArt">·</dd><small>일본과 한국 양쪽.</small></div>
+        <div class="fact"><dt>차트 소스</dt><dd id="fSrc">·</dd><small>나라마다 여러 곳을 함께 봅니다.</small></div>
+        <div class="fact"><dt>굿즈</dt><dd id="fPrd">·</dd><small>일본반과 한국반.</small></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="charts">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>두 나라 차트를 나란히 놓습니다.</h2>
+        <p>
+          한 나라의 순위만 보면 그 곡이 건너편에서 어떤 대접을 받는지 알 수 없습니다.
+          같은 시점의 양국 순위를 붙여 두면 그게 보입니다.
+        </p>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <h3>한국</h3>
+          <p>멜론, 지니, Apple Music, YouTube를 함께 봅니다.</p>
+          <ul class="plist" id="krList"><li class="loading">불러오는 중입니다.</li></ul>
+        </div>
+        <div class="panel">
+          <h3>일본</h3>
+          <p>오리콘, 빌보드 재팬, Apple Music을 함께 봅니다.</p>
+          <ul class="plist" id="jpList"><li class="loading">불러오는 중입니다.</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="store">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>일본반과 한국반을 한 장바구니에.</h2>
+        <p>
+          같은 앨범이라도 나라마다 판이 다릅니다. 원산지와 통화를 표시하고,
+          환율을 그날 값으로 적용해 최종 금액을 미리 보여 줍니다.
+        </p>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <h3>표시 통화</h3>
+          <p id="fxLine" class="loading">환율을 불러오는 중입니다.</p>
+          <div class="badges">
+            <span class="bdg">일본반</span><span class="bdg">한국반</span>
+            <span class="bdg ac">원 · 엔 동시 표기</span>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>다가오는 일정</h3>
+          <p>발매일과 응모 마감을 한 달력에 모읍니다.</p>
+          <ul class="plist" id="evList"><li class="loading">불러오는 중입니다.</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="honesty">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>어떤 값이 진짜인지 밝혀 둡니다.</h2>
+        <p>
+          공개 API가 있는 값은 실시간으로 가져오고, 없는 값은 하루 한 번 모읍니다.
+          예시로 채운 데모 값도 있습니다. 화면마다 어느 쪽인지 배지로 적어 둡니다.
+        </p>
+      </div>
+      <div class="badges">
+        <span class="bdg rt">실시간</span>
+        <span class="bdg">수집</span>
+        <span class="bdg">실데이터</span>
+        <span class="bdg">데모</span>
+      </div>
+      <p style="margin-top:24px;font-size:14.5px;color:var(--ink-faint);max-width:44em">
+        결제와 배송은 아직 동작하지 않는 데모입니다. 차트 수집 방식과 가중치는
+        <a href="/#/status" style="color:var(--accent)">서비스 상태</a> 화면에 그대로 적어 두었습니다.
+      </p>
+    </div>
+  </section>
+
+  <section class="end">
+    <div class="wrap">
+      <h2>지금 바로 둘러보세요.</h2>
+      <p>가입하지 않아도 차트와 검색은 모두 열려 있습니다.</p>
+      <div class="hero-cta">
+        <a class="btn btn-fill btn-lg" href="/#/">앱 열기</a>
+        <a class="btn btn-line btn-lg" href="/#/chart">차트부터 보기</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>Lilac</span>
+    <a href="/#/help">도움말</a>
+    <a href="/#/status">서비스 상태</a>
+    <span class="sp">데모 서비스입니다. 실제 거래는 일어나지 않습니다.</span>
+  </div>
+</footer>
+
+<script>
+/* 랜딩에 실제 값을 채운다.
+   숫자를 지어내지 않는다. 못 가져오면 그 칸은 조용히 접는다. */
+(async () => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  const get = async (u) => { try { const r = await fetch(u); return r.ok ? await r.json() : null; } catch { return null; } };
+
+  /* 아트워크가 없으면 <img> 자체를 내지 않는다.
+     빈 src는 깨진 이미지 아이콘을 띄운다. */
+  const art = (src, alt) => (src
+    ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" />`
+    : '<span class="noart" aria-hidden="true"></span>');
+
+  const rows = (list) => (list || []).slice(0, 4).map((t, i) => `
+    <li>
+      ${art(t.artwork, (t.title || '') + ' 커버')}
+      <span class="pl-t"><b>${esc(t.title || '')}</b><span>${esc(t.artist || '')}</span></span>
+      <span class="pl-n">${i + 1}위</span>
+    </li>`).join('');
+
+  const [kr, jp, idx, rel, fx, arts, prods, sys] = await Promise.all([
+    get('/api/chart?country=kr&source=appleRss'),
+    get('/api/chart?country=jp&source=appleRss'),
+    get('/api/index/status'),
+    get('/api/db/events'),
+    get('/api/db/fx'),
+    get('/api/db/artists'),
+    get('/api/db/products'),
+    get('/api/status'),
+  ]);
+
+  const krT = kr?.list || [];
+  const jpT = jp?.list || [];
+  if (krT.length) $('#krList').innerHTML = rows(krT); else $('#krList').innerHTML = '<li class="loading">지금은 불러올 수 없습니다.</li>';
+  if (jpT.length) $('#jpList').innerHTML = rows(jpT); else $('#jpList').innerHTML = '<li class="loading">지금은 불러올 수 없습니다.</li>';
+
+  /* 히어로 격자: 양국 상위 곡의 실제 커버.
+     한국 Apple 차트에도 일본 곡이 올라오기 때문에 두 목록이 크게 겹친다.
+     같은 재킷이 두 번 걸리지 않게 제목·아티스트로 걸러낸다. */
+  const seen = new Set();
+  const mix = [];
+  for (let i = 0; i < 12; i++) {
+    for (const t of [jpT[i], krT[i]]) {
+      if (!t || !t.artwork) continue;
+      const key = (t.title || '') + '|' + (t.artist || '');
+      if (seen.has(key)) continue;
+      seen.add(key); mix.push(t);
+    }
+  }
+  const nine = mix.slice(0, 9);
+  if (nine.length === 9) {
+    $('#heroGrid').innerHTML = nine.map((t) => `
+      <figure>
+        <img src="${esc(t.artwork)}" alt="${esc(t.title)} 앨범 커버" loading="lazy" />
+        <figcaption>${esc(t.title)}</figcaption>
+      </figure>`).join('');
+  } else {
+    $('#heroGrid').style.display = 'none';
+  }
+
+  // 지표: 실제 응답에서만 채운다
+  const len = (v) => (Array.isArray(v) ? v.length : null);
+  const setF = (id, v, unit) => { if (v == null) return; $(id).textContent = Number(v).toLocaleString('ko-KR') + (unit || ''); };
+  setF('#fIdx', idx?.count);
+  setF('#fArt', len(arts));
+  const chartSvc = sys?.services?.find((s) => s.id === 'charts');
+  if (chartSvc?.sources?.length) $('#fSrc').textContent = chartSvc.sources.length + '곳';
+  setF('#fPrd', len(prods));
+
+  // 일정: 오늘 이후만, 가까운 순
+  const today = new Date().toISOString().slice(0, 10);
+  const up = (Array.isArray(rel) ? rel : rel?.releases || [])
+    .filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
+  if (up.length) {
+    $('#evList').innerHTML = up.map((e) => {
+      const d = Math.round((new Date(e.date) - new Date(today)) / 86400000);
+      return `<li>
+        ${art(e.artwork, (e.title || '') + ' 커버')}
+        <span class="pl-t"><b>${esc(e.title || '')}</b><span>${esc(e.artist || '')}</span></span>
+        <span class="pl-n">D-${d}</span>
+      </li>`;
+    }).join('');
+  } else { $('#evList').innerHTML = '<li class="loading">예정된 일정이 없습니다.</li>'; }
+
+  // 환율
+  if (fx?.jpyKrw) {
+    $('#fxLine').classList.remove('loading');
+    $('#fxLine').innerHTML = `오늘 1엔은 <b>${Number(fx.jpyKrw).toFixed(2)}원</b>입니다. 상품 금액은 이 값으로 환산해 함께 적습니다.`;
+  } else {
+    $('#fxLine').textContent = '환율을 지금은 불러올 수 없습니다.';
+  }
+})();
+</script>
+</body>
+</html>
