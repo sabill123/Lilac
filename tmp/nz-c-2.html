@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+body.light-page .tb-search .ic { color: #8b8d93; }
+
+body.light-page .tb-search input { color: var(--paper-ink); }
+
+body.light-page .tb-search input::placeholder { color: #9c9ea4; }
+
+body.light-page .tb-search:focus-within { box-shadow: 0 0 0 2px var(--paper-ink); }
+
+body.light-page .tb-connect { border-color: #d2d3d8; color: var(--paper-ink); }
+
+body.light-page .tb-connect:hover { border-color: var(--paper-ink); }
+
+body.light-page .tb-connect.connected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+body.light-page .tb-icon { background: rgba(0,0,0,.06); color: #6b6d74; }
+
+body.light-page .tb-icon:hover { color: var(--paper-ink); background: rgba(0,0,0,.1); }
+
+body.light-page .tb-arrow { background: rgba(0,0,0,.06); color: #6b6d74; }
+
+body.light-page .tb-arrow:hover { color: var(--paper-ink); }
+
+body.light-page .tb-link { color: #6b6d74; }
+
+body.light-page .tb-link:hover { color: var(--paper-ink); }
+
+body.light-page .tb-signup { background: var(--paper-ink); color: #fff; }
+
+body.light-page .tb-user { background: rgba(0,0,0,.06); color: var(--paper-ink); }
+
+body.light-page .tb-user:hover { background: rgba(0,0,0,.1); }
+
+body.light-page .tb-credits { color: #6b6d74; }
+
+body.light-page .locale-menu { background: #fff; border-color: var(--paper-rule); box-shadow: var(--shadow-lg); }
+
+body.light-page .locale-menu button { color: #6b6d74; }
+
+body.light-page .locale-menu button:hover { background: #f2f2f4; color: var(--paper-ink); }
+
+body.play-mode.light-page .topbar.scrolled { background: rgba(255,255,255,.92); }
+
+
+/* 2) 플레이어 항상 표시 — 빈 상태 */
+body.has-player .main-panel { padding-bottom: var(--player-h); }
+
+.player.idle .pl-title { color: var(--ink-muted); font-weight: 500; }
+
+.player.idle .pl-art { background: var(--bg-soft); }
+
+.player.idle .vinyl, .player.idle .pl-expand { display: none; }
+
+.player.idle .tbtn.main { background: var(--bg-soft); color: var(--ink-faint); }
+
+.player.idle #btnLike, .player.idle #btnAddPl { opacity: .35; pointer-events: none; }
+
+.player.idle .pl-bar, .player.idle .pl-fill { opacity: .5; }
+
+
+/* 3) 원형 카드의 재생 버튼 위치 보정 */
+.card.round .hover-play { right: 50%; bottom: 50%; transform: translate(50%, 50%) scale(.86); }
+
+.card.round:hover .hover-play, .card.round.playing .hover-play { transform: translate(50%, 50%) scale(1); }
+
+.card.round .glare { border-radius: 50%; }
+
+
+/* 4) 가로 셸프 스크롤 페이드 (넘침 인지) */
+.shelf, .ev-shelf { mask-image: linear-gradient(90deg, #000 0 96%, transparent 100%); -webkit-mask-image: linear-gradient(90deg, #000 0 96%, transparent 100%); }
+
+
+/* 5) 트랙 테이블 삭제 버튼이 패널 밖으로 나가지 않도록 */
+.t-row { position: relative; padding-right: 40px; }
+
+.t-x { right: 4px; }
+
+.sp-table { --cols: 32px 5fr 3fr 2fr 62px; }
+
+
+/* 6) 사이드바 스크롤바 정돈 */
+.sb-list::-webkit-scrollbar { width: 6px; }
+
+.sb-list::-webkit-scrollbar-thumb { background: var(--bg-hover); }
+
+
+/* ============================================================
+   v0.9 — 보관함 독립 페이지 · 플레이리스트 심화 · 모바일
+   ============================================================ */
+
+/* ---------- 보관함 ---------- */
+.lib-page { padding: 24px var(--gutter) 20px; }
+
+.lib-head { margin-bottom: 22px; }
+
+.lib-title-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+
+.lib-newbtn { display: inline-flex; align-items: center; gap: 7px; background: var(--bg-soft); border: none; color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 999px; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
+</style></head><body><div>x</div></body></html>

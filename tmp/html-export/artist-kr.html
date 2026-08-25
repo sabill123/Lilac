@@ -160,7 +160,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .card .hover-play { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); opacity: 0; transform: translateY(8px); transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), background var(--dur-micro); }
 .card .hover-play .ic { width: 20px; height: 20px; }
 .card:hover .hover-play, .card.playing .hover-play { opacity: 1; transform: none; }
-.card .hover-play:hover { background: var(--accent-hover); transform: scale(1.05); }
+.card .hover-play:hover { background: var(--accent-hover); }
 .card .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .c-sub { margin-top: 3px; font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card.round { text-align: center; }
@@ -203,7 +203,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .ev-card .ev-scrim { position: absolute; inset: 0px; background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 8%, rgba(0, 0, 0, 0.18) 60%, transparent); }
 .ev-card .ev-body { position: absolute; inset: 0px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: flex-end; }
 .ev-card .ev-type { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; color: var(--ink); background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); padding: 3px 9px; border-radius: 999px; }
-.ev-card .ev-dday { position: absolute; top: 12px; right: 12px; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); text-shadow: rgba(0, 0, 0, 0.6) 0px 1px 8px; }
+.ev-card .ev-dday { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .ev-card .ev-dday.urgent { color: rgb(255, 107, 110); }
 .ev-card .ev-title { font-size: 15px; font-weight: 700; line-height: 1.35; text-shadow: rgba(0, 0, 0, 0.5) 0px 1px 10px; }
 .ev-card .ev-info { font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
@@ -218,8 +218,11 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 78%; height: 78%; object-fit: cover; box-shadow: var(--shadow-md); transition: transform var(--dur-short) var(--ease-out); }
 .p-card:hover .p-img img { filter: brightness(1.06); }
-.p-card .p-badge { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; background: var(--paper-ink); color: rgb(255, 255, 255); padding: 3px 8px; }
-.p-card .p-brand { margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-card .p-card .p-brand { margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-bn { min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-ed { flex-shrink: 0; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: rgba(0, 0, 0, 0.06); color: var(--paper-muted); }
+.p-ed.ltd { background: var(--paper-ink); color: rgb(255, 255, 255); }
+.p-low { color: rgb(194, 65, 12); font-weight: 800; }
 .p-card .p-name { margin-top: 3px; font-size: 13.5px; font-weight: 500; color: var(--paper-ink); line-height: 1.4; }
 .p-card .p-price { margin-top: 5px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .footer { padding: 36px var(--gutter) 48px; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
@@ -693,7 +696,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .bb-tag { margin-top: 6px; font-size: 13.5px; color: var(--ink-muted); }
 .bb-actions { margin-top: 28px; }
 .bb-card { width: clamp(200px, 24vw, 300px); aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.06); transform: rotate(-1.5deg); transition: transform var(--dur-long) var(--ease-out); }
-.bb-card:hover { transform: rotate(0deg) scale(1.02); }
+.bb-card:hover { transform: rotate(0deg); }
 .bb-card-inner { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-soft); }
 @media (max-width: 900px) {
   .bb-inner { grid-template-columns: 1fr; }
@@ -718,7 +721,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .empty-box span { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
 .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 6px; }
 .mood { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: var(--m); padding: 16px; text-decoration: none; color: rgb(255, 255, 255); display: block; transition: transform var(--dur-short) var(--ease-out); }
-.mood:hover { transform: scale(1.02); }
+.mood:hover { }
 .mood-k { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; position: relative; z-index: 1; text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 10px; }
 .mood-sq { position: absolute; right: -12px; bottom: -10px; width: 76px; height: 76px; background-size: cover; background-position: center center; background-color: rgba(0, 0, 0, 0.25); transform: rotate(24deg); box-shadow: var(--shadow-md); border-radius: 3px; }
 .gnb { background: transparent; border-bottom-color: transparent; backdrop-filter: none; transition: background var(--dur-short), border-color var(--dur-short), backdrop-filter var(--dur-short); }
@@ -891,7 +894,7 @@ body.playing .np-full.show .np-disc::after { animation: 6s linear 0s infinite no
 .glare { position: absolute; inset: 0px; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity var(--dur-short); background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.34), transparent 46%); mix-blend-mode: overlay; }
 [data-tilt]:hover .glare { opacity: 1; }
 .bb-card { transform: perspective(900px) rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); position: relative; }
-.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.03); }
+.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
 .card { position: relative; }
 .card.expanded { z-index: 20; }
 .card.expanded .cover { transform: scale(1.14); box-shadow: var(--shadow-lg); }
@@ -1295,7 +1298,6 @@ body.play-mode .pd-ul li.dim { color: var(--ink-faint); }
 body.play-mode .p-card .p-img { background: var(--bg-raised); border-radius: var(--radius-sm); }
 body.play-mode .p-card .p-name { color: var(--ink); }
 body.play-mode .p-card .p-price { color: var(--ink); }
-body.play-mode .p-badge { background: rgba(0, 0, 0, 0.7); color: var(--ink); border-radius: 999px; }
 body.play-mode .on-light .rk-row { border-bottom-color: var(--rule); }
 body.play-mode .on-light .rk-row:hover { background: var(--bg-soft); }
 body.play-mode .on-light .rk-t { color: var(--ink); }
@@ -1381,7 +1383,6 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .ar-hero { overflow: hidden; }
 section.billboard { overflow: hidden; }
 .src-badge { font-size: 11px; padding: 3px 9px; }
-.p-badge { font-size: 11px; }
 .cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .cal-arrow { width: 34px; height: 34px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--bg-soft); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
 .cal-arrow:hover { color: var(--ink); background: var(--bg-hover); transform: scale(1.05); }
@@ -1430,8 +1431,6 @@ body:not(.play-mode) .st-bar { color: var(--paper-muted); }
 .st-more { min-width: 190px; justify-content: center; }
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 100%; height: 100%; object-fit: cover; box-shadow: none; }
-.p-badge.ltd { background: var(--accent); color: var(--accent-ink); }
-.p-stock { position: absolute; bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.72); color: rgb(255, 255, 255); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
 .p-sub { font-size: 11.5px; color: var(--paper-muted); margin-top: 3px; }
 body.play-mode .p-sub { color: var(--ink-faint); }
 .pd-meta-line { font-size: 12.5px; color: var(--paper-muted); margin-top: 6px; }
@@ -1701,7 +1700,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-duration-row { grid-template-columns: repeat(4, 1fr); }
 .focus-mode-row button, .focus-duration-row button { min-height: 35px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; background: rgba(255, 255, 255, 0.035); color: var(--ink-faint); font-size: 11px; font-weight: 650; }
 .focus-mode-row button.on, .focus-duration-row button.on { color: var(--ink); border-color: color-mix(in srgb, var(--focus-tone) 50%, transparent); background: color-mix(in srgb, var(--focus-tone) 12%, transparent); }
-.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: 0 10px 30px color-mix(in srgb, var(--focus-tone) 20%, transparent); }
+.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: rgba(0, 0, 0, 0.28) 0px 1px 3px; }
 .focus-ai-btn:disabled { opacity: 0.6; cursor: wait; }
 .focus-ai-btn span { margin-right: 5px; }
 .focus-ai-result { min-height: 64px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
@@ -2152,7 +2151,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 .nm-danger:hover { filter: brightness(1.1); }
 .dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0px 12px; }
 .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
+.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
 .topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
 #topbar { view-transition-name: lilac-topbar; }
 #player { view-transition-name: lilac-player; }
@@ -2395,141 +2394,139 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
           </div>
         <div class="c-title">SYNK : PARALLEL LINE - Special Digital Single - EP</div><div class="c-sub">2024 · 4곡</div>
       </a></div></div></section>
-    <section class="page-section" id="arEvSec" style=""><div class="sec-head d3-head" data-d3="head"><h2>일정</h2><a class="sec-link" href="#/schedule">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div class="ev-shelf" id="arEvents"><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Savage - The 1st Mini Album (Extended Version) - EP</div><div class="ev-info">2021-11-19 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Dreams Come True - SM STATION - Single</div><div class="ev-info">2021-12-20 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Pokémon 2023 (Original TV Series Soundtrack, Korea) - EP</div><div class="ev-info">2023-08-23 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">iScreaM Vol.26 : Spicy Remix - Single</div><div class="ev-info">2023-09-15 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Jingle Bell Rock - Single</div><div class="ev-info">2023-11-24 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Jingle Bell Rock (Sped Up Version) - Single</div><div class="ev-info">2023-12-15 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Drama (Sped Up Version) - Single</div><div class="ev-info">2023-12-15 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Armageddon - The 1st Album</div><div class="ev-info">2024-05-27 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">We Go (English Version) - Single</div><div class="ev-info">2024-09-20 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Whiplash (English Version) - Single</div><div class="ev-info">2025-03-27 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Rich Man (English Version) - Single</div><div class="ev-info">2025-09-12 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="aespa" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4b/bb/7e/4bbb7eba-89d6-fc3b-f20a-7f3dea8f0860/827568005519.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">SYNK : aeXIS LINE - 2025 Special Digital Single - EP</div><div class="ev-info">2025-11-17 · 전 플랫폼</div></div></div></div></section>
+    <section class="page-section" id="arEvSec" style="display:none"><div class="sec-head d3-head" data-d3="head"><h2>일정</h2><a class="sec-link" href="#/schedule">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div class="ev-shelf" id="arEvents"></div></section>
     <section class="page-section" id="arGoodsSec" style=""><div class="sec-head d3-head" data-d3="head"><h2>스토어</h2><a class="sec-link" href="#/store">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div class="store-dark-grid" id="arGoods"><a class="p-card d3-tilt d3-rise" href="#/store/it-1837885909" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2e/ee/46/2eee4698-0762-68d8-4ec8-6601cef0beb7/888735953538.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Rich Man (English Version) - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2025 · 2곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1802766472" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f4/b8/66/f4b86695-f39f-7494-5cb4-3b71b0bed001/888735951480.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Whiplash (English Version) - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2025 · 3곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1768193506" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/c9/82/43/c98243f2-f516-a768-504b-756943750a0a/888272140231.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">We Go (English Version) - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2024 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1745285216" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/cf/97/05/cf970525-a2fd-a7e3-2812-0f9c3f3d2c33/888735947551.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Armageddon - The 1st Album</div>
     <div class="p-price">¥3,440</div>
     <div class="p-sub">2024 · 11곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1720475016" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/a7/d8/1a/a7d81a62-5f30-7519-1046-8d436f149de8/888735946455.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">싱글</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ">싱글</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Jingle Bell Rock (Sped Up Version) - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2023 · 2곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1720474360" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/91/cc/0e/91cc0ee8-9990-a03b-734f-1ef8494442cc/888735946448.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Drama (Sped Up Version) - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2023 · 2곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1890395239" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/32/e1/fb/32e1fb8d-2fff-119d-3351-d9520f9dd8d8/888735946080.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      <span class="p-stock">잔여 10</span>
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Jingle Bell Rock - Single</div>
     <div class="p-price">¥1,990</div>
-    <div class="p-sub">2023 · 1곡</div>
+    <div class="p-sub">2023 · 1곡 · <b class="p-low">잔여 10</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1890393604" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/2b/f3/5a/2bf35ada-2547-e9ca-7ae8-4e89b1daddd4/888735955037.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      <span class="p-stock">잔여 7</span>
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">iScreaM Vol.26 : Spicy Remix - Single</div>
     <div class="p-price">¥1,990</div>
-    <div class="p-sub">2023 · 2곡</div>
+    <div class="p-sub">2023 · 2곡 · <b class="p-low">잔여 7</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1703219660" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/d6/aa/1b/d6aa1b90-17e5-0ba0-7a86-3a2058f060a2/888272121766.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">미니 앨범</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ">미니 앨범</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Pokémon 2023 (Original TV Series Soundtrack, Korea) - EP</div>
     <div class="p-price">¥2,790</div>
     <div class="p-sub">2023 · 4곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1600008460" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/70/d7/4a/70d74a73-cb0e-eb09-4662-c2bdc7eb723a/dj.oabkpkud.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Dreams Come True - SM STATION - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2021 · 2곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1595925412" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/de/01/52/de0152dd-6d02-2525-ab6b-a4c432c4c670/888735939747.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">미니 앨범</span>
-      <span class="p-stock">잔여 7</span>
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>aespa</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ">미니 앨범</span>
+      <span class="p-bn">aespa</span>
+    </div>
     <div class="p-name">Savage - The 1st Mini Album (Extended Version) - EP</div>
     <div class="p-price">¥2,790</div>
-    <div class="p-sub">2021 · 9곡</div>
+    <div class="p-sub">2021 · 9곡 · <b class="p-low">잔여 7</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a></div></section>
     <section class="page-section"><div class="sec-head d3-head" data-d3="head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"><div class="shelf d3-stage">
     <a class="card round" href="#/artist/mrs-green-apple" data-term="Mrs. GREEN APPLE" data-tilt="8" data-expand="" data-tilt-on="1" data-exp-on="1">

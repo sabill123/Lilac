@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+
+/* 히어로들이 톱바 아래로 흐르도록 */
+section.billboard, .sp-head, .chart-hero, .mp-hero, .ar-hero { margin-top: calc(-1 * var(--tb-h)); }
+
+section.billboard { height: min(64vh, 560px); }
+
+.sp-head { padding-top: calc(var(--tb-h) + 48px); }
+
+.chart-hero { padding-top: calc(var(--tb-h) + 44px); }
+
+.mp-hero { padding-top: calc(var(--tb-h) + 48px); }
+
+.ar-hero { height: min(44vh, 360px); }
+
+.ar-info { padding-bottom: 24px; }
+
+.page-top { padding-top: 24px; }
+
+.store-wrap.page-top { padding-top: 20px; }
+
+.auth-wrap { padding-top: 56px; }
+
+.footer { padding-bottom: 32px; }
+
+
+/* ---------- 우측 도크: 그리드 컬럼 ---------- */
+.right-dock {
+  position: static; width: auto; height: 100%;
+  background: var(--bg-raised); border: none; border-radius: var(--radius-lg);
+  transform: none; opacity: 0; pointer-events: none;
+  display: none; flex-direction: column; padding: 16px 8px 12px 16px;
+  grid-column: 3; grid-row: 1; min-width: 0; overflow: hidden;
+}
+
+.right-dock.show { display: flex; opacity: 1; pointer-events: auto; animation: dockIn .4s var(--ease-out) both; }
+ from { opacity: 0; transform: translateX(24px); }
+ to { opacity: 1; transform: none; }
+
+
+/* ---------- 플레이어: 하단 풀폭 ---------- */
+.player { position: fixed; left: 0; right: 0; bottom: 0; height: var(--player-h); border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); background: var(--bg); border-radius: 0; padding: 0 16px; }
+
+.pl-artwrap { position: relative; width: 58px; height: 58px; flex-shrink: 0; }
+
+.pl-art { width: 58px; height: 58px; border-radius: var(--radius-sm); position: relative; z-index: 2; }
+
+.vinyl { position: absolute; left: 14px; top: 3px; width: 52px; height: 52px; border-radius: 50%; background-size: cover; background-position: center; background-color: #15161b; z-index: 1; transition: transform .5s var(--ease-out); box-shadow: var(--shadow-md); }
+
+.vinyl::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 50%, transparent 0 17%, rgba(0,0,0,.42) 17% 18%, transparent 18% 26%, rgba(0,0,0,.42) 26% 27%, transparent 27% 35%, rgba(0,0,0,.42) 35% 36%, transparent 36% 44%, rgba(0,0,0,.42) 44% 45%, transparent 45%); }
+
+.vinyl::before { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--bg-raised); z-index: 2; box-shadow: 0 0 0 2px rgba(0,0,0,.28); }
+
+.pl-artwrap:hover .vinyl, body.playing .vinyl { transform: translateX(20px); }
+
+body.playing .vinyl { animation: spin 4.5s linear infinite; }
+ to { rotate: 360deg; }
+
+.pl-expand { position: absolute; right: -6px; top: -6px; width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(.8); transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); z-index: 3; }
+
+.pl-expand .ic { width: 12px; height: 12px; }
+
+.pl-artwrap:hover .pl-expand { opacity: 1; transform: none; }
+
+.pl-title-wrap { overflow: hidden; }
+
+.pl-title.marquee { animation: mq 9s linear infinite alternate; }
+ 0%, 12% { transform: translateX(0); }
+ 88%, 100% { transform: translateX(var(--mq)); }
+
+#btnLike.pulse { animation: pop .5s var(--ease-out); }
+ 0% { transform: scale(1); }
+ 42% { transform: scale(1.45); }
+ 100% { transform: scale(1); }
+
+
+/* ---------- 전체화면 나우플레잉 ---------- */
+.np-full { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity var(--dur-long) var(--ease-out); }
+
+.np-full.show { opacity: 1; pointer-events: auto; }
+</style></head><body><div>x</div></body></html>

@@ -381,8 +381,8 @@ export async function pageHome() {
     const art = ev.artwork ? `background-image:url(${esc(sized(ev.artwork, 400))})` : '';
     return `<a class="ev-card d3-tilt" href="#/schedule" data-d3-tilt="6" data-d3="rise">
       <div class="ev-bg" ${ev.artwork ? `style="${art}"` : `data-artist="${esc(ev.artist)}"`}></div><div class="ev-scrim"></div>
-      <span class="ev-type">${esc(ev.type)}</span><span class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
-      <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info">${ev.date} · ${esc(ev.venue)}</div></div></a>`;
+      <span class="ev-type">${esc(ev.type)}</span>
+      <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> ${ev.date} · ${esc(ev.venue)}</div></div></a>`;
   }).join('') || `<p class="dim" style="padding:8px 0">예정된 일정이 없습니다</p>`;
   fillEventArts($('#hEvents'));
 
@@ -775,16 +775,23 @@ function storeFiltered() {
 }
 function productCard(p: Product) {
   const hasLtd = p.editions.some((e) => e.id === 'limited');
+  /* 반(한정반/통상반)과 잔여 수량은 아트워크 위에 칩으로 얹지 않는다.
+     글자는 글자 영역에 둔다. 원산지와 같은 줄에 놓으면 '어느 나라 판을
+     어떤 조건으로 사는가'가 한 눈에 읽힌다. 잔여는 살지 말지를 가르는
+     정보라 가격 바로 아래 둔다. */
+  const low = p.stock <= 10;
   return `<a class="p-card d3-tilt" href="#/store/${p.id}" data-d3-tilt="7" data-d3="rise">
     <div class="p-img">
       <img src="${esc(sized(p.artwork, 300))}" alt="" loading="lazy" decoding="async"/>
-      <span class="p-badge ${hasLtd ? 'ltd' : ''}">${esc(p.badge)}</span>
-      ${p.stock <= 10 ? `<span class="p-stock">잔여 ${p.stock}</span>` : ''}
     </div>
-    <div class="p-brand"><span class="p-flag ${p.origin === 'kr' ? 'kr' : 'jp'}">${p.origin === 'kr' ? '한국반' : '일본반'}</span>${esc(p.brand)}</div>
+    <div class="p-brand">
+      <span class="p-flag ${p.origin === 'kr' ? 'kr' : 'jp'}">${p.origin === 'kr' ? '한국반' : '일본반'}</span>
+      <span class="p-ed ${hasLtd ? 'ltd' : ''}">${esc(p.badge)}</span>
+      <span class="p-bn">${esc(p.brand)}</span>
+    </div>
     <div class="p-name">${esc(p.name)}</div>
     <div class="p-price">${money(p.price, p.priceCurrency)}</div>
-    <div class="p-sub">${esc(p.releaseDate?.slice(0, 4) || '')} · ${p.trackCount}곡</div>
+    <div class="p-sub">${esc(p.releaseDate?.slice(0, 4) || '')} · ${p.trackCount}곡${low ? ` · <b class="p-low">잔여 ${p.stock}</b>` : ''}</div>
   </a>`;
 }
 
@@ -960,9 +967,9 @@ export async function pageProduct(id: string) {
     <div class="store-wrap page-top full"><div class="store-inner product">
       <a class="crumb" href="#/store">${icon('i-chev-r', 'ic s flip')} ${t('store.title')}</a>
       <div class="pd-grid">
-        <div class="pd-img"><img src="${esc(sized(p.artwork, 560))}" alt="" decoding="async"/><span class="p-badge ${p.editions.some((e) => e.id === 'limited') ? 'ltd' : ''}">${esc(p.badge)}</span></div>
+        <div class="pd-img"><img src="${esc(sized(p.artwork, 560))}" alt="" decoding="async"/></div>
         <div class="pd-info">
-          <p class="p-brand">${esc(p.brand)} · ${esc(p.sizeLabel)}</p>
+          <p class="p-brand"><span class="p-ed ${p.editions.some((e) => e.id === 'limited') ? 'ltd' : ''}">${esc(p.badge)}</span><span class="p-bn">${esc(p.brand)} · ${esc(p.sizeLabel)}</span></p>
           <h2 class="pd-name">${esc(p.name)}</h2>
           <p class="pd-meta-line">${esc(p.releaseDate)} 발매 · ${p.trackCount}곡 · 재고 ${p.stock}개</p>
           <p class="pd-price" id="pdPrice">${money(p.editions[0].pricing.total, p.priceCurrency)}</p>
@@ -1300,14 +1307,19 @@ export async function pageArtist(id: string) {
   bindRank($('#arTracks'), entries);
   $('#arPlay').addEventListener('click', () => { if (top.length) playQueue(top.map((c) => toPlayable(c)), 0); });
 
-  const evs = events.filter((e) => e.artist === a.name);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const evs = events
+    .filter((e) => e.artist === a.name && e.date >= todayStr)
+    .sort((x, y) => x.date.localeCompare(y.date))
+    .slice(0, 8);
   if (evs.length) {
     $('#arEvSec').style.display = '';
     $('#arEvents').innerHTML = evs.map((ev) => {
       const { d, txt } = dday(ev.date);
       return `<div class="ev-card"><div class="ev-bg" data-artist="${esc(ev.artist)}"></div><div class="ev-scrim"></div>
-        <span class="ev-type">${esc(ev.type)}</span><span class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
-        <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info">${ev.date} · ${esc(ev.venue)}</div></div></div>`;
+        <span class="ev-type">${esc(ev.type)}</span>
+        <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div>
+          <div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> ${ev.date} · ${esc(ev.venue)}</div></div></div>`;
     }).join('');
     fillEventArts($('#arEvents'));
   }
@@ -2515,8 +2527,8 @@ export async function pageSearch(q: string, tab = 'all') {
 
   const productGrid = (list: Product[]) => `<div class="store-dark-grid">${list.map((p) => `
     <a class="p-card d3-tilt" href="#/store/${p.id}" data-d3-tilt="7" data-d3="rise">
-      <div class="p-img"><img src="${esc(p.artwork)}" alt="" loading="lazy" decoding="async"/><span class="p-badge">${esc(p.badge)}</span></div>
-      <div class="p-brand">${esc(p.brand)}</div><div class="p-name">${esc(p.name)}</div>
+      <div class="p-img"><img src="${esc(p.artwork)}" alt="" loading="lazy" decoding="async"/></div>
+      <div class="p-brand"><span class="p-ed">${esc(p.badge)}</span><span class="p-bn">${esc(p.brand)}</span></div><div class="p-name">${esc(p.name)}</div>
       <div class="p-price">₩${p.price.toLocaleString()}</div></a>`).join('')}</div>`;
 
   const eventList = (list: Ev[]) => `<div class="sch-rows">${list.map((e) => {

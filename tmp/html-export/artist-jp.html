@@ -160,7 +160,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .card .hover-play { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); opacity: 0; transform: translateY(8px); transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), background var(--dur-micro); }
 .card .hover-play .ic { width: 20px; height: 20px; }
 .card:hover .hover-play, .card.playing .hover-play { opacity: 1; transform: none; }
-.card .hover-play:hover { background: var(--accent-hover); transform: scale(1.05); }
+.card .hover-play:hover { background: var(--accent-hover); }
 .card .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .c-sub { margin-top: 3px; font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card.round { text-align: center; }
@@ -203,7 +203,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .ev-card .ev-scrim { position: absolute; inset: 0px; background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 8%, rgba(0, 0, 0, 0.18) 60%, transparent); }
 .ev-card .ev-body { position: absolute; inset: 0px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: flex-end; }
 .ev-card .ev-type { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; color: var(--ink); background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); padding: 3px 9px; border-radius: 999px; }
-.ev-card .ev-dday { position: absolute; top: 12px; right: 12px; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); text-shadow: rgba(0, 0, 0, 0.6) 0px 1px 8px; }
+.ev-card .ev-dday { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .ev-card .ev-dday.urgent { color: rgb(255, 107, 110); }
 .ev-card .ev-title { font-size: 15px; font-weight: 700; line-height: 1.35; text-shadow: rgba(0, 0, 0, 0.5) 0px 1px 10px; }
 .ev-card .ev-info { font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
@@ -218,8 +218,11 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 78%; height: 78%; object-fit: cover; box-shadow: var(--shadow-md); transition: transform var(--dur-short) var(--ease-out); }
 .p-card:hover .p-img img { filter: brightness(1.06); }
-.p-card .p-badge { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; background: var(--paper-ink); color: rgb(255, 255, 255); padding: 3px 8px; }
-.p-card .p-brand { margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-card .p-card .p-brand { margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-bn { min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-ed { flex-shrink: 0; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: rgba(0, 0, 0, 0.06); color: var(--paper-muted); }
+.p-ed.ltd { background: var(--paper-ink); color: rgb(255, 255, 255); }
+.p-low { color: rgb(194, 65, 12); font-weight: 800; }
 .p-card .p-name { margin-top: 3px; font-size: 13.5px; font-weight: 500; color: var(--paper-ink); line-height: 1.4; }
 .p-card .p-price { margin-top: 5px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .footer { padding: 36px var(--gutter) 48px; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
@@ -693,7 +696,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .bb-tag { margin-top: 6px; font-size: 13.5px; color: var(--ink-muted); }
 .bb-actions { margin-top: 28px; }
 .bb-card { width: clamp(200px, 24vw, 300px); aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.06); transform: rotate(-1.5deg); transition: transform var(--dur-long) var(--ease-out); }
-.bb-card:hover { transform: rotate(0deg) scale(1.02); }
+.bb-card:hover { transform: rotate(0deg); }
 .bb-card-inner { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-soft); }
 @media (max-width: 900px) {
   .bb-inner { grid-template-columns: 1fr; }
@@ -718,7 +721,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .empty-box span { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
 .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 6px; }
 .mood { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: var(--m); padding: 16px; text-decoration: none; color: rgb(255, 255, 255); display: block; transition: transform var(--dur-short) var(--ease-out); }
-.mood:hover { transform: scale(1.02); }
+.mood:hover { }
 .mood-k { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; position: relative; z-index: 1; text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 10px; }
 .mood-sq { position: absolute; right: -12px; bottom: -10px; width: 76px; height: 76px; background-size: cover; background-position: center center; background-color: rgba(0, 0, 0, 0.25); transform: rotate(24deg); box-shadow: var(--shadow-md); border-radius: 3px; }
 .gnb { background: transparent; border-bottom-color: transparent; backdrop-filter: none; transition: background var(--dur-short), border-color var(--dur-short), backdrop-filter var(--dur-short); }
@@ -891,7 +894,7 @@ body.playing .np-full.show .np-disc::after { animation: 6s linear 0s infinite no
 .glare { position: absolute; inset: 0px; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity var(--dur-short); background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.34), transparent 46%); mix-blend-mode: overlay; }
 [data-tilt]:hover .glare { opacity: 1; }
 .bb-card { transform: perspective(900px) rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); position: relative; }
-.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.03); }
+.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
 .card { position: relative; }
 .card.expanded { z-index: 20; }
 .card.expanded .cover { transform: scale(1.14); box-shadow: var(--shadow-lg); }
@@ -1295,7 +1298,6 @@ body.play-mode .pd-ul li.dim { color: var(--ink-faint); }
 body.play-mode .p-card .p-img { background: var(--bg-raised); border-radius: var(--radius-sm); }
 body.play-mode .p-card .p-name { color: var(--ink); }
 body.play-mode .p-card .p-price { color: var(--ink); }
-body.play-mode .p-badge { background: rgba(0, 0, 0, 0.7); color: var(--ink); border-radius: 999px; }
 body.play-mode .on-light .rk-row { border-bottom-color: var(--rule); }
 body.play-mode .on-light .rk-row:hover { background: var(--bg-soft); }
 body.play-mode .on-light .rk-t { color: var(--ink); }
@@ -1381,7 +1383,6 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .ar-hero { overflow: hidden; }
 section.billboard { overflow: hidden; }
 .src-badge { font-size: 11px; padding: 3px 9px; }
-.p-badge { font-size: 11px; }
 .cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .cal-arrow { width: 34px; height: 34px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--bg-soft); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
 .cal-arrow:hover { color: var(--ink); background: var(--bg-hover); transform: scale(1.05); }
@@ -1430,8 +1431,6 @@ body:not(.play-mode) .st-bar { color: var(--paper-muted); }
 .st-more { min-width: 190px; justify-content: center; }
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 100%; height: 100%; object-fit: cover; box-shadow: none; }
-.p-badge.ltd { background: var(--accent); color: var(--accent-ink); }
-.p-stock { position: absolute; bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.72); color: rgb(255, 255, 255); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
 .p-sub { font-size: 11.5px; color: var(--paper-muted); margin-top: 3px; }
 body.play-mode .p-sub { color: var(--ink-faint); }
 .pd-meta-line { font-size: 12.5px; color: var(--paper-muted); margin-top: 6px; }
@@ -1701,7 +1700,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-duration-row { grid-template-columns: repeat(4, 1fr); }
 .focus-mode-row button, .focus-duration-row button { min-height: 35px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; background: rgba(255, 255, 255, 0.035); color: var(--ink-faint); font-size: 11px; font-weight: 650; }
 .focus-mode-row button.on, .focus-duration-row button.on { color: var(--ink); border-color: color-mix(in srgb, var(--focus-tone) 50%, transparent); background: color-mix(in srgb, var(--focus-tone) 12%, transparent); }
-.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: 0 10px 30px color-mix(in srgb, var(--focus-tone) 20%, transparent); }
+.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: rgba(0, 0, 0, 0.28) 0px 1px 3px; }
 .focus-ai-btn:disabled { opacity: 0.6; cursor: wait; }
 .focus-ai-btn span { margin-right: 5px; }
 .focus-ai-result { min-height: 64px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
@@ -2152,7 +2151,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 .nm-danger:hover { filter: brightness(1.1); }
 .dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0px 12px; }
 .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
+.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
 .topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
 #topbar { view-transition-name: lilac-topbar; }
 #player { view-transition-name: lilac-player; }
@@ -2396,139 +2395,138 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
         <div class="c-title">Bakuretsu Aishiteru / Sukisugite METSU! - EP</div><div class="c-sub">2026 · 5곡</div>
       </a></div></div></section>
     <section class="page-section" id="arEvSec" style=""><div class="sec-head d3-head" data-d3="head"><h2>일정</h2><a class="sec-link" href="#/schedule">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div class="ev-shelf" id="arEvents"><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Jewel</div><div class="ev-info">2023-06-14 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">E Jan - Single</div><div class="ev-info">2025-02-17 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">M!Ⅹ</div><div class="ev-info">2025-03-05 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Aonooto - Single</div><div class="ev-info">2025-07-09 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Sukisugite METSU! - Single</div><div class="ev-info">2025-10-27 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Bakuretsu Aishiteru / Sukisugite METSU! - EP</div><div class="ev-info">2026-02-18 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">IDOLPOWER - Single</div><div class="ev-info">2026-04-27 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Maji Destiny (Shunta Sono &amp; Jyutaro Yamanaka) - Single</div><div class="ev-info">2026-06-17 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Yes! 東京 (feat. SUPER★DRAGON, Sakurashimeji, ONE N' ONLY, BUDDiiS, ICEx &amp; Lienel) - Single</div><div class="ev-info">2026-07-02 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Shiozaki Wonderland (Daichi Shiozaki) - Single</div><div class="ev-info">2026-07-06 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">You!Joy!Parade! - Single</div><div class="ev-info">2026-07-17 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">발매</span><span class="ev-dday ">종료</span>
-        <div class="ev-body"><div class="ev-title">Tsumi to Batsu to Ame to Kiss (Hayato Sano &amp; Jinto Yoshida) - Single</div><div class="ev-info">2026-08-03 · 전 플랫폼</div></div></div><div class="ev-card"><div class="ev-bg" data-artist="M!LK" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-        <span class="ev-type">내한</span><span class="ev-dday ">D-47</span>
-        <div class="ev-body"><div class="ev-title">M!LK 단독 내한 공연</div><div class="ev-info">2026-10-11 · 무신사 개러지</div></div></div></div></section>
+        <span class="ev-type">내한</span>
+        <div class="ev-body"><div class="ev-title">M!LK 단독 내한 공연</div>
+          <div class="ev-info"><b class="ev-dday ">D-47</b> 2026-10-11 · 무신사 개러지</div></div></div></div></section>
     <section class="page-section" id="arGoodsSec" style=""><div class="sec-head d3-head" data-d3="head"><h2>스토어</h2><a class="sec-link" href="#/store">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div class="store-dark-grid" id="arGoods"><a class="p-card d3-tilt d3-rise" href="#/store/it-6793456209" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/bd/11/7d/bd117d15-042d-c606-6e45-2bc5a14a96d4/VEATP-45813.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">싱글</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ">싱글</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Tsumi to Batsu to Ame to Kiss (Hayato Sano &amp; Jinto Yoshida) - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6789046108" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/3b/5d/b7/3b5db7d2-034a-23e4-f77a-ee01d8a2a4bd/VEATP-45775.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">You!Joy!Parade! - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6782749976" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a4/db/f8/a4dbf830-ec1e-e5af-723a-2ef5e4dac674/4580789774065.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Yes! 東京 (feat. SUPER★DRAGON, Sakurashimeji, ONE N' ONLY, BUDDiiS, ICEx &amp; Lienel) - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6776906225" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ea/5b/d4/ea5bd4d4-2b8c-1347-a6ba-51a18e7c6852/VEATP-45629.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Maji Destiny (Shunta Sono &amp; Jyutaro Yamanaka) - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1894988524" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/63/23/e2/6323e2fb-271c-5d6b-5db4-a6eeac25ac19/VEATP-45552.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">IDOLPOWER - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1869537741" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/45/b1/53/45b153d5-e943-6cd9-620e-0a4c66b7525b/VEATP-45199.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">미니 앨범</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ">미니 앨범</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Bakuretsu Aishiteru / Sukisugite METSU! - EP</div>
     <div class="p-price">₩30,400</div>
     <div class="p-sub">2026 · 5곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1846753945" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d4/f9/1b/d4f91bfd-6176-4733-113f-b72f6095d5df/VEATP-44481.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Sukisugite METSU! - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2025 · 1곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1822198318" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/40/33/f5/4033f5b1-915b-3a73-4fe9-b93ce75e8e3c/VEATP-44128.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Aonooto - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2025 · 3곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1796741285" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b3/89/4f/b3894f37-19cb-e9ed-a1e6-59f0f2a846a6/VICL-66044.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      <span class="p-stock">잔여 8</span>
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">M!Ⅹ</div>
     <div class="p-price">₩35,800</div>
-    <div class="p-sub">2025 · 11곡</div>
+    <div class="p-sub">2025 · 11곡 · <b class="p-low">잔여 8</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1794499542" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/54/fd/a4/54fda41c-2ff0-f132-9955-6c6e41a5c882/VEATP-43744.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">싱글</span>
-      <span class="p-stock">잔여 9</span>
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ">싱글</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">E Jan - Single</div>
     <div class="p-price">₩16,200</div>
-    <div class="p-sub">2025 · 1곡</div>
+    <div class="p-sub">2025 · 1곡 · <b class="p-low">잔여 9</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-1689987394" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/27/a4/d2/27a4d26f-a486-dd26-667d-c48cf7a54d71/VICL-65823.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>M!LK</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">M!LK</span>
+    </div>
     <div class="p-name">Jewel</div>
     <div class="p-price">₩35,800</div>
     <div class="p-sub">2023 · 11곡</div>

@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.lib-newbtn:hover { background: var(--bg-hover); transform: scale(1.02); }
+
+.lib-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+.lib-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+
+.lib-find { display: flex; align-items: center; gap: 8px; background: var(--bg-soft); border-radius: 999px; padding: 0 14px; height: 36px; width: 260px; max-width: 100%; }
+
+.lib-find .ic { color: var(--ink-muted); flex-shrink: 0; }
+
+.lib-find input { flex: 1; background: none; border: none; outline: none; color: var(--ink); font-family: inherit; font-size: 13px; min-width: 0; }
+
+.lib-tools { display: flex; align-items: center; gap: 8px; }
+
+.lib-tools select { background: var(--bg-soft); border: none; color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 12px; border-radius: 999px; }
+
+.view-toggle { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--bg-soft); color: var(--ink-faint); display: inline-flex; align-items: center; justify-content: center; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
+
+.view-toggle:hover { color: var(--ink); }
+
+.view-toggle.on { background: var(--ink); color: var(--bg); }
+
+
+.lib-grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 10px; }
+
+.lib-card { display: block; padding: 12px; border-radius: var(--radius-md); text-decoration: none; color: var(--ink); background: transparent; transition: background var(--dur-short); position: relative; }
+
+.lib-card:hover { background: var(--bg-soft); }
+
+.lib-cover { position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-soft); box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center; }
+
+.lib-card.round .lib-cover { border-radius: 50%; }
+
+.lib-cover img { width: 100%; height: 100%; object-fit: cover; }
+
+.lib-cover .ph { font-size: 34px; font-weight: 800; color: var(--ink-faint); }
+
+.lib-cover.liked { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); }
+
+.lib-cover.liked .lt { width: 44px; height: 44px; color: #fff; }
+
+.lib-card .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.lib-card .c-sub { margin-top: 3px; font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.lib-card.round { text-align: center; }
+
+
+.lib-rows { display: flex; flex-direction: column; }
+
+.lib-row { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 14px; padding: 9px 12px; border-radius: var(--radius-sm); text-decoration: none; color: var(--ink); transition: background var(--dur-micro); }
+
+.lib-row:hover { background: var(--bg-soft); }
+
+.lib-rcover { width: 52px; height: 52px; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-soft); display: flex; align-items: center; justify-content: center; }
+
+.lib-row.round .lib-rcover { border-radius: 50%; }
+
+.lib-rcover img { width: 100%; height: 100%; object-fit: cover; }
+
+.lib-rcover.liked { background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; }
+
+.lib-rcover .ph { font-weight: 800; color: var(--ink-faint); }
+
+.lib-rmeta { min-width: 0; display: flex; flex-direction: column; }
+
+.lib-rmeta b { font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.lib-rmeta i { font-size: 12.5px; font-style: normal; color: var(--ink-muted); }
+
+.lib-rdate { font-size: 12px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+
+/* ---------- 트랙 테이블 심화 ---------- */
+.sp-table { --cols: 32px 5fr 3fr 2fr 62px 92px; }
+
+.sp-table.no-al { --cols: 32px 6fr 2fr 62px 92px; }
+
+.sp-table.no-dt { --cols: 32px 6fr 3fr 62px 92px; }
+
+.sp-table.no-al.no-dt { --cols: 32px 1fr 62px 92px; }
+
+.t-row { padding-right: 12px; }
+
+.sp-table.sticky .t-head { position: sticky; top: var(--tb-h); z-index: 5; background: var(--bg-raised); backdrop-filter: blur(12px); margin: 0 -14px; padding: 0 28px; }
+</style></head><body><div>x</div></body></html>

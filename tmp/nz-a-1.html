@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.btn-sec:hover { background: rgba(109, 109, 110, 0.35); }
+
+
+/* ---------- 섹션 공통 ---------- */
+.page-section { padding: 40px var(--gutter) 8px; }
+
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+
+.sec-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+
+.sec-sub { font-size: 12.5px; color: var(--ink-faint); }
+
+
+/* ---------- 셸프 (스포티파이 카드 행) ---------- */
+.shelf {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 176px;
+  gap: 14px; overflow-x: auto; padding: 4px 2px 18px;
+  scroll-snap-type: x proximity;
+}
+
+.card {
+  background: transparent; border: none; border-radius: var(--radius-md);
+  padding: 12px; text-align: left; scroll-snap-align: start;
+  transition: background var(--dur-short) var(--ease-out);
+  position: relative; color: var(--ink);
+}
+
+.card:hover { background: var(--bg-raised); }
+
+.card .cover {
+  position: relative; width: 100%; aspect-ratio: 1;
+  border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-md);
+}
+
+.card.round .cover { border-radius: 50%; box-shadow: var(--shadow-md); }
+
+.card .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.card .cover .ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; color: var(--ink-faint); background: var(--bg-soft); }
+
+.card .hover-play {
+  position: absolute; right: 8px; bottom: 8px;
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: var(--accent); color: var(--accent-ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), background var(--dur-micro);
+}
+
+.card .hover-play .ic { width: 20px; height: 20px; }
+
+.card:hover .hover-play, .card.playing .hover-play { opacity: 1; transform: none; }
+
+.card .hover-play:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+.card .c-title {
+  margin-top: 11px; font-size: 14.5px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.card .c-sub {
+  margin-top: 3px; font-size: 12.5px; color: var(--ink-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.card.round { text-align: center; }
+
+.card.round .c-title { margin-top: 12px; }
+
+.card .follow-state {
+  position: absolute; top: 18px; right: 18px; z-index: 2;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink);
+  display: none; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.card .follow-state .ic { width: 14px; height: 14px; }
+
+.card.following .follow-state { display: flex; }
+
+
+/* ---------- 차트 (애플뮤직 리스트) ---------- */
+.chart-list {
+  list-style: none;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  column-gap: 28px;
+}
+
+.chart-row {
+  display: grid; grid-template-columns: 26px 48px 1fr auto;
+  align-items: center; gap: 14px;
+  padding: 8px 10px; border-radius: var(--radius-md);
+  cursor: pointer; border-bottom: 1px solid var(--rule, rgba(255,255,255,0.055));
+  transition: background var(--dur-micro);
+}
+
+.chart-row:hover { background: var(--bg-raised); border-bottom-color: transparent; }
+
+.chart-row .rank { font-size: 13px; font-weight: 600; color: var(--ink-muted); text-align: center; font-variant-numeric: tabular-nums; }
+
+.chart-row .art { width: 48px; height: 48px; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-soft); position: relative; }
+
+.chart-row .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.chart-row .art .overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.45); color: #fff; opacity: 0; transition: opacity var(--dur-micro);
+}
+
+.chart-row:hover .art .overlay { opacity: 1; }
+
+.chart-row .art .overlay .ic { width: 18px; height: 18px; }
+
+.chart-row .meta { min-width: 0; }
+
+.chart-row .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chart-row .a { font-size: 12.5px; color: var(--ink-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.chart-row .side { display: flex; align-items: center; gap: 10px; }
+
+.chart-row .tagchip {
+  font-size: 11px; color: var(--ink-muted);
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: 999px; padding: 2.5px 9px;
+  white-space: nowrap;
+}
+
+.chart-row .mv-link {
+  border: none; background: none; color: var(--ink-faint);
+  padding: 6px; border-radius: 6px; display: flex;
+  transition: color var(--dur-micro), background var(--dur-micro);
+}
+
+.chart-row .mv-link:hover { color: var(--ink); background: var(--bg-soft); }
+
+.chart-row .mv-link .ic { width: 16px; height: 16px; }
+
+.chart-row.playing .t { color: var(--accent); }
+</style></head><body><div>x</div></body></html>

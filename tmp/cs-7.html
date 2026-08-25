@@ -1,0 +1,943 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.work-native-sec .focus-native-points span { color: var(--accent); font: 600 16px/1.4 var(--font); }
+
+.work-native-sec .focus-native-points b { font-size: 14px; }
+
+.work-native-sec .focus-native-points p { margin-top: 4px; font-size: 11px; }
+
+.m-work-mode { display: none; }
+
+  .topbar { gap: 12px; }
+
+  .tb-search { width: 240px; }
+
+  .tb-search:focus-within { width: 280px; }
+
+  .tb-connect { display: none; }
+
+  .work-grid { grid-template-columns: minmax(0, 1.35fr) 340px; }
+
+  .tb-menu { display: none; }
+
+  .tb-search { width: 100%; }
+
+  .tb-work { margin-left: auto; }
+
+  .tb-work::before { display: none; }
+
+  .work-head { align-items: flex-start; }
+
+  .work-protection { display: none; }
+
+  .work-grid { grid-template-columns: 1fr; }
+
+  .work-setup { display: block; }
+
+  .work-mixes-sec .focus-mix-grid { grid-template-columns: 1fr; }
+
+  .work-native-sec { grid-template-columns: 1fr 1fr; }
+
+  .work-native-sec .focus-native-points { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+
+  .topbar { height: 64px; }
+
+  .tb-brand { font-size: 21px; }
+
+  .tb-search { display: none; }
+
+  .tb-work { height: 36px; padding: 0 11px; }
+
+  .tb-right > :not(.tb-work) { display: none; }
+
+  .work-shell { padding: 30px 14px 90px; }
+
+  .work-head { margin-bottom: 24px; }
+
+  .work-head h1 { font-size: 40px; }
+
+  .work-head > div:first-child p { font-size: 13px; line-height: 1.6; }
+
+  .work-player-card, .work-setup { border-radius: 16px; }
+
+  .work-player-card .focus-now { align-items: center; }
+
+  .focus-actions { grid-template-columns: 1fr; }
+
+  .work-setup { padding: 22px 18px; }
+
+  .work-setup .focus-mode-row, .work-setup .focus-duration-row { display: grid; }
+
+  .work-native-sec { grid-template-columns: 1fr; padding: 26px 20px; border-radius: 18px; }
+
+  .work-native-sec .focus-native-points { grid-column: auto; grid-template-columns: 1fr; }
+
+
+/* ── 양국(J-POP / K-POP) 구분 UI ────────────────────────── */
+
+/* 상품 카드의 원산지 배지 — 어느 나라 반인지 한눈에 */
+.p-flag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+}
+
+.p-flag.jp { background: rgba(229, 72, 77, 0.14); color: #e5484d; }
+
+.p-flag.kr { background: rgba(59, 130, 246, 0.16); color: #60a5fa; }
+
+/* 밝은 배경(스토어)에서는 대비를 다시 잡는다 */
+.store-wrap .p-flag.jp { background: rgba(229, 72, 77, 0.1); color: #c2373b; }
+
+.store-wrap .p-flag.kr { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
+
+
+/* 원산지 세그먼트 — 가장 상위 필터라 무게를 준다 */
+.origin-chips { margin-bottom: 4px; }
+
+.chip.strong { font-weight: 700; }
+
+
+/* 아티스트 칩을 국가별로 묶어 스캔 가능하게 */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--paper-rule, var(--rule));
+  border-radius: 12px;
+}
+
+.chip-group + .chip-group { margin-top: 2px; }
+
+.chip-group-label {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.store-wrap .chip-group-label { background: #f1f1f3; color: #6b6d73; }
+
+
+/* 필터 칩의 건수 표기 */
+.chip .cnt {
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bg-tint);
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chip.on .cnt { background: rgba(0, 0, 0, 0.16); color: inherit; }
+
+
+/* ── 서비스 상태 페이지 ─────────────────────────────────── */
+.svc-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; margin-bottom: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline), var(--shadow-sm);
+}
+
+.svc-head > div { display: flex; flex-direction: column; gap: 2px; }
+
+.svc-head b { font-size: 15px; }
+
+.svc-head span { font-size: 12px; color: var(--ink-muted); }
+
+.svc-dot {
+  flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%;
+  background: #2ecc71; box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.16);
+}
+
+.svc-head.bad .svc-dot { background: var(--danger); box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.18); }
+
+
+.svc-list { display: flex; flex-direction: column; gap: 2px; }
+
+.svc-row {
+  display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.4fr) auto;
+  gap: 12px; align-items: center;
+  padding: 13px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.svc-row.bad { background: rgba(229, 72, 77, 0.08); }
+
+.svc-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.svc-name b { font-size: 14px; }
+
+.svc-state {
+  padding: 2px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(46, 204, 113, 0.14); color: #2ecc71;
+}
+
+.svc-state.bad { background: rgba(229, 72, 77, 0.16); color: var(--danger); }
+
+.svc-kind { font-size: 11px; color: var(--ink-faint); }
+
+.svc-detail { font-size: 13px; color: var(--ink-muted); }
+
+.svc-age { font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+
+.svc-age.fresh { color: #2ecc71; }
+
+.svc-age.stale { color: #e0a336; }
+
+.svc-age.old   { color: var(--danger); }
+
+.svc-age.na    { color: var(--ink-faint); }
+
+
+.svc-sub { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 16px 10px; }
+
+.svc-chip {
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--bg-soft); color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.svc-chip b { color: var(--ink); margin-left: 3px; }
+
+.svc-chip.bad { background: rgba(229, 72, 77, 0.14); color: var(--danger); }
+
+
+.svc-note {
+  margin-top: 26px; padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule, rgba(255,255,255,0.055));
+}
+
+.svc-note h3 { font-size: 14px; margin-bottom: 6px; }
+
+.svc-note p { font-size: 13px; color: var(--ink-muted); line-height: 1.65; }
+
+  .svc-row { grid-template-columns: 1fr auto; }
+
+  .svc-detail { grid-column: 1 / -1; }
+
+
+  /* 원근 컨테이너 — 자식이 3D 공간을 공유하게 한다 */
+  .d3-stage {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+  }
+
+    .d3-rise {
+      animation: d3Rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 62%;
+      transform-origin: 50% 100%;
+    }
+
+      from { opacity: 0; transform: perspective(900px) translate3d(0, 28px, -90px) rotateX(9deg); }
+
+      to   { opacity: 1; transform: perspective(900px) translate3d(0, 0, 0) rotateX(0deg); }
+
+
+    /* 가로 셸프는 옆에서 밀려들어오게 */
+    .d3-slide {
+      animation: d3Slide linear both;
+      animation-timeline: view(inline);
+      animation-range: entry 0% entry 50%;
+    }
+
+      from { opacity: .35; transform: perspective(800px) translate3d(40px, 0, -60px) rotateY(-7deg); }
+
+      to   { opacity: 1;   transform: none; }
+
+
+    /* 히어로 — 스크롤에 따라 뒤로 물러나며 흐려진다 */
+    .d3-hero {
+      animation: d3Hero linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+      transform-origin: 50% 0%;
+    }
+
+      from { transform: perspective(1000px) translateZ(0) rotateX(0deg); opacity: 1; }
+
+      to   { transform: perspective(1000px) translateZ(-120px) rotateX(4deg); opacity: .55; }
+
+
+    /* 섹션 제목 — 살짝 늦게 따라온다 */
+    .d3-head {
+      animation: d3Head linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+
+      from { opacity: 0; transform: translate3d(0, 14px, 0); }
+
+      to   { opacity: 1; transform: none; }
+
+
+  /* ── 포인터 3D 틸트 ──────────────────────────────────────
+     JS는 --rx / --ry 변수만 갱신하고, 실제 변환은 CSS가 처리한다 */
+  .d3-tilt {
+    transform: perspective(var(--d3-persp, 760px))
+               rotateX(var(--rx, 0deg))
+               rotateY(var(--ry, 0deg))
+               translateZ(var(--tz, 0px));
+    transition: transform 420ms var(--ease-out);
+    transform-style: preserve-3d;
+  }
+
+  .d3-tilt.is-tilting { transition: transform 90ms linear; }
+
+
+  /* 카드 안쪽 요소를 Z축으로 띄워 실제 깊이를 만든다 */
+  .d3-tilt .d3-layer-1 { transform: translateZ(18px); }
+
+  .d3-tilt .d3-layer-2 { transform: translateZ(34px); }
+
+
+  /* 광택 — 기울인 방향을 따라 빛이 흐른다 */
+  .d3-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 260ms var(--ease-out);
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.08) 32%,
+      transparent 62%);
+  }
+
+  .d3-tilt.is-tilting .d3-glare { opacity: 1; }
+
+
+  /* ── 차트 순위 3D 스택 ──────────────────────────────────
+     상위권일수록 앞으로 나와 보이게 한다 */
+  .d3-stack { transform-style: preserve-3d; }
+
+  .d3-stack > * { transition: transform 320ms var(--ease-out); }
+
+  .d3-stack > *:hover { transform: translateZ(22px) scale(1.012); }
+
+
+  /* ── 페이지 전환 ────────────────────────────────────────*/
+  .d3-enter { animation: d3Enter 420ms var(--ease-out) both; }
+
+    from { opacity: 0; transform: perspective(1200px) translate3d(0, 10px, -40px); }
+
+    to   { opacity: 1; transform: none; }
+
+  .d3-rise, .d3-slide, .d3-hero, .d3-head, .d3-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+
+  .d3-tilt { transform: none !important; }
+
+  .d3-glare { display: none; }
+
+html.touch .d3-tilt { transform: none !important; }
+
+html.touch .d3-glare { display: none; }
+
+
+/* ── three.js 무대 ────────────────────────────────────────
+   캔버스는 배경 레이어로 깔고, 텍스트는 그 위에 얹는다.
+   3D가 뜨지 않는 환경에서는 기존 레이아웃이 그대로 유지된다. */
+
+/* 3D 무대는 히어로를 통째로 채운다.
+   작게 넣으면 3D인지도 알아보기 어렵고 오히려 어설퍼 보인다. */
+.bb-stage {
+  position: absolute;
+  /* 고정 톱바(70px) 아래에서 시작한다 */
+  inset: 70px 0 0 0;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 1100ms var(--ease-out);
+}
+
+.bb-stage canvas { opacity: 0.96; }
+
+body.has-3d-hero .bb-stage { opacity: 1; }
+
+/* 3D가 뜨면 기존 정적 레이어는 자리를 내준다.
+   블러 배경과 스크림을 그대로 두면 3D가 뿌옇게 묻힌다. */
+body.has-3d-hero .bb-card { opacity: 0; pointer-events: none; }
+
+body.has-3d-hero .bb-blur { opacity: 0.14; filter: blur(80px) saturate(1.4); }
+
+body.has-3d-hero .bb-scrim {
+  background: linear-gradient(to top, var(--page) 0%, rgba(5, 6, 8, 0.2) 16%, transparent 38%);
+}
+
+/* 텍스트가 캔버스에 묻히지 않도록 */
+section.billboard .bb-inner { position: relative; z-index: 2; }
+
+/* 텍스트가 앨범 위에서도 읽히도록 왼쪽에 그라데이션 막을 깐다 */
+/* 텍스트 뒤에만 어둡게 깔고, 재킷은 최대한 살린다.
+   전체를 덮으면 갤러리 벽이 통째로 묻혀 3D를 넣은 의미가 없어진다. */
+body.has-3d-hero .bb-inner::before {
+  content: '';
+  position: absolute;
+  inset: -30% -14% -30% -14%;
+  z-index: -1;
+  pointer-events: none;
+  /* 제목·버튼이 놓이는 왼쪽 40%는 확실히 눌러 글자가 깨끗하게 읽히게 한다 */
+  background: linear-gradient(90deg,
+    rgba(5, 6, 8, 0.94) 0%, rgba(5, 6, 8, 0.82) 30%,
+    rgba(5, 6, 8, 0.38) 52%, transparent 70%);
+}
+
+body.has-3d-hero .bb-content { text-shadow: 0 2px 28px rgba(0, 0, 0, 0.7); }
+
+/* 3D가 뜨면 히어로를 화면 높이만큼 키워 몰입감을 준다 */
+body.has-3d-hero section.billboard {
+  min-height: min(86vh, 780px);
+  align-items: center;
+}
+
+/* 아래로 이어지는 섹션과 자연스럽게 연결 */
+body.has-3d-hero section.billboard::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
+
+
+/* 차트 무대도 히어로 전체를 쓴다. 텍스트는 왼쪽 막 위에 얹는다. */
+.ch-stage {
+  position: absolute;
+  /* 톱바(고정 70px) 아래에서 시작하고, 하단 컨트롤과도 떨어뜨린다 */
+  inset: 88px 3% 84px 48%;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1100ms var(--ease-out);
+}
+
+body.has-3d-chart .ch-stage { opacity: 1; }
+
+.chart-hero { position: relative; overflow: hidden; }
+
+.chart-hero .ch-inner { position: relative; z-index: 2; }
+
+/* 컨트롤 뒤에 옅은 판을 깔아 3D와 겹쳐도 읽히게 한다 */
+body.has-3d-chart .ch-controls {
+  position: relative;
+  z-index: 3;
+}
+
+/* 컨트롤과 무대가 겹치지 않으므로 별도 배경이 필요 없다 */
+body.has-3d-chart .chart-hero {
+  /* 1위 한 점만 전시하므로 히어로가 클 필요가 없다.
+     예전엔 여러 작품을 걸어 62vh를 썼는데, 지금은 컨트롤 아래 빈 공간만 생긴다. */
+  min-height: min(48vh, 430px);
+  display: flex;
+  align-items: center;
+  padding-top: 28px;
+}
+
+/* 무대가 오른쪽에만 있으므로 텍스트를 덮는 막은 두지 않는다 */
+body.has-3d-chart .chart-hero::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 26%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
+
+
+/* 3D 열에서 현재 맨 앞에 온 곡 */
+.ch-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--hairline);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: chNowIn 380ms var(--ease-out) both;
+}
+ from { opacity: 0; transform: translateY(6px); }
+ to { opacity: 1; transform: none; }
+
+.ch-now-rank {
+  display: grid;
+  place-items: center;
+  min-width: 26px; height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px; font-weight: 800;
+}
+
+.ch-now-text { font-size: 13px; color: var(--ink); }
+
+
+/* 3D 조작 안내 — 처음 보는 사람은 드래그할 수 있다는 걸 모른다 */
+.stage-hint {
+  position: absolute;
+  right: 18px; bottom: 16px;
+  z-index: 3;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  animation: hintFade 5.5s ease-out both;
+}
+
+  0%, 62% { opacity: 1; }
+
+  100% { opacity: 0; }
+
+  .bb-stage, .ch-stage { inset: 0; opacity: 0.42 !important; }
+
+  .bb-stage, .ch-stage { display: none; }
+
+  body.has-3d-hero .bb-card { opacity: 1; pointer-events: auto; }
+
+  body.has-3d-chart .chart-hero { min-height: 0; }
+
+
+/* ═══ 보관함 재설계 ═══════════════════════════════════════
+   기존에는 플레이리스트·아티스트·좋아요가 한 목록에 섞여 있어
+   "무엇이 있는지"는 보여도 "무엇을 할지"가 보이지 않았다.
+   목적이 다른 것을 섹션으로 나누고, 가장 자주 하는 행동(이어 듣기)을 맨 위에 둔다. */
+
+.lib2 { padding: 0 var(--gutter) 80px; max-width: 1500px; margin: 0 auto; }
+
+
+/* ── 헤더: 요약을 숫자로 먼저 보여준다 ── */
+.lib2-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 44px 0 26px;
+}
+
+.lib2-title { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.03em; margin: 6px 0 8px; }
+
+.lib2-sub { color: var(--ink-muted); font-size: 14px; }
+
+.lib2-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.lib2-stats > div {
+  min-width: 96px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+}
+
+.lib2-stats dt { font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+
+.lib2-stats dd { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+
+
+/* ── 툴바 ── */
+.lib2-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  background: linear-gradient(var(--page) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lib2-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.lib2-tools { display: flex; align-items: center; gap: 8px; }
+
+
+/* ── 이어 듣기 ── */
+.lib2-sec { margin-top: 30px; }
+
+.sec-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.lib2-continue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 10px;
+}
+
+.lc-cont {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 0 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out);
+}
+
+.lc-cont:hover { background: var(--bg-soft); }
+
+.lc-cont-art { flex: 0 0 auto; width: 62px; height: 62px; background: var(--bg-soft); }
+
+.lc-cont-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lc-cont-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.lc-cont-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-cont-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-cont-play {
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  opacity: 0;
+  transform: scale(.82);
+  transition: opacity var(--dur-micro), transform var(--dur-micro) var(--ease-out);
+}
+
+.lc-cont:hover .lc-cont-play { opacity: 1; transform: none; }
+
+
+/* ── 플레이리스트 카드 ── */
+.lib2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 16px;
+}
+
+.lc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  transition: background var(--dur-short) var(--ease-out);
+}
+
+.lc-card:hover { background: var(--bg-soft); }
+
+.lc-art {
+  display: block;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.lc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lc-mosaic { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; }
+
+.lc-mosaic img { width: 100%; height: 100%; object-fit: cover; }
+
+.lc-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
+
+.lc-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-sub { font-size: 12px; color: var(--ink-muted); }
+
+.lc-likes-art {
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, var(--accent), var(--accent-deep));
+  color: #fff;
+}
+
+.lc-likes-art .ic { width: 40%; height: 40%; }
+
+
+/* ── 아티스트 ── */
+.lib2-artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 14px;
+}
+
+.la-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 16px 10px 14px;
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-align: center;
+  transition: background var(--dur-short) var(--ease-out);
+}
+
+.la-card:hover { background: var(--bg-soft); }
+
+.la-art {
+  display: grid; place-items: center;
+  width: 84px; height: 84px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-soft);
+  font-size: 26px; font-weight: 800; color: var(--ink-faint);
+  box-shadow: var(--shadow-sm);
+}
+
+.la-art img { width: 100%; height: 100%; object-fit: cover; }
+
+.la-card b { font-size: 13px; font-weight: 600; }
+
+.la-card > span:last-child { font-size: 11px; color: var(--ink-muted); }
+
+
+/* ── 곡 목록 ── */
+.lib2-tracks { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+
+.lt-row {
+  display: grid;
+  grid-template-columns: 28px 44px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--dur-micro);
+}
+
+.lt-row:hover { background: var(--bg-hover); }
+
+.lt-i { font-size: 13px; color: var(--ink-faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+.lt-art { width: 44px; height: 44px; border-radius: 5px; overflow: hidden; background: var(--bg-soft); }
+
+.lt-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lt-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+
+.lt-txt b { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lt-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lt-play { opacity: 0; color: var(--ink-muted); transition: opacity var(--dur-micro); }
+
+.lt-row:hover .lt-play { opacity: 1; }
+
+
+.lib2-more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.lib2-more:hover { color: var(--ink); }
+
+
+/* ── 빈 상태: 무엇을 하면 되는지 알려준다 ── */
+.lib2-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  border: 1px dashed var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-lg);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.lib2-empty .eb { width: 34px; height: 34px; opacity: .5; }
+
+.lib2-empty p { font-size: 14px; }
+
+  .lc-cont-play, .lt-play { opacity: 1; transform: none; }
+
+  .lib2-hero { padding-top: 28px; }
+
+  .lib2-stats > div { min-width: 78px; padding: 10px 12px; }
+
+  .lib2-stats dd { font-size: 18px; }
+
+  .lt-row { grid-template-columns: 22px 40px 1fr 30px; gap: 9px; }
+
+
+/* 1위 전시 안내 — 무대 아래 오른쪽 */
+body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
+
+  .ch-stage { inset: 40px 2% 72px 38%; opacity: 0.9 !important; }
+
+
+/* 소스 배지는 기본으로 접는다. 100행을 훑을 때 필요한 정보가 아니다.
+   행에 마우스를 올리거나 포커스가 닿으면 편다. 접힌 동안에는 개수만 보여
+   "여러 차트에 올라 있다"는 사실은 잃지 않는다. */
+.rk-ranks { display: none; }
+
+.rk-row:hover .rk-ranks, .rk-row:focus-within .rk-ranks { display: inline-flex; }
+
+.rk-row:hover .rk-srcn, .rk-row:focus-within .rk-srcn { display: none; }
+
+.rk-srcn {
+  font-size: 11.5px; font-weight: 700; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* 변동 표시는 순위에 붙는 성질이라 순위 칸 안에 둔다 */
+.rk-n .rk-move { display: block; font-size: 11px; margin-top: 1px; }
+
+/* 순위 소스 배지 — 히어로(.billboard)와 클래스명이 겹치므로 명시적으로 고정한다 */
+.rk-ranks .mini-rank {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+
+/* ── 이름 입력 모달 (prompt 대체) ─────────────────────── */
+.name-modal { display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); position: fixed; inset: 0; z-index: 300; }
+
+.nm-card {
+  width: min(92vw, 380px);
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline), var(--shadow-lg);
+}
+
+.nm-title { font-size: 15px; margin-bottom: 14px; }
+
+.nm-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.nm-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.nm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+
+.nm-msg { font-size: 14px; line-height: 1.6; }
+
+.nm-danger { background: var(--danger); color: #fff; }
+
+.nm-danger:hover { filter: brightness(1.1); }
+
+
+.dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0 12px; }
+
+.topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.topup-opt {
+  padding: 14px 10px;
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-micro), background var(--dur-micro);
+}
+
+.topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
+
+
+/* ═══ View Transitions — 페이지 전환 ═══════════════════════
+   셸(톱바·사이드바·플레이어)은 고정하고 내용만 넘어가게 한다.
+   전환은 짧고(280ms) 방향이 느껴지는 정도로만. */
+
+#topbar { view-transition-name: lilac-topbar; }
+
+#player { view-transition-name: lilac-player; }
+
+.sidebar { view-transition-name: lilac-sidebar; }
+
+  ::view-transition-old(root) {
+    animation: vtLeave 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vtEnter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+    to { opacity: 0; transform: translateY(-10px) scale(0.994); }
+
+    from { opacity: 0; transform: translateY(14px) scale(0.996); }
+
+  /* 셸은 스냅숏이 동일하므로 애니메이션을 걸지 않는다 */
+  ::view-transition-old(lilac-topbar), ::view-transition-new(lilac-topbar),
+  ::view-transition-old(lilac-player), ::view-transition-new(lilac-player),
+  ::view-transition-old(lilac-sidebar), ::view-transition-new(lilac-sidebar) {
+    animation: none;
+  }
+
+  .ar-head { gap: 16px; padding-bottom: 20px; }
+
+  .ar-portrait { width: 96px; border-radius: 10px; }
+
+  .ar-name { font-size: clamp(26px, 9vw, 40px); }
+
+
+/* 실시간 소스 배지 — 수집(주기)과 구분 */
+.live-badge.rt { background: rgba(46, 204, 113, 0.16); color: #2ecc71; }
+
+
+/* 아티스트 카드 — 이미지가 로드되면 이니셜 플레이스홀더를 가린다.
+   원형 마스크 밖으로 글자가 비쳐 보이던 문제. */
+.ars-cover { position: relative; }
+
+.ars-cover img { position: relative; z-index: 1; }
+
+.ars-cover:has(img) .ph { display: none; }
+
+.la-art:has(img) { font-size: 0; }
+</style></head><body><div>x</div></body></html>

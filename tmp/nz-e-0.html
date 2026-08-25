@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.work-native-sec .focus-native-points span { color: var(--accent); font: 600 16px/1.4 var(--font); }
+
+.work-native-sec .focus-native-points b { font-size: 14px; }
+
+.work-native-sec .focus-native-points p { margin-top: 4px; font-size: 11px; }
+
+.m-work-mode { display: none; }
+
+  .topbar { gap: 12px; }
+
+  .tb-search { width: 240px; }
+
+  .tb-search:focus-within { width: 280px; }
+
+  .tb-connect { display: none; }
+
+  .work-grid { grid-template-columns: minmax(0, 1.35fr) 340px; }
+
+  .tb-menu { display: none; }
+
+  .tb-search { width: 100%; }
+
+  .tb-work { margin-left: auto; }
+
+  .tb-work::before { display: none; }
+
+  .work-head { align-items: flex-start; }
+
+  .work-protection { display: none; }
+
+  .work-grid { grid-template-columns: 1fr; }
+
+  .work-setup { display: block; }
+
+  .work-mixes-sec .focus-mix-grid { grid-template-columns: 1fr; }
+
+  .work-native-sec { grid-template-columns: 1fr 1fr; }
+
+  .work-native-sec .focus-native-points { grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); }
+
+  .topbar { height: 64px; }
+
+  .tb-brand { font-size: 21px; }
+
+  .tb-search { display: none; }
+
+  .tb-work { height: 36px; padding: 0 11px; }
+
+  .tb-right > :not(.tb-work) { display: none; }
+
+  .work-shell { padding: 30px 14px 90px; }
+
+  .work-head { margin-bottom: 24px; }
+
+  .work-head h1 { font-size: 40px; }
+
+  .work-head > div:first-child p { font-size: 13px; line-height: 1.6; }
+
+  .work-player-card, .work-setup { border-radius: 16px; }
+
+  .work-player-card .focus-now { align-items: center; }
+
+  .focus-actions { grid-template-columns: 1fr; }
+
+  .work-setup { padding: 22px 18px; }
+
+  .work-setup .focus-mode-row, .work-setup .focus-duration-row { display: grid; }
+
+  .work-native-sec { grid-template-columns: 1fr; padding: 26px 20px; border-radius: 18px; }
+
+  .work-native-sec .focus-native-points { grid-column: auto; grid-template-columns: 1fr; }
+
+
+/* ── 양국(J-POP / K-POP) 구분 UI ────────────────────────── */
+
+/* 상품 카드의 원산지 배지 — 어느 나라 반인지 한눈에 */
+.p-flag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: 1px;
+}
+
+.p-flag.jp { background: rgba(229, 72, 77, 0.14); color: #e5484d; }
+
+.p-flag.kr { background: rgba(59, 130, 246, 0.16); color: #60a5fa; }
+
+/* 밝은 배경(스토어)에서는 대비를 다시 잡는다 */
+.store-wrap .p-flag.jp { background: rgba(229, 72, 77, 0.1); color: #c2373b; }
+</style></head><body><div>x</div></body></html>

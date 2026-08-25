@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+/* ============================================================
+   LILAC UI — v0.2
+   토큰 구조: surface 3단(bg/raised/soft) · ink 3단 · hairline rule
+   · 단일 액센트. 모션 120/220/420ms.
+   패턴: 넷플릭스(빌보드/버튼) · 스포티파이(카드/플레이어)
+   · 애플뮤직(차트 리스트) · 라프텔(이벤트 카드) · YG셀렉트(스토어)
+   ============================================================ */
+
+:root {
+  /* surfaces — 4단 계층 (ThreeUI 방식)
+     page(가장 깊음) → wall → raised → soft 순으로 올라온다.
+     단차를 좁게 두면 요소가 겹쳐도 탁해지지 않는다. */
+  --page: #050608;
+  --bg: #0a0b0d;
+  --bg-wall: #0e0f12;
+  --bg-raised: #131418;
+  --bg-soft: #1a1b20;
+  --bg-hover: rgba(255, 255, 255, 0.045);
+  --bg-tint: rgba(255, 255, 255, 0.026);
+  /* ink */
+  --ink: #f7f8f8;
+  --ink-muted: #8a8f98;
+  --ink-faint: #5c616b;
+  /* rules — 경계는 눈에 띄지 않을 만큼 얇게 */
+  --rule: rgba(255, 255, 255, 0.055);
+  --rule-strong: rgba(255, 255, 255, 0.13);
+  --ring: rgba(255, 255, 255, 0.075);
+  /* elevation — 단일 값 대신 여러 단계를 겹쳐 실제 빛 감쇠에 가깝게 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28), 0 2px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.26), 0 6px 14px -4px rgba(0, 0, 0, 0.34), 0 14px 28px -12px rgba(0, 0, 0, 0.38);
+  --shadow-lg: 0 2.8px 2.2px rgba(0, 0, 0, 0.09), 0 6.7px 5.3px rgba(0, 0, 0, 0.12),
+               0 12.5px 10px rgba(0, 0, 0, 0.15), 0 22.3px 17.9px rgba(0, 0, 0, 0.18),
+               0 41.8px 33.4px rgba(0, 0, 0, 0.24), 0 100px 80px rgba(0, 0, 0, 0.34);
+  /* 표면 위 얇은 하이라이트 — 카드 가장자리를 또렷하게 만든다 */
+  --hairline: inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  /* accent (라일락) — 절제해서 사용 */
+  /* 라일락 — 색상 284°, 채도 39%.
+     이전 값(#a78bfa)은 Tailwind violet-400 기본값이었다. 채도 92%의
+     청보라라 브랜드명(라일락)과도 어긋났다. 실제 라일락은 핑크 쪽으로
+     기운 중채도다. 배경 대비도 7.19 → 9.30으로 올라간다.
+     알파 합성을 위해 rgb 3원색을 따로 둔다 — 리터럴 재등장을 막는 장치. */
+  --accent: #CBA6D8;
+  --accent-rgb: 203 166 216;
+  --accent-hover: #D9BCE3;
+  --accent-deep: #8A5FA6;
+  --accent-deep-rgb: 138 95 166;
+  --accent-ink: #0b0c0f;
+  --danger: #e5484d;
+  /* store (light) */
+  --paper: #ffffff;
+  --paper-ink: #111113;
+  --paper-muted: #8b8d93;
+  --paper-rule: #ececee;
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+  /* layout */
+  --gnb-h: 60px;
+  --player-h: 80px;
+  --gutter: clamp(20px, 4vw, 48px);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font: "Pretendard Variable", Pretendard, "Noto Sans JP", -apple-system, sans-serif;
+}
+
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--gnb-h) + 12px); }
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  overflow-x: hidden;
+}
+
+body.has-player { padding-bottom: var(--player-h); }
+
+main { min-height: 70vh; }
+
+button { font-family: inherit; letter-spacing: inherit; cursor: pointer; }
+
+.ic { width: 20px; height: 20px; fill: currentColor; display: block; }
+
+.dim { color: var(--ink-faint); }
+
+::selection { background: rgb(var(--accent-rgb) / 0.35); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+
+::-webkit-scrollbar-thumb { background: var(--bg-soft); border-radius: 6px; }
+
+::-webkit-scrollbar-track { background: transparent; }
+
+
+/* ---------- GNB ---------- */
+.gnb {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  height: var(--gnb-h);
+  display: flex; align-items: center; gap: 28px;
+  padding: 0 var(--gutter);
+  background: rgba(11, 12, 15, 0.86);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom: 1px solid var(--rule, rgba(255,255,255,0.055));
+}
+
+.gnb-logo {
+  font-size: 21px; font-weight: 800; letter-spacing: -0.03em;
+  color: var(--accent); text-decoration: none;
+}
+
+.gnb-menu { display: flex; gap: 2px; }
+
+.gnb-item {
+  color: var(--ink-muted); text-decoration: none;
+  font-size: 13.5px; font-weight: 600;
+  padding: 6px 12px; border-radius: 6px;
+  transition: color var(--dur-micro), background var(--dur-micro);
+}
+
+.gnb-item:hover { color: var(--ink); background: var(--rule); }
+
+.gnb-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.gnb-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-soft); border-radius: 999px;
+  padding: 0 16px; height: 38px; width: 280px;
+  transition: box-shadow var(--dur-micro);
+}
+
+.gnb-search:focus-within { box-shadow: 0 0 0 2px var(--ink); width: 330px; }
+
+.gnb-search .ic { width: 16px; height: 16px; color: var(--ink-muted); flex-shrink: 0; }
+
+.gnb-search input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--ink); font-size: 13.5px; font-family: inherit;
+}
+
+.gnb-search input::placeholder { color: var(--ink-faint); }
+
+.gnb-connect {
+  height: 38px; padding: 0 18px; border-radius: 999px;
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); background: transparent;
+  color: var(--ink); font-size: 13px; font-weight: 700;
+  transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); white-space: nowrap;
+}
+
+.gnb-connect:hover { border-color: var(--ink); transform: scale(1.02); }
+
+.gnb-connect.connected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+
+/* ---------- 빌보드 (넷플릭스) ---------- */
+section.billboard { position: relative; height: min(78vh, 720px); min-height: 480px; display: flex; align-items: flex-end; }
+
+/* 백드롭: img와 스크림이 동일한 박스를 정확히 공유 (정렬 불일치 방지) */
+.bb-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 28%; display: block;
+}
+
+.bb-scrim {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(77deg, rgba(11, 12, 15, 0.92) 0%, rgba(11, 12, 15, 0.55) 45%, rgba(11, 12, 15, 0.1) 75%),
+    linear-gradient(to top, var(--bg) 2%, rgba(11, 12, 15, 0.4) 28%, transparent 55%);
+}
+
+.bb-content { position: relative; z-index: 1; padding: 0 var(--gutter) 64px; max-width: 640px; }
+
+.bb-eyebrow {
+  font-size: 12.5px; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.16em; margin-bottom: 12px;
+}
+
+.bb-title {
+  font-size: clamp(38px, 5.4vw, 64px); font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1.08;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+.bb-meta { margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--ink); opacity: 0.92; }
+
+.bb-desc { margin-top: 10px; font-size: 14.5px; color: var(--ink-muted); line-height: 1.65; max-width: 520px; }
+
+.bb-actions { display: flex; gap: 10px; margin-top: 26px; }
+
+.btn-play-w {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: #fff; color: #000; border: none; border-radius: var(--radius-sm);
+  padding: 0 26px; height: 46px; font-size: 15.5px; font-weight: 700;
+  transition: background var(--dur-micro);
+}
+
+.btn-play-w:hover { background: rgba(255, 255, 255, 0.78); }
+
+.btn-play-w .ic { width: 22px; height: 22px; }
+
+.btn-play-w.wide { width: 100%; justify-content: center; margin-top: 16px; }
+
+.btn-sec {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: rgba(109, 109, 110, 0.55); color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 0 24px; height: 46px; font-size: 15.5px; font-weight: 700;
+  transition: background var(--dur-micro);
+}
+</style></head><body><div>x</div></body></html>

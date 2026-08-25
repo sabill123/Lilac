@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.ar-info { position: relative; z-index: 1; min-width: 0; }
+
+.ar-vf { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+
+.ar-vf .ic { color: var(--accent); width: 14px; height: 14px; }
+
+.ar-name { font-size: clamp(40px, 8vw, 96px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin: 10px 0 12px; }
+
+.ar-stats { font-size: 13.5px; color: var(--ink); opacity: .9; font-variant-numeric: tabular-nums; }
+
+.ar-actionbar { display: flex; align-items: center; gap: 16px; padding: 22px var(--gutter); }
+
+.ar-op { font-size: 12px; color: var(--ink-faint); margin-left: auto; }
+ .ar-op { display: none; }
+
+
+/* ---------- 보관함 ---------- */
+.liked-hero { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 26px; }
+
+.liked-tile { width: 172px; height: 172px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); flex-shrink: 0; }
+
+.liked-tile.sm { width: 100%; aspect-ratio: 1; height: auto; border-radius: var(--radius-sm); }
+
+.liked-tile .lt { width: 52px; height: 52px; color: #fff; }
+
+.liked-title { font-size: clamp(28px, 4.6vw, 54px); font-weight: 800; letter-spacing: -0.04em; margin: 8px 0 10px; }
+
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(172px, 1fr)); gap: 8px; }
+
+.lib-liked { background: transparent; border-radius: var(--radius-md); padding: 12px; text-decoration: none; color: var(--ink); transition: background var(--dur-short); }
+
+.lib-liked:hover { background: var(--bg-raised); }
+
+.lib-liked .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; }
+
+.lib-liked .c-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 3px; }
+
+.pl-toolbar { margin-bottom: 18px; }
+
+.cover .mosaic { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; }
+
+.cover .mosaic span { background-size: cover; background-position: center; }
+
+.cover .ph .ic { width: 34px; height: 34px; }
+
+
+/* ---------- 스토어 ---------- */
+.store-nav { display: flex; gap: 22px; border-bottom: 1px solid var(--paper-rule); padding-bottom: 14px; margin-bottom: 26px; overflow-x: auto; }
+
+.sn-item { font-size: 13.5px; font-weight: 600; color: var(--paper-muted); cursor: pointer; white-space: nowrap; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+
+.sn-item:hover { color: var(--paper-ink); }
+
+.sn-item.on { color: var(--paper-ink); font-weight: 800; border-bottom-color: var(--paper-ink); }
+
+.store-hero { display: grid; grid-template-columns: 1fr 320px; align-items: center; gap: 30px; background: #f6f6f7; padding: 40px; margin-bottom: 34px; }
+
+.sh-eyebrow { font-size: 11.5px; font-weight: 800; letter-spacing: .22em; color: var(--paper-muted); margin-bottom: 12px; }
+
+.sh-text h2 { font-size: clamp(22px, 2.8vw, 34px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.32; color: var(--paper-ink); }
+
+.sh-sub { font-size: 13.5px; color: #6b6d74; margin-top: 12px; }
+
+.sh-img { height: 200px; background-size: cover; background-position: center; box-shadow: var(--shadow-lg); }
+ .store-hero { grid-template-columns: 1fr; }
+ .sh-img { height: 160px; }
+
+.sort-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; font-size: 12.5px; color: var(--paper-muted); }
+
+.sort-bar select { border: 1px solid #d9dade; background: #fff; color: var(--paper-ink); font-family: inherit; font-size: 12.5px; padding: 7px 12px; border-radius: 2px; }
+
+.pd-sec { margin-top: 46px; }
+
+.pd-sec h2 { font-size: 20px; }
+
+
+/* ---------- 마이페이지 ---------- */
+.mp-hero { display: flex; align-items: flex-end; gap: 26px; padding: calc(var(--gnb-h) + 56px) var(--gutter) 30px; background: linear-gradient(180deg, rgb(var(--accent-rgb) / .3) 0%, rgb(var(--accent-deep-rgb) / .12) 46%, var(--bg) 100%); }
+
+.mp-avatar { width: 168px; height: 168px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); display: flex; align-items: center; justify-content: center; font-size: 68px; font-weight: 800; color: #fff; box-shadow: var(--shadow-lg); flex-shrink: 0; }
+
+.mp-name { font-size: clamp(32px, 5.4vw, 68px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.05; margin: 8px 0 12px; }
+
+.mp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 34px; }
+</style></head><body><div>x</div></body></html>

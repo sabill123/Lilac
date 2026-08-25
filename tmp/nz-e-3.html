@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+body.has-3d-chart .ch-stage { opacity: 1; }
+
+.chart-hero { position: relative; overflow: hidden; }
+
+.chart-hero .ch-inner { position: relative; z-index: 2; }
+
+/* 컨트롤 뒤에 옅은 판을 깔아 3D와 겹쳐도 읽히게 한다 */
+body.has-3d-chart .ch-controls {
+  position: relative;
+  z-index: 3;
+}
+
+/* 컨트롤과 무대가 겹치지 않으므로 별도 배경이 필요 없다 */
+body.has-3d-chart .chart-hero {
+  /* 1위 한 점만 전시하므로 히어로가 클 필요가 없다.
+     예전엔 여러 작품을 걸어 62vh를 썼는데, 지금은 컨트롤 아래 빈 공간만 생긴다. */
+  min-height: min(48vh, 430px);
+  display: flex;
+  align-items: center;
+  padding-top: 28px;
+}
+
+/* 무대가 오른쪽에만 있으므로 텍스트를 덮는 막은 두지 않는다 */
+body.has-3d-chart .chart-hero::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 26%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
+
+
+/* 3D 열에서 현재 맨 앞에 온 곡 */
+.ch-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: var(--hairline);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: chNowIn 380ms var(--ease-out) both;
+}
+ from { opacity: 0; transform: translateY(6px); }
+ to { opacity: 1; transform: none; }
+
+.ch-now-rank {
+  display: grid;
+  place-items: center;
+  min-width: 26px; height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px; font-weight: 800;
+}
+
+.ch-now-text { font-size: 13px; color: var(--ink); }
+
+
+/* 3D 조작 안내 — 처음 보는 사람은 드래그할 수 있다는 걸 모른다 */
+.stage-hint {
+  position: absolute;
+  right: 18px; bottom: 16px;
+  z-index: 3;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  animation: hintFade 5.5s ease-out both;
+}
+
+  0%, 62% { opacity: 1; }
+
+  100% { opacity: 0; }
+
+  .bb-stage, .ch-stage { inset: 0; opacity: 0.42 !important; }
+
+  .bb-stage, .ch-stage { display: none; }
+
+  body.has-3d-hero .bb-card { opacity: 1; pointer-events: auto; }
+
+  body.has-3d-chart .chart-hero { min-height: 0; }
+
+
+/* ═══ 보관함 재설계 ═══════════════════════════════════════
+   기존에는 플레이리스트·아티스트·좋아요가 한 목록에 섞여 있어
+   "무엇이 있는지"는 보여도 "무엇을 할지"가 보이지 않았다.
+   목적이 다른 것을 섹션으로 나누고, 가장 자주 하는 행동(이어 듣기)을 맨 위에 둔다. */
+
+.lib2 { padding: 0 var(--gutter) 80px; max-width: 1500px; margin: 0 auto; }
+
+
+/* ── 헤더: 요약을 숫자로 먼저 보여준다 ── */
+.lib2-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 44px 0 26px;
+}
+
+.lib2-title { font-size: clamp(30px, 4vw, 46px); font-weight: 800; letter-spacing: -0.03em; margin: 6px 0 8px; }
+
+.lib2-sub { color: var(--ink-muted); font-size: 14px; }
+
+.lib2-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.lib2-stats > div {
+  min-width: 96px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+}
+
+.lib2-stats dt { font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+
+.lib2-stats dd { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+
+
+/* ── 툴바 ── */
+.lib2-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  background: linear-gradient(var(--page) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lib2-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.lib2-tools { display: flex; align-items: center; gap: 8px; }
+
+
+/* ── 이어 듣기 ── */
+.lib2-sec { margin-top: 30px; }
+
+.sec-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.lib2-continue {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 10px;
+}
+
+.lc-cont {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 0 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-out);
+}
+
+.lc-cont:hover { background: var(--bg-soft); }
+
+.lc-cont-art { flex: 0 0 auto; width: 62px; height: 62px; background: var(--bg-soft); }
+
+.lc-cont-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lc-cont-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.lc-cont-txt b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-cont-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-cont-play {
+  flex: 0 0 auto;
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  opacity: 0;
+  transform: scale(.82);
+  transition: opacity var(--dur-micro), transform var(--dur-micro) var(--ease-out);
+}
+</style></head><body><div>x</div></body></html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+
+/* 닫힌 오버레이는 탭 순서에서 완전히 제외 (스킵 링크·본문 포커스 방해 방지) */
+.modal:not(.show), .onboard:not(.show), .np-full:not(.show) { visibility: hidden; }
+
+.modal.show, .onboard.show, .np-full.show { visibility: visible; }
+
+.right-dock:not(.show) { visibility: hidden; }
+
+.right-dock.show { visibility: visible; }
+
+.player:not(.show) { visibility: hidden; }
+
+.player.show { visibility: visible; }
+
+
+/* 터치 기기(JS 판별) — 미디어쿼리를 지원하지 않는 환경까지 커버 */
+html.touch [data-tilt] { transform: none !important; }
+
+html.touch .glare { display: none; }
+
+html.touch .card.expanded .cover { transform: none; box-shadow: none; }
+
+html.touch .pl-title.marquee { animation: none; transform: none; }
+
+html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; transform: none; }
+
+
+/* 한글 검색 → 일본어 표기 안내 */
+.sr-translit { font-size: 13px; color: var(--ink-muted); margin-top: 8px; }
+
+.sr-translit b { color: var(--accent); font-weight: 700; }
+
+
+/* ============================================================
+   Focus Desk — 업무 청취 + macOS 메뉴바 companion
+   ============================================================ */
+.focus-shell {
+  --focus-tone: var(--accent);
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: 100vh; padding: clamp(58px, 7vw, 96px) clamp(20px, 5vw, 74px) 100px;
+  background:
+    radial-gradient(circle at 78% 8%, color-mix(in srgb, var(--focus-tone) 24%, transparent), transparent 30%),
+    linear-gradient(180deg, #121019 0%, #0b0c0f 52%);
+}
+
+.focus-aurora { position: absolute; z-index: -1; width: 520px; height: 520px; right: -180px; top: 260px; border-radius: 50%; background: var(--focus-tone); opacity: .08; filter: blur(90px); transition: background .6s var(--ease-out); }
+
+.focus-head { max-width: 1440px; margin: 0 auto 48px; display: flex; align-items: end; justify-content: space-between; gap: 44px; }
+
+.focus-kicker, .focus-section-label { color: var(--focus-tone); font-size: 11px; line-height: 1; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+
+.focus-kicker { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; }
+
+.focus-kicker span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 1px 3px rgba(0,0,0,.28); }
+
+.focus-head h1 { max-width: 760px; font-size: clamp(44px, 6vw, 88px); line-height: .98; letter-spacing: -0.03em; font-weight: 760; word-break: keep-all; }
+
+.focus-head > div > p:last-child { max-width: 610px; margin-top: 24px; color: var(--ink-muted); font-size: 16px; line-height: 1.75; }
+
+.focus-status-card { flex: 0 0 330px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); backdrop-filter: blur(18px); box-shadow: var(--shadow-lg); }
+
+.focus-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #5FC98C; box-shadow: 0 1px 3px rgba(0,0,0,.28); }
+
+.focus-status-card b { display: block; font-size: 13px; }
+
+.focus-status-card small { display: block; margin-top: 2px; color: var(--ink-faint); font-size: 11px; }
+
+.focus-mac-badge { padding: 4px 7px; border-radius: 6px; color: var(--ink-muted); background: rgba(255,255,255,.07); font: 600 10px/1.2 ui-monospace, SFMono-Regular, monospace; }
+
+
+.focus-grid { max-width: 1440px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .75fr); gap: 18px; align-items: stretch; }
+
+.focus-player-card, .focus-curator { border: 1px solid rgba(255,255,255,.09); border-radius: 24px; background: rgba(18,18,24,.88); box-shadow: var(--shadow-lg); overflow: hidden; }
+
+.focus-player-card { padding: 10px; }
+
+.focus-video { position: relative; aspect-ratio: 16 / 9; min-height: 240px; overflow: hidden; border-radius: 17px; background: #08080b; }
+
+.focus-video iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+.focus-duck-pill { position: absolute; left: 50%; bottom: 16px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 999px; background: rgba(10,10,14,.82); backdrop-filter: blur(14px); color: #e7e7ed; font-size: 11px; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: .3s var(--ease-out); }
+
+.focus-duck-pill span { width: 6px; height: 6px; border-radius: 50%; background: #ffd166; }
+
+.focus-shell.ducking .focus-duck-pill { transform: translate(-50%, 0); opacity: 1; }
+
+.focus-now { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 22px 14px 16px; }
+
+.focus-now small { color: var(--focus-tone); font: 700 9.5px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: 0.06em; }
+
+.focus-now h2 { margin-top: 7px; font-size: clamp(19px, 2vw, 27px); letter-spacing: -.035em; }
+
+.focus-now p { margin-top: 3px; color: var(--ink-faint); font-size: 12px; }
+
+.focus-session-clock { text-align: right; }
+
+.focus-session-clock span { display: block; font: 600 clamp(25px, 3vw, 38px)/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -0.03em; }
+
+.focus-session-clock small { margin-top: 7px; letter-spacing: 0; color: var(--ink-faint); }
+</style></head><body><div>x</div></body></html>

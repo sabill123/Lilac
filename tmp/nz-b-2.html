@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.bb-actions { margin-top: 28px; }
+
+.bb-card { width: clamp(200px, 24vw, 300px); aspect-ratio: 1; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.06); transform: rotate(-1.5deg); transition: transform var(--dur-long) var(--ease-out); }
+
+.bb-card:hover { transform: rotate(0deg) scale(1.02); }
+
+.bb-card-inner { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-soft); }
+ .bb-inner { grid-template-columns: 1fr; }
+ .bb-card { display: none; }
+ 100% { background-position: -200% 0; }
+
+.sk { background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-soft) 37%, var(--bg-raised) 63%); background-size: 200% 100%; animation: shimmer 1.25s linear infinite; border-radius: var(--radius-sm); display: block; }
+
+.sk.rd { border-radius: 50%; }
+
+.sk-list { display: flex; flex-direction: column; gap: 4px; }
+
+.sk-row { display: grid; grid-template-columns: 40px 56px 1fr; align-items: center; gap: 14px; padding: 10px 12px; }
+
+.sk-n { width: 16px; height: 14px; margin: 0 auto; }
+
+.sk-art { width: 56px; height: 56px; border-radius: 4px; }
+
+.sk-tt { display: flex; flex-direction: column; gap: 7px; }
+
+.sk-l1 { width: 42%; height: 13px; }
+
+.sk-l2 { width: 24%; height: 11px; margin-top: 6px; }
+
+.card .cover.sk { aspect-ratio: 1; }
+
+
+/* ---------- 빈 상태 ---------- */
+.empty-box { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 56px 20px; border: 1px dashed var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-lg); }
+
+.empty-box .eb { width: 34px; height: 34px; color: var(--ink-faint); margin-bottom: 14px; }
+
+.empty-box p { font-size: 15px; font-weight: 700; }
+
+.empty-box span { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
+
+
+/* ---------- 무드 타일 ---------- */
+.mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 6px; }
+
+.mood { position: relative; aspect-ratio: 16/9; border-radius: var(--radius-md); overflow: hidden; background: var(--m); padding: 16px; text-decoration: none; color: #fff; display: block; transition: transform var(--dur-short) var(--ease-out); }
+
+.mood:hover { transform: scale(1.02); }
+
+.mood-k { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; position: relative; z-index: 1; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
+
+.mood-sq { position: absolute; right: -12px; bottom: -10px; width: 76px; height: 76px; background-size: cover; background-position: center; background-color: rgba(0,0,0,.25); transform: rotate(24deg); box-shadow: var(--shadow-md); border-radius: 3px; }
+
+
+/* ---------- GNB 스크롤 반응 ---------- */
+.gnb { background: transparent; border-bottom-color: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; transition: background var(--dur-short), border-color var(--dur-short), backdrop-filter var(--dur-short); }
+
+.gnb.scrolled { background: rgba(11,12,15,.88); border-bottom-color: var(--rule); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); }
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: none; }
+
+#page > * { animation: pageIn .42s var(--ease-out) both; }
+
+#page > *:nth-child(2) { animation-delay: .04s; }
+
+#page > *:nth-child(3) { animation-delay: .08s; }
+
+#page > *:nth-child(4) { animation-delay: .12s; }
+ #page > *, .sk { animation: none !important; }
+
+
+/* ---------- 플레이어 마이크로 인터랙션 ---------- */
+.pl-bar { position: relative; }
+
+.pl-fill { position: relative; }
+
+.pl-fill::after { content: ''; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: #fff; transform: translateY(-50%) scale(0); transition: transform var(--dur-micro); box-shadow: var(--shadow-sm); }
+
+.pl-bar:hover .pl-fill::after { transform: translateY(-50%) scale(1); }
+
+.pl-art { transition: transform var(--dur-short) var(--ease-out); }
+
+.pl-left:hover .pl-art { filter: brightness(1.08); }
+</style></head><body><div>x</div></body></html>

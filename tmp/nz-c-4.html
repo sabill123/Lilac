@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+body:not(.play-mode) .sp-table.sticky .t-head { background: rgba(11,12,15,.94); }
+
+.t-acts { display: flex; align-items: center; gap: 4px; justify-self: end; }
+
+.t-a { border: none; background: none; color: var(--ink-faint); padding: 6px; border-radius: 50%; display: flex; opacity: 0; transition: opacity var(--dur-micro), color var(--dur-micro); cursor: pointer; }
+
+.t-a .ic { width: 16px; height: 16px; }
+
+.t-row:hover .t-a, .t-a.on { opacity: 1; }
+
+.t-a:hover { color: var(--ink); }
+
+.t-a.on { color: var(--accent); }
+
+.t-x { position: static; transform: none; }
+
+.t-row.dragging { opacity: .4; }
+
+.t-row.drop-tgt { box-shadow: inset 0 2px 0 var(--accent); }
+
+.sp-desc { font-size: 13.5px; color: var(--ink-muted); margin-top: 8px; }
+
+.sp-title { cursor: pointer; }
+
+.sp-title:hover { text-decoration: none; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+
+.sp-find { display: flex; align-items: center; gap: 8px; background: var(--bg-soft); border-radius: 999px; padding: 0 14px; height: 36px; width: 240px; margin-left: auto; }
+
+.sp-find .ic { color: var(--ink-muted); flex-shrink: 0; }
+
+.sp-find input { flex: 1; background: none; border: none; outline: none; color: var(--ink); font-family: inherit; font-size: 13px; min-width: 0; }
+
+
+/* 추천 항목 */
+.sp-reco { margin-top: 42px; padding-top: 26px; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
+
+.reco-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+
+.reco-head h3 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+
+.reco-head span { font-size: 12.5px; color: var(--ink-faint); }
+
+.reco-list { display: flex; flex-direction: column; }
+
+.reco-row { display: grid; grid-template-columns: 44px 1fr 2fr auto; align-items: center; gap: 14px; padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--dur-micro); }
+
+.reco-row:hover { background: var(--bg-soft); }
+
+.reco-row img { width: 44px; height: 44px; border-radius: 4px; object-fit: cover; background: var(--bg-soft); }
+
+.reco-meta { min-width: 0; display: flex; flex-direction: column; }
+
+.reco-meta b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.reco-meta i { font-size: 12px; font-style: normal; color: var(--ink-muted); }
+
+.reco-al { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.reco-add { border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); background: transparent; color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 700; padding: 7px 16px; border-radius: 999px; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
+
+.reco-add:hover { border-color: var(--ink); transform: scale(1.03); }
+
+  :root { --gutter: 16px; --player-h: 72px; --tb-h: 56px; }
+
+  .app { padding: 0; height: calc(100vh - var(--player-h) - 56px); }
+
+  .topbar { gap: 10px; }
+
+  .tb-brand { font-size: 19px; }
+
+  .tb-menu { display: none !important; }
+
+  .tb-right { gap: 6px; }
+
+  .tb-signup, .tb-link { font-size: 12.5px; padding: 7px 12px; }
+
+  section.billboard { height: auto; min-height: 0; padding: calc(var(--tb-h) + 20px) 0 24px; }
+
+  .bb-inner { grid-template-columns: 1fr; gap: 20px; }
+
+  .bb-title { font-size: clamp(30px, 9vw, 44px); }
+
+  .bb-meta { font-size: 15px; margin-top: 10px; }
+</style></head><body><div>x</div></body></html>

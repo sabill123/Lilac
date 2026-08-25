@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.store-wrap .p-flag.kr { background: rgba(37, 99, 235, 0.1); color: #2563eb; }
+
+
+/* 원산지 세그먼트 — 가장 상위 필터라 무게를 준다 */
+.origin-chips { margin-bottom: 4px; }
+
+.chip.strong { font-weight: 700; }
+
+
+/* 아티스트 칩을 국가별로 묶어 스캔 가능하게 */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  border: 1px solid var(--paper-rule, var(--rule));
+  border-radius: 12px;
+}
+
+.chip-group + .chip-group { margin-top: 2px; }
+
+.chip-group-label {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.store-wrap .chip-group-label { background: #f1f1f3; color: #6b6d73; }
+
+
+/* 필터 칩의 건수 표기 */
+.chip .cnt {
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bg-tint);
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.chip.on .cnt { background: rgba(0, 0, 0, 0.16); color: inherit; }
+
+
+/* ── 서비스 상태 페이지 ─────────────────────────────────── */
+.svc-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px; margin-bottom: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline), var(--shadow-sm);
+}
+
+.svc-head > div { display: flex; flex-direction: column; gap: 2px; }
+
+.svc-head b { font-size: 15px; }
+
+.svc-head span { font-size: 12px; color: var(--ink-muted); }
+
+.svc-dot {
+  flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%;
+  background: #2ecc71; box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.16);
+}
+
+.svc-head.bad .svc-dot { background: var(--danger); box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.18); }
+
+
+.svc-list { display: flex; flex-direction: column; gap: 2px; }
+
+.svc-row {
+  display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 1.4fr) auto;
+  gap: 12px; align-items: center;
+  padding: 13px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.svc-row.bad { background: rgba(229, 72, 77, 0.08); }
+
+.svc-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.svc-name b { font-size: 14px; }
+
+.svc-state {
+  padding: 2px 7px; border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(46, 204, 113, 0.14); color: #2ecc71;
+}
+
+.svc-state.bad { background: rgba(229, 72, 77, 0.16); color: var(--danger); }
+
+.svc-kind { font-size: 11px; color: var(--ink-faint); }
+
+.svc-detail { font-size: 13px; color: var(--ink-muted); }
+
+.svc-age { font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+
+.svc-age.fresh { color: #2ecc71; }
+
+.svc-age.stale { color: #e0a336; }
+
+.svc-age.old   { color: var(--danger); }
+
+.svc-age.na    { color: var(--ink-faint); }
+
+
+.svc-sub { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 16px 10px; }
+
+.svc-chip {
+  padding: 3px 8px; border-radius: 999px;
+  background: var(--bg-soft); color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.svc-chip b { color: var(--ink); margin-left: 3px; }
+
+.svc-chip.bad { background: rgba(229, 72, 77, 0.14); color: var(--danger); }
+
+
+.svc-note {
+  margin-top: 26px; padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule, rgba(255,255,255,0.055));
+}
+
+.svc-note h3 { font-size: 14px; margin-bottom: 6px; }
+
+.svc-note p { font-size: 13px; color: var(--ink-muted); line-height: 1.65; }
+
+  .svc-row { grid-template-columns: 1fr auto; }
+
+  .svc-detail { grid-column: 1 / -1; }
+
+
+  /* 원근 컨테이너 — 자식이 3D 공간을 공유하게 한다 */
+  .d3-stage {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+  }
+
+    .d3-rise {
+      animation: d3Rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 62%;
+      transform-origin: 50% 100%;
+    }
+</style></head><body><div>x</div></body></html>

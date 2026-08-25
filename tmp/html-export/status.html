@@ -160,7 +160,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .card .hover-play { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); opacity: 0; transform: translateY(8px); transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), background var(--dur-micro); }
 .card .hover-play .ic { width: 20px; height: 20px; }
 .card:hover .hover-play, .card.playing .hover-play { opacity: 1; transform: none; }
-.card .hover-play:hover { background: var(--accent-hover); transform: scale(1.05); }
+.card .hover-play:hover { background: var(--accent-hover); }
 .card .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .c-sub { margin-top: 3px; font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card.round { text-align: center; }
@@ -203,7 +203,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .ev-card .ev-scrim { position: absolute; inset: 0px; background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 8%, rgba(0, 0, 0, 0.18) 60%, transparent); }
 .ev-card .ev-body { position: absolute; inset: 0px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: flex-end; }
 .ev-card .ev-type { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; color: var(--ink); background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); padding: 3px 9px; border-radius: 999px; }
-.ev-card .ev-dday { position: absolute; top: 12px; right: 12px; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); text-shadow: rgba(0, 0, 0, 0.6) 0px 1px 8px; }
+.ev-card .ev-dday { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .ev-card .ev-dday.urgent { color: rgb(255, 107, 110); }
 .ev-card .ev-title { font-size: 15px; font-weight: 700; line-height: 1.35; text-shadow: rgba(0, 0, 0, 0.5) 0px 1px 10px; }
 .ev-card .ev-info { font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
@@ -218,8 +218,11 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 78%; height: 78%; object-fit: cover; box-shadow: var(--shadow-md); transition: transform var(--dur-short) var(--ease-out); }
 .p-card:hover .p-img img { filter: brightness(1.06); }
-.p-card .p-badge { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; background: var(--paper-ink); color: rgb(255, 255, 255); padding: 3px 8px; }
-.p-card .p-brand { margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-card .p-card .p-brand { margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-bn { min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-ed { flex-shrink: 0; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: rgba(0, 0, 0, 0.06); color: var(--paper-muted); }
+.p-ed.ltd { background: var(--paper-ink); color: rgb(255, 255, 255); }
+.p-low { color: rgb(194, 65, 12); font-weight: 800; }
 .p-card .p-name { margin-top: 3px; font-size: 13.5px; font-weight: 500; color: var(--paper-ink); line-height: 1.4; }
 .p-card .p-price { margin-top: 5px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .footer { padding: 36px var(--gutter) 48px; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
@@ -693,7 +696,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .bb-tag { margin-top: 6px; font-size: 13.5px; color: var(--ink-muted); }
 .bb-actions { margin-top: 28px; }
 .bb-card { width: clamp(200px, 24vw, 300px); aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.06); transform: rotate(-1.5deg); transition: transform var(--dur-long) var(--ease-out); }
-.bb-card:hover { transform: rotate(0deg) scale(1.02); }
+.bb-card:hover { transform: rotate(0deg); }
 .bb-card-inner { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-soft); }
 @media (max-width: 900px) {
   .bb-inner { grid-template-columns: 1fr; }
@@ -718,7 +721,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .empty-box span { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
 .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 6px; }
 .mood { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: var(--m); padding: 16px; text-decoration: none; color: rgb(255, 255, 255); display: block; transition: transform var(--dur-short) var(--ease-out); }
-.mood:hover { transform: scale(1.02); }
+.mood:hover { }
 .mood-k { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; position: relative; z-index: 1; text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 10px; }
 .mood-sq { position: absolute; right: -12px; bottom: -10px; width: 76px; height: 76px; background-size: cover; background-position: center center; background-color: rgba(0, 0, 0, 0.25); transform: rotate(24deg); box-shadow: var(--shadow-md); border-radius: 3px; }
 .gnb { background: transparent; border-bottom-color: transparent; backdrop-filter: none; transition: background var(--dur-short), border-color var(--dur-short), backdrop-filter var(--dur-short); }
@@ -891,7 +894,7 @@ body.playing .np-full.show .np-disc::after { animation: 6s linear 0s infinite no
 .glare { position: absolute; inset: 0px; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity var(--dur-short); background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.34), transparent 46%); mix-blend-mode: overlay; }
 [data-tilt]:hover .glare { opacity: 1; }
 .bb-card { transform: perspective(900px) rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); position: relative; }
-.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.03); }
+.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
 .card { position: relative; }
 .card.expanded { z-index: 20; }
 .card.expanded .cover { transform: scale(1.14); box-shadow: var(--shadow-lg); }
@@ -1295,7 +1298,6 @@ body.play-mode .pd-ul li.dim { color: var(--ink-faint); }
 body.play-mode .p-card .p-img { background: var(--bg-raised); border-radius: var(--radius-sm); }
 body.play-mode .p-card .p-name { color: var(--ink); }
 body.play-mode .p-card .p-price { color: var(--ink); }
-body.play-mode .p-badge { background: rgba(0, 0, 0, 0.7); color: var(--ink); border-radius: 999px; }
 body.play-mode .on-light .rk-row { border-bottom-color: var(--rule); }
 body.play-mode .on-light .rk-row:hover { background: var(--bg-soft); }
 body.play-mode .on-light .rk-t { color: var(--ink); }
@@ -1381,7 +1383,6 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .ar-hero { overflow: hidden; }
 section.billboard { overflow: hidden; }
 .src-badge { font-size: 11px; padding: 3px 9px; }
-.p-badge { font-size: 11px; }
 .cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .cal-arrow { width: 34px; height: 34px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--bg-soft); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
 .cal-arrow:hover { color: var(--ink); background: var(--bg-hover); transform: scale(1.05); }
@@ -1430,8 +1431,6 @@ body:not(.play-mode) .st-bar { color: var(--paper-muted); }
 .st-more { min-width: 190px; justify-content: center; }
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 100%; height: 100%; object-fit: cover; box-shadow: none; }
-.p-badge.ltd { background: var(--accent); color: var(--accent-ink); }
-.p-stock { position: absolute; bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.72); color: rgb(255, 255, 255); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
 .p-sub { font-size: 11.5px; color: var(--paper-muted); margin-top: 3px; }
 body.play-mode .p-sub { color: var(--ink-faint); }
 .pd-meta-line { font-size: 12.5px; color: var(--paper-muted); margin-top: 6px; }
@@ -1701,7 +1700,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-duration-row { grid-template-columns: repeat(4, 1fr); }
 .focus-mode-row button, .focus-duration-row button { min-height: 35px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; background: rgba(255, 255, 255, 0.035); color: var(--ink-faint); font-size: 11px; font-weight: 650; }
 .focus-mode-row button.on, .focus-duration-row button.on { color: var(--ink); border-color: color-mix(in srgb, var(--focus-tone) 50%, transparent); background: color-mix(in srgb, var(--focus-tone) 12%, transparent); }
-.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: 0 10px 30px color-mix(in srgb, var(--focus-tone) 20%, transparent); }
+.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: rgba(0, 0, 0, 0.28) 0px 1px 3px; }
 .focus-ai-btn:disabled { opacity: 0.6; cursor: wait; }
 .focus-ai-btn span { margin-right: 5px; }
 .focus-ai-result { min-height: 64px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
@@ -2152,7 +2151,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 .nm-danger:hover { filter: brightness(1.1); }
 .dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0px 12px; }
 .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
+.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
 .topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
 #topbar { view-transition-name: lilac-topbar; }
 #player { view-transition-name: lilac-player; }
@@ -2294,7 +2293,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
       <span class="svc-dot"></span>
       <div>
         <b>모든 서비스 정상</b>
-        <span>백엔드 가동 3시간 43분 · 2026. 8. 25. 오후 8:53:05 기준</span>
+        <span>백엔드 가동 43분 · 2026. 8. 25. 오후 9:37:35 기준</span>
       </div>
     </div>
     <div class="svc-list">
@@ -2305,7 +2304,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">외부 수집</span>
           </div>
           <div class="svc-detail">12개 소스 · 891건</div>
-          <div class="svc-age fresh">31시간 전</div>
+          <div class="svc-age fresh">32시간 전</div>
         </div>
         <div class="svc-sub"><span class="svc-chip ">일본 apple <b>50</b></span><span class="svc-chip ">일본 appleRss <b>50</b></span><span class="svc-chip ">일본 youtube <b>45</b></span><span class="svc-chip ">일본 billboard <b>100</b></span><span class="svc-chip ">일본 oricon <b>30</b></span><span class="svc-chip ">일본 combined <b>138</b></span><span class="svc-chip ">한국 apple <b>50</b></span><span class="svc-chip ">한국 appleRss <b>50</b></span><span class="svc-chip ">한국 youtube <b>43</b></span><span class="svc-chip ">한국 melon <b>100</b></span><span class="svc-chip ">한국 genie <b>50</b></span><span class="svc-chip ">한국 combined <b>185</b></span></div><div class="svc-row ">
           <div class="svc-name">
@@ -2314,7 +2313,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">외부 수집</span>
           </div>
           <div class="svc-detail">450건 (일본반 240 · 한국반 210)</div>
-          <div class="svc-age fresh">27시간 전</div>
+          <div class="svc-age fresh">28시간 전</div>
         </div>
         <div class="svc-row ">
           <div class="svc-name">
@@ -2350,7 +2349,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">자동 생성</span>
           </div>
           <div class="svc-detail">6,161개 표기</div>
-          <div class="svc-age fresh">6시간 전</div>
+          <div class="svc-age fresh">7시간 전</div>
         </div>
         <div class="svc-row ">
           <div class="svc-name">
@@ -2385,7 +2384,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <b>Spotify Web API</b>
             <span class="svc-kind">선택 통합</span>
           </div>
-          <div class="svc-detail">미설정 — SPOTIFY_CLIENT_ID/SECRET 등록 시 활성화 (무료)</div>
+          <div class="svc-detail">미설정: SPOTIFY_CLIENT_ID/SECRET 등록 시 활성화 (무료)</div>
           <div class="svc-age na">상시</div>
         </div>
         

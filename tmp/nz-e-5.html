@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+  .lt-row { grid-template-columns: 22px 40px 1fr 30px; gap: 9px; }
+
+
+/* 1위 전시 안내 — 무대 아래 오른쪽 */
+body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
+
+  .ch-stage { inset: 40px 2% 72px 38%; opacity: 0.9 !important; }
+
+
+/* 소스 배지는 기본으로 접는다. 100행을 훑을 때 필요한 정보가 아니다.
+   행에 마우스를 올리거나 포커스가 닿으면 편다. 접힌 동안에는 개수만 보여
+   "여러 차트에 올라 있다"는 사실은 잃지 않는다. */
+.rk-ranks { display: none; }
+
+.rk-row:hover .rk-ranks, .rk-row:focus-within .rk-ranks { display: inline-flex; }
+
+.rk-row:hover .rk-srcn, .rk-row:focus-within .rk-srcn { display: none; }
+
+.rk-srcn {
+  font-size: 11.5px; font-weight: 700; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* 변동 표시는 순위에 붙는 성질이라 순위 칸 안에 둔다 */
+.rk-n .rk-move { display: block; font-size: 11px; margin-top: 1px; }
+
+/* 순위 소스 배지 — 히어로(.billboard)와 클래스명이 겹치므로 명시적으로 고정한다 */
+.rk-ranks .mini-rank {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+
+/* ── 이름 입력 모달 (prompt 대체) ─────────────────────── */
+.name-modal { display: grid; place-items: center; background: rgba(0, 0, 0, 0.55); position: fixed; inset: 0; z-index: 300; }
+
+.nm-card {
+  width: min(92vw, 380px);
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline), var(--shadow-lg);
+}
+
+.nm-title { font-size: 15px; margin-bottom: 14px; }
+
+.nm-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.nm-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.nm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+
+.nm-msg { font-size: 14px; line-height: 1.6; }
+
+.nm-danger { background: var(--danger); color: #fff; }
+
+.nm-danger:hover { filter: brightness(1.1); }
+
+
+.dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0 12px; }
+
+.topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.topup-opt {
+  padding: 14px 10px;
+  border: 1px solid var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-micro), background var(--dur-micro);
+}
+
+.topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
+
+
+/* ═══ View Transitions — 페이지 전환 ═══════════════════════
+   셸(톱바·사이드바·플레이어)은 고정하고 내용만 넘어가게 한다.
+   전환은 짧고(280ms) 방향이 느껴지는 정도로만. */
+
+#topbar { view-transition-name: lilac-topbar; }
+
+#player { view-transition-name: lilac-player; }
+
+.sidebar { view-transition-name: lilac-sidebar; }
+
+  ::view-transition-old(root) {
+    animation: vtLeave 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vtEnter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+    to { opacity: 0; transform: translateY(-10px) scale(0.994); }
+
+    from { opacity: 0; transform: translateY(14px) scale(0.996); }
+
+  /* 셸은 스냅숏이 동일하므로 애니메이션을 걸지 않는다 */
+  ::view-transition-old(lilac-topbar), ::view-transition-new(lilac-topbar),
+  ::view-transition-old(lilac-player), ::view-transition-new(lilac-player),
+  ::view-transition-old(lilac-sidebar), ::view-transition-new(lilac-sidebar) {
+    animation: none;
+  }
+
+  .ar-head { gap: 16px; padding-bottom: 20px; }
+
+  .ar-portrait { width: 96px; border-radius: 10px; }
+
+  .ar-name { font-size: clamp(26px, 9vw, 40px); }
+
+
+/* 실시간 소스 배지 — 수집(주기)과 구분 */
+.live-badge.rt { background: rgba(46, 204, 113, 0.16); color: #2ecc71; }
+
+
+/* 아티스트 카드 — 이미지가 로드되면 이니셜 플레이스홀더를 가린다.
+   원형 마스크 밖으로 글자가 비쳐 보이던 문제. */
+.ars-cover { position: relative; }
+
+.ars-cover img { position: relative; z-index: 1; }
+
+.ars-cover:has(img) .ph { display: none; }
+
+.la-art:has(img) { font-size: 0; }
+</style></head><body><div>x</div></body></html>

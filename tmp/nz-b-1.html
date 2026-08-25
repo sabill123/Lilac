@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.mp-card { background: var(--bg-raised); border: 1px solid var(--rule, rgba(255,255,255,0.055)); border-radius: var(--radius-md); padding: 22px; }
+
+.mp-card.accent { background: linear-gradient(135deg, rgb(var(--accent-rgb) / .16), rgb(var(--accent-deep-rgb) / .06)); border-color: rgb(var(--accent-rgb) / .3); }
+
+.mp-k { font-size: 12px; font-weight: 700; color: var(--ink-muted); }
+
+.mp-v { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 8px; }
+
+.mp-v.num { font-size: 30px; font-variant-numeric: tabular-nums; }
+
+.mp-s { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+
+.mp-section { margin-bottom: 34px; }
+
+.mp-section h3 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 14px; }
+
+.mp-row { display: grid; grid-template-columns: 140px 1fr auto; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--rule, rgba(255,255,255,0.055)); }
+
+.mp-label { font-size: 13px; color: var(--ink-muted); font-weight: 600; }
+
+.mp-field { font-size: 14px; }
+
+.mp-field.dim { color: var(--ink-muted); }
+
+.mp-field.num { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+
+.mp-field input { width: min(320px, 100%); background: var(--bg); border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--ink); font-size: 14px; font-family: inherit; outline: none; }
+
+.mp-field input:focus { border-color: var(--accent); }
+
+.mp-hint { font-size: 11.5px; color: var(--ink-faint); }
+
+.mp-row .btn-ghost-sm { margin-top: 0; }
+
+.mp-empty { font-size: 13px; color: var(--ink-faint); padding: 10px 0; }
+
+.mp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+.mp-table th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--ink-faint); padding: 10px 12px; border-bottom: 1px solid var(--rule, rgba(255,255,255,0.055)); }
+
+.mp-table td { padding: 14px 12px; border-bottom: 1px solid var(--rule, rgba(255,255,255,0.055)); vertical-align: top; }
+
+.mp-table td.num, .mp-table td .dim { font-variant-numeric: tabular-nums; }
+
+.mp-table td .dim { font-size: 11.5px; color: var(--ink-faint); }
+
+.mp-status { font-size: 11.5px; font-weight: 700; color: var(--accent); background: rgb(var(--accent-rgb) / .14); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+ .mp-row { grid-template-columns: 1fr; gap: 8px; }
+ .mp-table { font-size: 12px; }
+
+
+/* 인증 카드 로고 */
+.auth-logo { font-size: 24px; font-weight: 800; color: var(--accent); letter-spacing: -0.03em; margin-bottom: 18px; }
+
+.auth-card .btn-pill { margin-top: 8px; }
+
+
+/* ============================================================
+   v0.5 — 디자인 폴리시
+   대표색 동적 헤더 · 히어로 재구성 · 스켈레톤 · 무드 타일
+   · 마이크로 인터랙션 · 모바일 네비
+   ============================================================ */
+
+/* ---------- 아트워크 대표색 헤더 ---------- */
+.toned.sp-head { background: linear-gradient(180deg, rgba(var(--hdr), .58) 0%, rgba(var(--hdr), .22) 44%, var(--bg) 100%); }
+
+.toned.chart-hero { background: linear-gradient(180deg, rgba(var(--hdr), .5) 0%, rgba(var(--hdr), .16) 52%, var(--bg) 100%); }
+
+.toned.ar-hero .ar-scrim { background: linear-gradient(to top, var(--bg) 2%, rgba(11,12,15,.74) 40%, rgba(var(--hdr), .42) 100%); }
+
+.toned.billboard .bb-scrim {
+  background:
+    linear-gradient(78deg, rgba(11,12,15,.96) 0%, rgba(11,12,15,.72) 42%, rgba(11,12,15,.32) 72%, transparent 100%),
+    linear-gradient(to top, var(--bg) 1%, rgba(var(--hdr), .18) 46%, rgba(var(--hdr), .3) 100%);
+}
+
+.sp-head, .chart-hero, .ar-hero .ar-scrim, section.billboard .bb-scrim { transition: background var(--dur-long) ease; }
+
+
+/* ---------- 히어로 재구성 ---------- */
+section.billboard { position: relative; height: min(74vh, 640px); min-height: 460px; display: flex; align-items: center; overflow: hidden; }
+
+.bb-blur { position: absolute; inset: -8%; background-size: cover; background-position: center; filter: blur(46px) saturate(1.35); transform: scale(1.15); opacity: .85; }
+
+.bb-inner { position: relative; z-index: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 48px; }
+
+.bb-content { max-width: 620px; }
+
+.bb-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .2em; color: var(--ink); opacity: .8; margin-bottom: 14px; }
+
+.bb-title { font-size: clamp(40px, 6.6vw, 84px); font-weight: 800; letter-spacing: -0.045em; line-height: 1.02; text-shadow: 0 4px 30px rgba(0,0,0,.4); }
+
+.bb-meta { margin-top: 16px; font-size: 18px; font-weight: 700; color: var(--ink); }
+
+.bb-tag { margin-top: 6px; font-size: 13.5px; color: var(--ink-muted); }
+</style></head><body><div>x</div></body></html>

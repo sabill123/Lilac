@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.pl-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pl-artist { font-size: 11.5px; color: var(--ink-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.pl-center { display: flex; flex-direction: column; align-items: center; gap: 7px; width: min(560px, 42vw); }
+
+.pl-transport { display: flex; align-items: center; gap: 18px; }
+
+.tbtn {
+  border: none; background: none; color: var(--ink-muted);
+  padding: 4px; display: flex; border-radius: 50%;
+  transition: color var(--dur-micro), transform var(--dur-micro);
+}
+
+.tbtn:hover { color: var(--ink); }
+
+.tbtn .ic { width: 18px; height: 18px; }
+
+.tbtn.main {
+  width: 36px; height: 36px; background: var(--ink); color: var(--bg);
+  align-items: center; justify-content: center;
+}
+
+.tbtn.main:hover { transform: scale(1.06); color: var(--bg); }
+
+.tbtn.main .ic { width: 17px; height: 17px; }
+
+.pl-progress { display: flex; align-items: center; gap: 10px; width: 100%; }
+
+.pl-time { font-size: 11px; color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 32px; }
+
+.pl-time:last-child { text-align: right; }
+
+.pl-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--bg-soft); cursor: pointer; position: relative; }
+
+.pl-bar:hover .pl-fill { background: var(--accent); }
+
+.pl-fill { height: 100%; width: 0%; border-radius: 2px; background: var(--ink); }
+
+.pl-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+.pl-right .vol { width: 16px; height: 16px; color: var(--ink-muted); }
+
+.pl-vol { width: 90px; height: 4px; border-radius: 2px; background: var(--bg-soft); cursor: pointer; }
+
+.pl-vol-fill { height: 100%; width: 70%; border-radius: 2px; background: var(--ink-muted); }
+
+.pl-vol:hover .pl-vol-fill { background: var(--accent); }
+
+
+/* ---------- 가사 패널 ---------- */
+.lyrics {
+  position: fixed; right: 16px; bottom: calc(var(--player-h) + 12px); z-index: 59;
+  width: 340px; max-width: calc(100vw - 32px);
+  background: var(--bg-raised); border: 1px solid var(--rule, rgba(255,255,255,0.055));
+  border-radius: var(--radius-lg); padding: 16px 18px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+}
+
+.lyrics.show { opacity: 1; transform: none; pointer-events: auto; }
+
+.ly-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: var(--ink-muted); margin-bottom: 10px; }
+
+.ly-body { display: flex; flex-direction: column; gap: 13px; max-height: 280px; overflow-y: auto; }
+
+.ly-line { transition: opacity var(--dur-short); opacity: 0.38; }
+
+.ly-line.now { opacity: 1; }
+
+.ly-line .jp { font-size: 14.5px; font-weight: 700; }
+
+.ly-line .romaji { font-size: 11px; color: var(--ink-faint); margin-top: 1px; }
+
+.ly-line .ko { font-size: 12px; color: var(--ink-muted); margin-top: 1px; }
+
+.ly-note { margin-top: 12px; font-size: 11px; color: var(--ink-faint); line-height: 1.6; }
+
+
+/* ---------- 모달 ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-short);
+}
+
+.modal.show { opacity: 1; pointer-events: auto; }
+
+.modal-box {
+  position: relative; width: min(860px, 92vw);
+  background: var(--bg-raised); border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-lg);
+  transform: scale(0.97); transition: transform var(--dur-short) var(--ease-out);
+}
+
+.modal.show .modal-box { transform: none; }
+
+.modal-x {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(11, 12, 15, 0.7); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--dur-micro);
+}
+
+.modal-x:hover { background: rgba(11, 12, 15, 0.95); }
+
+.modal-x .ic { width: 16px; height: 16px; }
+
+.yt-wrap { aspect-ratio: 16 / 9; background: #000; }
+
+.yt-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+
+.modal-box.sheet { max-width: 460px; padding: 32px; overflow: visible; }
+</style></head><body><div>x</div></body></html>

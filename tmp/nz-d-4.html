@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+
+/* Shared component scale and quieter typography across content pages. */
+.page-section { padding: 56px var(--gutter) 14px; }
+
+.page-top { padding-top: 40px; }
+
+.page-head { margin-bottom: 34px; }
+
+.page-title { font-size: clamp(38px, 4.6vw, 58px); font-weight: 680; letter-spacing: -.045em; }
+
+.page-desc { max-width: 680px; margin-top: 13px; color: var(--ink-muted); font-size: 14px; line-height: 1.7; }
+
+.sp-label, .bb-eyebrow { display: none; }
+
+.sec-head { margin-bottom: 22px; }
+
+.sec-head h2 { font-size: 25px; font-weight: 680; letter-spacing: -.035em; }
+
+.sec-sub { font-size: 13px; }
+
+.shelf { grid-auto-columns: clamp(184px, 15vw, 220px); gap: 18px; padding-bottom: 24px; }
+
+.card { padding: 8px; border-radius: 15px; }
+
+.card:hover { background: rgba(255,255,255,.055); }
+
+.card .cover { border-radius: 12px; box-shadow: var(--shadow-lg); }
+
+.card .c-title { margin-top: 13px; font-size: 15px; font-weight: 650; }
+
+.card .c-sub { margin-top: 4px; font-size: 13px; }
+
+.player { background: rgba(7,8,11,.94); backdrop-filter: blur(24px); }
+
+
+/* Work mode is a tool surface, not another fandom page. */
+body.work-page .footer, body.work-page .player { display: none; }
+
+body.work-page .main-panel { padding-bottom: 0 !important; background: transparent; }
+
+body.work-page .topbar { background: rgba(7,8,11,.8); backdrop-filter: blur(24px); }
+
+body.work-page #backdrop { opacity: .62; }
+
+body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circle at 72% 8%, #000 0, rgba(0,0,0,.82) 38%, transparent 82%); }
+
+.work-shell {
+  min-height: calc(100vh - var(--tb-h));
+  padding: 44px var(--gutter) 110px;
+  background:
+    radial-gradient(circle at 82% 0%, color-mix(in srgb, var(--focus-tone) 15%, transparent), transparent 33%),
+    linear-gradient(180deg, rgba(10,10,15,.78), rgba(6,7,10,.96) 58%);
+}
+
+.work-shell .focus-aurora { width: 680px; height: 680px; right: -250px; top: -180px; opacity: .07; }
+
+.work-head { max-width: 1360px; margin: 0 auto 30px; display: flex; align-items: flex-end; justify-content: space-between; gap: 36px; }
+
+.work-head h1 { font-size: clamp(42px, 4.6vw, 62px); line-height: 1; font-weight: 680; letter-spacing: -0.03em; }
+
+.work-head > div:first-child p { max-width: 610px; margin-top: 13px; color: var(--ink-muted); font-size: 15px; }
+
+.work-protection { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 9px; row-gap: 3px; padding: 13px 15px; border: 1px solid var(--rule, rgba(255,255,255,0.055)); border-radius: 14px; background: rgba(255,255,255,.045); backdrop-filter: blur(18px); }
+
+.work-protection .focus-status-dot { grid-row: 1 / span 2; }
+
+.work-protection b { font-size: 12px; font-weight: 620; }
+
+.work-protection small { color: var(--ink-faint); font-size: 11px; }
+
+.work-grid { max-width: 1360px; grid-template-columns: minmax(0, 1.55fr) minmax(350px, .72fr); gap: 18px; align-items: start; }
+
+.work-player-card, .work-setup { border-color: var(--rule); border-radius: 20px; background: rgba(15,16,21,.9); box-shadow: var(--shadow-lg); }
+
+.work-player-card { padding: 8px; }
+
+.work-player-card .focus-video { min-height: 0; border-radius: 14px; }
+
+.work-player-card .focus-now { padding: 18px 12px 14px; }
+
+.work-player-card .focus-now h2 { margin: 0; font-size: clamp(20px, 2vw, 26px); font-weight: 650; }
+
+.work-player-card .focus-now p { margin-top: 5px; font-size: 12px; }
+
+.work-player-card .focus-session-clock span { font-size: clamp(30px, 3vw, 42px); font-weight: 620; }
+
+.work-player-card .focus-session-clock small { display: block; margin-top: 5px; color: var(--ink-faint); font-size: 11px; }
+
+.focus-actions { grid-template-columns: 1fr auto; gap: 8px; padding: 0 4px 4px; }
+
+.focus-primary, .focus-quiet, .focus-ai-btn { min-height: 48px; border-radius: 12px; font-size: 13px; font-weight: 680; }
+</style></head><body><div>x</div></body></html>

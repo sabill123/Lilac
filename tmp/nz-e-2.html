@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+      from { opacity: 0; transform: perspective(900px) translate3d(0, 28px, -90px) rotateX(9deg); }
+
+      to   { opacity: 1; transform: perspective(900px) translate3d(0, 0, 0) rotateX(0deg); }
+
+
+    /* 가로 셸프는 옆에서 밀려들어오게 */
+    .d3-slide {
+      animation: d3Slide linear both;
+      animation-timeline: view(inline);
+      animation-range: entry 0% entry 50%;
+    }
+
+      from { opacity: .35; transform: perspective(800px) translate3d(40px, 0, -60px) rotateY(-7deg); }
+
+      to   { opacity: 1;   transform: none; }
+
+
+    /* 히어로 — 스크롤에 따라 뒤로 물러나며 흐려진다 */
+    .d3-hero {
+      animation: d3Hero linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+      transform-origin: 50% 0%;
+    }
+
+      from { transform: perspective(1000px) translateZ(0) rotateX(0deg); opacity: 1; }
+
+      to   { transform: perspective(1000px) translateZ(-120px) rotateX(4deg); opacity: .55; }
+
+
+    /* 섹션 제목 — 살짝 늦게 따라온다 */
+    .d3-head {
+      animation: d3Head linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+
+      from { opacity: 0; transform: translate3d(0, 14px, 0); }
+
+      to   { opacity: 1; transform: none; }
+
+
+  /* ── 포인터 3D 틸트 ──────────────────────────────────────
+     JS는 --rx / --ry 변수만 갱신하고, 실제 변환은 CSS가 처리한다 */
+  .d3-tilt {
+    transform: perspective(var(--d3-persp, 760px))
+               rotateX(var(--rx, 0deg))
+               rotateY(var(--ry, 0deg))
+               translateZ(var(--tz, 0px));
+    transition: transform 420ms var(--ease-out);
+    transform-style: preserve-3d;
+  }
+
+  .d3-tilt.is-tilting { transition: transform 90ms linear; }
+
+
+  /* 카드 안쪽 요소를 Z축으로 띄워 실제 깊이를 만든다 */
+  .d3-tilt .d3-layer-1 { transform: translateZ(18px); }
+
+  .d3-tilt .d3-layer-2 { transform: translateZ(34px); }
+
+
+  /* 광택 — 기울인 방향을 따라 빛이 흐른다 */
+  .d3-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 260ms var(--ease-out);
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.08) 32%,
+      transparent 62%);
+  }
+
+  .d3-tilt.is-tilting .d3-glare { opacity: 1; }
+
+
+  /* ── 차트 순위 3D 스택 ──────────────────────────────────
+     상위권일수록 앞으로 나와 보이게 한다 */
+  .d3-stack { transform-style: preserve-3d; }
+
+  .d3-stack > * { transition: transform 320ms var(--ease-out); }
+
+  .d3-stack > *:hover { transform: translateZ(22px) scale(1.012); }
+
+
+  /* ── 페이지 전환 ────────────────────────────────────────*/
+  .d3-enter { animation: d3Enter 420ms var(--ease-out) both; }
+
+    from { opacity: 0; transform: perspective(1200px) translate3d(0, 10px, -40px); }
+
+    to   { opacity: 1; transform: none; }
+
+  .d3-rise, .d3-slide, .d3-hero, .d3-head, .d3-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+
+  .d3-tilt { transform: none !important; }
+
+  .d3-glare { display: none; }
+
+html.touch .d3-tilt { transform: none !important; }
+
+html.touch .d3-glare { display: none; }
+
+
+/* ── three.js 무대 ────────────────────────────────────────
+   캔버스는 배경 레이어로 깔고, 텍스트는 그 위에 얹는다.
+   3D가 뜨지 않는 환경에서는 기존 레이아웃이 그대로 유지된다. */
+
+/* 3D 무대는 히어로를 통째로 채운다.
+   작게 넣으면 3D인지도 알아보기 어렵고 오히려 어설퍼 보인다. */
+.bb-stage {
+  position: absolute;
+  /* 고정 톱바(70px) 아래에서 시작한다 */
+  inset: 70px 0 0 0;
+  z-index: 1;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 1100ms var(--ease-out);
+}
+
+.bb-stage canvas { opacity: 0.96; }
+
+body.has-3d-hero .bb-stage { opacity: 1; }
+
+/* 3D가 뜨면 기존 정적 레이어는 자리를 내준다.
+   블러 배경과 스크림을 그대로 두면 3D가 뿌옇게 묻힌다. */
+body.has-3d-hero .bb-card { opacity: 0; pointer-events: none; }
+
+body.has-3d-hero .bb-blur { opacity: 0.14; filter: blur(80px) saturate(1.4); }
+
+body.has-3d-hero .bb-scrim {
+  background: linear-gradient(to top, var(--page) 0%, rgba(5, 6, 8, 0.2) 16%, transparent 38%);
+}
+
+/* 텍스트가 캔버스에 묻히지 않도록 */
+section.billboard .bb-inner { position: relative; z-index: 2; }
+
+/* 텍스트가 앨범 위에서도 읽히도록 왼쪽에 그라데이션 막을 깐다 */
+/* 텍스트 뒤에만 어둡게 깔고, 재킷은 최대한 살린다.
+   전체를 덮으면 갤러리 벽이 통째로 묻혀 3D를 넣은 의미가 없어진다. */
+body.has-3d-hero .bb-inner::before {
+  content: '';
+  position: absolute;
+  inset: -30% -14% -30% -14%;
+  z-index: -1;
+  pointer-events: none;
+  /* 제목·버튼이 놓이는 왼쪽 40%는 확실히 눌러 글자가 깨끗하게 읽히게 한다 */
+  background: linear-gradient(90deg,
+    rgba(5, 6, 8, 0.94) 0%, rgba(5, 6, 8, 0.82) 30%,
+    rgba(5, 6, 8, 0.38) 52%, transparent 70%);
+}
+
+body.has-3d-hero .bb-content { text-shadow: 0 2px 28px rgba(0, 0, 0, 0.7); }
+
+/* 3D가 뜨면 히어로를 화면 높이만큼 키워 몰입감을 준다 */
+body.has-3d-hero section.billboard {
+  min-height: min(86vh, 780px);
+  align-items: center;
+}
+
+/* 아래로 이어지는 섹션과 자연스럽게 연결 */
+body.has-3d-hero section.billboard::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(transparent, var(--page));
+}
+
+
+/* 차트 무대도 히어로 전체를 쓴다. 텍스트는 왼쪽 막 위에 얹는다. */
+.ch-stage {
+  position: absolute;
+  /* 톱바(고정 70px) 아래에서 시작하고, 하단 컨트롤과도 떨어뜨린다 */
+  inset: 88px 3% 84px 48%;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 1100ms var(--ease-out);
+}
+</style></head><body><div>x</div></body></html>

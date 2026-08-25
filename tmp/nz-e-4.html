@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.lc-cont:hover .lc-cont-play { opacity: 1; transform: none; }
+
+
+/* ── 플레이리스트 카드 ── */
+.lib2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(172px, 1fr));
+  gap: 16px;
+}
+
+.lc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--hairline);
+  color: inherit;
+  transition: background var(--dur-short) var(--ease-out);
+}
+
+.lc-card:hover { background: var(--bg-soft); }
+
+.lc-art {
+  display: block;
+  aspect-ratio: 1;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow-sm);
+}
+
+.lc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lc-mosaic { display: grid; grid-template-columns: 1fr 1fr; width: 100%; height: 100%; }
+
+.lc-mosaic img { width: 100%; height: 100%; object-fit: cover; }
+
+.lc-ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-faint); }
+
+.lc-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lc-sub { font-size: 12px; color: var(--ink-muted); }
+
+.lc-likes-art {
+  display: grid; place-items: center;
+  background: linear-gradient(140deg, var(--accent), var(--accent-deep));
+  color: #fff;
+}
+
+.lc-likes-art .ic { width: 40%; height: 40%; }
+
+
+/* ── 아티스트 ── */
+.lib2-artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 14px;
+}
+
+.la-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 16px 10px 14px;
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-align: center;
+  transition: background var(--dur-short) var(--ease-out);
+}
+
+.la-card:hover { background: var(--bg-soft); }
+
+.la-art {
+  display: grid; place-items: center;
+  width: 84px; height: 84px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg-soft);
+  font-size: 26px; font-weight: 800; color: var(--ink-faint);
+  box-shadow: var(--shadow-sm);
+}
+
+.la-art img { width: 100%; height: 100%; object-fit: cover; }
+
+.la-card b { font-size: 13px; font-weight: 600; }
+
+.la-card > span:last-child { font-size: 11px; color: var(--ink-muted); }
+
+
+/* ── 곡 목록 ── */
+.lib2-tracks { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+
+.lt-row {
+  display: grid;
+  grid-template-columns: 28px 44px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--dur-micro);
+}
+
+.lt-row:hover { background: var(--bg-hover); }
+
+.lt-i { font-size: 13px; color: var(--ink-faint); text-align: right; font-variant-numeric: tabular-nums; }
+
+.lt-art { width: 44px; height: 44px; border-radius: 5px; overflow: hidden; background: var(--bg-soft); }
+
+.lt-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.lt-txt { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+
+.lt-txt b { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lt-txt span { font-size: 12px; color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lt-play { opacity: 0; color: var(--ink-muted); transition: opacity var(--dur-micro); }
+
+.lt-row:hover .lt-play { opacity: 1; }
+
+
+.lib2-more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.lib2-more:hover { color: var(--ink); }
+
+
+/* ── 빈 상태: 무엇을 하면 되는지 알려준다 ── */
+.lib2-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  border: 1px dashed var(--rule-strong, rgba(255,255,255,0.13));
+  border-radius: var(--radius-lg);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.lib2-empty .eb { width: 34px; height: 34px; opacity: .5; }
+
+.lib2-empty p { font-size: 14px; }
+
+  .lc-cont-play, .lt-play { opacity: 1; transform: none; }
+
+  .lib2-hero { padding-top: 28px; }
+
+  .lib2-stats > div { min-width: 78px; padding: 10px 12px; }
+
+  .lib2-stats dd { font-size: 18px; }
+</style></head><body><div>x</div></body></html>

@@ -160,7 +160,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .card .hover-play { position: absolute; right: 8px; bottom: 8px; width: 44px; height: 44px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); opacity: 0; transform: translateY(8px); transition: opacity var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out), background var(--dur-micro); }
 .card .hover-play .ic { width: 20px; height: 20px; }
 .card:hover .hover-play, .card.playing .hover-play { opacity: 1; transform: none; }
-.card .hover-play:hover { background: var(--accent-hover); transform: scale(1.05); }
+.card .hover-play:hover { background: var(--accent-hover); }
 .card .c-title { margin-top: 11px; font-size: 14.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .c-sub { margin-top: 3px; font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card.round { text-align: center; }
@@ -203,7 +203,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .ev-card .ev-scrim { position: absolute; inset: 0px; background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 8%, rgba(0, 0, 0, 0.18) 60%, transparent); }
 .ev-card .ev-body { position: absolute; inset: 0px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: flex-end; }
 .ev-card .ev-type { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 700; color: var(--ink); background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(6px); padding: 3px 9px; border-radius: 999px; }
-.ev-card .ev-dday { position: absolute; top: 12px; right: 12px; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); text-shadow: rgba(0, 0, 0, 0.6) 0px 1px 8px; }
+.ev-card .ev-dday { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
 .ev-card .ev-dday.urgent { color: rgb(255, 107, 110); }
 .ev-card .ev-title { font-size: 15px; font-weight: 700; line-height: 1.35; text-shadow: rgba(0, 0, 0, 0.5) 0px 1px 10px; }
 .ev-card .ev-info { font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
@@ -218,8 +218,11 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 78%; height: 78%; object-fit: cover; box-shadow: var(--shadow-md); transition: transform var(--dur-short) var(--ease-out); }
 .p-card:hover .p-img img { filter: brightness(1.06); }
-.p-card .p-badge { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; background: var(--paper-ink); color: rgb(255, 255, 255); padding: 3px 8px; }
-.p-card .p-brand { margin-top: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-card .p-card .p-brand { margin-top: 12px; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--paper-muted); text-transform: uppercase; }
+.p-bn { min-width: 0px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-ed { flex-shrink: 0; padding: 1px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: rgba(0, 0, 0, 0.06); color: var(--paper-muted); }
+.p-ed.ltd { background: var(--paper-ink); color: rgb(255, 255, 255); }
+.p-low { color: rgb(194, 65, 12); font-weight: 800; }
 .p-card .p-name { margin-top: 3px; font-size: 13.5px; font-weight: 500; color: var(--paper-ink); line-height: 1.4; }
 .p-card .p-price { margin-top: 5px; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .footer { padding: 36px var(--gutter) 48px; border-top: 1px solid var(--rule, rgba(255,255,255,0.055)); }
@@ -693,7 +696,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .bb-tag { margin-top: 6px; font-size: 13.5px; color: var(--ink-muted); }
 .bb-actions { margin-top: 28px; }
 .bb-card { width: clamp(200px, 24vw, 300px); aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,.06); transform: rotate(-1.5deg); transition: transform var(--dur-long) var(--ease-out); }
-.bb-card:hover { transform: rotate(0deg) scale(1.02); }
+.bb-card:hover { transform: rotate(0deg); }
 .bb-card-inner { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--bg-soft); }
 @media (max-width: 900px) {
   .bb-inner { grid-template-columns: 1fr; }
@@ -718,7 +721,7 @@ section.billboard { position: relative; height: min(74vh, 640px); min-height: 46
 .empty-box span { font-size: 13px; color: var(--ink-faint); margin-top: 6px; }
 .mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; padding-bottom: 6px; }
 .mood { position: relative; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: var(--m); padding: 16px; text-decoration: none; color: rgb(255, 255, 255); display: block; transition: transform var(--dur-short) var(--ease-out); }
-.mood:hover { transform: scale(1.02); }
+.mood:hover { }
 .mood-k { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; position: relative; z-index: 1; text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 10px; }
 .mood-sq { position: absolute; right: -12px; bottom: -10px; width: 76px; height: 76px; background-size: cover; background-position: center center; background-color: rgba(0, 0, 0, 0.25); transform: rotate(24deg); box-shadow: var(--shadow-md); border-radius: 3px; }
 .gnb { background: transparent; border-bottom-color: transparent; backdrop-filter: none; transition: background var(--dur-short), border-color var(--dur-short), backdrop-filter var(--dur-short); }
@@ -891,7 +894,7 @@ body.playing .np-full.show .np-disc::after { animation: 6s linear 0s infinite no
 .glare { position: absolute; inset: 0px; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity var(--dur-short); background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.34), transparent 46%); mix-blend-mode: overlay; }
 [data-tilt]:hover .glare { opacity: 1; }
 .bb-card { transform: perspective(900px) rotateX(var(--rx, 2deg)) rotateY(var(--ry, -6deg)); position: relative; }
-.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1.03); }
+.bb-card:hover { transform: perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)); }
 .card { position: relative; }
 .card.expanded { z-index: 20; }
 .card.expanded .cover { transform: scale(1.14); box-shadow: var(--shadow-lg); }
@@ -1295,7 +1298,6 @@ body.play-mode .pd-ul li.dim { color: var(--ink-faint); }
 body.play-mode .p-card .p-img { background: var(--bg-raised); border-radius: var(--radius-sm); }
 body.play-mode .p-card .p-name { color: var(--ink); }
 body.play-mode .p-card .p-price { color: var(--ink); }
-body.play-mode .p-badge { background: rgba(0, 0, 0, 0.7); color: var(--ink); border-radius: 999px; }
 body.play-mode .on-light .rk-row { border-bottom-color: var(--rule); }
 body.play-mode .on-light .rk-row:hover { background: var(--bg-soft); }
 body.play-mode .on-light .rk-t { color: var(--ink); }
@@ -1381,7 +1383,6 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
 .ar-hero { overflow: hidden; }
 section.billboard { overflow: hidden; }
 .src-badge { font-size: 11px; padding: 3px 9px; }
-.p-badge { font-size: 11px; }
 .cal-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .cal-arrow { width: 34px; height: 34px; border-radius: 50%; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; background: var(--bg-soft); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
 .cal-arrow:hover { color: var(--ink); background: var(--bg-hover); transform: scale(1.05); }
@@ -1430,8 +1431,6 @@ body:not(.play-mode) .st-bar { color: var(--paper-muted); }
 .st-more { min-width: 190px; justify-content: center; }
 .p-card .p-img { position: relative; aspect-ratio: 1 / 1; background: rgb(246, 246, 247); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .p-card .p-img img { width: 100%; height: 100%; object-fit: cover; box-shadow: none; }
-.p-badge.ltd { background: var(--accent); color: var(--accent-ink); }
-.p-stock { position: absolute; bottom: 10px; left: 10px; background: rgba(0, 0, 0, 0.72); color: rgb(255, 255, 255); font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
 .p-sub { font-size: 11.5px; color: var(--paper-muted); margin-top: 3px; }
 body.play-mode .p-sub { color: var(--ink-faint); }
 .pd-meta-line { font-size: 12.5px; color: var(--paper-muted); margin-top: 6px; }
@@ -1701,7 +1700,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-duration-row { grid-template-columns: repeat(4, 1fr); }
 .focus-mode-row button, .focus-duration-row button { min-height: 35px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 9px; background: rgba(255, 255, 255, 0.035); color: var(--ink-faint); font-size: 11px; font-weight: 650; }
 .focus-mode-row button.on, .focus-duration-row button.on { color: var(--ink); border-color: color-mix(in srgb, var(--focus-tone) 50%, transparent); background: color-mix(in srgb, var(--focus-tone) 12%, transparent); }
-.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: 0 10px 30px color-mix(in srgb, var(--focus-tone) 20%, transparent); }
+.focus-ai-btn { width: 100%; margin-top: 14px; color: rgb(22, 18, 31); background: linear-gradient(135deg, #e0c8ff, var(--focus-tone)); box-shadow: rgba(0, 0, 0, 0.28) 0px 1px 3px; }
 .focus-ai-btn:disabled { opacity: 0.6; cursor: wait; }
 .focus-ai-btn span { margin-right: 5px; }
 .focus-ai-result { min-height: 64px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); }
@@ -2152,7 +2151,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 .nm-danger:hover { filter: brightness(1.1); }
 .dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0px 12px; }
 .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
+.topup-opt { padding: 14px 10px; border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-md); color: var(--ink); font-size: 15px; font-weight: 700; cursor: pointer; transition: border-color var(--dur-micro), background var(--dur-micro); }
 .topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
 #topbar { view-transition-name: lilac-topbar; }
 #player { view-transition-name: lilac-player; }
@@ -2283,7 +2282,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
         </header>
         <main id="page" tabindex="-1">
     <section class="billboard toned" id="bb" style="--hdr: 162,146,201;">
-      <div class="bb-blur" id="bbBlur" data-parallax="0.34" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4c/3b/b2/4c3bb247-3be8-0c57-aa9a-7f1775a7b7a8/24UMGIM32931.rgb.jpg/1200x1200bb.jpg&quot;);"></div>
+      <div class="bb-blur" id="bbBlur" data-parallax="0.34" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4c/3b/b2/4c3bb247-3be8-0c57-aa9a-7f1775a7b7a8/24UMGIM32931.rgb.jpg/1200x1200bb.jpg&quot;); transform: translate3d(0px, 0px, 0px) scale(1); opacity: 1;"></div>
       <div class="bb-stage" id="bbStage" aria-hidden="true"><canvas data-engine="three.js r185" width="2860" height="1408" style="width: 100%; height: 100%; display: block; cursor: grab;"></canvas></div><span class="stage-hint">드래그해서 넘겨보세요 · 재킷을 누르면 이동합니다</span>
       <div class="bb-scrim"></div>
       <div class="bb-inner">
@@ -2709,57 +2708,65 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
     </a></div></div></section>
     <section class="page-section"><div class="sec-head d3-head" data-d3="head"><h2>다가오는 일정</h2><a class="sec-link" href="#/schedule">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div id="hEvents" class="ev-shelf"><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="리센느" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/44/70/65/44706599-2480-efab-7cfe-564b5e254b25/888272184075_Cover.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span><span class="ev-dday urgent">D-4</span>
-      <div class="ev-body"><div class="ev-title">리센느 팬사인회 응모 마감</div><div class="ev-info">2026-08-29 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <span class="ev-type">응모</span>
+      <div class="ev-body"><div class="ev-title">리센느 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday urgent">D-4</b> 2026-08-29 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="Mrs. GREEN APPLE" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/41/a0/b6/41a0b6b9-a720-25e5-fc69-7e9c3ca1296e/26UMGIM73217.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span><span class="ev-dday urgent">D-6</span>
-      <div class="ev-body"><div class="ev-title">Mrs. GREEN APPLE FC 선행 추첨 마감</div><div class="ev-info">2026-08-31 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <span class="ev-type">응모</span>
+      <div class="ev-body"><div class="ev-title">Mrs. GREEN APPLE FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday urgent">D-6</b> 2026-08-31 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="back number" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/26/b6/e7/26b6e7e2-1cbb-4dde-edfb-e44e1f881cbd/00602577303739.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span><span class="ev-dday ">D-15</span>
-      <div class="ev-body"><div class="ev-title">back number FC 선행 추첨 마감</div><div class="ev-info">2026-09-09 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <span class="ev-type">응모</span>
+      <div class="ev-body"><div class="ev-title">back number FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> 2026-09-09 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="Hearts2Hearts" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/6e/83/de/6e83debe-ab2c-f3f6-a195-40127c516ec2/26UMGIM10021.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span><span class="ev-dday ">D-15</span>
-      <div class="ev-body"><div class="ev-title">Hearts2Hearts 팬사인회 응모 마감</div><div class="ev-info">2026-09-09 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a></div></section>
+      <span class="ev-type">응모</span>
+      <div class="ev-body"><div class="ev-title">Hearts2Hearts 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> 2026-09-09 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a></div></section>
     <section class="store-wrap"><div class="store-inner">
       <p class="store-label">STORE</p>
       <div class="sec-head store-head"><h2>스토어 신상품</h2><a class="sec-link dark" href="#/store">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div>
       <div class="store-grid" id="hStore"><a class="p-card d3-tilt d3-rise" href="#/store/it-6800756978" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/4a/47/1e/4a471ebb-6e25-2ce9-66e9-f34537ff915b/26UMGIM92691.rgb.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      <span class="p-stock">잔여 5</span>
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>THE ALFEE</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">THE ALFEE</span>
+    </div>
     <div class="p-name">Crossroad -Aino Menkyo hennnou- - Single</div>
     <div class="p-price">₩16,200</div>
-    <div class="p-sub">2026 · 3곡</div>
+    <div class="p-sub">2026 · 3곡 · <b class="p-low">잔여 5</b></div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6793870933" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/58/a3/34/58a33441-7926-8b5c-ee82-3771614dcbd3/4580789778247.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>EBiDAN</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">EBiDAN</span>
+    </div>
     <div class="p-name">Yes! 東京 (体験入学版)</div>
     <div class="p-price">₩35,800</div>
     <div class="p-sub">2026 · 9곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6795358332" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/18/37/47/18374759-a073-88df-dcc9-2ac1b1abcc57/888735956423.png/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ">싱글</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag kr">한국반</span>Hearts2Hearts</div>
+    <div class="p-brand">
+      <span class="p-flag kr">한국반</span>
+      <span class="p-ed ">싱글</span>
+      <span class="p-bn">Hearts2Hearts</span>
+    </div>
     <div class="p-name">ICONIC HEART - Single</div>
     <div class="p-price">¥1,990</div>
     <div class="p-sub">2026 · 3곡</div>
   <span class="d3-glare" aria-hidden="true"></span></a><a class="p-card d3-tilt d3-rise" href="#/store/it-6793888333" data-d3-tilt="7" data-d3="rise" data-d3-bound="1">
     <div class="p-img">
       <img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/600x600bb.jpg" alt="" loading="lazy" decoding="async">
-      <span class="p-badge ltd">한정반</span>
-      
     </div>
-    <div class="p-brand"><span class="p-flag jp">일본반</span>スピッツ</div>
+    <div class="p-brand">
+      <span class="p-flag jp">일본반</span>
+      <span class="p-ed ltd">한정반</span>
+      <span class="p-bn">スピッツ</span>
+    </div>
     <div class="p-name">Unknown Thread - Single</div>
     <div class="p-price">₩16,200</div>
     <div class="p-sub">2026 · 1곡</div>
@@ -2792,7 +2799,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 
     <!-- 모바일 하단 네비 -->
     <a class="m-work-mode" id="mWorkMode" data-r="work" href="#/work"><svg class="ic"><use href="#i-clock"></use></svg><span>워크 모드</span></a>
-    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"><a data-r="home" href="#/" class="on"><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a data-r="chart" href="#/chart"><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a data-r="store" href="#/store"><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a data-r="schedule" href="#/schedule"><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a><a data-r="library" href="#/library"><svg class="ic"><use href="#i-lib"></use></svg><span>보관함</span></a></nav>
+    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"><a data-r="home" href="#/" class="on"><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a data-r="chart" href="#/chart"><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a data-r="store" href="#/store" class=""><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a data-r="schedule" href="#/schedule"><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a><a data-r="library" href="#/library"><svg class="ic"><use href="#i-lib"></use></svg><span>보관함</span></a></nav>
 
     <!-- 플레이어 -->
     <div class="player show idle" id="player" role="region" aria-label="재생 플레이어">
