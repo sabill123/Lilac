@@ -126,7 +126,7 @@ button { font-family: inherit; letter-spacing: inherit; cursor: pointer; }
 .gnb-connect.connected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
 /* ---------- 빌보드 (넷플릭스) ---------- */
-.billboard { position: relative; height: min(78vh, 720px); min-height: 480px; display: flex; align-items: flex-end; }
+section.billboard { position: relative; height: min(78vh, 720px); min-height: 480px; display: flex; align-items: flex-end; }
 /* 백드롭: img와 스크림이 동일한 박스를 정확히 공유 (정렬 불일치 방지) */
 .bb-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
@@ -908,10 +908,10 @@ body.dock-open main, body.dock-open .footer { margin-right: 320px; transition: m
     linear-gradient(78deg, rgba(11,12,15,.96) 0%, rgba(11,12,15,.72) 42%, rgba(11,12,15,.32) 72%, transparent 100%),
     linear-gradient(to top, var(--bg) 1%, rgba(var(--hdr), .18) 46%, rgba(var(--hdr), .3) 100%);
 }
-.sp-head, .chart-hero, .ar-hero .ar-scrim, .billboard .bb-scrim { transition: background var(--dur-long) ease; }
+.sp-head, .chart-hero, .ar-hero .ar-scrim, section.billboard .bb-scrim { transition: background var(--dur-long) ease; }
 
 /* ---------- 히어로 재구성 ---------- */
-.billboard { position: relative; height: min(74vh, 640px); min-height: 460px; display: flex; align-items: center; overflow: hidden; }
+section.billboard { position: relative; height: min(74vh, 640px); min-height: 460px; display: flex; align-items: center; overflow: hidden; }
 .bb-blur { position: absolute; inset: -8%; background-size: cover; background-position: center; filter: blur(46px) saturate(1.35); transform: scale(1.15); opacity: .85; }
 .bb-inner { position: relative; z-index: 1; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 var(--gutter); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 48px; }
 .bb-content { max-width: 620px; }
@@ -1084,8 +1084,8 @@ body.dock-open .app { grid-template-columns: var(--sb-w) minmax(0, 1fr) 320px; }
 .locale-menu { top: 44px; }
 
 /* 히어로들이 톱바 아래로 흐르도록 */
-.billboard, .sp-head, .chart-hero, .mp-hero, .ar-hero { margin-top: calc(-1 * var(--tb-h)); }
-.billboard { height: min(64vh, 560px); }
+section.billboard, .sp-head, .chart-hero, .mp-hero, .ar-hero { margin-top: calc(-1 * var(--tb-h)); }
+section.billboard { height: min(64vh, 560px); }
 .sp-head { padding-top: calc(var(--tb-h) + 48px); }
 .chart-hero { padding-top: calc(var(--tb-h) + 44px); }
 .mp-hero { padding-top: calc(var(--tb-h) + 48px); }
@@ -1405,7 +1405,7 @@ body:not(.play-mode) .sp-table.sticky .t-head { background: rgba(11,12,15,.94); 
   .tb-menu { display: none !important; }
   .tb-right { gap: 6px; }
   .tb-signup, .tb-link { font-size: 12.5px; padding: 7px 12px; }
-  .billboard { height: auto; min-height: 0; padding: calc(var(--tb-h) + 20px) 0 24px; }
+  section.billboard { height: auto; min-height: 0; padding: calc(var(--tb-h) + 20px) 0 24px; }
   .bb-inner { grid-template-columns: 1fr; gap: 20px; }
   .bb-title { font-size: clamp(30px, 9vw, 44px); }
   .bb-meta { font-size: 15px; margin-top: 10px; }
@@ -1821,7 +1821,7 @@ body.sb-collapsed .sb-empty p, body.sb-collapsed .sb-empty-btn { display: none; 
    ============================================================ */
 /* 1) 아티스트 히어로: 블러 배경 scale(1.06)이 패널 밖으로 나가 가로 스크롤 유발 */
 .ar-hero { overflow: hidden; }
-.billboard { overflow: hidden; }
+section.billboard { overflow: hidden; }
 
 /* 2) 출처 배지 가독성 (10px -> 11px) */
 .src-badge { font-size: 11px; padding: 3px 9px; }
@@ -2763,7 +2763,8 @@ html.touch .d3-glare { display: none; }
    작게 넣으면 3D인지도 알아보기 어렵고 오히려 어설퍼 보인다. */
 .bb-stage {
   position: absolute;
-  inset: 0;
+  /* 고정 톱바(70px) 아래에서 시작한다 */
+  inset: 70px 0 0 0;
   z-index: 1;
   pointer-events: auto;
   opacity: 0;
@@ -2779,26 +2780,29 @@ body.has-3d-hero .bb-scrim {
   background: linear-gradient(to top, var(--page) 0%, rgba(5, 6, 8, 0.2) 16%, transparent 38%);
 }
 /* 텍스트가 캔버스에 묻히지 않도록 */
-.billboard .bb-inner { position: relative; z-index: 2; }
+section.billboard .bb-inner { position: relative; z-index: 2; }
 /* 텍스트가 앨범 위에서도 읽히도록 왼쪽에 그라데이션 막을 깐다 */
 /* 텍스트 뒤에만 어둡게 깔고, 재킷은 최대한 살린다.
    전체를 덮으면 갤러리 벽이 통째로 묻혀 3D를 넣은 의미가 없어진다. */
 body.has-3d-hero .bb-inner::before {
   content: '';
   position: absolute;
-  inset: -24% -10% -24% -12%;
+  inset: -30% -14% -30% -14%;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(72% 62% at 16% 50%, rgba(5, 6, 8, 0.9) 0%, rgba(5, 6, 8, 0.62) 42%, transparent 76%);
+  /* 제목·버튼이 놓이는 왼쪽 40%는 확실히 눌러 글자가 깨끗하게 읽히게 한다 */
+  background: linear-gradient(90deg,
+    rgba(5, 6, 8, 0.94) 0%, rgba(5, 6, 8, 0.82) 30%,
+    rgba(5, 6, 8, 0.38) 52%, transparent 70%);
 }
 body.has-3d-hero .bb-content { text-shadow: 0 2px 28px rgba(0, 0, 0, 0.7); }
 /* 3D가 뜨면 히어로를 화면 높이만큼 키워 몰입감을 준다 */
-body.has-3d-hero .billboard {
+body.has-3d-hero section.billboard {
   min-height: min(86vh, 780px);
   align-items: center;
 }
 /* 아래로 이어지는 섹션과 자연스럽게 연결 */
-body.has-3d-hero .billboard::after {
+body.has-3d-hero section.billboard::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: 0;
@@ -2811,8 +2815,8 @@ body.has-3d-hero .billboard::after {
 /* 차트 무대도 히어로 전체를 쓴다. 텍스트는 왼쪽 막 위에 얹는다. */
 .ch-stage {
   position: absolute;
-  /* 1위 작품 한 점만 오른쪽에 전시한다. 왼쪽은 제목·컨트롤 자리로 온전히 비운다. */
-  inset: 40px 2% 72px 46%;
+  /* 톱바(고정 70px) 아래에서 시작하고, 하단 컨트롤과도 떨어뜨린다 */
+  inset: 88px 3% 84px 48%;
   z-index: 1;
   opacity: 0;
   transition: opacity 1100ms var(--ease-out);
@@ -3130,4 +3134,10 @@ body.has-3d-chart .chart-hero::after {
 body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 @media (max-width: 1100px) {
   .ch-stage { inset: 40px 2% 72px 38%; opacity: 0.9 !important; }
+}
+
+/* 순위 소스 배지 — 히어로(.billboard)와 클래스명이 겹치므로 명시적으로 고정한다 */
+.rk-ranks .mini-rank {
+  height: auto !important;
+  min-height: 0 !important;
 }

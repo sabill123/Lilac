@@ -37,8 +37,8 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(34, host.clientWidth / Math.max(1, host.clientHeight), 0.1, 40);
-  camera.position.set(0, 0.35, 6.2);
-  camera.lookAt(0, -0.1, 0);
+  camera.position.set(0, 0.2, 6.2);
+  camera.lookAt(0, -0.05, 0);
 
   /* 조명
      전시실 조명처럼 위에서 떨어지는 주광 하나와, 반대쪽에서 형태를 살리는 보조광.
@@ -63,22 +63,25 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
     transparent: true, opacity: 0.001,
   });
   const art = new THREE.Mesh(artGeo, [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, edgeMat]);
-  art.position.y = 0.32;
+  art.position.y = 0.08;
   group.add(art);
 
-  /* 받침대 — 미술관 좌대 */
-  const baseGeo = new THREE.BoxGeometry(ART * 1.18, 0.16, 0.8);
-  const baseMat = new THREE.MeshStandardMaterial({ color: 0x1b1c22, roughness: 0.78, metalness: 0.12 });
-  const base = new THREE.Mesh(baseGeo, baseMat);
-  base.position.set(0, 0.32 - ART / 2 - 0.08, 0.1);
-  group.add(base);
-
-  /* 바닥에 번지는 빛 — 좌대 아래 반사 */
-  const glowGeo = new THREE.CircleGeometry(ART * 1.5, 48);
-  const glowMat = new THREE.MeshBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.055 });
+  /* 접지 그림자 — 카메라 각도에서 넓은 판은 회색 띠로 보여 지저분했다.
+     재킷 바로 아래 작은 그라데이션 원 하나로 '떠 있음'만 표현한다. */
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = shadowCanvas.height = 128;
+  const sg = shadowCanvas.getContext('2d')!;
+  const grad = sg.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  sg.fillStyle = grad;
+  sg.fillRect(0, 0, 128, 128);
+  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+  const glowGeo = new THREE.PlaneGeometry(ART * 1.1, ART * 0.34);
+  const glowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.75, depthWrite: false });
   const glow = new THREE.Mesh(glowGeo, glowMat);
   glow.rotation.x = -Math.PI / 2;
-  glow.position.y = 0.32 - ART / 2 - 0.17;
+  glow.position.y = -ART / 2 - 0.18;
   group.add(glow);
 
   const loader = new THREE.TextureLoader();
@@ -198,8 +201,8 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
       renderer.domElement.removeEventListener('click', onClick);
       currentTex?.dispose();
       faceMat.dispose(); edgeMat.dispose();
-      artGeo.dispose(); baseGeo.dispose(); baseMat.dispose();
-      glowGeo.dispose(); glowMat.dispose();
+      artGeo.dispose();
+      glowGeo.dispose(); glowMat.dispose(); shadowTex.dispose();
       renderer.dispose();
       renderer.domElement.remove();
     },
