@@ -1,5 +1,32 @@
 [
   {
+    "id": "LO-MT8OATBQ",
+    "productId": "it-6800756978",
+    "name": "Crossroad -Aino Menkyo hennnou- - Single",
+    "brand": "THE ALFEE",
+    "option": "통상반 CD (싱글)",
+    "qty": 1,
+    "unit": 16200,
+    "total": 16200,
+    "buyerCurrency": "KRW",
+    "chargedKrw": 16200,
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/4a/47/1e/4a471ebb-6e25-2ce9-66e9-f34537ff915b/26UMGIM92691.rgb.jpg/600x600bb.jpg",
+    "breakdown": {
+      "localAmount": 1320,
+      "localCurrency": "JPY",
+      "rate": 8.7224,
+      "base": 11514,
+      "feeRate": 0.1,
+      "fee": 1151,
+      "shipping": 3500,
+      "total": 16200,
+      "buyerCurrency": "KRW",
+      "rateDate": "2026-08-21"
+    },
+    "status": "예약 접수",
+    "orderedAt": "2026-08-25T13:00:42.614Z"
+  },
+  {
     "id": "LO-MT88V605",
     "productId": "it-6795358332",
     "name": "ICONIC HEART - Single",
