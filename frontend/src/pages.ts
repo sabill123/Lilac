@@ -381,8 +381,7 @@ export async function pageHome() {
     const art = ev.artwork ? `background-image:url(${esc(sized(ev.artwork, 400))})` : '';
     return `<a class="ev-card d3-tilt" href="#/schedule" data-d3-tilt="6" data-d3="rise">
       <div class="ev-bg" ${ev.artwork ? `style="${art}"` : `data-artist="${esc(ev.artist)}"`}></div><div class="ev-scrim"></div>
-      <span class="ev-type">${esc(ev.type)}</span>
-      <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> ${ev.date} · ${esc(ev.venue)}</div></div></a>`;
+      <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> <span class="ev-type">${esc(ev.type)}</span> · ${ev.date} · ${esc(ev.venue)}</div></div></a>`;
   }).join('') || `<p class="dim" style="padding:8px 0">예정된 일정이 없습니다</p>`;
   fillEventArts($('#hEvents'));
 
@@ -523,11 +522,31 @@ const RANK_BADGES: [string, string, string][] = [
 const viewsTxt = (n?: number | null) =>
   !n ? '' : n >= 1e8 ? `${(n / 1e8).toFixed(2)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString();
 
+/* 행에 처음 마우스가 닿을 때 배지를 그린다.
+   한 번 그리면 data 속성을 지워 다시 그리지 않는다. */
+function bindChartBadges(container: HTMLElement) {
+  container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) => {
+    row.addEventListener('mouseenter', () => {
+      const holder = row.querySelector<HTMLElement>('.rk-ranks[data-badges]');
+      if (!holder) return;
+      const raw = holder.dataset.badges || '';
+      holder.innerHTML = raw.split(';').filter(Boolean).map((chunk) => {
+        const [k, s, tt, n] = chunk.split('|');
+        return `<span class="mini-rank ${esc(k)}" title="${esc(tt)} 순위">${esc(s)} ${esc(n)}</span>`;
+      }).join('');
+      delete holder.dataset.badges;
+    }, { once: true });
+  });
+}
+
 function chartRowsHtml(list: ChartRow[], source: string) {
   return `<div class="rank-list big d3-stack">${list.map((e) => {
-    const badges = source === 'combined'
-      ? `<span class="rk-ranks">${RANK_BADGES.filter(([k]) => e.ranks?.[k])
-          .map(([k, s, tt]) => `<span class="mini-rank ${k}" title="${tt} 순위">${s} ${e.ranks![k]}</span>`).join('')}</span>`
+    /* 소스별 배지는 처음부터 그리지 않는다.
+       100행 × 배지 5개면 화면에 보이지도 않는 요소 500개를 들고 있게 된다.
+       필요한 값만 data 속성에 담아 두고, 행에 마우스가 닿을 때 그린다. */
+    const badgeData = source === 'combined'
+      ? RANK_BADGES.filter(([k]) => e.ranks?.[k])
+          .map(([k, s, tt]) => `${k}|${s}|${tt}|${e.ranks![k]}`).join(';')
       : '';
     const move = e.move
       ? `<span class="rk-move ${e.move}">${e.move === 'new' ? 'NEW' : e.move === 'up' ? '▲' : '▼'}${e.lastRank && e.move !== 'new' ? ` ${Math.abs(e.lastRank - e.rank)}` : ''}</span>`
@@ -548,7 +567,7 @@ function chartRowsHtml(list: ChartRow[], source: string) {
       </div>
       <div class="rk-side">
         ${srcN ? `<span class="rk-srcn" title="${srcN}개 차트에 올라 있습니다">${srcN}곳</span>` : ''}
-        ${badges}
+        ${badgeData ? `<span class="rk-ranks" data-badges="${esc(badgeData)}"></span>` : ''}
         ${e.ytViews ? `<span class="rk-views">${viewsTxt(e.ytViews)}회</span>` : ''}
         ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="뮤직비디오">${icon('i-ext')}</button>` : ''}
       </div>
@@ -674,6 +693,7 @@ export async function pageChart(sub?: string) {
     : `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
   $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
   body.innerHTML = chartRowsHtml(list, source);
+  bindChartBadges(body);
   bindChartRows(body, list);
   if (list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), list[0].artwork);
 
@@ -722,6 +742,7 @@ async function pageChartPlay(sub?: string) {
   bindTilt(root());
 
   body.innerHTML = chartRowsHtml(list, source);
+  bindChartBadges(body);
   bindChartRows(body, list);
   $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
 
@@ -1317,9 +1338,8 @@ export async function pageArtist(id: string) {
     $('#arEvents').innerHTML = evs.map((ev) => {
       const { d, txt } = dday(ev.date);
       return `<div class="ev-card"><div class="ev-bg" data-artist="${esc(ev.artist)}"></div><div class="ev-scrim"></div>
-        <span class="ev-type">${esc(ev.type)}</span>
         <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div>
-          <div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> ${ev.date} · ${esc(ev.venue)}</div></div></div>`;
+          <div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> <span class="ev-type">${esc(ev.type)}</span> · ${ev.date} · ${esc(ev.venue)}</div></div></div>`;
     }).join('');
     fillEventArts($('#arEvents'));
   }

@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.sk { background: linear-gradient(90deg, var(--bg-raised) 25%, var(--bg-soft) 37%, var(--bg-raised) 63%); background-size: 200% 100%; animation: shimmer 1.25s linear infinite; border-radius: var(--radius-sm); display: block; }
+
+.sk.rd { border-radius: 50%; }
+
+.sk-list { display: flex; flex-direction: column; gap: 4px; }
+
+.sk-row { display: grid; grid-template-columns: 40px 56px 1fr; align-items: center; gap: 14px; padding: 10px 12px; }
+
+.sk-n { width: 16px; height: 14px; margin: 0 auto; }
+
+.sk-art { width: 56px; height: 56px; border-radius: 4px; }
+
+.sk-tt { display: flex; flex-direction: column; gap: 7px; }
+
+.sk-l1 { width: 42%; height: 13px; }
+
+.sk-l2 { width: 24%; height: 11px; margin-top: 6px; }
+
+.card .cover.sk { aspect-ratio: 1; }
+ #page > *, .sk { animation: none !important; }
+
+
+/* ============================================================
+   v2.0 — 프로덕션 UX (온보딩 · 접근성 · 모바일 최적화)
+   ============================================================ */
+
+/* 스킵 링크 · 스크린리더 전용 */
+.skip-link {
+  position: fixed; top: 0; transform: translateY(-200%); left: 12px; z-index: 300;
+  background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 13.5px;
+  padding: 12px 20px; border-radius: 0 0 8px 8px; text-decoration: none;
+  transition: transform var(--dur-short) var(--ease-out);
+}
+
+.skip-link:focus { transform: none; }
+</style></head><body><div>x</div></body></html>

@@ -665,7 +665,7 @@ body.dock-open main, body.dock-open .footer { margin-right: 320px; }
 .mp-field.num { font-variant-numeric: tabular-nums; letter-spacing: 0.06em; }
 .mp-field input { width: min(320px, 100%); background: var(--bg); border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--ink); font-size: 14px; font-family: inherit; outline: none; }
 .mp-field input:focus { border-color: var(--accent); }
-.mp-hint { font-size: 11.5px; color: var(--ink-faint); }
+.mp-hint { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; justify-self: end; }
 .mp-row .btn-ghost-sm { margin-top: 0px; }
 .mp-empty { font-size: 13px; color: var(--ink-faint); padding: 10px 0px; }
 .mp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -959,7 +959,7 @@ body.play-mode .right-dock { position: static; width: auto; max-height: none; he
   body.play-mode .tb-brand, body.play-mode .tb-menu { display: none; }
   .right-dock { left: 6px; right: 6px; width: auto; }
 }
-body.light-page .topbar.scrolled { background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid var(--paper-rule); }
+body.light-page .topbar.scrolled { background: rgba(255, 255, 255, 0.9); box-shadow: 0 1px 0 var(--paper-rule); }
 body.light-page .tb-item { color: rgb(107, 109, 116); }
 body.light-page .tb-item:hover { color: var(--paper-ink); background: rgba(0, 0, 0, 0.05); }
 body.light-page .tb-item.on { color: var(--paper-ink); background: rgba(0, 0, 0, 0.07); }
@@ -2282,7 +2282,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
         </header>
         <main id="page" tabindex="-1">
     <section class="billboard toned" id="bb" style="--hdr: 162,146,201;">
-      <div class="bb-blur" id="bbBlur" data-parallax="0.34" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4c/3b/b2/4c3bb247-3be8-0c57-aa9a-7f1775a7b7a8/24UMGIM32931.rgb.jpg/1200x1200bb.jpg&quot;); transform: translate3d(0px, 0px, 0px) scale(1); opacity: 1;"></div>
+      <div class="bb-blur" id="bbBlur" data-parallax="0.34" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4c/3b/b2/4c3bb247-3be8-0c57-aa9a-7f1775a7b7a8/24UMGIM32931.rgb.jpg/1200x1200bb.jpg&quot;);"></div>
       <div class="bb-stage" id="bbStage" aria-hidden="true"><canvas data-engine="three.js r185" width="2860" height="1408" style="width: 100%; height: 100%; display: block; cursor: grab;"></canvas></div><span class="stage-hint">드래그해서 넘겨보세요 · 재킷을 누르면 이동합니다</span>
       <div class="bb-scrim"></div>
       <div class="bb-inner">
@@ -2708,17 +2708,13 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
     </a></div></div></section>
     <section class="page-section"><div class="sec-head d3-head" data-d3="head"><h2>다가오는 일정</h2><a class="sec-link" href="#/schedule">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div><div id="hEvents" class="ev-shelf"><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="리센느" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/44/70/65/44706599-2480-efab-7cfe-564b5e254b25/888272184075_Cover.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span>
-      <div class="ev-body"><div class="ev-title">리센느 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday urgent">D-4</b> 2026-08-29 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <div class="ev-body"><div class="ev-title">리센느 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday urgent">D-4</b> <span class="ev-type">응모</span> · 2026-08-29 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="Mrs. GREEN APPLE" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/41/a0/b6/41a0b6b9-a720-25e5-fc69-7e9c3ca1296e/26UMGIM73217.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span>
-      <div class="ev-body"><div class="ev-title">Mrs. GREEN APPLE FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday urgent">D-6</b> 2026-08-31 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <div class="ev-body"><div class="ev-title">Mrs. GREEN APPLE FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday urgent">D-6</b> <span class="ev-type">응모</span> · 2026-08-31 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="back number" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/26/b6/e7/26b6e7e2-1cbb-4dde-edfb-e44e1f881cbd/00602577303739.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span>
-      <div class="ev-body"><div class="ev-title">back number FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> 2026-09-09 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
+      <div class="ev-body"><div class="ev-title">back number FC 선행 추첨 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> <span class="ev-type">응모</span> · 2026-09-09 · FC 회원 한정</div></div><span class="d3-glare" aria-hidden="true"></span></a><a class="ev-card d3-tilt d3-rise" href="#/schedule" data-d3-tilt="6" data-d3="rise" data-d3-bound="1">
       <div class="ev-bg" data-artist="Hearts2Hearts" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/6e/83/de/6e83debe-ab2c-f3f6-a195-40127c516ec2/26UMGIM10021.rgb.jpg/1200x1200bb.jpg&quot;);"></div><div class="ev-scrim"></div>
-      <span class="ev-type">응모</span>
-      <div class="ev-body"><div class="ev-title">Hearts2Hearts 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> 2026-09-09 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a></div></section>
+      <div class="ev-body"><div class="ev-title">Hearts2Hearts 팬사인회 응모 마감</div><div class="ev-info"><b class="ev-dday ">D-15</b> <span class="ev-type">응모</span> · 2026-09-09 · 음반 구매자 대상</div></div><span class="d3-glare" aria-hidden="true"></span></a></div></section>
     <section class="store-wrap"><div class="store-inner">
       <p class="store-label">STORE</p>
       <div class="sec-head store-head"><h2>스토어 신상품</h2><a class="sec-link dark" href="#/store">더보기 <svg class="ic s"><use href="#i-chev-r"></use></svg></a></div>
@@ -2799,7 +2795,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 
     <!-- 모바일 하단 네비 -->
     <a class="m-work-mode" id="mWorkMode" data-r="work" href="#/work"><svg class="ic"><use href="#i-clock"></use></svg><span>워크 모드</span></a>
-    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"><a data-r="home" href="#/" class="on"><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a data-r="chart" href="#/chart"><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a data-r="store" href="#/store" class=""><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a data-r="schedule" href="#/schedule"><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a><a data-r="library" href="#/library"><svg class="ic"><use href="#i-lib"></use></svg><span>보관함</span></a></nav>
+    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"><a data-r="home" href="#/" class="on"><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a data-r="chart" href="#/chart"><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a data-r="store" href="#/store"><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a data-r="schedule" href="#/schedule"><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a><a data-r="library" href="#/library"><svg class="ic"><use href="#i-lib"></use></svg><span>보관함</span></a></nav>
 
     <!-- 플레이어 -->
     <div class="player show idle" id="player" role="region" aria-label="재생 플레이어">

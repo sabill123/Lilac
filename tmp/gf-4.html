@@ -1,0 +1,12 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+.glare { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity var(--dur-short); background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.34), transparent 46%); mix-blend-mode: overlay; }
+
+[data-tilt]:hover .glare { opacity: 1; }
+
+.card.round .glare { border-radius: 50%; }
+
+  .glare { display: none; }
+
+html.touch .glare { display: none; }
+</style></head><body><div>x</div></body></html>

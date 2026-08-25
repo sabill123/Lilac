@@ -1,0 +1,388 @@
+{
+  "results": [
+    {
+      "file": "tmp/html-export/account.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 5x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 61,462; 50,000)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/multiline-row-meta] [advisory] 7x: A review quote or description wrapping to two-plus lines inside a repeating row, snapping the list's vertical rhythm against its single-line neighbors. (e.g. wrapping quote/meta in a list row; wrapping quote/meta in a list row; wrapping quote/meta in a list row)",
+        "[layout/overstuffed-row] [advisory] 3x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 5 slots in one row; 6 slots in one row; 6 slots in one row)",
+        "[layout/nested-cards] 8x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 10,
+      "counts": {
+        "byRule": {
+          "oversized-number": 5,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "multiline-row-meta": 7,
+          "overstuffed-row": 3,
+          "nested-cards": 8
+        },
+        "total": 25
+      }
+    },
+    {
+      "file": "tmp/html-export/artist-jp.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 12x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 16,200; 16,200)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[layout/floating-hero-card] 1x: Decorative 'badge' / 'spec' cards floated over the hero: corner-pinned, backdrop-blurred chips carrying a tiny label that overlap the artwork. A generated-landing signature. (e.g. \"M!LK 단독 내한 공연 D-47 내한 · 2026\")",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 14x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 12 slots in one row; 24 slots in one row; 54 slots in one row)",
+        "[layout/row-as-card] [advisory] 4x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 4 text-rows styled as cards; 7 text-rows styled as cards; 11 text-rows styled as cards)",
+        "[layout/nested-cards] 30x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 11,
+      "counts": {
+        "byRule": {
+          "oversized-number": 12,
+          "gradient-fill": 1,
+          "floating-hero-card": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 14,
+          "row-as-card": 4,
+          "nested-cards": 30
+        },
+        "total": 63
+      }
+    },
+    {
+      "file": "tmp/html-export/artist-kr.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/row-kicker-eyebrow] [advisory] 2x: List rows wearing eyebrows: every repeated item opens with an ALL-CAPS kicker ('LOCAL FAVORITE · 96 RAVING') before its actual title. (e.g. \"LEMONADE\"; \"Apple Music 카탈로그\")",
+        "[layout/overstuffed-row] [advisory] 15x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 15 slots in one row; 25 slots in one row; 56 slots in one row)",
+        "[layout/row-as-card] [advisory] 4x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 4 text-rows styled as cards; 8 text-rows styled as cards; 11 text-rows styled as cards)",
+        "[layout/nested-cards] 29x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "row-kicker-eyebrow": 2,
+          "overstuffed-row": 15,
+          "row-as-card": 4,
+          "nested-cards": 29
+        },
+        "total": 53
+      }
+    },
+    {
+      "file": "tmp/html-export/artists.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/row-as-card] [advisory] 1x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 26 text-rows styled as cards)",
+        "[layout/nested-cards] 49x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "row-as-card": 1,
+          "nested-cards": 49
+        },
+        "total": 53
+      }
+    },
+    {
+      "file": "tmp/html-export/chart.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[layout/floating-hero-card] 1x: Decorative 'badge' / 'spec' cards floated over the hero: corner-pinned, backdrop-blurred chips carrying a tiny label that overlap the artwork. A generated-landing signature. (e.g. \"이번 주 1위 · 누르면 재생됩니다\")",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 7x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 5 slots in one row; 5 slots in one row; 5 slots in one row)",
+        "[layout/nested-cards] 108x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 8,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "floating-hero-card": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 7,
+          "nested-cards": 108
+        },
+        "total": 119
+      }
+    },
+    {
+      "file": "tmp/html-export/help.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/nested-cards] 5x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "nested-cards": 5
+        },
+        "total": 8
+      }
+    },
+    {
+      "file": "tmp/html-export/home.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 4x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 16,200; 35,800)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 7x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 65 slots in one row; 18 slots in one row; 37 slots in one row)",
+        "[layout/row-as-card] [advisory] 3x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 3 text-rows styled as cards; 11 text-rows styled as cards; 4 text-rows styled as cards)",
+        "[layout/nested-cards] 71x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 10,
+      "counts": {
+        "byRule": {
+          "oversized-number": 4,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 7,
+          "row-as-card": 3,
+          "nested-cards": 71
+        },
+        "total": 87
+      }
+    },
+    {
+      "file": "tmp/html-export/landing.html",
+      "pass": true,
+      "issues": [
+        "[layout/overstuffed-row] [advisory] 5x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 7 slots in one row; 20 slots in one row; 9 slots in one row)"
+      ],
+      "severity": 0,
+      "counts": {
+        "byRule": {
+          "overstuffed-row": 5
+        },
+        "total": 5
+      }
+    },
+    {
+      "file": "tmp/html-export/library.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 2x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 13 slots in one row; 5 slots in one row)",
+        "[layout/nested-cards] 13x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"보관함 전체플레이리스트팔로우 최근 순 심야의\"); card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"Lilac 홈차트스토어일정보관함 워크 모드 \"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 2,
+          "nested-cards": 13
+        },
+        "total": 18
+      }
+    },
+    {
+      "file": "tmp/html-export/login.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/nested-cards] 4x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "nested-cards": 4
+        },
+        "total": 7
+      }
+    },
+    {
+      "file": "tmp/html-export/orders.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 3x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 16,200; 36,000)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 3x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 5 slots in one row; 5 slots in one row; 5 slots in one row)",
+        "[layout/nested-cards] 5x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 9,
+      "counts": {
+        "byRule": {
+          "oversized-number": 3,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 3,
+          "nested-cards": 5
+        },
+        "total": 13
+      }
+    },
+    {
+      "file": "tmp/html-export/product.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 11x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 16,200; 16,200)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/row-kicker-eyebrow] [advisory] 4x: List rows wearing eyebrows: every repeated item opens with an ALL-CAPS kicker ('LOCAL FAVORITE · 96 RAVING') before its actual title. (e.g. \"THE ALFEE\"; \"THE ALFEE\"; \"THE ALFEE\")",
+        "[layout/overstuffed-row] [advisory] 4x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 5 slots in one row; 5 slots in one row; 5 slots in one row)",
+        "[layout/row-as-card] [advisory] 1x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 4 text-rows styled as cards)",
+        "[layout/nested-cards] 5x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 10,
+      "counts": {
+        "byRule": {
+          "oversized-number": 11,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "row-kicker-eyebrow": 4,
+          "overstuffed-row": 4,
+          "row-as-card": 1,
+          "nested-cards": 5
+        },
+        "total": 27
+      }
+    },
+    {
+      "file": "tmp/html-export/schedule.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/overstuffed-row] [advisory] 3x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 6 slots in one row; 18 slots in one row; 12 slots in one row)",
+        "[layout/nested-cards] 18x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))",
+        "[layout/numbered-section-markers] [advisory] 2x: Decorative 01 / 02 / 03 scaffolding: leading-zero index labels stamped on sections whose order encodes nothing. (e.g. \"08\"; \"09\")"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "overstuffed-row": 3,
+          "nested-cards": 18,
+          "numbered-section-markers": 2
+        },
+        "total": 26
+      }
+    },
+    {
+      "file": "tmp/html-export/search.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/row-as-card] [advisory] 2x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 5 text-rows styled as cards; 4 text-rows styled as cards)",
+        "[layout/nested-cards] 17x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "row-as-card": 2,
+          "nested-cards": 17
+        },
+        "total": 22
+      }
+    },
+    {
+      "file": "tmp/html-export/status.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/nested-cards] 17x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 7,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "nested-cards": 17
+        },
+        "total": 20
+      }
+    },
+    {
+      "file": "tmp/html-export/store.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 13x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462; 16,200; 35,800)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/row-kicker-eyebrow] [advisory] 2x: List rows wearing eyebrows: every repeated item opens with an ALL-CAPS kicker ('LOCAL FAVORITE · 96 RAVING') before its actual title. (e.g. \"THE ALFEE\"; \"NCT WISH\")",
+        "[layout/overstuffed-row] [advisory] 17x: The everything-row: thumbnail plus kicker plus title plus location plus quote plus mini-viz crammed into each repeated item, past any scannable density. (e.g. 18 slots in one row; 7 slots in one row; 5 slots in one row)",
+        "[layout/row-as-card] [advisory] 1x: Card-itis: a plain text feed where every uniform row gets its own border, radius, and elevation, floating on gaps instead of sitting in a list. (e.g. 24 text-rows styled as cards)",
+        "[layout/nested-cards] 7x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 10,
+      "counts": {
+        "byRule": {
+          "oversized-number": 13,
+          "gradient-fill": 1,
+          "redundant-border": 1,
+          "row-kicker-eyebrow": 2,
+          "overstuffed-row": 17,
+          "row-as-card": 1,
+          "nested-cards": 7
+        },
+        "total": 42
+      }
+    },
+    {
+      "file": "tmp/html-export/work.html",
+      "pass": false,
+      "issues": [
+        "[copy/oversized-number] 1x: A long un-abbreviated figure (e.g. $1,842,000) overflows its container and reads as a live screen-recording rather than mockup data. (e.g. 61,462)",
+        "[color/gradient-fill] 1x: A rounded entity (icon tile, card, chip, avatar, filled button) filled with a gradient: a single solid color reads cleaner; the gradient is a generated-UI tell. (e.g. gradient entity fill, flattened to solid)",
+        "[visual/glyph-on-metric] 1x: A decorative emoji, catalog icon, or trend glyph placed on or over a numeric value: an emoji centered behind a progress-ring's percentage, an arrow or icon beside a stat's NN%. The number is the visual; the glyph collides with or pollutes it. (e.g. glyph on a metric (decoration .ic))",
+        "[visual/redundant-border] 1x: Belt and suspenders: an opaque box border drawn around an element that already separates itself with a background fill. (e.g. border on a filled card)",
+        "[layout/nested-cards] 14x: Cards inside cards: surfaced containers stacked so every level carries its own radius, fill, and edge, and depth stops meaning anything. (e.g. card container nested in a card (\"심야의 J-POP플레이리스트 · 6곡 YOA\"); card container nested in a card (\"\"); card container nested in a card (\"한국어日本語English中文\"))"
+      ],
+      "severity": 9,
+      "counts": {
+        "byRule": {
+          "oversized-number": 1,
+          "gradient-fill": 1,
+          "glyph-on-metric": 1,
+          "redundant-border": 1,
+          "nested-cards": 14
+        },
+        "total": 18
+      }
+    }
+  ]
+}

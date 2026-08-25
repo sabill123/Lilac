@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>
+
+
+  /* 광택 — 기울인 방향을 따라 빛이 흐른다 */
+  .d3-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 260ms var(--ease-out);
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgba(255, 255, 255, 0.26) 0%,
+      rgba(255, 255, 255, 0.08) 32%,
+      transparent 62%);
+  }
+
+  .d3-tilt.is-tilting .d3-glare { opacity: 1; }
+
+  .d3-glare { display: none; }
+
+html.touch .d3-glare { display: none; }
+</style></head><body><div>x</div></body></html>

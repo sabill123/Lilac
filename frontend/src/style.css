@@ -924,7 +924,7 @@ body.dock-open main, body.dock-open .footer { margin-right: 320px; }
 .mp-field.num { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
 .mp-field input { width: min(320px, 100%); background: var(--bg); border: 1px solid var(--rule-strong, rgba(255,255,255,0.13)); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--ink); font-size: 14px; font-family: inherit; outline: none; }
 .mp-field input:focus { border-color: var(--accent); }
-.mp-hint { font-size: 11.5px; color: var(--ink-faint); }
+.mp-hint { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; justify-self: end; }
 .mp-row .btn-ghost-sm { margin-top: 0; }
 .mp-empty { font-size: 13px; color: var(--ink-faint); padding: 10px 0; }
 .mp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1302,7 +1302,7 @@ body.play-mode .right-dock {
    ============================================================ */
 
 /* 1) 화이트(스토어) 페이지에서 톱바를 라이트 테마로 전환 */
-body.light-page .topbar.scrolled { background: rgba(255,255,255,.9); border-bottom: 1px solid var(--paper-rule); }
+body.light-page .topbar.scrolled { background: rgba(255,255,255,.9); box-shadow: 0 1px 0 var(--paper-rule); }
 body.light-page .tb-item { color: #6b6d74; }
 body.light-page .tb-item:hover { color: var(--paper-ink); background: rgba(0,0,0,.05); }
 body.light-page .tb-item.on { color: var(--paper-ink); background: rgba(0,0,0,.07); }
