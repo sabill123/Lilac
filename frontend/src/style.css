@@ -2811,7 +2811,8 @@ body.has-3d-hero .billboard::after {
 /* 차트 무대도 히어로 전체를 쓴다. 텍스트는 왼쪽 막 위에 얹는다. */
 .ch-stage {
   position: absolute;
-  inset: 0;
+  /* 1위 작품 한 점만 오른쪽에 전시한다. 왼쪽은 제목·컨트롤 자리로 온전히 비운다. */
+  inset: 40px 2% 72px 46%;
   z-index: 1;
   opacity: 0;
   transition: opacity 1100ms var(--ease-out);
@@ -2824,25 +2825,14 @@ body.has-3d-chart .ch-controls {
   position: relative;
   z-index: 3;
 }
-body.has-3d-chart .ch-controls::before {
-  content: '';
-  position: absolute;
-  inset: -10px -16px;
-  z-index: -1;
-  border-radius: 18px;
-  background: linear-gradient(90deg, var(--page) 62%, transparent);
+/* 컨트롤과 무대가 겹치지 않으므로 별도 배경이 필요 없다 */
+body.has-3d-chart .chart-hero {
+  min-height: min(62vh, 560px);
+  display: flex;
+  align-items: center;
+  padding-top: 32px;
 }
-body.has-3d-chart .chart-hero { min-height: min(78vh, 700px); display: flex; align-items: center; }
-body.has-3d-chart .ch-inner::before {
-  content: '';
-  position: absolute;
-  inset: -40% -18% -40% -14%;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(100deg, var(--page) 4%, rgba(5, 6, 8, 0.88) 28%, rgba(5, 6, 8, 0.36) 50%, transparent 66%),
-    radial-gradient(120% 90% at 6% 50%, rgba(5, 6, 8, 0.7) 0%, transparent 60%);
-}
+/* 무대가 오른쪽에만 있으므로 텍스트를 덮는 막은 두지 않는다 */
 body.has-3d-chart .chart-hero::after {
   content: '';
   position: absolute;
@@ -3134,4 +3124,10 @@ body.has-3d-chart .chart-hero::after {
   .lib2-stats > div { min-width: 78px; padding: 10px 12px; }
   .lib2-stats dd { font-size: 18px; }
   .lt-row { grid-template-columns: 22px 40px 1fr 30px; gap: 9px; }
+}
+
+/* 1위 전시 안내 — 무대 아래 오른쪽 */
+body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
+@media (max-width: 1100px) {
+  .ch-stage { inset: 40px 2% 72px 38%; opacity: 0.9 !important; }
 }

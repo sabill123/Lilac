@@ -572,7 +572,7 @@ export async function pageChart(sub?: string) {
   const stage = document.getElementById('chStage');
   if (stage && can3D()) {
     document.body.classList.add('has-3d-chart');
-    const items = list.filter((e) => e.artwork).slice(0, 20).map((e) => ({
+    const items = list.filter((e) => e.artwork).slice(0, 1).map((e) => ({
       rank: e.rank, title: e.title, artist: e.artist, artwork: e.artwork,
       onPick: async () => {
         // 3D 카드에서 바로 재생 — 카탈로그에서 원곡을 찾아 큐에 올린다
@@ -580,15 +580,15 @@ export async function pageChart(sub?: string) {
         playQueue([hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork || undefined }], 0);
       },
     }));
-    stage.addEventListener('chart3d:front', (ev) => {
-      const d = (ev as CustomEvent).detail as { rank: number; title: string; artist: string };
-      const now = document.getElementById('chNow');
-      if (!now || !d) return;
-      now.hidden = false;
-      now.querySelector('.ch-now-rank')!.textContent = String(d.rank);
-      now.querySelector('.ch-now-text')!.textContent = `${d.title} · ${d.artist}`;
-    });
-    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">스크롤·드래그로 복도를 따라 이동합니다</span>');
+    // 전시 중인 작품(1위) 정보를 배지에 고정 표시
+    const first = list[0];
+    const nowEl = document.getElementById('chNow');
+    if (nowEl && first) {
+      nowEl.hidden = false;
+      nowEl.querySelector('.ch-now-rank')!.textContent = String(first.rank ?? 1);
+      nowEl.querySelector('.ch-now-text')!.textContent = `${first.title} · ${first.artist}`;
+    }
+    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">이번 주 1위 · 누르면 재생됩니다</span>');
     mountChart3D(stage, items).catch(() => document.body.classList.remove('has-3d-chart'));
   }
   $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
