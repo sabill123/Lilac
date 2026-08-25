@@ -163,14 +163,31 @@ function bindRank(container: HTMLElement, entries: { title: string; artist: stri
     row.addEventListener('click', async (e) => {
       if ((e.target as HTMLElement).closest('.rk-mv')) return;
       const i = Number(row.dataset.i);
-      const list: PlayableTrack[] = [];
-      for (const en of entries) {
-        const hit = await findCatalog(en.searchTerm || `${en.artist} ${en.title}`);
-        list.push(hit ? toPlayable(hit, en.youtubeId) : { title: en.title, artist: en.artist, artwork: en.artwork });
-      }
-      playQueue(list, i);
+
+      /* 클릭한 곡부터 바로 튼다.
+         예전에는 목록 전체(최대 100곡)의 카탈로그를 다 찾은 뒤 재생해서
+         클릭 후 7초 넘게 무반응이었다. 지금은:
+         1) 클릭한 곡 하나만 찾아 즉시 재생
+         2) 나머지는 뒤에서 채워 큐를 완성 */
       container.querySelectorAll('.rk-row').forEach((r) => r.classList.remove('playing'));
       row.classList.add('playing');
+
+      const asTrack = (en: typeof entries[number], hit: CatalogTrack | null): PlayableTrack =>
+        hit ? toPlayable(hit, en.youtubeId) : { title: en.title, artist: en.artist, artwork: en.artwork };
+
+      const clicked = entries[i];
+      const first = await findCatalog(clicked.searchTerm || `${clicked.artist} ${clicked.title}`);
+      // 우선 클릭한 곡 하나로 재생을 시작한다
+      playQueue([asTrack(clicked, first)], 0, 'chart');
+
+      // 이어서 주변 곡(앞뒤 20곡)만 큐로 채운다 — 100곡 전부는 과하다
+      const from = Math.max(0, i - 5);
+      const slice = entries.slice(from, from + 25);
+      const hits = await Promise.all(slice.map((en) => findCatalog(en.searchTerm || `${en.artist} ${en.title}`).catch(() => null)));
+      // 사용자가 그 사이 다른 곡을 틀지 않았을 때만 큐를 확장한다
+      if (row.classList.contains('playing')) {
+        playQueue(slice.map((en, k) => asTrack(en, hits[k])), i - from, 'chart');
+      }
     }));
 }
 
@@ -663,6 +680,9 @@ const sized = (url?: string | null, size = 300) => artUrl({ artwork: url || unde
 const artistSub = (a: Artist) => a.nameJa || a.nameOriginal || (a.searchTerm !== a.name ? a.searchTerm : '') || '';
 /** 국가 라벨 */
 const countryLabel = (c?: string) => (c === 'kr' ? '한국' : '일본');
+/** 주문의 구매자 통화 — 한국반 주문은 엔, 일본반 주문은 원 */
+const orderCur = (o: { breakdown?: { buyerCurrency?: string; localCurrency?: string } }) =>
+  (o.breakdown?.buyerCurrency ?? (o.breakdown?.localCurrency === 'KRW' ? 'JPY' : 'KRW')) as 'KRW' | 'JPY';
 
 const money = (n: number, cur?: string) => (cur === 'JPY' ? `¥${n.toLocaleString()}` : `₩${n.toLocaleString()}`);
 const SIZE_FILTERS = [
@@ -1683,7 +1703,11 @@ export async function pageArtists() {
 interface Order {
   id: string; productId: string; name: string; brand: string; option: string;
   qty: number; unit?: number; total: number; status: string; orderedAt: string;
-  artwork?: string; breakdown?: { jpy: number; rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number; rateDate?: string } | null;
+  artwork?: string;
+  breakdown?: {
+    jpy?: number; localAmount?: number; localCurrency?: string; buyerCurrency?: string;
+    rate: number; base: number; feeRate: number; fee: number; shipping: number; total: number; rateDate?: string;
+  } | null;
 }
 const STATUS_STEPS = ['예약 접수', '현지 매입', '국제 배송', '배송 완료'];
 
@@ -1715,7 +1739,7 @@ export async function pageOrders() {
         <div class="ord-sub">${esc(o.brand)} · ${esc(o.option)} · ${o.qty}개</div>
       </div>
       <div class="ord-right">
-        <div class="ord-total">₩${o.total.toLocaleString()}</div>
+        <div class="ord-total">${money(o.total, orderCur(o))}</div>
         <div class="ord-date">${new Date(o.orderedAt).toLocaleDateString()}</div>
       </div>
       ${icon('i-chev-r', 'ic s ord-go')}
@@ -1754,8 +1778,8 @@ export async function pageOrderDetail(id: string) {
           <tr><th>아티스트</th><td>${esc(o.brand)}</td></tr>
           <tr><th>사양</th><td>${esc(o.option)}</td></tr>
           <tr><th>수량</th><td>${o.qty}개</td></tr>
-          <tr><th>단가</th><td>₩${(o.unit ?? Math.round(o.total / o.qty)).toLocaleString()}</td></tr>
-          <tr><th>결제 금액</th><td><b>₩${o.total.toLocaleString()}</b> <span class="dim">(데모 크레딧)</span></td></tr>
+          <tr><th>단가</th><td>${money(o.unit ?? Math.round(o.total / o.qty), orderCur(o))}</td></tr>
+          <tr><th>결제 금액</th><td><b>${money(o.total, orderCur(o))}</b> <span class="dim">(데모 크레딧)</span></td></tr>
           <tr><th>상태</th><td><span class="mp-status">${esc(o.status)}</span></td></tr>
         </tbody></table>
       </div>
@@ -1764,12 +1788,12 @@ export async function pageOrderDetail(id: string) {
       <div class="mp-section">
         <h3>가격 산출 내역</h3>
         <table class="calc-table on-dark"><tbody>
-          <tr><th>일본 정가</th><td>¥${b.jpy.toLocaleString()}</td><td class="calc-src">주문 시점 기준</td></tr>
+          <tr><th>현지 정가</th><td>${b.localCurrency === 'KRW' ? '₩' : '¥'}${(b.localAmount ?? b.jpy ?? 0).toLocaleString()}</td><td class="calc-src">주문 시점 기준</td></tr>
           <tr><th>적용 환율</th><td>× ${b.rate}</td><td class="calc-src">${esc(b.rateDate || '')}</td></tr>
-          <tr><th>상품 원가</th><td>₩${b.base.toLocaleString()}</td><td class="calc-src"></td></tr>
-          <tr><th>대행 수수료</th><td>+ ₩${b.fee.toLocaleString()}</td><td class="calc-src">${Math.round(b.feeRate * 100)}%</td></tr>
-          <tr><th>국제배송 분담</th><td>+ ₩${b.shipping.toLocaleString()}</td><td class="calc-src">합배송</td></tr>
-          <tr class="calc-total"><th>단가</th><td>₩${b.total.toLocaleString()}</td><td class="calc-src"></td></tr>
+          <tr><th>상품 원가</th><td>${money(b.base, orderCur(o))}</td><td class="calc-src"></td></tr>
+          <tr><th>대행 수수료</th><td>+ ${money(b.fee, orderCur(o))}</td><td class="calc-src">${Math.round(b.feeRate * 100)}%</td></tr>
+          <tr><th>국제배송 분담</th><td>+ ${money(b.shipping, orderCur(o))}</td><td class="calc-src">합배송</td></tr>
+          <tr class="calc-total"><th>단가</th><td>${money(b.total, orderCur(o))}</td><td class="calc-src"></td></tr>
         </tbody></table>
       </div>` : ''}
 
@@ -2223,9 +2247,9 @@ export async function pageAccount() {
         ${orders.length ? `
         <table class="mp-table">
           <thead><tr><th>주문번호</th><th>상품</th><th>옵션</th><th>수량</th><th>결제</th><th>상태</th><th>주문일</th></tr></thead>
-          <tbody>${orders.map((o: { id: string; name: string; brand: string; option: string; qty: number; total: number; status: string; orderedAt: string }) => `
+          <tbody>${orders.map((o: { id: string; name: string; brand: string; option: string; qty: number; total: number; status: string; orderedAt: string; breakdown?: { buyerCurrency?: string; localCurrency?: string } }) => `
             <tr><td class="num">${o.id}</td><td><b>${esc(o.name)}</b><br/><span class="dim">${esc(o.brand)}</span></td>
-            <td>${esc(o.option)}</td><td class="num">${o.qty}</td><td class="num">₩${o.total.toLocaleString()}</td>
+            <td>${esc(o.option)}</td><td class="num">${o.qty}</td><td class="num">${money(o.total, orderCur(o))}</td>
             <td><span class="mp-status">${esc(o.status)}</span></td><td class="dim num">${new Date(o.orderedAt).toLocaleDateString()}</td></tr>`).join('')}
           </tbody></table>` : '<p class="mp-empty">주문 내역이 없습니다</p>'}
       </div>
