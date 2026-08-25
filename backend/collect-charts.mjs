@@ -65,7 +65,7 @@ async function genieKR() {
 
 /** Apple 공식 마케팅 RSS — 스크래핑이 아닌 정식 피드라 가장 안정적이다 */
 async function appleRss(country, limit = 50) {
-  const j = await fetchJson(`https://rss.applemarketingtools.com/api/v2/${country}/music/most-played/${limit}/songs.json`);
+  const j = await fetchJson(`https://rss.marketingtools.apple.com/api/v2/${country}/music/most-played/${limit}/songs.json`);
   return (j?.feed?.results || []).map((x, i) => ({
     rank: i + 1,
     title: x.name,

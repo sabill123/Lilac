@@ -720,10 +720,17 @@ async function loadCharts() {
 const rssLiveCache = { jp: { at: 0, list: [] }, kr: { at: 0, list: [] } };
 const RSS_TTL = 10 * 60 * 1000;
 
-async function liveAppleRss(country) {
+async function liveAppleRss(country, budgetMs = 3500) {
   const c = rssLiveCache[country];
   if (c && Date.now() - c.at < RSS_TTL && c.list.length) return { list: c.list, fetchedAt: c.at, live: true };
-  const j = await fetchJsonRetry(`https://rss.applemarketingtools.com/api/v2/${country}/music/most-played/50/songs.json`, 2);
+
+  /* 외부 피드가 느려도 우리 응답을 막으면 안 된다.
+     제한 시간 안에 못 받으면 수집본으로 넘기고, 갱신은 백그라운드에서 계속한다.
+     (Apple이 도메인을 옮기며 리다이렉트가 끼자 콜드 캐시에서 20초가 걸렸다) */
+  const j = await Promise.race([
+    fetchJsonRetry(`https://rss.marketingtools.apple.com/api/v2/${country}/music/most-played/50/songs.json`, 2),
+    new Promise((r) => setTimeout(() => r(null), budgetMs)),
+  ]);
   const list = (j?.feed?.results || []).map((x, i) => ({
     rank: i + 1, title: x.name, artist: x.artistName,
     artwork: (x.artworkUrl100 || '').replace('100x100', '400x400'),
