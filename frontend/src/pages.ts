@@ -1170,10 +1170,13 @@ export async function pageArtist(id: string) {
   root().innerHTML = `
     <section class="ar-hero">
       <div class="ar-bg" id="arBg"></div><div class="ar-scrim"></div>
-      <div class="ar-info">
-        <p class="ar-verified">${icon('i-check', 'ic s')} 인증된 아티스트</p>
-        <h1 class="ar-name">${esc(a.name)}</h1>
-        <p class="ar-stats" id="arStats"><span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
+      <div class="ar-head">
+        <div class="ar-portrait" id="arPortrait" aria-hidden="true"></div>
+        <div class="ar-info">
+          <p class="ar-verified">${icon('i-check', 'ic s')} 인증된 아티스트</p>
+          <h1 class="ar-name">${esc(a.name)}</h1>
+          <p class="ar-stats" id="arStats"><span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
+        </div>
       </div>
     </section>
     <div class="ar-actionbar">
@@ -1202,10 +1205,21 @@ export async function pageArtist(id: string) {
 
   findCatalog(a.searchTerm).then((hit) => {
     const bg = document.getElementById('arBg');
+    const portrait = document.getElementById('arPortrait');
     if (!hit || !bg) return;
-    bg.style.backgroundImage = `url(${artUrl(hit, 1200)})`;
+    /* 배경은 강한 블러라 잘려도 무방하고,
+       원본은 초상 카드에 온전하게 보여준다 — 어떤 아트워크든 잘리지 않는다 */
+    bg.style.backgroundImage = `url(${artUrl(hit, 600)})`;
+    if (portrait) portrait.innerHTML = `<img src="${artUrl(hit, 440)}" alt="" decoding="async"/>`;
     void applyTone(document.querySelector('.ar-hero'), artUrl(hit, 200));
   });
+  // 수집된 아트워크가 있으면 카탈로그 응답을 기다리지 않고 먼저 채운다
+  if (a.artwork) {
+    const bg0 = document.getElementById('arBg');
+    const pt0 = document.getElementById('arPortrait');
+    if (bg0) bg0.style.backgroundImage = `url(${sized(a.artwork, 600)})`;
+    if (pt0) pt0.innerHTML = `<img src="${sized(a.artwork, 440)}" alt="" decoding="async"/>`;
+  }
   $('#arFollow').addEventListener('click', async () => {
     const list = await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: a.id, name: a.name }) });
     const on = list.some((o: { artistId: string }) => o.artistId === a.id);

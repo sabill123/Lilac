@@ -815,9 +815,35 @@ body.dock-open main, body.dock-open .footer { margin-right: 320px; transition: m
 
 /* ---------- 아티스트 히어로 (스포티파이) ---------- */
 .ar-hero { position: relative; height: min(46vh, 380px); min-height: 280px; display: flex; align-items: flex-end; }
-.ar-bg { position: absolute; inset: 0; background-size: cover; background-position: center 30%; filter: blur(2px); transform: scale(1.06); }
+/* 배경은 색과 분위기만 남긴다.
+   정사각 아트워크를 초광폭 히어로에 그대로 깔면 어떤 위치값을 줘도
+   이미지에 따라 얼굴이 잘린다 — 원본은 .ar-portrait 가 온전하게 보여준다. */
+.ar-bg {
+  position: absolute; inset: -12%;
+  background-size: cover; background-position: center;
+  filter: blur(52px) saturate(1.35);
+  transform: scale(1.15);
+  opacity: 0.85;
+}
 .ar-scrim { position: absolute; inset: 0; background: linear-gradient(to top, var(--bg) 2%, rgba(11,12,15,.72) 42%, rgba(11,12,15,.42) 100%); }
-.ar-info { position: relative; z-index: 1; padding: 0 var(--gutter) 26px; }
+.ar-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; gap: 26px;
+  width: 100%;
+  padding: 0 var(--gutter) 28px;
+}
+.ar-portrait {
+  flex: 0 0 auto;
+  width: clamp(116px, 16vw, 196px);
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: var(--hairline), var(--shadow-lg);
+}
+.ar-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ar-portrait:empty { display: none; }
+.ar-info { position: relative; z-index: 1; min-width: 0; }
 .ar-verified { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink); }
 .ar-verified .ic { color: var(--accent); }
 .ar-name { font-size: clamp(40px, 8vw, 96px); font-weight: 800; letter-spacing: -0.05em; line-height: 1; margin: 10px 0 12px; }
@@ -3209,4 +3235,10 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
   ::view-transition-old(lilac-sidebar), ::view-transition-new(lilac-sidebar) {
     animation: none;
   }
+}
+
+@media (max-width: 720px) {
+  .ar-head { gap: 16px; padding-bottom: 20px; }
+  .ar-portrait { width: 96px; border-radius: 10px; }
+  .ar-name { font-size: clamp(26px, 9vw, 40px); }
 }
