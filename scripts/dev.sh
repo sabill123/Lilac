@@ -47,6 +47,19 @@ else
 fi
 
 echo "── 4. 프론트 기동 (포트 ${FRONT_PORT})"
+# 포트가 이미 점유돼 있으면(종료 권한이 없는 환경) 캐시를 지우면 안 된다 —
+# 돌고 있는 vite의 의존성 번들이 깨져 동적 import가 실패한다.
+if lsof -ti :$FRONT_PORT > /dev/null 2>&1; then
+  EXISTING_MARKER=$(curl -s --max-time 3 "http://localhost:${FRONT_PORT}/src/main.ts" | grep -c "startViewTransition" || true)
+  if [ "$EXISTING_MARKER" -ge 1 ]; then
+    echo "   기존 vite가 최신 코드를 서빙 중 — 재기동 생략"
+    echo ""
+    echo "완료 → http://localhost:${FRONT_PORT}/"
+    exit 0
+  fi
+  echo "   오류: 포트 ${FRONT_PORT}를 낡은 프로세스가 점유 중입니다. 본인 터미널에서 실행해 주세요."
+  exit 1
+fi
 rm -rf frontend/node_modules/.vite
 (npm --prefix frontend run dev -- --port $FRONT_PORT --strictPort --force > /tmp/lilac-vite.log 2>&1 &)
 sleep 4

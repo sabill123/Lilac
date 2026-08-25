@@ -121,20 +121,34 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
     );
   });
 
+  /* ── 무한 루프 ──
+     벽을 한 바퀴 폭(totalW)만큼 오른쪽에 그대로 복제해 이어 붙인다.
+     랩이 totalW 안에서 돌기 때문에 어느 시점에도 이음새·끝이 보이지 않는다.
+     복제 메시는 지오메트리와 머티리얼을 공유하므로 텍스처 비용이 늘지 않는다. */
+  const clones: THREE.Mesh[] = [];
+  for (const t of tiles) {
+    const clone = new THREE.Mesh(t.mesh.geometry, t.mesh.material);
+    clone.position.copy(t.mesh.position);
+    clone.position.x += totalW;
+    clone.userData = t.mesh.userData;      // 클릭·호버 동작 동일
+    wall.add(clone);
+    clones.push(clone);
+  }
+
   /* 선반 — 각 행 아래에 얇은 판을 대 '걸려 있는' 느낌을 만든다 */
-  const shelfGeo = new THREE.BoxGeometry(totalW + COL_W * 2, 0.045, 0.2);
+  const shelfGeo = new THREE.BoxGeometry(totalW * 2 + 30, 0.045, 0.2);
   const shelfMat = new THREE.MeshStandardMaterial({ color: 0x2a2b33, roughness: 0.86, metalness: 0.05 });
   for (let r = 0; r < ROWS; r++) {
     const shelf = new THREE.Mesh(shelfGeo, shelfMat);
-    shelf.position.set(0, (ROWS - 1) / 2 * ROW_H - r * ROW_H - TILE / 2 - 0.06, 0.08);
+    shelf.position.set(totalW / 2, (ROWS - 1) / 2 * ROW_H - r * ROW_H - TILE / 2 - 0.06, 0.08);
     wall.add(shelf);
   }
 
   /* 벽면 — 아주 어두운 판. 재킷 뒤로 공간이 있다는 걸 알려준다 */
-  const backGeo = new THREE.PlaneGeometry(totalW + 14, ROWS * ROW_H + 10);
+  const backGeo = new THREE.PlaneGeometry(totalW * 2 + 34, ROWS * ROW_H + 10);
   const backMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0e, roughness: 1, metalness: 0 });
   const back = new THREE.Mesh(backGeo, backMat);
-  back.position.z = -0.6;
+  back.position.set(totalW / 2, 0, -0.6);
   wall.add(back);
 
   /* ---- 상호작용 ----
@@ -216,7 +230,7 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
 
     // 마우스가 얹힌 재킷만 벽에서 살짝 떠오른다
     ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects(tiles.map((t) => t.mesh), false)[0];
+    const hit = ray.intersectObjects([...tiles.map((t) => t.mesh), ...clones], false)[0];
     const next = (hit?.object as THREE.Mesh) || null;
     if (next !== hovered) {
       hovered = next;
@@ -224,14 +238,20 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
       host.dispatchEvent(new CustomEvent('wall:hover', { detail: hovered?.userData?.item ?? null }));
     }
 
-    for (const t of tiles) {
-      const mat = t.mesh.userData.faceMat as THREE.MeshStandardMaterial;
-      if (t.mesh.userData.ready) mat.opacity += (1 - mat.opacity) * 0.08;
-      const lift = t.mesh === hovered ? 0.34 : 0;
-      t.mesh.position.z += (lift - t.mesh.position.z) * 0.16;
-      const s = t.mesh === hovered ? 1.045 : 1;
-      t.mesh.scale.x += (s - t.mesh.scale.x) * 0.16;
-      t.mesh.scale.y = t.mesh.scale.x;
+    for (let k = 0; k < tiles.length; k++) {
+      const orig = tiles[k].mesh;
+      const twin = clones[k];
+      const mat = orig.userData.faceMat as THREE.MeshStandardMaterial;
+      if (orig.userData.ready) mat.opacity += (1 - mat.opacity) * 0.08;
+      // 원본이든 복제본이든 마우스가 얹힌 쪽 짝 전체를 들어올린다
+      const isHover = hovered === orig || hovered === twin;
+      const lift = isHover ? 0.34 : 0;
+      const s = isHover ? 1.045 : 1;
+      for (const m of [orig, twin]) {
+        m.position.z += (lift - m.position.z) * 0.16;
+        m.scale.x += (s - m.scale.x) * 0.16;
+        m.scale.y = m.scale.x;
+      }
     }
 
     renderer.render(scene, camera);
@@ -262,6 +282,7 @@ export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | nul
       window.removeEventListener('pointerup', onPointerUp);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       renderer.domElement.removeEventListener('click', onClick);
+      clones.forEach((c) => c.removeFromParent());
       tiles.forEach((t) => {
         const mat = t.mesh.userData.faceMat as THREE.MeshStandardMaterial;
         mat.map?.dispose(); mat.dispose();
