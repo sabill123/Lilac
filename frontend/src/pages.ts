@@ -881,7 +881,7 @@ export async function pageStore() {
           <p class="sh-sub">현지에서만 유통되는 반을 매입해 합배송으로 전달합니다.
             <b>일본반은 한국으로</b>, <b>한국반은 일본으로</b> 보냅니다.
             판매가는 <b>현지 정가 × 실시간 환율 + 대행 수수료 + 배송 분담</b>으로 자동 산출됩니다.</p>
-          ${fx ? `<p class="fx-line">적용 환율 <b>1엔 = ${fx.jpyKrw ?? fx.rate}원</b> · <b>1원 = ${fx.krwJpy ?? '—'}엔</b> <span class="src-badge ${fx.live ? 'real' : 'demo'}">${fx.date} ${fx.live ? '실시간' : '폴백'}</span></p>` : ''}
+          ${fx ? `<p class="fx-line">적용 환율 <b>1엔 = ${fx.jpyKrw ?? fx.rate}원</b> · <b>1원 = ${fx.krwJpy ?? '·'}엔</b> <span class="src-badge ${fx.live ? 'real' : 'demo'}">${fx.date} ${fx.live ? '실시간' : '폴백'}</span></p>` : ''}
         </div>
         <div class="sh-stats">
           <div><b>${products.filter((p) => (p.origin || 'jp') === 'jp').length}</b><span>일본반</span></div>
@@ -1902,6 +1902,17 @@ type FocusSession = {
 let focusTimerId: number | undefined;
 let focusEndsAt = 0;
 let focusNativeHandler: ((event: Event) => void) | null = null;
+/* 저장된 값이 없으면 72%로 시작한다.
+   Number(null)은 0이고 0은 isFinite·범위 검사를 모두 통과하므로,
+   getItem 결과를 바로 Number()에 넣으면 기본값 분기가 영영 실행되지 않는다.
+   그 결과 처음 들어온 사용자가 무음으로 시작하게 된다. */
+const savedFocusVolumeRaw = localStorage.getItem('lilac.workVolume');
+const savedFocusVolume = savedFocusVolumeRaw === null || savedFocusVolumeRaw.trim() === ''
+  ? Number.NaN
+  : Number(savedFocusVolumeRaw);
+let focusPreferredVolume = Number.isFinite(savedFocusVolume) && savedFocusVolume >= 0 && savedFocusVolume <= 100
+  ? Math.round(savedFocusVolume)
+  : 72;
 
 function focusPostNative(message: Record<string, unknown>) {
   const bridge = (window as unknown as { webkit?: { messageHandlers?: { lilac?: { postMessage: (v: unknown) => void } } } }).webkit;
@@ -1913,12 +1924,16 @@ function focusPlayerCommand(func: string, args: unknown[] = []) {
   frame?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args }), 'https://www.youtube-nocookie.com');
 }
 
-function focusSetVolume(volume: number, restoreAfter = 0) {
-  focusPlayerCommand('setVolume', [Math.max(0, Math.min(100, volume))]);
-  document.querySelector('.focus-shell')?.classList.toggle('ducking', volume < 50);
+function focusSetVolume(volume: number, restoreAfter = 0, ducking = false) {
+  const next = Math.max(0, Math.min(100, Math.round(volume)));
+  focusPlayerCommand('setVolume', [next]);
+  const range = document.getElementById('focusVolume') as HTMLInputElement | null;
+  const output = document.getElementById('focusVolumeValue');
+  if (range) range.value = String(next);
+  if (output) output.textContent = `${next}%`;
+  document.querySelector('.focus-shell')?.classList.toggle('ducking', ducking);
   if (restoreAfter) window.setTimeout(() => {
-    focusPlayerCommand('setVolume', [72]);
-    document.querySelector('.focus-shell')?.classList.remove('ducking');
+    focusSetVolume(focusPreferredVolume);
   }, restoreAfter);
 }
 
@@ -1959,6 +1974,11 @@ export async function pageFocus() {
           <div class="focus-actions">
             <button class="focus-primary" id="focusStart">45분 작업 시작</button>
             <button class="focus-quiet" id="focusTestDuck">스마트 볼륨 확인</button>
+            <label class="focus-volume" aria-label="YouTube 볼륨">
+              ${icon('i-vol', 'ic s')}
+              <input id="focusVolume" type="range" min="0" max="100" value="${focusPreferredVolume}"/>
+              <output id="focusVolumeValue" for="focusVolume">${focusPreferredVolume}%</output>
+            </label>
           </div>
         </section>
 
@@ -2019,6 +2039,15 @@ export async function pageFocus() {
   let selectedMode = 'balanced';
   let selectedMinutes = 45;
   let focusIsPlaying = false;
+
+  const focusFrame = $('#focusPlayer') as HTMLIFrameElement;
+  focusFrame.addEventListener('load', () => window.setTimeout(() => focusSetVolume(focusPreferredVolume), 350));
+
+  $('#focusVolume').addEventListener('input', (event) => {
+    focusPreferredVolume = Number((event.currentTarget as HTMLInputElement).value) || 0;
+    localStorage.setItem('lilac.workVolume', String(focusPreferredVolume));
+    focusSetVolume(focusPreferredVolume);
+  });
 
   const selectMix = (mix: FocusMix, autoplay = true) => {
     selected = mix;
@@ -2091,8 +2120,8 @@ export async function pageFocus() {
     } else startSession();
   });
   $('#focusTestDuck').addEventListener('click', () => {
-    focusSetVolume(18, 2600);
-    toast('알림 중에는 18%로 낮추고 자동 복원합니다');
+    focusSetVolume(18, 2600, true);
+    toast(`알림 중에는 18%로 낮추고 ${focusPreferredVolume}%로 복원합니다`);
   });
 
   $('#focusCurate').addEventListener('click', async () => {
@@ -2129,8 +2158,8 @@ export async function pageFocus() {
       const offset = command === 'next' ? 1 : -1;
       selectMix(mixes[(i + offset + mixes.length) % mixes.length]);
     }
-    else if (command.startsWith('duck:')) focusSetVolume(Number(command.split(':')[1]) || 18);
-    else if (command === 'restore') focusSetVolume(72);
+    else if (command.startsWith('duck:')) focusSetVolume(Number(command.split(':')[1]) || 18, 0, true);
+    else if (command === 'restore') focusSetVolume(focusPreferredVolume);
     else if (command.startsWith('session:')) {
       selectedMinutes = Number(command.split(':')[1]) || 45;
       $('#focusClock').textContent = focusClock(selectedMinutes * 60);

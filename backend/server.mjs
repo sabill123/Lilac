@@ -434,7 +434,7 @@ app.get('/api/status', async (_req, res) => {
       ok: true, updatedAt: null, ageHours: null,
       detail: process.env.SPOTIFY_CLIENT_ID
         ? '키 설정됨'
-        : '미설정 — SPOTIFY_CLIENT_ID/SECRET 등록 시 활성화 (무료)',
+        : '미설정: SPOTIFY_CLIENT_ID/SECRET 등록 시 활성화 (무료)',
     },
   ];
 

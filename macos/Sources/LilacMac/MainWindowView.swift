@@ -1,23 +1,25 @@
+import AppKit
 import SwiftUI
 
 enum LilacTheme {
-    static let accent = Color(red: 0.72, green: 0.61, blue: 1.00)
-    static let accentBright = Color(red: 0.82, green: 0.75, blue: 1.00)
-    static let canvas = Color(red: 0.037, green: 0.039, blue: 0.052)
-    static let sidebar = Color(red: 0.045, green: 0.047, blue: 0.061)
-    static let panel = Color(red: 0.061, green: 0.064, blue: 0.082)
-    static let panelRaised = Color(red: 0.082, green: 0.086, blue: 0.109)
-    static let stroke = Color.white.opacity(0.075)
-    static let muted = Color.white.opacity(0.58)
-    static let faint = Color.white.opacity(0.34)
+    static let accent = Color(red: 0.66, green: 0.54, blue: 1.00)
+    static let accentBright = Color(red: 0.78, green: 0.70, blue: 1.00)
+    static let canvas = Color(red: 0.028, green: 0.029, blue: 0.037)
+    static let sidebar = Color(red: 0.040, green: 0.041, blue: 0.050)
+    static let panel = Color(red: 0.056, green: 0.057, blue: 0.068)
+    static let panelRaised = Color(red: 0.076, green: 0.077, blue: 0.090)
+    static let stroke = Color.white.opacity(0.085)
+    static let muted = Color.white.opacity(0.62)
+    static let faint = Color.white.opacity(0.40)
+    static let danger = Color(red: 1.00, green: 0.39, blue: 0.42)
 }
 
 private extension View {
-    func lilacPanel(radius: CGFloat = 18, shadow: Bool = false) -> some View {
+    func lilacPanel(radius: CGFloat = 16, shadow: Bool = false) -> some View {
         self
-            .background(LilacTheme.panel.opacity(0.96), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .background(LilacTheme.panel, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
             .overlay { RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(LilacTheme.stroke) }
-            .shadow(color: shadow ? Color.black.opacity(0.25) : .clear, radius: 26, y: 14)
+            .shadow(color: shadow ? Color.black.opacity(0.20) : .clear, radius: 22, y: 12)
     }
 }
 
@@ -32,8 +34,8 @@ struct MainWindowView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            LilacSidebar(state: state).frame(width: 224)
-            Rectangle().fill(Color.white.opacity(0.055)).frame(width: 1)
+            LilacSidebar(state: state).frame(width: 244)
+            Rectangle().fill(Color.white.opacity(0.06)).frame(width: 1)
             ZStack {
                 LilacCanvas(tint: state.selectedMix.tint)
                 VStack(spacing: 0) {
@@ -46,6 +48,7 @@ struct MainWindowView: View {
         .background(LilacTheme.canvas)
         .tint(LilacTheme.accent)
         .preferredColorScheme(.dark)
+        .background(WindowStyler())
     }
 
     @ViewBuilder
@@ -65,15 +68,12 @@ private struct LilacCanvas: View {
     var body: some View {
         ZStack {
             LilacTheme.canvas
-            Canvas { context, size in
-                let spacing: CGFloat = 30
-                for x in stride(from: spacing, through: size.width, by: spacing) {
-                    for y in stride(from: spacing, through: size.height, by: spacing) {
-                        context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 1.2, height: 1.2)), with: .color(.white.opacity(0.022)))
-                    }
-                }
-            }
-            RadialGradient(colors: [tint.opacity(0.14), .clear], center: .topTrailing, startRadius: 20, endRadius: 520)
+            LinearGradient(
+                colors: [Color.white.opacity(0.018), .clear, Color.black.opacity(0.10)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            RadialGradient(colors: [tint.opacity(0.10), .clear], center: .topTrailing, startRadius: 10, endRadius: 560)
         }
         .ignoresSafeArea()
     }
@@ -90,14 +90,18 @@ private struct LilacSidebar: View {
         VStack(spacing: 0) {
             HStack(spacing: 11) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 11, style: .continuous).fill(LilacTheme.accent.opacity(0.16))
-                    Image(systemName: "waveform").font(.system(size: 15, weight: .bold)).foregroundStyle(LilacTheme.accentBright)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LilacTheme.accent)
+                    Image(systemName: "waveform").font(.system(size: 14, weight: .bold)).foregroundStyle(Color.black.opacity(0.72))
                 }
-                .frame(width: 38, height: 38)
-                Text("Lilac").font(.system(size: 19, weight: .semibold)).tracking(-0.5)
+                .frame(width: 36, height: 36)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Lilac").font(.system(size: 18, weight: .semibold)).tracking(-0.4)
+                    Text(state.player.isReady ? "재생 준비됨" : "플레이어 연결 중")
+                        .font(.system(size: 11, weight: .medium)).foregroundStyle(LilacTheme.faint)
+                }
                 Spacer()
             }
-            .padding(.horizontal, 18).padding(.top, 18).padding(.bottom, 28)
+            .padding(.horizontal, 18).padding(.top, 19).padding(.bottom, 25)
 
             VStack(spacing: 5) {
                 SidebarButton(section: .focus, state: state)
@@ -107,37 +111,31 @@ private struct LilacSidebar: View {
 
             Spacer()
 
-            VStack(spacing: 5) {
-                SidebarButton(section: .settings, state: state)
-                VStack(alignment: .leading, spacing: 11) {
+            VStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 9) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("오늘 \(todayMinutes)분").font(.system(size: 14, weight: .semibold))
-                            Text(state.hasActiveSession ? state.timerText : "하루 목표 120분")
-                                .font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
-                        }
+                        Text("오늘 \(todayMinutes)분").font(.system(size: 13, weight: .semibold))
                         Spacer()
-                        ZStack {
-                            Circle().stroke(Color.white.opacity(0.08), lineWidth: 4)
-                            Circle().trim(from: 0, to: min(Double(todayMinutes) / 120, 1))
-                                .stroke(LilacTheme.accent, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                            Image(systemName: "bolt.fill").font(.system(size: 10)).foregroundStyle(LilacTheme.accentBright)
-                        }
-                        .frame(width: 40, height: 40)
+                        Text(state.hasActiveSession ? state.timerText : "120분 목표")
+                            .font(.system(size: 11, weight: .medium)).foregroundStyle(LilacTheme.muted)
                     }
                     GeometryReader { proxy in
                         ZStack(alignment: .leading) {
-                            Capsule().fill(Color.white.opacity(0.055))
+                            Capsule().fill(Color.white.opacity(0.07))
                             Capsule().fill(LilacTheme.accent).frame(width: proxy.size.width * min(Double(todayMinutes) / 120, 1))
                         }
                     }
                     .frame(height: 4)
                 }
-                .padding(14)
-                .background(Color.white.opacity(0.035), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-                .overlay { RoundedRectangle(cornerRadius: 15).stroke(LilacTheme.stroke) }
-                .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 14)
+                .padding(.horizontal, 18)
+
+                SidebarButton(section: .settings, state: state)
+
+                HStack(spacing: 7) {
+                    SidebarWindowButton(title: "창 닫기", symbol: "xmark") { state.closeMainWindow() }
+                    SidebarWindowButton(title: "앱 종료", symbol: "power", destructive: true) { state.quitApp() }
+                }
+                .padding(.horizontal, 10).padding(.bottom, 13)
             }
         }
         .background(LilacTheme.sidebar)
@@ -159,8 +157,8 @@ private struct SidebarButton: View {
                 if selected { Circle().fill(LilacTheme.accentBright).frame(width: 5, height: 5) }
             }
             .foregroundStyle(selected ? Color.white : LilacTheme.muted)
-            .padding(.horizontal, 14).frame(height: 44)
-            .background(selected ? LilacTheme.accent.opacity(0.13) : .clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(.horizontal, 14).frame(height: 43)
+            .background(selected ? Color.white.opacity(0.075) : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain).padding(.horizontal, 10)
@@ -172,30 +170,68 @@ private struct DetailHeader: View {
     @ObservedObject var player: YouTubePlayerController
 
     var body: some View {
-        HStack(spacing: 18) {
-            Text((state.selectedSection ?? .focus).title).font(.system(size: 27, weight: .semibold)).tracking(-0.7)
+        HStack(spacing: 16) {
+            Text((state.selectedSection ?? .focus).title).font(.system(size: 25, weight: .semibold)).tracking(-0.55)
             Spacer()
             HStack(spacing: 8) {
                 Circle().fill(state.isDucked ? Color.orange : (player.isReady ? Color.green : LilacTheme.faint)).frame(width: 7, height: 7)
                 Text(state.isDucked ? "볼륨 자동 조절 중" : "스마트 볼륨")
                     .font(.system(size: 12, weight: .medium)).foregroundStyle(LilacTheme.muted)
             }
-            .padding(.horizontal, 12).frame(height: 34).background(Color.white.opacity(0.045), in: Capsule())
+            .padding(.horizontal, 12).frame(height: 32).background(Color.white.opacity(0.05), in: Capsule())
 
             if state.hasActiveSession {
                 Text(state.timerText).font(.system(size: 14, weight: .semibold, design: .monospaced))
                     .padding(.horizontal, 12).frame(height: 34).background(LilacTheme.accent.opacity(0.13), in: Capsule())
             }
-            if state.selectedSection != .settings {
-                Button { state.selectedSection = .settings } label: {
-                    Image(systemName: "slider.horizontal.3").font(.system(size: 14, weight: .medium))
-                        .frame(width: 34, height: 34).background(Color.white.opacity(0.045), in: Circle())
-                }
-                .buttonStyle(.plain).help("설정")
+            Button { state.closeMainWindow() } label: {
+                Label("창 닫기", systemImage: "xmark")
+                    .font(.system(size: 12, weight: .medium)).padding(.horizontal, 11).frame(height: 32)
+                    .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
+            .buttonStyle(.plain)
         }
-        .padding(.horizontal, 28).frame(height: 74)
+        .padding(.horizontal, 26).frame(height: 68)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.white.opacity(0.05)).frame(height: 1) }
+    }
+}
+
+private struct SidebarWindowButton: View {
+    let title: String
+    let symbol: String
+    var destructive = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(destructive ? LilacTheme.danger.opacity(0.9) : LilacTheme.muted)
+                .frame(maxWidth: .infinity).frame(height: 34)
+                .background(Color.white.opacity(0.035), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay { RoundedRectangle(cornerRadius: 8).stroke(LilacTheme.stroke) }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct WindowStyler: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { configure(view.window) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async { configure(nsView.window) }
+    }
+
+    private func configure(_ window: NSWindow?) {
+        guard let window else { return }
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = NSColor(red: 0.028, green: 0.029, blue: 0.037, alpha: 1)
+        window.minSize = NSSize(width: 1100, height: 700)
     }
 }
 
@@ -205,18 +241,21 @@ private struct FocusWorkspace: View {
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
-                Group {
-                    if proxy.size.width >= 900 {
-                        HStack(alignment: .top, spacing: 18) {
-                            FocusSetupCard(state: state).frame(maxWidth: .infinity)
-                            FocusPlayerCard(state: state).frame(width: min(max(proxy.size.width * 0.40, 380), 440))
+                VStack(alignment: .leading, spacing: 26) {
+                    Group {
+                        if proxy.size.width >= 900 {
+                            HStack(alignment: .top, spacing: 22) {
+                                FocusSetupCard(state: state).frame(maxWidth: .infinity)
+                                FocusPlayerCard(state: state).frame(width: min(max(proxy.size.width * 0.42, 400), 470))
+                            }
+                        } else {
+                            VStack(spacing: 20) { FocusSetupCard(state: state); FocusPlayerCard(state: state) }
                         }
-                    } else {
-                        VStack(spacing: 18) { FocusSetupCard(state: state); FocusPlayerCard(state: state) }
                     }
+                    QuickMixStrip(state: state)
                 }
-                .padding(.horizontal, 28).padding(.vertical, 24)
-                .frame(maxWidth: 1280).frame(maxWidth: .infinity)
+                .padding(.horizontal, 30).padding(.vertical, 28)
+                .frame(maxWidth: 1320).frame(maxWidth: .infinity)
             }
         }
     }
@@ -261,33 +300,62 @@ private struct FocusPlayerCard: View {
 
                 Divider().overlay(Color.white.opacity(0.055))
 
-                Text("다른 믹스")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(LilacTheme.muted)
-                    .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 7)
+                HStack(spacing: 9) {
+                    Circle().fill(state.isDucked ? Color.orange : (player.isReady ? Color.green : LilacTheme.faint)).frame(width: 7, height: 7)
+                    Text(state.isDucked ? "알림 소리에 맞춰 볼륨을 낮추는 중" : player.statusText)
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(LilacTheme.muted)
+                    Spacer()
+                    Text("\(player.actualVolume)%")
+                        .font(.system(size: 12, weight: .medium, design: .monospaced)).foregroundStyle(LilacTheme.faint)
+                }
+                .padding(.horizontal, 16).frame(height: 48)
+            }
+        }
+        .lilacPanel(radius: 18, shadow: true)
+    }
+}
 
-                ForEach(state.mixes.filter { $0 != state.selectedMix }) { mix in
-                    Button { state.selectMix(mix, autoplay: true) } label: {
-                        HStack(spacing: 11) {
+private struct QuickMixStrip: View {
+    @ObservedObject var state: AppState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("믹스 바꾸기").font(.system(size: 18, weight: .semibold)).tracking(-0.25)
+                Spacer()
+                Button("전체 보기") { state.selectedSection = .mixes }
+                    .buttonStyle(.plain).font(.system(size: 12, weight: .medium)).foregroundStyle(LilacTheme.muted)
+            }
+
+            HStack(spacing: 12) {
+                ForEach(state.mixes) { mix in
+                    Button {
+                        if mix == state.selectedMix { state.togglePlayback() }
+                        else { state.selectMix(mix, autoplay: true) }
+                    } label: {
+                        HStack(spacing: 13) {
                             MixArtwork(mix: mix)
-                                .frame(width: 46, height: 46)
-                                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(mix.title).font(.system(size: 12, weight: .semibold)).lineLimit(1)
-                                Text(mix.detail).font(.system(size: 10)).foregroundStyle(LilacTheme.muted).lineLimit(1)
+                                .frame(width: 62, height: 62)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(mix.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                                Text(mix.detail).font(.system(size: 11)).foregroundStyle(LilacTheme.muted).lineLimit(1)
                             }
-                            Spacer()
-                            Image(systemName: "play.fill").font(.system(size: 9)).foregroundStyle(LilacTheme.faint)
+                            Spacer(minLength: 4)
+                            Image(systemName: mix == state.selectedMix && state.player.isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .frame(width: 32, height: 32)
+                                .background(mix == state.selectedMix ? LilacTheme.accent : Color.white.opacity(0.07), in: Circle())
+                                .foregroundStyle(mix == state.selectedMix ? Color.black.opacity(0.75) : LilacTheme.muted)
                         }
-                        .padding(.horizontal, 12).frame(height: 58)
-                        .contentShape(Rectangle())
+                        .padding(9).frame(maxWidth: .infinity).frame(height: 80)
+                        .background(mix == state.selectedMix ? mix.tint.opacity(0.15) : LilacTheme.panel, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay { RoundedRectangle(cornerRadius: 14).stroke(mix == state.selectedMix ? mix.tint.opacity(0.55) : LilacTheme.stroke) }
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.bottom, 8)
         }
-        .lilacPanel(radius: 20, shadow: true)
     }
 }
 
@@ -296,20 +364,20 @@ private struct FocusSetupCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("오늘 끝낼 일").font(.system(size: 25, weight: .semibold)).tracking(-0.5)
-            Text("할 일과 시간을 정하면 어울리는 믹스를 골라드려요.")
-                .font(.system(size: 12)).foregroundStyle(LilacTheme.muted).padding(.top, 7)
+            Text("오늘의 한 가지").font(.system(size: 26, weight: .semibold)).tracking(-0.5)
+            Text("지금 끝낼 일을 적고 시간을 고르세요.")
+                .font(.system(size: 13)).foregroundStyle(LilacTheme.muted).padding(.top, 7)
             TextField("예: 기획서 초안 마무리", text: $state.taskTitle)
-                .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 13).frame(height: 44)
+                .textFieldStyle(.plain).font(.system(size: 14)).padding(.horizontal, 14).frame(height: 48)
                 .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                 .overlay { RoundedRectangle(cornerRadius: 11).stroke(Color.white.opacity(0.09)) }
-                .padding(.top, 18).disabled(state.hasActiveSession)
+                .padding(.top, 20).disabled(state.hasActiveSession)
 
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(state.timerText)
-                        .font(.system(size: 58, weight: .semibold, design: .monospaced))
-                        .tracking(-2.5)
+                        .font(.system(size: 68, weight: .semibold, design: .rounded))
+                        .tracking(-3.0)
                     Text(state.isSessionRunning ? "작업 중" : (state.hasActiveSession ? "잠시 멈춤" : "시작 전"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(state.isSessionRunning ? LilacTheme.accentBright : LilacTheme.muted)
@@ -320,7 +388,7 @@ private struct FocusSetupCard: View {
                     Text(state.selectedMix.title).font(.system(size: 11)).foregroundStyle(LilacTheme.muted).lineLimit(1)
                 }
             }
-            .padding(.top, 21)
+            .padding(.top, 24)
 
             ProgressView(value: state.sessionProgress)
                 .progressViewStyle(.linear)
@@ -344,8 +412,8 @@ private struct FocusSetupCard: View {
             .padding(.top, 9).disabled(state.hasActiveSession)
 
             Button { state.composeSession() } label: {
-                HStack { Image(systemName: "sparkles"); Text("내 작업에 맞추기"); Spacer(); Image(systemName: "arrow.right") }
-                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(LilacTheme.muted)
+                HStack { Image(systemName: "wand.and.stars"); Text("작업 흐름 추천"); Spacer(); Image(systemName: "arrow.right") }
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(LilacTheme.muted)
                     .padding(.horizontal, 14).frame(height: 46)
                     .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                     .overlay { RoundedRectangle(cornerRadius: 11).stroke(LilacTheme.stroke) }
@@ -382,7 +450,7 @@ private struct FocusSetupCard: View {
             }
             .padding(.top, 14)
         }
-        .padding(22).lilacPanel(radius: 20)
+        .padding(24).lilacPanel(radius: 18)
     }
 
     private func setupModeTitle(_ mode: FocusMode) -> String {
@@ -397,8 +465,8 @@ private struct SetupChoice: View {
 
     var body: some View {
         Button(action: action) {
-            Text(title).font(.system(size: 11, weight: selected ? .semibold : .medium))
-                .foregroundStyle(selected ? Color.white : LilacTheme.muted).frame(maxWidth: .infinity).frame(height: 38)
+            Text(title).font(.system(size: 12, weight: selected ? .semibold : .medium))
+                .foregroundStyle(selected ? Color.white : LilacTheme.muted).frame(maxWidth: .infinity).frame(height: 40)
                 .background(selected ? LilacTheme.accent.opacity(0.16) : Color.white.opacity(0.035), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay { RoundedRectangle(cornerRadius: 10).stroke(selected ? LilacTheme.accent.opacity(0.52) : LilacTheme.stroke) }
         }
@@ -431,21 +499,21 @@ private struct PlayerBar: View {
     @ObservedObject var player: YouTubePlayerController
 
     var body: some View {
-        HStack(spacing: 14) {
-            MixArtwork(mix: state.selectedMix).frame(width: 56, height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay { RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.1)) }
+        HStack(spacing: 13) {
+            MixArtwork(mix: state.selectedMix).frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay { RoundedRectangle(cornerRadius: 9).stroke(Color.white.opacity(0.1)) }
             VStack(alignment: .leading, spacing: 3) {
                 Text(state.selectedMix.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                Text(state.selectedMix.creator).font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
+                Text("\(state.selectedMix.creator) · YouTube").font(.system(size: 11)).foregroundStyle(LilacTheme.muted).lineLimit(1)
             }
-            .frame(width: 170, alignment: .leading)
+            .frame(width: 190, alignment: .leading)
             Spacer(minLength: 12)
-            HStack(spacing: 24) {
+            HStack(spacing: 26) {
                 Button { state.previousMix() } label: { Image(systemName: "backward.end.fill") }.help("이전 믹스")
                 Button { state.togglePlayback() } label: {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").font(.system(size: 15, weight: .bold))
-                        .frame(width: 42, height: 42).background(LilacTheme.accent, in: Circle())
+                        .frame(width: 40, height: 40).background(LilacTheme.accent, in: Circle())
                         .foregroundStyle(Color(red: 0.10, green: 0.08, blue: 0.14))
                 }.help(player.isPlaying ? "일시정지" : "재생")
                 Button { state.nextMix() } label: { Image(systemName: "forward.end.fill") }.help("다음 믹스")
@@ -454,15 +522,15 @@ private struct PlayerBar: View {
             Spacer(minLength: 12)
             HStack(spacing: 9) {
                 Image(systemName: state.userVolume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 11)).foregroundStyle(state.isDucked ? Color.orange : LilacTheme.muted)
-                Slider(value: $state.userVolume, in: 0...1).frame(width: 120).help("볼륨 \(player.actualVolume)%")
-                Text("\(player.actualVolume)%").font(.system(size: 10, weight: .medium)).foregroundStyle(LilacTheme.muted)
-                    .frame(width: 30, alignment: .trailing)
+                    .font(.system(size: 12)).foregroundStyle(state.isDucked ? Color.orange : LilacTheme.muted)
+                Slider(value: $state.userVolume, in: 0...1).frame(width: 116).help("볼륨 \(player.actualVolume)%")
+                Text("\(player.actualVolume)%").font(.system(size: 11, weight: .medium, design: .monospaced)).foregroundStyle(LilacTheme.muted)
+                    .frame(width: 34, alignment: .trailing)
             }
         }
-        .padding(.horizontal, 18).frame(height: 82)
-        .background(.ultraThinMaterial).background(LilacTheme.sidebar.opacity(0.9))
-        .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.065)).frame(height: 1) }
+        .padding(.horizontal, 20).frame(height: 74)
+        .background(.ultraThinMaterial).background(LilacTheme.sidebar.opacity(0.82))
+        .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.08)).frame(height: 1) }
     }
 }
 
@@ -479,14 +547,27 @@ private struct MixLibraryView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(state.mixes) { mix in
-                    MixCard(mix: mix, selected: mix == state.selectedMix, isPlaying: mix == state.selectedMix && state.player.isPlaying) {
-                        if mix == state.selectedMix { state.togglePlayback() } else { state.selectMix(mix, autoplay: true) }
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("일의 리듬을 고르세요").font(.system(size: 24, weight: .semibold)).tracking(-0.45)
+                        Text("보컬이 적고 오래 들어도 흐름을 끊지 않는 믹스만 모았습니다.")
+                            .font(.system(size: 13)).foregroundStyle(LilacTheme.muted)
+                    }
+                    Spacer()
+                    Text("YouTube 믹스 \(state.mixes.count)개")
+                        .font(.system(size: 12, weight: .medium)).foregroundStyle(LilacTheme.faint)
+                }
+
+                LazyVGrid(columns: columns, spacing: 18) {
+                    ForEach(state.mixes) { mix in
+                        MixCard(mix: mix, selected: mix == state.selectedMix, isPlaying: mix == state.selectedMix && state.player.isPlaying) {
+                            if mix == state.selectedMix { state.togglePlayback() } else { state.selectMix(mix, autoplay: true) }
+                        }
                     }
                 }
             }
-            .padding(28).frame(maxWidth: 1180).frame(maxWidth: .infinity, alignment: .top)
+            .padding(30).frame(maxWidth: 1220).frame(maxWidth: .infinity, alignment: .top)
         }
     }
 }
@@ -499,28 +580,39 @@ private struct MixCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 0) {
-                ZStack(alignment: .topTrailing) {
-                    MixArtwork(mix: mix).aspectRatio(16 / 10, contentMode: .fit).frame(maxWidth: .infinity)
-                    Image(systemName: isPlaying ? "pause.fill" : "play.fill").font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.10, green: 0.08, blue: 0.14)).frame(width: 40, height: 40)
-                        .background(LilacTheme.accent, in: Circle()).shadow(color: Color.black.opacity(0.3), radius: 12, y: 5).padding(13)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            ZStack(alignment: .bottomLeading) {
+                MixArtwork(mix: mix).aspectRatio(1.28, contentMode: .fit).frame(maxWidth: .infinity)
+                LinearGradient(
+                    colors: [.clear, Color.black.opacity(0.15), Color.black.opacity(0.92)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
                 VStack(alignment: .leading, spacing: 5) {
-                    HStack {
-                        Text(mix.title).font(.system(size: 17, weight: .semibold)).lineLimit(1)
-                        Spacer()
-                        if selected { Text(isPlaying ? "재생 중" : "선택됨").font(.system(size: 10, weight: .semibold)).foregroundStyle(LilacTheme.accentBright) }
+                    HStack(spacing: 7) {
+                        Text(mix.title).font(.system(size: 20, weight: .semibold)).lineLimit(1)
+                        if selected {
+                            Circle().fill(LilacTheme.accentBright).frame(width: 6, height: 6)
+                        }
                     }
-                    Text(mix.creator).font(.system(size: 12)).foregroundStyle(LilacTheme.muted)
-                    Text(mix.detail).font(.system(size: 11)).foregroundStyle(LilacTheme.faint)
+                    Text(mix.creator).font(.system(size: 13, weight: .medium)).foregroundStyle(Color.white.opacity(0.76))
+                    Text(mix.detail).font(.system(size: 12)).foregroundStyle(Color.white.opacity(0.58))
                 }
-                .padding(.horizontal, 5).padding(.top, 13).padding(.bottom, 5)
+                .padding(18)
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        Image(systemName: isPlaying ? "pause.fill" : "play.fill").font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Color.black.opacity(0.76)).frame(width: 42, height: 42)
+                            .background(LilacTheme.accent, in: Circle())
+                            .shadow(color: Color.black.opacity(0.32), radius: 12, y: 6)
+                    }
+                    Spacer()
+                }
+                .padding(14)
             }
-            .padding(8)
-            .background(selected ? mix.tint.opacity(0.105) : Color.white.opacity(0.025), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay { RoundedRectangle(cornerRadius: 18).stroke(selected ? mix.tint.opacity(0.55) : LilacTheme.stroke) }
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay { RoundedRectangle(cornerRadius: 18).stroke(selected ? LilacTheme.accent.opacity(0.9) : LilacTheme.stroke, lineWidth: selected ? 2 : 1) }
         }
         .buttonStyle(.plain)
     }
@@ -541,23 +633,61 @@ private struct HistoryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
-                HStack(spacing: 12) {
-                    HistoryStat(title: "오늘", value: "\(todayMinutes)분", symbol: "sun.max.fill", tint: .orange)
-                    HistoryStat(title: "완료한 세션", value: "\(state.history.count)회", symbol: "checkmark.circle.fill", tint: LilacTheme.accent)
-                    HistoryStat(title: "누적 시간", value: "\(totalMinutes)분", symbol: "chart.bar.fill", tint: .green)
+            VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("작업 흐름을 돌아보세요").font(.system(size: 24, weight: .semibold)).tracking(-0.45)
+                    Text("완료한 작업만 기록됩니다.").font(.system(size: 13)).foregroundStyle(LilacTheme.muted)
                 }
+
+                HistorySummaryBar(today: todayMinutes, sessions: state.history.count, total: totalMinutes)
+
                 HStack(alignment: .top, spacing: 16) {
                     WeekActivityCard(days: week).frame(maxWidth: .infinity)
                     RecentSessionsCard(state: state).frame(width: 380)
                 }
             }
-            .padding(28).frame(maxWidth: 1120).frame(maxWidth: .infinity, alignment: .top)
+            .padding(30).frame(maxWidth: 1160).frame(maxWidth: .infinity, alignment: .top)
         }
     }
 }
 
 private struct DaySummary: Identifiable { let date: Date; let minutes: Int; var id: Date { date } }
+
+private struct HistorySummaryBar: View {
+    let today: Int
+    let sessions: Int
+    let total: Int
+
+    var body: some View {
+        HStack(spacing: 0) {
+            SummaryCell(title: "오늘", value: "\(today)분")
+            SummaryDivider()
+            SummaryCell(title: "완료한 작업", value: "\(sessions)회")
+            SummaryDivider()
+            SummaryCell(title: "누적 시간", value: "\(total)분")
+        }
+        .padding(.vertical, 18)
+        .background(LilacTheme.panel, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 16).stroke(LilacTheme.stroke) }
+    }
+}
+
+private struct SummaryCell: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(value).font(.system(size: 26, weight: .semibold)).tracking(-0.6)
+            Text(title).font(.system(size: 12, weight: .medium)).foregroundStyle(LilacTheme.muted)
+        }
+        .padding(.horizontal, 22).frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct SummaryDivider: View {
+    var body: some View { Rectangle().fill(Color.white.opacity(0.07)).frame(width: 1, height: 42) }
+}
 
 private struct HistoryStat: View {
     let title: String, value: String, symbol: String
@@ -637,10 +767,10 @@ private struct HistoryRow: View {
                 .frame(width: 34, height: 34).background(Color.green.opacity(0.1), in: Circle())
             VStack(alignment: .leading, spacing: 3) {
                 Text(record.task).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                Text("\(record.mixTitle) · \(record.minutes)분").font(.system(size: 10)).foregroundStyle(LilacTheme.muted)
+                Text("\(record.mixTitle) · \(record.minutes)분").font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
             }
             Spacer()
-            Text(record.completedAt, format: .dateTime.month(.abbreviated).day()).font(.system(size: 10)).foregroundStyle(LilacTheme.faint)
+            Text(record.completedAt, format: .dateTime.month(.abbreviated).day()).font(.system(size: 11)).foregroundStyle(LilacTheme.faint)
         }
         .padding(.horizontal, 16).frame(height: 62)
     }
@@ -657,7 +787,13 @@ private struct SettingsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Lilac 동작 설정").font(.system(size: 24, weight: .semibold)).tracking(-0.45)
+                    Text("메뉴바 실행과 스마트 볼륨을 여기서 관리합니다.")
+                        .font(.system(size: 13)).foregroundStyle(LilacTheme.muted)
+                }
+
                 SettingsGroup {
                     SettingsToggleRow(title: "Mac을 켤 때 함께 시작", detail: "로그인하면 Lilac을 메뉴바에 준비합니다.", symbol: "power", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
                     SettingsDivider()
@@ -667,7 +803,7 @@ private struct SettingsView: View {
                         SettingsIcon(symbol: "bell.badge.fill")
                         VStack(alignment: .leading, spacing: 4) {
                             Text("볼륨 전환 확인").font(.system(size: 14, weight: .medium))
-                            Text("알림이 왔을 때의 동작을 미리 확인합니다.").font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
+                            Text("알림이 왔을 때의 동작을 미리 확인합니다.").font(.system(size: 12)).foregroundStyle(LilacTheme.muted)
                         }
                         Spacer(); Button("테스트") { state.simulateNotification() }.buttonStyle(LilacQuietButtonStyle())
                     }
@@ -678,7 +814,7 @@ private struct SettingsView: View {
                         SettingsIcon(symbol: "play.rectangle.fill", tint: .red)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("YouTube 플레이어").font(.system(size: 14, weight: .medium))
-                            Text("현재 적용 볼륨 \(player.actualVolume)%").font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
+                            Text("현재 적용 볼륨 \(player.actualVolume)%").font(.system(size: 12)).foregroundStyle(LilacTheme.muted)
                         }
                         Spacer()
                         HStack(spacing: 7) {
@@ -689,8 +825,18 @@ private struct SettingsView: View {
                     }
                     .frame(minHeight: 60)
                 }
+
+                SettingsGroup {
+                    SettingsActionRow(title: "메인 창 닫기", detail: "음악과 메뉴바는 계속 실행됩니다.", symbol: "xmark") {
+                        state.closeMainWindow()
+                    }
+                    SettingsDivider()
+                    SettingsActionRow(title: "Lilac 종료", detail: "재생과 작업 세션을 모두 끝냅니다.", symbol: "power", destructive: true) {
+                        state.quitApp()
+                    }
+                }
             }
-            .padding(.horizontal, 28).padding(.vertical, 28).frame(maxWidth: 780).frame(maxWidth: .infinity, alignment: .top)
+            .padding(.horizontal, 30).padding(.vertical, 28).frame(maxWidth: 820).frame(maxWidth: .infinity, alignment: .top)
         }
     }
 }
@@ -719,11 +865,36 @@ private struct SettingsToggleRow: View {
         HStack(spacing: 14) {
             SettingsIcon(symbol: symbol)
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.system(size: 14, weight: .medium)); Text(detail).font(.system(size: 11)).foregroundStyle(LilacTheme.muted)
+                Text(title).font(.system(size: 14, weight: .medium)); Text(detail).font(.system(size: 12)).foregroundStyle(LilacTheme.muted)
             }
             Spacer(); Toggle("", isOn: $isOn).labelsHidden().toggleStyle(.switch)
         }
         .frame(minHeight: 64)
+    }
+}
+
+private struct SettingsActionRow: View {
+    let title: String
+    let detail: String
+    let symbol: String
+    var destructive = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                SettingsIcon(symbol: symbol, tint: destructive ? LilacTheme.danger : LilacTheme.accentBright)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.system(size: 14, weight: .medium))
+                    Text(detail).font(.system(size: 12)).foregroundStyle(LilacTheme.muted)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(LilacTheme.faint)
+            }
+            .foregroundStyle(destructive ? LilacTheme.danger.opacity(0.92) : Color.white)
+            .frame(minHeight: 64).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

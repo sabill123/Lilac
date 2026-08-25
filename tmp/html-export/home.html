@@ -1681,12 +1681,16 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-session-clock { text-align: right; }
 .focus-session-clock span { display: block; font: 600 clamp(25px, 3vw, 38px) / 1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -0.03em; }
 .focus-session-clock small { margin-top: 7px; letter-spacing: 0px; color: var(--ink-faint); }
-.focus-actions { display: grid; grid-template-columns: 1fr auto; gap: 9px; padding: 0px 8px 8px; }
+.focus-actions { display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(148px, 0.42fr); gap: 9px; align-items: center; padding: 0px 8px 8px; }
 .focus-primary, .focus-quiet, .focus-ai-btn { min-height: 46px; border: 0px; border-radius: 12px; font-size: 13px; font-weight: 750; }
 .focus-primary { background: var(--focus-tone); color: rgb(16, 13, 23); transition: filter 0.2s, transform 0.2s; }
 .focus-primary:hover { filter: brightness(1.08); }
 .focus-primary.running { background: rgba(255, 255, 255, 0.1); color: var(--ink); }
 .focus-quiet { padding: 0px 18px; color: var(--ink-muted); background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(255, 255, 255, 0.08); }
+.focus-volume { display: grid; grid-template-columns: 18px minmax(70px, 1fr) 34px; align-items: center; gap: 8px; min-height: 46px; padding: 0px 12px; color: var(--ink-muted); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: rgba(255, 255, 255, 0.043); }
+.focus-volume .ic { width: 15px; height: 15px; }
+.focus-volume input { width: 100%; accent-color: var(--focus-tone); cursor: pointer; }
+.focus-volume output { color: var(--ink-muted); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
 .focus-curator { padding: clamp(24px, 3vw, 38px); }
 .focus-curator h2 { max-width: 360px; margin-top: 13px; font-size: clamp(25px, 2.4vw, 32px); line-height: 1.18; letter-spacing: -0.04em; word-break: keep-all; }
 .focus-curator-copy { margin: 10px 0px 24px; color: var(--ink-muted); font-size: 13px; line-height: 1.65; }
@@ -1750,7 +1754,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-native-points p { margin-top: 3px; color: var(--ink-faint); font-size: 11px; }
 body.focus-page .player { display: none; }
 body.focus-page .main-panel { padding-bottom: 0px !important; }
-body.focus-page .mnav { bottom: 0px; }
+body.focus-page .mnav, body.work-page .mnav { bottom: 0px; }
 @media (max-width: 1180px) {
   .focus-head { align-items: flex-start; }
   .focus-status-card { display: none; }
@@ -1770,6 +1774,7 @@ body.focus-page .mnav { bottom: 0px; }
   .focus-video { min-height: 200px; }
   .focus-now { align-items: flex-start; }
   .focus-actions { grid-template-columns: 1fr; }
+  .focus-volume { grid-template-columns: 18px 1fr 40px; }
   .focus-curator { display: block; padding: 24px 18px; }
   .focus-mode-row, .focus-duration-row { display: grid; }
   .focus-sec-head { display: block; }
@@ -1783,7 +1788,7 @@ body.focus-page .mnav { bottom: 0px; }
 body { font-size: 15px; background: rgb(5, 6, 9); }
 #backdrop { position: fixed; inset: 0px; z-index: 0; pointer-events: none; opacity: 0.32; }
 #backdrop canvas { opacity: 0.72; mix-blend-mode: screen; mask-image: radial-gradient(circle at 64% 16%, rgb(0, 0, 0) 0px, rgba(0, 0, 0, 0.78) 30%, transparent 74%); }
-.app, .mnav, .m-work-mode, .player, .right-dock, .modal, .onboard, .np-full, .toast { position: relative; z-index: 1; }
+.app { position: relative; z-index: 1; }
 .app { background: rgba(5, 6, 9, 0.88); }
 .main-panel { background: rgba(8, 9, 12, 0.92); }
 .topbar { gap: 20px; padding: 0 var(--gutter); border-bottom: 1px solid transparent; }
@@ -1856,8 +1861,8 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-setup .focus-mode-row button, .work-setup .focus-duration-row button { min-height: 38px; border-radius: 10px; font-size: 11px; }
 .work-setup .focus-ai-btn { margin-top: 16px; background: var(--accent); box-shadow: none; }
 .work-setup .focus-ai-result { min-height: 48px; margin-top: 15px; padding-top: 13px; }
-.work-setup .focus-ai-result small { color: rgb(189, 184, 200); font: 560 10px/1.4 var(--font); letter-spacing: 0px; text-transform: none; }
-.work-setup .focus-ai-result p { margin-top: 3px; font-size: 11px; }
+.work-setup .focus-ai-result small { color: rgb(189, 184, 200); font: 560 12px/1.4 var(--font); letter-spacing: 0px; text-transform: none; }
+.work-setup .focus-ai-result p { margin-top: 4px; font-size: 12px; }
 .work-mixes-sec { max-width: 1360px; margin-top: 72px; }
 .work-mixes-sec .focus-sec-head { display: block; margin-bottom: 22px; }
 .work-mixes-sec .focus-sec-head h2 { margin: 0px; font-size: 34px; font-weight: 660; letter-spacing: -0.045em; }
@@ -1867,7 +1872,7 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-mixes-sec .focus-mix:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.06); }
 .work-mixes-sec .focus-mix.on { background: color-mix(in srgb, var(--mix) 9%, rgba(255,255,255,.025)); }
 .work-mixes-sec .focus-mix-art { border-radius: 11px; }
-.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 4px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.5); font: 570 9px/1 var(--font); letter-spacing: 0px; }
+.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 5px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.56); font: 600 11px/1 var(--font); letter-spacing: 0px; }
 .work-mixes-sec .focus-mix-meta { padding-top: 10px; }
 .work-mixes-sec .focus-mix-meta b { font-size: 15px; }
 .work-mixes-sec .focus-mix-meta small { margin-top: 4px; font-size: 11px; }
@@ -1879,7 +1884,7 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-native-sec .focus-menubar-demo { border-radius: 18px; background: rgba(20, 20, 26, 0.94); }
 .work-native-sec .fmd-track b { margin-top: 0px; }
 .work-native-sec .fmd-controls button { font-family: var(--font); }
-.work-native-sec .fmd-rule i { color: rgb(135, 221, 176); font: 650 10px/1 var(--font); }
+.work-native-sec .fmd-rule i { color: rgb(135, 221, 176); font: 650 11px/1 var(--font); }
 .work-native-sec .focus-native-points { gap: 24px; }
 .work-native-sec .focus-native-points > div { grid-template-columns: 32px 1fr; }
 .work-native-sec .focus-native-points span { color: var(--accent); font: 600 16px/1.4 var(--font); }
@@ -2447,7 +2452,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
       <div class="c-title">I.O.I</div><div class="c-sub">아티스트</div>
     </a>
     <a class="card round" href="#/artist/aimyon" data-term="あいみょん" data-tilt="8" data-expand="" data-tilt-on="1" data-exp-on="1">
-      <div class="cover"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/85/0b/1b/850b1b4c-f529-6828-4b2b-a5a187ec61c6/190295235017.jpg/600x600bb.jpg" alt="" loading="lazy"><div class="ph">아</div>
+      <div class="cover"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/d8/7b/7c/d87b7cfd-c88c-1003-bc5d-883882043e33/190295747138.jpg/600x600bb.jpg" alt="" loading="lazy"><div class="ph">아</div>
         <span class="glare"></span>
         <button class="hover-play"><svg class="ic"><use href="#i-play"></use></svg></button></div>
       <div class="c-title">아이묭</div><div class="c-sub">아티스트</div>
@@ -2622,7 +2627,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
     <a class="mood d3-tilt d3-rise" href="#/search?q=city%20pop" style="--m:linear-gradient(135deg,#0ea5e9,#0c4a6e)" data-d3-tilt="10" data-d3="rise" data-d3-bound="1">
       <span class="mood-k">심야 시티팝</span><span class="mood-sq" data-term="city pop" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/bd/15/85/bd15852c-e72a-be5d-1229-bd802e5d3859/859754922027_cover.jpg/400x400bb.jpg&quot;);"></span><span class="d3-glare" aria-hidden="true"></span></a>
     <a class="mood d3-tilt d3-rise" href="#/search?q=j-rock" style="--m:linear-gradient(135deg,#ef4444,#7f1d1d)" data-d3-tilt="10" data-d3="rise" data-d3-bound="1">
-      <span class="mood-k">J-ROCK</span><span class="mood-sq" data-term="j-rock" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/34/27/08/3427087f-2d39-4847-9b19-052dd3589014/18UMGIM36633.rgb.jpg/400x400bb.jpg&quot;);"></span><span class="d3-glare" aria-hidden="true"></span></a>
+      <span class="mood-k">J-ROCK</span><span class="mood-sq" data-term="j-rock" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/09/89/00/09890002-b2de-3637-39b2-f6c2d34d0e93/197189854859.jpg/400x400bb.jpg&quot;);"></span><span class="d3-glare" aria-hidden="true"></span></a>
     <a class="mood d3-tilt d3-rise" href="#/search?q=vocaloid" style="--m:linear-gradient(135deg,#22d3ee,#155e75)" data-d3-tilt="10" data-d3="rise" data-d3-bound="1">
       <span class="mood-k">보컬로이드</span><span class="mood-sq" data-term="vocaloid" style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3b/de/25/3bde256e-3fb4-98ab-f673-d3642d355e2d/JK_BEST_1500-1400.jpg/400x400bb.jpg&quot;);"></span><span class="d3-glare" aria-hidden="true"></span></a>
     <a class="mood d3-tilt d3-rise" href="#/search?q=ballad" style="--m:linear-gradient(135deg,#f59e0b,#7c2d12)" data-d3-tilt="10" data-d3="rise" data-d3-bound="1">
@@ -2761,7 +2766,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
   <span class="d3-glare" aria-hidden="true"></span></a></div>
     </div></section></main>
         <footer class="footer">
-          <p>Lilac demo — Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a> · <a href="#/status" class="footer-link">서비스 상태</a></p>
+          <p>Lilac demo · Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a> · <a href="#/status" class="footer-link">서비스 상태</a></p>
           <p>미리듣기는 Apple Music 카탈로그 30초 프리뷰, MV는 YouTube 공식 임베드로 재생됩니다. 상품·일정은 데모 데이터이며 가사 패널 문구는 자체 제작 예시입니다.</p>
         </footer>
       </div>

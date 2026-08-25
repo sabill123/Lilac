@@ -9,10 +9,15 @@ struct LilacMacApp: App {
     var body: some Scene {
         WindowGroup("Lilac", id: "main") {
             MainWindowView(state: state)
-                .frame(minWidth: 1040, minHeight: 680)
+                .frame(minWidth: 1100, minHeight: 700)
         }
-        .defaultSize(width: 1240, height: 800)
+        .defaultSize(width: 1280, height: 820)
         .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Lilac 종료") { state.quitApp() }
+                    .keyboardShortcut("q")
+            }
+
             CommandMenu("워크") {
                 Button(state.isSessionRunning ? "세션 일시정지" : "작업 세션 시작") {
                     state.toggleSession()

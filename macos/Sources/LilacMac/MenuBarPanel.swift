@@ -12,13 +12,12 @@ struct MenuBarPanel: View {
 
     var body: some View {
         ZStack {
-            LilacTheme.canvas
-
-            Circle()
-                .fill(state.selectedMix.tint.opacity(0.20))
-                .frame(width: 250, height: 250)
-                .blur(radius: 82)
-                .offset(x: 142, y: -210)
+            LilacTheme.sidebar
+            LinearGradient(
+                colors: [state.selectedMix.tint.opacity(0.15), .clear],
+                startPoint: .topTrailing,
+                endPoint: .center
+            )
 
             VStack(alignment: .leading, spacing: 0) {
                 header
@@ -43,9 +42,9 @@ struct MenuBarPanel: View {
                 footer
                     .padding(.top, 12)
             }
-            .padding(18)
+            .padding(17)
         }
-        .frame(width: 354)
+        .frame(width: 368)
         .preferredColorScheme(.dark)
     }
 
@@ -62,21 +61,24 @@ struct MenuBarPanel: View {
             }
             .frame(width: 32, height: 32)
 
-            Text("Lilac")
-                .font(.system(size: 15, weight: .semibold))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Lilac").font(.system(size: 15, weight: .semibold))
+                Text(player.statusText).font(.system(size: 11, weight: .medium)).foregroundStyle(LilacTheme.faint)
+            }
 
             Spacer()
 
-            Circle()
-                .fill(state.isDucked ? Color.orange : (player.isReady ? Color.green : LilacTheme.faint))
-                .frame(width: 7, height: 7)
+            HStack(spacing: 6) {
+                Circle().fill(state.isDucked ? Color.orange : (player.isReady ? Color.green : LilacTheme.faint)).frame(width: 7, height: 7)
+                Text(state.isDucked ? "볼륨 조절 중" : "준비됨").font(.system(size: 11, weight: .medium)).foregroundStyle(LilacTheme.muted)
+            }
         }
     }
 
     private var nowPlaying: some View {
         HStack(spacing: 12) {
             MixArtwork(mix: state.selectedMix)
-                .frame(width: 68, height: 68)
+                .frame(width: 74, height: 74)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -95,8 +97,8 @@ struct MenuBarPanel: View {
 
             Spacer(minLength: 2)
         }
-        .padding(11)
-        .background(LilacTheme.panelRaised.opacity(0.92), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .padding(10)
+        .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 15, style: .continuous)
                 .stroke(LilacTheme.stroke)
@@ -137,12 +139,12 @@ struct MenuBarPanel: View {
     private var volume: some View {
         HStack(spacing: 9) {
             Image(systemName: state.userVolume == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                .font(.system(size: 10))
+                .font(.system(size: 11))
                 .foregroundStyle(LilacTheme.muted)
             Slider(value: $state.userVolume, in: 0...1)
                 .tint(LilacTheme.accent)
             Text("\(player.actualVolume)%")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .foregroundStyle(LilacTheme.muted)
                 .frame(width: 32, alignment: .trailing)
         }
@@ -157,7 +159,7 @@ struct MenuBarPanel: View {
                         .font(.system(size: 12, weight: .semibold))
                         .lineLimit(1)
                     Text(state.isSessionRunning ? "작업 세션 진행 중" : "세션 일시정지")
-                        .font(.system(size: 10))
+                        .font(.system(size: 11))
                         .foregroundStyle(LilacTheme.muted)
                 }
                 Spacer()
@@ -243,17 +245,16 @@ struct MenuBarPanel: View {
                 openWindow(id: "main")
                 state.bringMainWindowForward()
             } label: {
-                Label("전체 앱 열기", systemImage: "macwindow")
+                Label("Lilac 열기", systemImage: "macwindow")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(MenuAccentButtonStyle())
 
-            Button { NSApp.terminate(nil) } label: {
-                Image(systemName: "power")
-                    .frame(width: 30)
+            Button { state.quitApp() } label: {
+                Label("앱 종료", systemImage: "power")
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(MenuQuietButtonStyle())
-            .help("Lilac 종료")
         }
     }
 }
@@ -288,7 +289,7 @@ private struct MenuToggleRow: View {
 private struct MenuAccentButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 11, weight: .bold))
+            .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(Color(red: 0.15, green: 0.10, blue: 0.19))
             .padding(.horizontal, 11)
             .frame(height: 32)
@@ -300,7 +301,7 @@ private struct MenuAccentButtonStyle: ButtonStyle {
 private struct MenuQuietButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 11, weight: .semibold))
+            .font(.system(size: 12, weight: .semibold))
             .foregroundStyle(Color.white.opacity(0.76))
             .padding(.horizontal, 10)
             .frame(maxWidth: .infinity)

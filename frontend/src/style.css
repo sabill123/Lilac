@@ -2244,12 +2244,16 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-session-clock { text-align: right; }
 .focus-session-clock span { display: block; font: 600 clamp(25px, 3vw, 38px)/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -0.03em; }
 .focus-session-clock small { margin-top: 7px; letter-spacing: 0; color: var(--ink-faint); }
-.focus-actions { display: grid; grid-template-columns: 1fr auto; gap: 9px; padding: 0 8px 8px; }
+.focus-actions { display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(148px, .42fr); gap: 9px; align-items: center; padding: 0 8px 8px; }
 .focus-primary, .focus-quiet, .focus-ai-btn { min-height: 46px; border: 0; border-radius: 12px; font-size: 13px; font-weight: 750; }
 .focus-primary { background: var(--focus-tone); color: #100d17; transition: filter .2s, transform .2s; }
 .focus-primary:hover { filter: brightness(1.08); }
 .focus-primary.running { background: rgba(255,255,255,.1); color: var(--ink); }
 .focus-quiet { padding: 0 18px; color: var(--ink-muted); background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.08); }
+.focus-volume { display: grid; grid-template-columns: 18px minmax(70px, 1fr) 34px; align-items: center; gap: 8px; min-height: 46px; padding: 0 12px; color: var(--ink-muted); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(255,255,255,.045); }
+.focus-volume .ic { width: 15px; height: 15px; }
+.focus-volume input { width: 100%; accent-color: var(--focus-tone); cursor: pointer; }
+.focus-volume output { color: var(--ink-muted); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
 
 .focus-curator { padding: clamp(24px, 3vw, 38px); }
 .focus-curator h2 { max-width: 360px; margin-top: 13px; font-size: clamp(25px, 2.4vw, 32px); line-height: 1.18; letter-spacing: -.04em; word-break: keep-all; }
@@ -2318,7 +2322,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 /* Focus Desk 자체 플레이어가 있으므로 기존 DSP 하단 바는 이 화면에서만 숨긴다. */
 body.focus-page .player { display: none; }
 body.focus-page .main-panel { padding-bottom: 0 !important; }
-body.focus-page .mnav { bottom: 0; }
+body.focus-page .mnav, body.work-page .mnav { bottom: 0; }
 
 @media (max-width: 1180px) {
   .focus-head { align-items: flex-start; }
@@ -2339,6 +2343,7 @@ body.focus-page .mnav { bottom: 0; }
   .focus-video { min-height: 200px; }
   .focus-now { align-items: flex-start; }
   .focus-actions { grid-template-columns: 1fr; }
+  .focus-volume { grid-template-columns: 18px 1fr 40px; }
   .focus-curator { display: block; padding: 24px 18px; }
   .focus-mode-row, .focus-duration-row { display: grid; }
   .focus-sec-head { display: block; }
@@ -2376,7 +2381,7 @@ body.focus-page .mnav { bottom: 0; }
 body { font-size: 15px; background: #050609; }
 #backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .32; }
 #backdrop canvas { opacity: .72; mix-blend-mode: screen; mask-image: radial-gradient(circle at 64% 16%, #000 0, rgba(0,0,0,.78) 30%, transparent 74%); }
-.app, .mnav, .m-work-mode, .player, .right-dock, .modal, .onboard, .np-full, .toast { position: relative; z-index: 1; }
+.app { position: relative; z-index: 1; }
 .app { background: rgba(5,6,9,.88); }
 .main-panel { background: rgba(8,9,12,.92); }
 
@@ -2469,8 +2474,8 @@ body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circ
 .work-setup .focus-mode-row button, .work-setup .focus-duration-row button { min-height: 38px; border-radius: 10px; font-size: 11px; }
 .work-setup .focus-ai-btn { margin-top: 16px; background: var(--accent); box-shadow: none; }
 .work-setup .focus-ai-result { min-height: 48px; margin-top: 15px; padding-top: 13px; }
-.work-setup .focus-ai-result small { color: #bdb8c8; font: 560 10px/1.4 var(--font); letter-spacing: 0; text-transform: none; }
-.work-setup .focus-ai-result p { margin-top: 3px; font-size: 11px; }
+.work-setup .focus-ai-result small { color: #bdb8c8; font: 560 12px/1.4 var(--font); letter-spacing: 0; text-transform: none; }
+.work-setup .focus-ai-result p { margin-top: 4px; font-size: 12px; }
 .work-mixes-sec { max-width: 1360px; margin-top: 72px; }
 .work-mixes-sec .focus-sec-head { display: block; margin-bottom: 22px; }
 .work-mixes-sec .focus-sec-head h2 { margin: 0; font-size: 34px; font-weight: 660; letter-spacing: -.045em; }
@@ -2480,7 +2485,7 @@ body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circ
 .work-mixes-sec .focus-mix:hover { transform: translateY(-2px); background: rgba(255,255,255,.06); }
 .work-mixes-sec .focus-mix.on { background: color-mix(in srgb, var(--mix) 9%, rgba(255,255,255,.025)); }
 .work-mixes-sec .focus-mix-art { border-radius: 11px; }
-.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 4px 6px; border-radius: 6px; background: rgba(0,0,0,.5); font: 570 9px/1 var(--font); letter-spacing: 0; }
+.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 5px 7px; border-radius: 6px; background: rgba(0,0,0,.56); font: 600 11px/1 var(--font); letter-spacing: 0; }
 .work-mixes-sec .focus-mix-meta { padding-top: 10px; }
 .work-mixes-sec .focus-mix-meta b { font-size: 15px; }
 .work-mixes-sec .focus-mix-meta small { margin-top: 4px; font-size: 11px; }
@@ -2492,7 +2497,7 @@ body.work-page #backdrop canvas { opacity: .88; mask-image: radial-gradient(circ
 .work-native-sec .focus-menubar-demo { border-radius: 18px; background: rgba(20,20,26,.94); }
 .work-native-sec .fmd-track b { margin-top: 0; }
 .work-native-sec .fmd-controls button { font-family: var(--font); }
-.work-native-sec .fmd-rule i { color: #87ddb0; font: 650 10px/1 var(--font); }
+.work-native-sec .fmd-rule i { color: #87ddb0; font: 650 11px/1 var(--font); }
 .work-native-sec .focus-native-points { gap: 24px; }
 .work-native-sec .focus-native-points > div { grid-template-columns: 32px 1fr; }
 .work-native-sec .focus-native-points span { color: var(--accent); font: 600 16px/1.4 var(--font); }

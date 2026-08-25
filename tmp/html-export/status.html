@@ -1681,12 +1681,16 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-session-clock { text-align: right; }
 .focus-session-clock span { display: block; font: 600 clamp(25px, 3vw, 38px) / 1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -0.03em; }
 .focus-session-clock small { margin-top: 7px; letter-spacing: 0px; color: var(--ink-faint); }
-.focus-actions { display: grid; grid-template-columns: 1fr auto; gap: 9px; padding: 0px 8px 8px; }
+.focus-actions { display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(148px, 0.42fr); gap: 9px; align-items: center; padding: 0px 8px 8px; }
 .focus-primary, .focus-quiet, .focus-ai-btn { min-height: 46px; border: 0px; border-radius: 12px; font-size: 13px; font-weight: 750; }
 .focus-primary { background: var(--focus-tone); color: rgb(16, 13, 23); transition: filter 0.2s, transform 0.2s; }
 .focus-primary:hover { filter: brightness(1.08); }
 .focus-primary.running { background: rgba(255, 255, 255, 0.1); color: var(--ink); }
 .focus-quiet { padding: 0px 18px; color: var(--ink-muted); background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(255, 255, 255, 0.08); }
+.focus-volume { display: grid; grid-template-columns: 18px minmax(70px, 1fr) 34px; align-items: center; gap: 8px; min-height: 46px; padding: 0px 12px; color: var(--ink-muted); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: rgba(255, 255, 255, 0.043); }
+.focus-volume .ic { width: 15px; height: 15px; }
+.focus-volume input { width: 100%; accent-color: var(--focus-tone); cursor: pointer; }
+.focus-volume output { color: var(--ink-muted); font-size: 11px; font-variant-numeric: tabular-nums; text-align: right; }
 .focus-curator { padding: clamp(24px, 3vw, 38px); }
 .focus-curator h2 { max-width: 360px; margin-top: 13px; font-size: clamp(25px, 2.4vw, 32px); line-height: 1.18; letter-spacing: -0.04em; word-break: keep-all; }
 .focus-curator-copy { margin: 10px 0px 24px; color: var(--ink-muted); font-size: 13px; line-height: 1.65; }
@@ -1750,7 +1754,7 @@ html.touch .hover-play, html.touch .quick-play, html.touch .t-a { opacity: 1; tr
 .focus-native-points p { margin-top: 3px; color: var(--ink-faint); font-size: 11px; }
 body.focus-page .player { display: none; }
 body.focus-page .main-panel { padding-bottom: 0px !important; }
-body.focus-page .mnav { bottom: 0px; }
+body.focus-page .mnav, body.work-page .mnav { bottom: 0px; }
 @media (max-width: 1180px) {
   .focus-head { align-items: flex-start; }
   .focus-status-card { display: none; }
@@ -1770,6 +1774,7 @@ body.focus-page .mnav { bottom: 0px; }
   .focus-video { min-height: 200px; }
   .focus-now { align-items: flex-start; }
   .focus-actions { grid-template-columns: 1fr; }
+  .focus-volume { grid-template-columns: 18px 1fr 40px; }
   .focus-curator { display: block; padding: 24px 18px; }
   .focus-mode-row, .focus-duration-row { display: grid; }
   .focus-sec-head { display: block; }
@@ -1783,7 +1788,7 @@ body.focus-page .mnav { bottom: 0px; }
 body { font-size: 15px; background: rgb(5, 6, 9); }
 #backdrop { position: fixed; inset: 0px; z-index: 0; pointer-events: none; opacity: 0.32; }
 #backdrop canvas { opacity: 0.72; mix-blend-mode: screen; mask-image: radial-gradient(circle at 64% 16%, rgb(0, 0, 0) 0px, rgba(0, 0, 0, 0.78) 30%, transparent 74%); }
-.app, .mnav, .m-work-mode, .player, .right-dock, .modal, .onboard, .np-full, .toast { position: relative; z-index: 1; }
+.app { position: relative; z-index: 1; }
 .app { background: rgba(5, 6, 9, 0.88); }
 .main-panel { background: rgba(8, 9, 12, 0.92); }
 .topbar { gap: 20px; padding: 0 var(--gutter); border-bottom: 1px solid transparent; }
@@ -1856,8 +1861,8 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-setup .focus-mode-row button, .work-setup .focus-duration-row button { min-height: 38px; border-radius: 10px; font-size: 11px; }
 .work-setup .focus-ai-btn { margin-top: 16px; background: var(--accent); box-shadow: none; }
 .work-setup .focus-ai-result { min-height: 48px; margin-top: 15px; padding-top: 13px; }
-.work-setup .focus-ai-result small { color: rgb(189, 184, 200); font: 560 10px/1.4 var(--font); letter-spacing: 0px; text-transform: none; }
-.work-setup .focus-ai-result p { margin-top: 3px; font-size: 11px; }
+.work-setup .focus-ai-result small { color: rgb(189, 184, 200); font: 560 12px/1.4 var(--font); letter-spacing: 0px; text-transform: none; }
+.work-setup .focus-ai-result p { margin-top: 4px; font-size: 12px; }
 .work-mixes-sec { max-width: 1360px; margin-top: 72px; }
 .work-mixes-sec .focus-sec-head { display: block; margin-bottom: 22px; }
 .work-mixes-sec .focus-sec-head h2 { margin: 0px; font-size: 34px; font-weight: 660; letter-spacing: -0.045em; }
@@ -1867,7 +1872,7 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-mixes-sec .focus-mix:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.06); }
 .work-mixes-sec .focus-mix.on { background: color-mix(in srgb, var(--mix) 9%, rgba(255,255,255,.025)); }
 .work-mixes-sec .focus-mix-art { border-radius: 11px; }
-.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 4px 6px; border-radius: 6px; background: rgba(0, 0, 0, 0.5); font: 570 9px/1 var(--font); letter-spacing: 0px; }
+.work-mixes-sec .focus-mix-art i { left: 8px; bottom: 8px; padding: 5px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.56); font: 600 11px/1 var(--font); letter-spacing: 0px; }
 .work-mixes-sec .focus-mix-meta { padding-top: 10px; }
 .work-mixes-sec .focus-mix-meta b { font-size: 15px; }
 .work-mixes-sec .focus-mix-meta small { margin-top: 4px; font-size: 11px; }
@@ -1879,7 +1884,7 @@ body.work-page #backdrop canvas { opacity: 0.88; mask-image: radial-gradient(cir
 .work-native-sec .focus-menubar-demo { border-radius: 18px; background: rgba(20, 20, 26, 0.94); }
 .work-native-sec .fmd-track b { margin-top: 0px; }
 .work-native-sec .fmd-controls button { font-family: var(--font); }
-.work-native-sec .fmd-rule i { color: rgb(135, 221, 176); font: 650 10px/1 var(--font); }
+.work-native-sec .fmd-rule i { color: rgb(135, 221, 176); font: 650 11px/1 var(--font); }
 .work-native-sec .focus-native-points { gap: 24px; }
 .work-native-sec .focus-native-points > div { grid-template-columns: 32px 1fr; }
 .work-native-sec .focus-native-points span { color: var(--accent); font: 600 16px/1.4 var(--font); }
@@ -2289,7 +2294,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
       <span class="svc-dot"></span>
       <div>
         <b>모든 서비스 정상</b>
-        <span>백엔드 가동 58분 · 2026. 8. 25. 오후 6:08:44 기준</span>
+        <span>백엔드 가동 3시간 43분 · 2026. 8. 25. 오후 8:53:05 기준</span>
       </div>
     </div>
     <div class="svc-list">
@@ -2300,7 +2305,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">외부 수집</span>
           </div>
           <div class="svc-detail">12개 소스 · 891건</div>
-          <div class="svc-age fresh">29시간 전</div>
+          <div class="svc-age fresh">31시간 전</div>
         </div>
         <div class="svc-sub"><span class="svc-chip ">일본 apple <b>50</b></span><span class="svc-chip ">일본 appleRss <b>50</b></span><span class="svc-chip ">일본 youtube <b>45</b></span><span class="svc-chip ">일본 billboard <b>100</b></span><span class="svc-chip ">일본 oricon <b>30</b></span><span class="svc-chip ">일본 combined <b>138</b></span><span class="svc-chip ">한국 apple <b>50</b></span><span class="svc-chip ">한국 appleRss <b>50</b></span><span class="svc-chip ">한국 youtube <b>43</b></span><span class="svc-chip ">한국 melon <b>100</b></span><span class="svc-chip ">한국 genie <b>50</b></span><span class="svc-chip ">한국 combined <b>185</b></span></div><div class="svc-row ">
           <div class="svc-name">
@@ -2309,7 +2314,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">외부 수집</span>
           </div>
           <div class="svc-detail">450건 (일본반 240 · 한국반 210)</div>
-          <div class="svc-age fresh">25시간 전</div>
+          <div class="svc-age fresh">27시간 전</div>
         </div>
         <div class="svc-row ">
           <div class="svc-name">
@@ -2345,7 +2350,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
             <span class="svc-kind">자동 생성</span>
           </div>
           <div class="svc-detail">6,161개 표기</div>
-          <div class="svc-age fresh">3시간 전</div>
+          <div class="svc-age fresh">6시간 전</div>
         </div>
         <div class="svc-row ">
           <div class="svc-name">
@@ -2393,7 +2398,7 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
     </div></div>
     </section></main>
         <footer class="footer">
-          <p>Lilac demo — Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a> · <a href="#/status" class="footer-link">서비스 상태</a></p>
+          <p>Lilac demo · Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a> · <a href="#/status" class="footer-link">서비스 상태</a></p>
           <p>미리듣기는 Apple Music 카탈로그 30초 프리뷰, MV는 YouTube 공식 임베드로 재생됩니다. 상품·일정은 데모 데이터이며 가사 패널 문구는 자체 제작 예시입니다.</p>
         </footer>
       </div>

@@ -184,7 +184,20 @@ final class AppState: ObservableObject {
 
     func bringMainWindowForward() {
         NSApp.activate(ignoringOtherApps: true)
-        NSApp.windows.first(where: { $0.canBecomeMain })?.makeKeyAndOrderFront(nil)
+        mainWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    func closeMainWindow() {
+        mainWindow?.performClose(nil)
+    }
+
+    func quitApp() {
+        NSApp.terminate(nil)
+    }
+
+    private var mainWindow: NSWindow? {
+        NSApp.windows.first(where: { $0.canBecomeMain && $0.title == "Lilac" })
+            ?? NSApp.windows.first(where: { $0.canBecomeMain })
     }
 
     private func runTimer() {

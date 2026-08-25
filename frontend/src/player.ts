@@ -403,15 +403,15 @@ export function initPlayer() {
   $('#plPicker').addEventListener('click', (e) => { if (e.target === $('#plPicker')) $('#plPicker').classList.remove('show'); });
   $('#plPickerClose').addEventListener('click', () => $('#plPicker').classList.remove('show'));
 
-  // macOS 메뉴바 셸에서 전달하는 공통 명령. Focus Desk의 YouTube 명령은
+  // macOS 메뉴바 셸에서 전달하는 공통 명령. 워크 모드의 YouTube 명령은
   // pages.ts가 같은 이벤트를 받아 별도로 처리한다.
   window.addEventListener('lilac:native-command', (event) => {
     const command = String((event as CustomEvent<string>).detail || '');
-    const focusRoute = location.hash.startsWith('#/focus');
-    if (!focusRoute && command === 'toggle') playerActions.toggle();
-    else if (!focusRoute && command === 'pause') audio?.pause();
-    else if (!focusRoute && command === 'prev') playerActions.prev();
-    else if (!focusRoute && command === 'next') playerActions.next();
+    const workRoute = location.hash.startsWith('#/work') || location.hash.startsWith('#/focus');
+    if (!workRoute && command === 'toggle') playerActions.toggle();
+    else if (!workRoute && command === 'pause') audio?.pause();
+    else if (!workRoute && command === 'prev') playerActions.prev();
+    else if (!workRoute && command === 'next') playerActions.next();
     else if (command.startsWith('duck:') && audio) audio.volume = Math.max(0, Math.min(1, (Number(command.split(':')[1]) || 18) / 100));
     else if (command === 'restore' && audio) audio.volume = 0.7;
   });
