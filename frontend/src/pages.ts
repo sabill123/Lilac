@@ -4,7 +4,7 @@ import { mountHero3D, mountChart3D, can3D } from './three';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
 import { playQueue, openYt, toast, enqueue, openPlaylistPicker, askName, askConfirm } from './player';
 import { applyTone } from './colors';
-import { openContextMenu, bindTilt, bindDragReorder } from './interactions';
+import { bindHoverExpand, openContextMenu, bindTilt, bindDragReorder } from './interactions';
 import { t } from './i18n';
 
 /* ---- 스켈레톤 ---- */
@@ -225,6 +225,7 @@ export async function pageHome() {
     <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
     <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
     <section class="sec"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
+    <section class="sec"><div class="sec-head" data-d3="head"><h2>에디터 픽</h2><span class="sec-sub" id="hEdSub">Deezer 공식 에디토리얼 · 실시간</span></div><div id="hEditorial"></div></section>
     <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
     <section class="store-wrap"><div class="store-inner">
       <p class="store-label">STORE</p>
@@ -323,6 +324,30 @@ export async function pageHome() {
     const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
     if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
   });
+
+  /* 에디터 픽 — Deezer 공식 에디토리얼 (실시간 무료 API, 키 불필요)
+     클릭하면 iTunes 카탈로그에서 원곡을 찾아 바로 재생한다 */
+  api(`/api/editorial?country=${chCountry}`).then((ed: { label: string; editor: string; list: { title: string; artist: string; artwork: string | null }[] }) => {
+    const host = document.getElementById('hEditorial');
+    if (!host || !ed?.list?.length) return;
+    const sub = document.getElementById('hEdSub');
+    if (sub) sub.textContent = `${ed.label} · ${ed.editor} · 실시간`;
+    host.innerHTML = shelf(ed.list.slice(0, 12).map((t) => ({
+      title: t.title, sub: t.artist, art: t.artwork || undefined,
+      href: `#/search?q=${encodeURIComponent(`${t.artist} ${t.title}`)}`,
+      term: `${t.artist} ${t.title}`,
+    })));
+    // 카드 클릭 = 즉시 재생 (검색 이동 대신)
+    host.querySelectorAll<HTMLElement>('.card').forEach((el) => {
+      el.addEventListener('click', async (ev2) => {
+        ev2.preventDefault();
+        const hit = await findCatalog(el.dataset.term || '');
+        if (hit) playQueue([toPlayable(hit)], 0, 'editorial');
+        else location.hash = el.getAttribute('href')?.slice(1) || '/';
+      });
+    });
+    bindTilt(host); bindHoverExpand(host);
+  }).catch(() => { document.getElementById('hEditorial')?.closest('section')?.remove(); });
 
   $('#hEvents').innerHTML = events.slice(0, 4).map((ev) => {
     const { d, txt } = dday(ev.date);

@@ -331,6 +331,40 @@ app.post('/api/catalog/batch', async (req, res) => {
   res.json({ results });
 });
 
+/* ── Deezer 에디토리얼 (무료 · 키 불필요) ──
+   Deezer 국가 차트는 한일 이용자가 적어 품질이 무너져 있음을 실측으로 확인했다
+   (Top South Korea에 D'Angelo가 뜬다). 대신 Deezer 공식 에디터가 관리하는
+   장르 플레이리스트(Top K-Pop / Top J-Pop)는 품질이 검증되어 이를 쓴다.
+   '차트'가 아니라 '에디터 픽'으로 정확히 라벨링한다. */
+const DEEZER_EDITORIAL = {
+  kr: { id: 4096400722, label: 'Top K-Pop', editor: 'Deezer K-Pop Editor' },
+  jp: { id: 6049895724, label: 'Top J-Pop', editor: 'Deezer Japan Editor' },
+};
+const editorialCache = { kr: { at: 0, list: [] }, jp: { at: 0, list: [] } };
+const EDITORIAL_TTL = 30 * 60 * 1000;
+
+app.get('/api/editorial', async (req, res) => {
+  const country = String(req.query.country || 'jp');
+  const cfg = DEEZER_EDITORIAL[country];
+  if (!cfg) return res.status(404).json({ error: 'unknown country' });
+  const cache = editorialCache[country];
+  if (cache.list.length && Date.now() - cache.at < EDITORIAL_TTL) {
+    return res.json({ country, ...cfg, live: true, fetchedAt: new Date(cache.at).toISOString(), list: cache.list });
+  }
+  try {
+    const j = await fetchJsonRetry(`https://api.deezer.com/playlist/${cfg.id}/tracks?limit=30`, 2);
+    const list = (j?.data || []).map((t, i) => ({
+      rank: i + 1, title: t.title, artist: t.artist?.name || '',
+      artwork: t.album?.cover_medium || t.album?.cover || null,
+      deezerUrl: t.link || null,
+    })).filter((x) => x.title && x.artist);
+    if (list.length) { editorialCache[country] = { at: Date.now(), list }; }
+    res.json({ country, ...cfg, live: true, fetchedAt: new Date().toISOString(), list });
+  } catch {
+    res.json({ country, ...cfg, live: false, fetchedAt: new Date(cache.at || 0).toISOString(), list: cache.list });
+  }
+});
+
 app.get('/api/status', async (_req, res) => {
   const now = Date.now();
   const ageH = (iso) => (iso ? Math.round(((now - new Date(iso).getTime()) / 36e5) * 10) / 10 : null);
@@ -385,6 +419,22 @@ app.get('/api/status', async (_req, res) => {
     {
       id: 'catalog', name: 'Apple 카탈로그 검색', kind: '실시간 API',
       ok: true, updatedAt: null, ageHours: null, detail: '요청 시 조회 (캐시 없음)',
+    },
+    {
+      id: 'apple-rss', name: 'Apple 공식 RSS 차트', kind: '실시간 API',
+      ok: true, updatedAt: null, ageHours: null, detail: '요청 시 조회 · 10분 캐시 (키 불필요)',
+    },
+    {
+      id: 'deezer', name: 'Deezer 에디터 픽', kind: '실시간 API',
+      ok: true, updatedAt: null, ageHours: null,
+      detail: 'Top K-Pop · Top J-Pop 공식 에디토리얼 (키 불필요, 30분 캐시)',
+    },
+    {
+      id: 'spotify', name: 'Spotify Web API', kind: '선택 통합',
+      ok: true, updatedAt: null, ageHours: null,
+      detail: process.env.SPOTIFY_CLIENT_ID
+        ? '키 설정됨'
+        : '미설정 — SPOTIFY_CLIENT_ID/SECRET 등록 시 활성화 (무료)',
     },
   ];
 
