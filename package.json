@@ -10,7 +10,8 @@
     "build": "npm --prefix frontend run build",
     "build:mac": "zsh macos/scripts/build-app.sh",
     "run:mac": "npm run build:mac && open macos/.build/Lilac.app",
-    "dev:clean": "zsh scripts/dev.sh"
+    "dev:clean": "zsh scripts/dev.sh",
+    "test:smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "kuromoji": "^0.1.2"
