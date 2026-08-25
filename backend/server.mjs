@@ -663,6 +663,26 @@ async function loadCharts() {
   } catch { return null; }
 }
 
+/* ── 실시간 소스 ──
+   Apple 공식 마케팅 RSS는 스크래핑이 아닌 정식 JSON 피드라
+   요청 시점에 직접 가져와도 안전하다. 10분 TTL 캐시만 두고 실시간 서빙한다.
+   (멜론·지니·오리콘·빌보드는 공개 API가 없어 여전히 일일 수집에 의존한다) */
+const rssLiveCache = { jp: { at: 0, list: [] }, kr: { at: 0, list: [] } };
+const RSS_TTL = 10 * 60 * 1000;
+
+async function liveAppleRss(country) {
+  const c = rssLiveCache[country];
+  if (c && Date.now() - c.at < RSS_TTL && c.list.length) return { list: c.list, fetchedAt: c.at, live: true };
+  const j = await fetchJsonRetry(`https://rss.applemarketingtools.com/api/v2/${country}/music/most-played/50/songs.json`, 2);
+  const list = (j?.feed?.results || []).map((x, i) => ({
+    rank: i + 1, title: x.name, artist: x.artistName,
+    artwork: (x.artworkUrl100 || '').replace('100x100', '400x400'),
+    appleUrl: x.url, youtubeId: null, ytViews: null,
+  }));
+  if (list.length) { rssLiveCache[country] = { at: Date.now(), list }; return { list, fetchedAt: Date.now(), live: true }; }
+  return null;   // 실패 시 호출부가 수집본으로 폴백
+}
+
 app.get('/api/charts', async (req, res) => {
   const data = await loadCharts();
   if (!data) return res.status(503).json({ error: 'charts not collected yet', hint: 'node backend/collect-charts.mjs' });
@@ -681,7 +701,12 @@ app.get('/api/charts', async (req, res) => {
     ranks: e.ranks || null, sources: e.sources || null, score: e.score,
     move: e.move || null, lastRank: e.lastRank ?? null,
   });
-  const full = c[source] || [];
+  let full = c[source] || [];
+  let liveInfo = null;
+  if (source === 'appleRss' && (country === 'jp' || country === 'kr')) {
+    const live = await liveAppleRss(country).catch(() => null);
+    if (live) { full = live.list; liveInfo = live; }
+  }
   const list = full.slice(0, limit).map(slim);
 
   // 국가마다 소스 구성이 다르다(일본: 빌보드·오리콘 / 한국: 멜론·지니)
@@ -701,7 +726,9 @@ app.get('/api/charts', async (req, res) => {
   };
 
   res.json({
-    country, countryLabel: c.label, source, updated: data.updated,
+    country, countryLabel: c.label, source,
+    updated: liveInfo ? new Date(liveInfo.fetchedAt).toISOString() : data.updated,
+    live: !!liveInfo,
     limit, total: full.length,
     counts,
     sources: Object.keys(counts).filter((k) => k !== 'combined'),

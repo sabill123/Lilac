@@ -608,7 +608,10 @@ export async function pageChart(sub?: string) {
     stage.insertAdjacentHTML('afterend', '<span class="stage-hint">이번 주 1위 · 누르면 재생됩니다</span>');
     mountChart3D(stage, items).catch(() => document.body.classList.remove('has-3d-chart'));
   }
-  $('#chUpdated').innerHTML = `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
+  // 실시간 소스(공식 피드 직접 조회)와 일일 수집 소스를 구분해 보여준다
+  $('#chUpdated').innerHTML = data.live
+    ? `<span class="live-badge on rt">실시간</span>조회 시점 데이터 · Apple 공식 피드`
+    : `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
   $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치 — ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
   body.innerHTML = chartRowsHtml(list, source);
   bindChartRows(body, list);

@@ -3242,3 +3242,6 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
   .ar-portrait { width: 96px; border-radius: 10px; }
   .ar-name { font-size: clamp(26px, 9vw, 40px); }
 }
+
+/* 실시간 소스 배지 — 수집(주기)과 구분 */
+.live-badge.rt { background: rgba(46, 204, 113, 0.16); color: #2ecc71; }
