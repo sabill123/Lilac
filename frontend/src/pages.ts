@@ -222,11 +222,11 @@ export async function pageHome() {
         <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
       </div>
     </section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>에디터 픽</h2><span class="sec-sub" id="hEdSub">Deezer 공식 에디토리얼 · 실시간</span></div><div id="hEditorial"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>에디터 픽</h2><span class="sec-sub" id="hEdSub">Deezer 공식 에디토리얼 · 실시간</span></div><div id="hEditorial"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
     <section class="store-wrap"><div class="store-inner">
       <p class="store-label">STORE</p>
       <div class="sec-head store-head"><h2>${t('newArrivals')}</h2><a class="sec-link dark" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div>
@@ -242,7 +242,7 @@ export async function pageHome() {
     ].slice(0, 6);
     if (quick.length) {
       root().insertAdjacentHTML('afterbegin', `
-        <section class="sec quick-sec"><div class="sec-head" data-d3="head"><h2>바로 가기</h2></div>
+        <section class="page-section quick-sec"><div class="sec-head" data-d3="head"><h2>바로 가기</h2></div>
         <div class="quick-grid">${quick.map((q) => `
           <a class="quick" href="${q.href}">
             <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
@@ -396,14 +396,14 @@ async function pageHomePlay() {
   const hour = new Date().getHours();
   const greet = hour < 6 ? '깊은 밤이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
   root().innerHTML = `
-    <section class="sec home-play">
+    <section class="page-section home-play">
       <h1 class="greet">${greet}</h1>
       <div class="quick-grid" id="hQuick"></div>
     </section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>최근 재생</h2><a class="sec-link" href="#/library/history">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hRecent">${skCards(6)}</div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>오늘의 추천</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hPicks">${skCards(6)}</div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists">${skCards(7, true)}</div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>`;
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>최근 재생</h2><a class="sec-link" href="#/library/history">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hRecent">${skCards(6)}</div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>오늘의 추천</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hPicks">${skCards(6)}</div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists">${skCards(7, true)}</div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>`;
 
   const [lists, likes, hist] = await Promise.all([
     api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/history').catch(() => []),
@@ -532,16 +532,23 @@ function chartRowsHtml(list: ChartRow[], source: string) {
     const move = e.move
       ? `<span class="rk-move ${e.move}">${e.move === 'new' ? 'NEW' : e.move === 'up' ? '▲' : '▼'}${e.lastRank && e.move !== 'new' ? ` ${Math.abs(e.lastRank - e.rank)}` : ''}</span>`
       : '';
+    /* 행은 네 가지만 싣는다: 순위 · 커버 · 곡 · 대표 지표.
+       예전에는 소스 배지 7개와 변동과 조회수와 MV 버튼이 한 줄에 다 들어가
+       100행을 훑는 게 불가능했다. 소스별 순위는 한 곡을 파고들 때 필요한
+       정보지 목록을 훑을 때 필요한 정보가 아니다. 요약해서 접고 호버로 편다.
+       변동은 별도 칸이 아니라 순위에 붙는 성질이므로 순위 칸 안에 넣는다. */
+    const srcN = source === 'combined' ? RANK_BADGES.filter(([k]) => e.ranks?.[k]).length : 0;
     return `
     <div class="rk-row" data-i="${e.rank - 1}">
-      <span class="rk-n">${e.rank}</span>
+      <span class="rk-n">${e.rank}${move}</span>
       <div class="rk-art">${e.artwork ? `<img src="${esc(sized(e.artwork, 120))}" loading="lazy" decoding="async" alt=""/>` : `<span class="rk-ph">${icon('i-chart')}</span>`}<span class="rk-ov">${icon('i-play')}</span></div>
       <div class="rk-meta">
         <div class="rk-t">${esc(e.title)}</div>
         <div class="rk-a">${esc(e.artist)}</div>
       </div>
       <div class="rk-side">
-        ${badges}${move}
+        ${srcN ? `<span class="rk-srcn" title="${srcN}개 차트에 올라 있습니다">${srcN}곳</span>` : ''}
+        ${badges}
         ${e.ytViews ? `<span class="rk-views">${viewsTxt(e.ytViews)}회</span>` : ''}
         ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="뮤직비디오">${icon('i-ext')}</button>` : ''}
       </div>
@@ -617,7 +624,7 @@ export async function pageChart(sub?: string) {
         </div>
       </div>
     </section>
-    <section class="sec chart-body">
+    <section class="page-section chart-body">
       <div class="ch-bar">
         <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
         <button class="tbtn big-ghost" id="chShuffle">${icon('i-shuffle')}</button>
@@ -930,7 +937,7 @@ async function pageStorePlay() {
     $('#stGrid').innerHTML = shown.map((p) => `
       <a class="lib-card" href="#/store/${p.id}" data-tilt="7">
         <div class="lib-cover"><img src="${esc(p.artwork)}" alt="" loading="lazy"/>
-          <span class="card-badge">${esc(p.badge)}</span></div>
+          </div>
         <div class="c-title">${esc(p.name)}</div>
         <div class="c-sub">${esc(p.brand)} · ${money(p.price, p.priceCurrency)}</div>
       </a>`).join('') || `<div class="empty-box">${icon('i-bag', 'ic eb')}<p>조건에 맞는 상품이 없습니다</p></div>`;
@@ -1080,7 +1087,7 @@ export async function pageSchedule() {
     return m;
   };
   root().innerHTML = `
-    <section class="sec page-top">
+    <section class="page-section page-top">
       <div class="page-head" data-d3="head">
         <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
@@ -1229,9 +1236,8 @@ export async function pageArtist(id: string) {
       <div class="ar-head">
         <div class="ar-portrait" id="arPortrait" aria-hidden="true"></div>
         <div class="ar-info">
-          <p class="ar-verified">${icon('i-check', 'ic s')} 인증된 아티스트</p>
           <h1 class="ar-name">${esc(a.name)}</h1>
-          <p class="ar-stats" id="arStats"><span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
+          <p class="ar-stats" id="arStats"><span class="ar-vf">${icon('i-check', 'ic s')} 인증됨</span> · <span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
         </div>
       </div>
     </section>
@@ -1241,12 +1247,12 @@ export async function pageArtist(id: string) {
       ${a.official ? `<a class="tbtn big-ghost" href="${esc(a.official)}" target="_blank" rel="noopener" title="공식 사이트">${icon('i-ext')}</a>` : ''}
       <span class="ar-op">${a.operator ? `${t('store.operator')} · ${esc(a.operator)}` : `${countryLabel(a.country)} · ${esc(a.genre)}`}</span>
     </div>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>인기</h2></div><div id="arTracks">${skRows(5)}</div></section>
-    <section class="sec" id="arDiscSec"><div class="sec-head" data-d3="head"><h2>디스코그래피</h2><span class="sec-sub">Apple Music 카탈로그</span></div><div id="arDisc">${skCards(6)}</div></section>
-    <section class="sec" id="arEvSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('schedule.title')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="ev-shelf" id="arEvents"></div></section>
-    <section class="sec" id="arGoodsSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('store.title')}</h2><a class="sec-link" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="store-dark-grid" id="arGoods"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>
-    <section class="sec"><div class="sec-head" data-d3="head"><h2>정보</h2></div>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>인기</h2></div><div id="arTracks">${skRows(5)}</div></section>
+    <section class="page-section" id="arDiscSec"><div class="sec-head" data-d3="head"><h2>디스코그래피</h2><span class="sec-sub">Apple Music 카탈로그</span></div><div id="arDisc">${skCards(6)}</div></section>
+    <section class="page-section" id="arEvSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('schedule.title')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="ev-shelf" id="arEvents"></div></section>
+    <section class="page-section" id="arGoodsSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('store.title')}</h2><a class="sec-link" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="store-dark-grid" id="arGoods"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>정보</h2></div>
       <div class="ar-about">
         <div class="ar-about-img" id="arAboutImg"></div>
         <div class="ar-about-txt">
@@ -1311,12 +1317,14 @@ export async function pageArtist(id: string) {
     $('#arGoods').innerHTML = goods.map(productCard).join('');
     bindTilt($('#arGoods'));
   }
+  // 인증 표기는 지표를 다시 그릴 때도 남아 있어야 한다
+  const vf = `<span class="ar-vf">${icon('i-check', 'ic s')} 인증됨</span> · `;
   // 실제 지표 (YouTube 공식 MV 누적 조회수 합산)
   api(`/api/artist/${a.id}/stats`).then((s: { totalViews: number; trackCount: number; live: boolean; source: string }) => {
     const st = document.getElementById('arStats');
     const ls = document.getElementById('arListeners');
     if (!s.totalViews) {
-      if (st) st.innerHTML = `${esc(a.genre)}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
+      if (st) st.innerHTML = `${vf}${esc(a.genre)}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
       if (ls) ls.innerHTML = `<span class="dim">공개 지표를 가져오지 못했습니다</span>`;
       return;
     }
@@ -1326,7 +1334,7 @@ export async function pageArtist(id: string) {
       <span class="dim" style="display:block;font-size:12px;margin-top:4px">${esc(s.source)} · 등록곡 ${s.trackCount}개 기준</span>`;
   }).catch(() => {
     const st = document.getElementById('arStats');
-    if (st) st.textContent = `${a.genre}${artistSub(a) ? ` · ${artistSub(a)}` : ''}`;
+    if (st) st.innerHTML = `${vf}${esc(a.genre)}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
   });
 
   // 디스코그래피
@@ -1341,8 +1349,8 @@ export async function pageArtist(id: string) {
     el.innerHTML = `<div class="shelf d3-stage">${use.map((al) => `
       <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
         <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy"/><span class="glare"></span>
-          <span class="card-badge">${al.trackCount}곡</span></div>
-        <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · 앨범</div>
+          </div>
+        <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · ${al.trackCount}곡</div>
       </a>`).join('')}</div>`;
     bindTilt(el);
     const about = document.getElementById('arAboutImg');
@@ -1720,7 +1728,7 @@ export async function pageArtists() {
   const oshi = await api('/api/oshi').catch(() => []);
   const followed = new Set(oshi.map((o: { artistId: string }) => o.artistId));
   root().innerHTML = `
-    <section class="sec page-top">
+    <section class="page-section page-top">
       <div class="page-head" data-d3="head">
         <p class="sp-label">아티스트</p>
         <h1 class="page-title">전체 아티스트</h1>
@@ -1789,7 +1797,7 @@ export async function pageOrders() {
   if (!me) { location.hash = '#/login'; return; }
   const orders = (await api('/api/orders').catch(() => [])) as Order[];
   root().innerHTML = `
-    <section class="sec page-top narrow">
+    <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
         <p class="sp-label">주문</p>
         <h1 class="page-title">주문 내역</h1>
@@ -1828,7 +1836,7 @@ export async function pageOrderDetail(id: string) {
   const stepIdx = Math.max(0, STATUS_STEPS.indexOf(o.status));
   const b = o.breakdown;
   root().innerHTML = `
-    <section class="sec page-top narrow">
+    <section class="page-section page-top narrow">
       <a class="crumb" href="#/orders">${icon('i-chev-r', 'ic s flip')} 주문 내역</a>
       <div class="page-head" data-d3="head">
         <p class="sp-label">주문 상세</p>
@@ -2146,7 +2154,7 @@ export function pageHelp() {
   }, 0);
 
   root().innerHTML = `
-    <section class="sec page-top narrow">
+    <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
         <p class="sp-label">안내</p>
         <h1 class="page-title">Lilac 소개 · 데이터 출처</h1>
@@ -2278,7 +2286,7 @@ export async function pageAccount() {
         <p class="sp-meta">${esc(me.email)}<span class="sep">·</span>플레이리스트 ${lists.length}개<span class="sep">·</span>팔로우 ${oshi.length}명<span class="sep">·</span>가입 ${joined}</p>
       </div>
     </section>
-    <section class="sec">
+    <section class="page-section">
       <div class="mp-cards">
         <div class="mp-card accent">
           <p class="mp-k">${t('acct.plan')}</p>
@@ -2402,7 +2410,7 @@ const SR_TABS = [
 export async function pageSearch(q: string, tab = 'all') {
   if (!q) {
     root().innerHTML = `
-      <section class="sec page-top">
+      <section class="page-section page-top">
         <div class="page-head" data-d3="head"><p class="sp-label">검색</p><h1 class="page-title">무엇을 찾으세요?</h1>
           <p class="page-desc">곡·아티스트·앨범·굿즈·일정을 한 번에 검색합니다.</p></div>
         <div class="mood-grid" id="srBrowse"></div>
@@ -2420,7 +2428,7 @@ export async function pageSearch(q: string, tab = 'all') {
   }
 
   root().innerHTML = `
-    <section class="sec page-top">
+    <section class="page-section page-top">
       <div class="page-head" data-d3="head">
         <p class="sp-label">검색 결과</p>
         <h1 class="page-title">${esc(q)}</h1>
@@ -2473,7 +2481,7 @@ export async function pageSearch(q: string, tab = 'all') {
   const albumShelf = (list: typeof albums) => `<div class="shelf d3-stage">${list.map((al) => `
     <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
       <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy" decoding="async"/><span class="glare"></span>
-        <span class="card-badge">${al.trackCount}곡</span></div>
+        </div>
       <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · ${esc(al.artist)}</div></a>`).join('')}</div>`;
 
   const productGrid = (list: Product[]) => `<div class="store-dark-grid">${list.map((p) => `
@@ -2551,7 +2559,7 @@ export async function pageSearch(q: string, tab = 'all') {
 }
 
 export function page404() {
-  root().innerHTML = `<section class="sec page-top"><div class="page-head" data-d3="head"><h1 class="page-title">페이지를 찾을 수 없습니다</h1></div><a class="btn-pill" href="#/">${t('nav.home')}</a></section>`;
+  root().innerHTML = `<section class="page-section page-top"><div class="page-head" data-d3="head"><h1 class="page-title">페이지를 찾을 수 없습니다</h1></div><a class="btn-pill" href="#/">${t('nav.home')}</a></section>`;
 }
 
 
@@ -2579,7 +2587,7 @@ function freshness(kind: string, ageHours: number | null): { level: 'fresh' | 's
 
 export async function pageStatus() {
   root().innerHTML = `
-    <section class="sec page-top narrow">
+    <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
         <p class="sp-label">시스템</p>
         <h1 class="page-title">서비스 상태</h1>

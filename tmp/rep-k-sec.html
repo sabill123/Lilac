@@ -1,15 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko"><head>
-    
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>워크 모드 · Lilac</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a78bfa'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-weight='800' font-size='18' fill='%23000' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    
-  <style>@font-face { font-family: "Pretendard Variable"; font-style: normal; font-display: swap; font-weight: 45 920; src: url("../../../packages/pretendard/dist/web/variable/woff2-dynamic-subset/PretendardVariable.subset.0.woff2") format("woff2-variations"); unicode-range: U+F9CA-FA0B, U+FF03-FF05, U+FF07, U+FF0A-FF0B, U+FF0D-FF19, U+FF1B, U+FF1D, U+FF20-FF5B, U+FF5D, U+FFE0-FFE3, U+FFE5-FFE6; }
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>t</title><style>@font-face { font-family: "Pretendard Variable"; font-style: normal; font-display: swap; font-weight: 45 920; src: url("../../../packages/pretendard/dist/web/variable/woff2-dynamic-subset/PretendardVariable.subset.0.woff2") format("woff2-variations"); unicode-range: U+F9CA-FA0B, U+FF03-FF05, U+FF07, U+FF0A-FF0B, U+FF0D-FF19, U+FF1B, U+FF1D, U+FF20-FF5B, U+FF5D, U+FFE0-FFE3, U+FFE5-FFE6; }
 @font-face { font-family: "Pretendard Variable"; font-style: normal; font-display: swap; font-weight: 45 920; src: url("../../../packages/pretendard/dist/web/variable/woff2-dynamic-subset/PretendardVariable.subset.1.woff2") format("woff2-variations"); unicode-range: U+D723-D728, U+D72A-D733, U+D735-D748, U+D74A-D74F, U+D752-D753, U+D755-D757, U+D75A-D75F, U+D762-D764, U+D766-D768, U+D76A-D76B, U+D76D-D76F, U+D771-D787, U+D789-D78B, U+D78D-D78F, U+D791-D797, U+D79A, U+D79C, U+D79E-D7A3, U+F900-F909, U+F90B-F92E; }
 @font-face { font-family: "Pretendard Variable"; font-style: normal; font-display: swap; font-weight: 45 920; src: url("../../../packages/pretendard/dist/web/variable/woff2-dynamic-subset/PretendardVariable.subset.2.woff2") format("woff2-variations"); unicode-range: U+D679-D68B, U+D68E-D69E, U+D6A0, U+D6A2-D6A7, U+D6A9-D6C3, U+D6C6-D6C7, U+D6C9-D6CB, U+D6CD-D6D3, U+D6D5-D6D6, U+D6D8-D6E3, U+D6E5-D6E7, U+D6E9-D6FB, U+D6FD-D717, U+D719-D71F, U+D721-D722; }
 @font-face { font-family: "Pretendard Variable"; font-style: normal; font-display: swap; font-weight: 45 920; src: url("../../../packages/pretendard/dist/web/variable/woff2-dynamic-subset/PretendardVariable.subset.3.woff2") format("woff2-variations"); unicode-range: U+D5BC-D5C7, U+D5CA-D5CB, U+D5CD-D5CF, U+D5D1-D5D7, U+D5D9-D5DA, U+D5DC, U+D5DE-D5E3, U+D5E6-D5E7, U+D5E9-D5EB, U+D5ED-D5F6, U+D5F8, U+D5FA-D5FF, U+D602-D603, U+D605-D607, U+D609-D60F, U+D612-D613, U+D616-D61B, U+D61D-D637, U+D63A-D63B, U+D63D-D63F, U+D641-D647, U+D64A-D64C, U+D64E-D653, U+D656-D657, U+D659-D65B, U+D65D-D666, U+D668, U+D66A-D678; }
@@ -146,7 +135,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .btn-play-w.wide { width: 100%; justify-content: center; margin-top: 16px; }
 .btn-sec { display: inline-flex; align-items: center; gap: 9px; background: rgba(109, 109, 110, 0.55); color: rgb(255, 255, 255); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; border-radius: var(--radius-sm); padding: 0px 24px; height: 46px; font-size: 15.5px; font-weight: 700; transition: background var(--dur-micro); }
 .btn-sec:hover { background: rgba(109, 109, 110, 0.35); }
-.page-section { padding: 40px var(--gutter) 8px; }
+.sec { padding: 40px var(--gutter) 8px; }
 .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
 .sec-head h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
 .sec-sub { font-size: 12.5px; color: var(--ink-faint); }
@@ -305,7 +294,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .locale-menu button.on { color: var(--accent); font-weight: 700; }
 #page { padding-top: 0px; }
 .page-top { padding-top: calc(var(--gnb-h) + 28px); }
-.page-section.narrow { max-width: 980px; }
+.sec.narrow { max-width: 980px; }
 .sec-link { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; color: var(--ink-faint); font-size: 12.5px; font-weight: 700; text-decoration: none; }
 .sec-link:hover { color: var(--ink); }
 .sec-link.dark { color: var(--paper-muted); }
@@ -314,7 +303,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .ic.s.flip { transform: rotate(180deg); }
 .loading { color: var(--ink-faint); padding: 28px 0px; font-size: 13.5px; }
 .crumb { display: inline-flex; align-items: center; gap: 4px; color: var(--paper-muted); font-size: 12.5px; font-weight: 700; text-decoration: none; margin-bottom: 18px; }
-.page-section .crumb { color: var(--ink-faint); }
+.sec .crumb { color: var(--ink-faint); }
 .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
 .tab { padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--ink-muted); background: var(--bg-raised); text-decoration: none; transition: background-color var(--dur-micro), border-color var(--dur-micro), color var(--dur-micro), opacity var(--dur-micro), transform var(--dur-micro), box-shadow var(--dur-micro); }
 .tab:hover { color: var(--ink); }
@@ -350,14 +339,14 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .btn-buy { background: var(--paper-ink); color: rgb(255, 255, 255); border-width: medium; border-style: none; border-color: currentcolor; border-image: none; padding: 0px 26px; height: 46px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: opacity var(--dur-micro); border-radius: 2px; }
 .btn-buy:hover { opacity: 0.82; }
 .btn-buy.wide { width: 100%; }
-.page-section .btn-buy { border-radius: var(--radius-sm); }
+.sec .btn-buy { border-radius: var(--radius-sm); }
 .btn-out { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgb(217, 218, 222); background: rgb(255, 255, 255); color: var(--paper-ink); padding: 0px 18px; height: 46px; font-size: 13.5px; font-weight: 700; cursor: pointer; text-decoration: none; transition: border-color var(--dur-micro); border-radius: 2px; }
 .btn-out:hover { border-color: var(--paper-ink); }
-.page-section .btn-out, .auth-card .btn-out { background: transparent; border-color: var(--rule-strong); color: var(--ink); border-radius: var(--radius-sm); }
-.page-section .btn-out:hover { border-color: var(--ink); }
+.sec .btn-out, .auth-card .btn-out { background: transparent; border-color: var(--rule-strong); color: var(--ink); border-radius: var(--radius-sm); }
+.sec .btn-out:hover { border-color: var(--ink); }
 .btn-out.danger { color: rgb(255, 107, 110); border-color: rgba(229, 72, 77, 0.4); margin-top: 24px; }
 .pd-note { font-size: 11.5px; color: var(--paper-muted); margin-top: 14px; line-height: 1.6; }
-.page-section .pd-note { color: var(--ink-faint); }
+.sec .pd-note { color: var(--ink-faint); }
 .dark-h { color: var(--paper-ink); }
 .store-dark-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px; }
 .store-dark-grid .p-brand { color: var(--ink-faint); }
@@ -421,7 +410,7 @@ section.billboard { position: relative; height: min(78vh, 720px); min-height: 48
 .q-row { display: flex; align-items: center; gap: 11px; padding: 7px 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--dur-micro); }
 .q-row:hover { background: var(--bg-soft); }
 .q-row.now { cursor: default; }
-.q-art { width: 38px; height: 38px; border-radius: 4px; background-image: ; background-repeat: ; background-attachment: ; background-origin: ; background-clip: ; background-size: cover; background-position: center center; background-color: var(--bg-soft); flex-shrink: 0; }
+.q-art { width: 38px; height: 38px; border-radius: 4px; background-size: cover; background-position: center center; background-color: var(--bg-soft); flex-shrink: 0; }
 .q-meta { min-width: 0px; flex: 1 1 0%; }
 .q-t { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .q-row.now .q-t { color: var(--accent); }
@@ -543,7 +532,7 @@ body.dock-open main, body.dock-open .footer { margin-right: 320px; }
 .rank-list.big .rk-n { font-size: 19px; }
 .rank-list.big .rk-row { grid-template-columns: 46px 60px 1fr auto; padding: 10px 12px; }
 .rank-list.big .rk-art { width: 60px; height: 60px; }
-.rk-art { position: relative; width: 52px; height: 52px; border-radius: 4px; overflow: hidden; background: var(--bg-soft); }
+.rk-art { position: relative; width: 52px; height: 52px; border-radius: 4px; overflow: hidden; }
 .rk-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .rk-ov { position: absolute; inset: 0px; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.5); opacity: 0; transition: opacity var(--dur-micro); }
 .rk-ov .ic { width: 18px; height: 18px; color: rgb(255, 255, 255); }
@@ -798,7 +787,7 @@ body.dock-open .app { grid-template-columns: var(--sb-w) minmax(0, 1fr) 320px; }
 .sb-meta { min-width: 0px; display: flex; flex-direction: column; }
 .sb-meta b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-meta i { font-size: 12px; font-style: normal; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.main-panel { background: var(--bg); overflow: hidden auto; position: relative; scroll-behavior: smooth; }
+.main-panel { background: var(--bg-raised); border-radius: var(--radius-lg); overflow: hidden auto; position: relative; scroll-behavior: smooth; }
 .topbar { position: sticky; top: 0px; z-index: 30; height: var(--tb-h); display: flex; align-items: center; gap: 16px; padding: 0 var(--gutter); background: transparent; transition: background var(--dur-short); }
 .topbar.scrolled { background: rgba(22, 23, 28, 0.86); backdrop-filter: blur(20px) saturate(1.5); }
 .tb-nav { display: flex; gap: 8px; }
@@ -930,6 +919,7 @@ body.playing .np-full.show .np-disc::after { animation: 6s linear 0s infinite no
 }
 .app { grid-template-columns: minmax(0px, 1fr) 0px; gap: 0px; padding: 0px; height: 100vh; }
 .sidebar { display: none; }
+.main-panel { background: var(--bg); border-radius: 0px; }
 body.has-player .main-panel { padding-bottom: var(--player-h); }
 .topbar { padding: 0 var(--gutter); }
 .topbar.scrolled { background: rgba(11, 12, 15, 0.86); }
@@ -1076,6 +1066,7 @@ body:not(.play-mode) .sp-table.sticky .t-head { background: rgba(11, 12, 15, 0.9
 @media (max-width: 760px) {
   :root { --gutter: 16px; --player-h: 72px; --tb-h: 56px; }
   .app { padding: 0px; height: calc(100vh - var(--player-h) - 56px); }
+  .main-panel { border-radius: 0px; }
   .topbar { gap: 10px; }
   .tb-brand { font-size: 19px; }
   .tb-menu { display: none !important; }
@@ -1087,7 +1078,7 @@ body:not(.play-mode) .sp-table.sticky .t-head { background: rgba(11, 12, 15, 0.9
   .bb-meta { font-size: 15px; margin-top: 10px; }
   .bb-actions { margin-top: 18px; }
   .btn-play-w, .btn-sec { height: 42px; font-size: 14px; padding: 0px 20px; }
-  .page-section { padding: 26px var(--gutter) 6px; }
+  .sec { padding: 26px var(--gutter) 6px; }
   .sec-head h2 { font-size: 19px; }
   .shelf { grid-auto-columns: 136px; gap: 10px; }
   .mood-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1803,7 +1794,7 @@ body { font-size: 15px; background: rgb(5, 6, 9); }
 .tb-connect { height: 40px; border-radius: 12px; }
 .tb-icon, .tb-user { background: rgba(255, 255, 255, 0.055); }
 .tb-signup { border-radius: 11px; padding: 10px 16px; }
-.page-section { padding: 56px var(--gutter) 14px; }
+.sec { padding: 56px var(--gutter) 14px; }
 .page-top { padding-top: 40px; }
 .page-head { margin-bottom: 34px; }
 .page-title { font-size: clamp(38px, 4.6vw, 58px); font-weight: 680; letter-spacing: -0.045em; }
@@ -2172,315 +2163,18 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 .ars-cover { position: relative; }
 .ars-cover img { position: relative; z-index: 1; }
 .ars-cover:has(img) .ph { display: none; }
-.la-art:has(img) { font-size: 0px; }</style></head>
-  <body class="has-player work-page">
-    <div id="backdrop" aria-hidden="true"><canvas width="2880" height="1800" style="width: 1440px; height: 900px;"></canvas></div>
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.14v13.72c0 .8.87 1.3 1.56.88l11.2-6.86a1.04 1.04 0 0 0 0-1.76L9.56 4.26A1.03 1.03 0 0 0 8 5.14Z"></path></symbol>
-      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></symbol>
-      <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 5a1 1 0 0 1 2 0v6.3l9.4-6.1A1 1 0 0 1 19 6v12a1 1 0 0 1-1.6.8L8 12.7V19a1 1 0 1 1-2 0V5Z"></path></symbol>
-      <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 5a1 1 0 0 0-2 0v6.3L6.6 5.2A1 1 0 0 0 5 6v12a1 1 0 0 0 1.6.8l9.4-6.1V19a1 1 0 1 0 2 0V5Z"></path></symbol>
-      <symbol id="i-shuffle" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path></symbol>
-      <symbol id="i-repeat" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
-      <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Zm10.4 2.9-4.8-4.8"></path></symbol>
-      <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 10.4 12 4l8 6.4V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9.6Z"></path></symbol>
-      <symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></symbol>
-      <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm3.5 0V6a3.5 3.5 0 1 1 7 0v2"></path></symbol>
-      <symbol id="i-cal" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 6h16v14H4V6Zm0 5h16M8 3v4m8-4v4"></path></symbol>
-      <symbol id="i-lib" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 4h4v16H4V4Zm7 0h3v16h-3V4Zm7.6.6 3 15.2"></path></symbol>
-      <symbol id="i-info" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"></path><path d="M12 10.8c.6 0 1 .4 1 1v4.4a1 1 0 1 1-2 0v-4.4c0-.6.4-1 1-1Zm0-3.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"></path></symbol>
-      <symbol id="i-mic" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3Zm-7 8a7 7 0 0 0 14 0M12 18v3"></path></symbol>
-      <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m6 6 12 12M18 6 6 18"></path></symbol>
-      <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"></path></symbol>
-      <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.5 5 5 10-11"></path></symbol>
-      <symbol id="i-chev-r" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"></path></symbol>
-      <symbol id="i-chev-l" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 5-7 7 7 7"></path></symbol>
-      <symbol id="i-ext" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"></path></symbol>
-      <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"></path><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 8.5a5 5 0 0 1 0 7"></path></symbol>
-      <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"></path></symbol>
-      <symbol id="i-heart-f" viewBox="0 0 24 24"><path d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"></path></symbol>
-      <symbol id="i-queue" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h10M4 18h10"></path><path d="m17 13 5 3-5 3v-6Z"></path></symbol>
-      <symbol id="i-clock" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7.5V12l3 2"></path></symbol>
-      <symbol id="i-globe" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c2.5-2.2 4-5.4 4-9s-1.5-6.8-4-9m0 18c-2.5-2.2-4-5.4-4-9s1.5-6.8 4-9M3.5 9h17M3.5 15h17"></path></symbol>
-      <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6"></circle><circle cx="15" cy="6" r="1.6"></circle><circle cx="9" cy="12" r="1.6"></circle><circle cx="15" cy="12" r="1.6"></circle><circle cx="9" cy="18" r="1.6"></circle><circle cx="15" cy="18" r="1.6"></circle></symbol>
-      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"></rect><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"></rect><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"></rect><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"></rect></symbol>
-      <symbol id="i-rows" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1.5"></rect><rect x="3" y="10" width="18" height="4" rx="1.5"></rect><rect x="3" y="16" width="18" height="4" rx="1.5"></rect></symbol>
-      <symbol id="i-expand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path></symbol>
-    </svg>
-
-    <a class="skip-link" href="#page">본문으로 건너뛰기</a>
-    <div class="sr-only" id="srAnnounce" role="status" aria-live="polite">워크 모드 페이지로 이동했습니다</div>
-
-    <div class="app" id="app">
-      <!-- 좌측 사이드바 -->
-      <aside class="sidebar" id="sidebar" aria-label="라이브러리">
-        <div class="sb-top">
-          <nav class="sb-nav" id="sbNav" aria-label="주요 메뉴"><a class="sb-item" data-r="home" href="#/" title="홈"><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a class="sb-item" data-r="chart" href="#/chart" title="차트"><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a class="sb-item" data-r="store" href="#/store" title="스토어"><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a class="sb-item" data-r="schedule" href="#/schedule" title="일정"><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a></nav>
-        </div>
-        <div class="sb-lib">
-          <div class="sb-lib-head">
-            <button class="sb-lib-title" id="sbCollapse" title="사이드바 접기">
-              <svg class="ic"><use href="#i-lib"></use></svg><b id="sbLibLabel">보관함</b>
-            </button>
-            <span class="sb-head-btns">
-              <button class="sb-icon" id="sbAdd" title="플레이리스트 만들기"><svg class="ic"><use href="#i-plus"></use></svg></button>
-              <a class="sb-icon" href="#/library/all" title="보관함 전체보기"><svg class="ic"><use href="#i-chev-r"></use></svg></a>
-            </span>
-          </div>
-          <div class="sb-chips" id="sbChips"><button class="sb-chip on" data-f="all">전체</button><button class="sb-chip " data-f="playlist">플레이리스트</button><button class="sb-chip " data-f="artist">팔로우</button></div>
-          <div class="sb-tools">
-            <button class="sb-find-btn" id="sbFindBtn" title="보관함에서 찾기"><svg class="ic"><use href="#i-search"></use></svg></button>
-            <input class="sb-find" id="sbFind" placeholder="보관함에서 찾기">
-            <button class="sb-sort" id="sbSort">최근 순 <svg class="ic s"><use href="#i-rows"></use></svg></button>
-          </div>
-          <div class="sb-list" id="sbList">
-    <a class="sb-row  " href="#/playlist/c90a8e72" data-key="playlist:c90a8e72" data-term="">
-      <span class="sb-cover " style="background-image:url(https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/c2/49/87/c249873f-fa61-9d61-52aa-a7e1d780c8b3/22UMGIM81500.rgb.jpg/400x400bb.jpg)">
-        
-        <span class="sb-play"><svg class="ic"><use href="#i-play"></use></svg></span>
-      </span>
-      <span class="sb-meta"><b>심야의 J-POP</b><i>플레이리스트 · 6곡</i></span>
-      <span class="sb-eq"><span class="np-eq"><i></i><i></i><i></i></span></span>
-    </a>
-    <a class="sb-row round " href="#/artist/yoasobi" data-key="artist:yoasobi" data-term="YOASOBI">
-      <span class="sb-cover " style="background-image: url(&quot;https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/fe/58/79/fe58795c-1628-230a-9ffe-300c04b6627c/194491717186.jpg/200x200bb.jpg&quot;);">
-        <svg class="ic s"><use href="#i-mic"></use></svg>
-        <span class="sb-play"><svg class="ic"><use href="#i-play"></use></svg></span>
-      </span>
-      <span class="sb-meta"><b>YOASOBI</b><i>아티스트</i></span>
-      <span class="sb-eq"><span class="np-eq"><i></i><i></i><i></i></span></span>
-    </a></div>
-        </div>
-      </aside>
-
-      <!-- 메인 패널 -->
-      <div class="main-panel" id="mainPanel">
-        <header class="topbar" id="topbar" role="banner">
-          <a class="tb-brand" href="#/">Lilac</a>
-          <nav class="tb-menu" id="tbMenu"><a class="tb-item" data-r="home" href="#/">홈</a><a class="tb-item" data-r="chart" href="#/chart">차트</a><a class="tb-item" data-r="store" href="#/store">스토어</a><a class="tb-item" data-r="schedule" href="#/schedule">일정</a><a class="tb-item" data-r="library" href="#/library">보관함</a></nav>
-          <div class="tb-nav">
-            <button class="tb-arrow" id="navBack" title="뒤로"><svg class="ic"><use href="#i-chev-l"></use></svg></button>
-            <button class="tb-arrow" id="navFwd" title="앞으로"><svg class="ic"><use href="#i-chev-r"></use></svg></button>
-          </div>
-          <div class="tb-search">
-            <svg class="ic"><use href="#i-search"></use></svg>
-            <input id="searchInput" type="search" autocomplete="off" spellcheck="false" aria-label="검색" placeholder="어떤 음악을 찾으세요?">
-          </div>
-          <div class="tb-right">
-            <a class="tb-work" id="tbWorkMode" data-r="home" href="#/"><svg class="ic"><use href="#i-clock"></use></svg><span>J‑POP 둘러보기</span></a>
-            <button id="connectApple" class="tb-connect">Apple Music 연동</button>
-            <div class="globe-wrap">
-              <button class="tb-icon" id="btnGlobe" title="Language"><svg class="ic"><use href="#i-globe"></use></svg></button>
-              <div class="locale-menu" id="localeMenu"><button data-l="ko" class="on">한국어</button><button data-l="ja" class="">日本語</button><button data-l="en" class="">English</button><button data-l="zh" class="">中文</button></div>
-            </div>
-            <span class="tb-acct" id="gnbAcct"><a class="tb-user" href="#/account" title="계정"><span class="tb-avatar">테</span><span class="tb-credits">61,462C</span></a></span>
-          </div>
-        </header>
-        <main id="page" tabindex="-1">
-    <section class="focus-shell work-shell page-top" style="--focus-tone:#b58cff">
-      <div class="focus-aurora" aria-hidden="true"></div>
-      <header class="work-head">
-        <div>
-          <h1>워크 모드</h1>
-          <p>할 일과 시간을 정하면 음악 선택부터 알림 볼륨까지 한 흐름으로 이어집니다.</p>
-        </div>
-        <div class="work-protection"><span class="focus-status-dot"></span><b>스마트 볼륨 사용 중</b><small>Slack · 미팅 · 개발 도구 알림 감지</small></div>
-      </header>
-
-      <div class="focus-grid work-grid">
-        <section class="focus-player-card work-player-card">
-          <div class="focus-video">
-            <iframe id="focusPlayer" title="Best of Lofi Hip Hop" src="https://www.youtube-nocookie.com/embed/n61ULEU7CO0?enablejsapi=1&amp;playsinline=1&amp;rel=0&amp;origin=http%3A%2F%2Flocalhost%3A5180" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen=""></iframe>
-            <div class="focus-duck-pill"><span></span> 알림이 지나갈 때까지 볼륨을 낮췄어요</div>
-          </div>
-          <div class="focus-now">
-            <div><h2 id="focusNowTitle">Best of Lofi Hip Hop</h2><p id="focusNowCreator">Lofi Girl · YouTube</p></div>
-            <div class="focus-session-clock"><span id="focusClock">45:00</span><small id="focusClockLabel">시작 전</small></div>
-          </div>
-          <div class="focus-actions">
-            <button class="focus-primary" id="focusStart">45분 작업 시작</button>
-            <button class="focus-quiet" id="focusTestDuck">스마트 볼륨 확인</button>
-          </div>
-        </section>
-
-        <aside class="focus-curator work-setup">
-          <h2>오늘 끝낼 일</h2>
-          <p class="focus-curator-copy">업무를 적으면 GPT-5.4가 검증된 믹스와 시간 흐름을 골라줍니다.</p>
-          <textarea id="focusTask" maxlength="240" placeholder="예: 투자자 피치덱 초안을 45분 안에 정리하기"></textarea>
-          <label>작업 흐름</label>
-          <div class="focus-mode-row" role="group" aria-label="작업 흐름">
-            <button data-focus-mode="deep">차분하게</button>
-            <button class="on" data-focus-mode="balanced">균형 있게</button>
-            <button data-focus-mode="energy">빠르게</button>
-          </div>
-          <label>작업 시간</label>
-          <div class="focus-duration-row" role="group" aria-label="작업 시간">
-            <button class="" data-focus-minutes="25">25분</button><button class="on" data-focus-minutes="45">45분</button><button class="" data-focus-minutes="60">60분</button><button class="" data-focus-minutes="90">90분</button>
-          </div>
-          <button class="focus-ai-btn" id="focusCurate"><span>✦</span> 내 작업에 맞추기</button>
-          <div class="focus-ai-result" id="focusAiResult">
-            <small>기본 추천으로 바로 사용할 수 있어요</small>
-            <p>입력한 업무는 추천을 만드는 데만 사용합니다.</p>
-          </div>
-        </aside>
+.la-art:has(img) { font-size: 0px; }</style></head><body><div class="sec"><div id="chartBody"><div class="rank-list big d3-stack"><div class="rk-row" data-i="0">
+      <span class="rk-n">1</span>
+      <div class="rk-art"><img src="https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/c5/d9/3a/c5d93ab5-12ac-3800-c13d-e57b819b6d89/8809519881443_cover.png/240x240bb.jpg" loading="lazy" decoding="async" alt=""><span class="rk-ov"><svg class="ic"><use href="#i-play"></use></svg></span></div>
+      <div class="rk-meta">
+        <div class="rk-t">BiiiG</div>
+        <div class="rk-a">BIGBANG</div>
       </div>
-
-      <section class="focus-mixes-sec work-mixes-sec">
-        <div class="focus-sec-head"><div><h2>바로 재생하기</h2><p>업무 중 오래 들어도 흐름을 끊지 않는 YouTube 믹스입니다.</p></div></div>
-        <div class="focus-mix-grid">
-          <button class="focus-mix on" data-focus-mix="lilac-lofi" style="--mix:#b58cff">
-            <span class="focus-mix-art" style="background-image:url(https://i.ytimg.com/vi/n61ULEU7CO0/hqdefault.jpg)"><i>보컬 없음</i></span>
-            <span class="focus-mix-meta"><b>Best of Lofi Hip Hop</b><small>Lofi Girl</small><em>문서 작성 · 코딩 · 독서</em></span>
-            <span class="focus-energy"><i style="width:32%"></i></span>
-          </button><button class="focus-mix " data-focus-mix="night-drive" style="--mix:#7c5cff">
-            <span class="focus-mix-art" style="background-image:url(https://i.ytimg.com/vi/HFQibg2OJkU/hqdefault.jpg)"><i>보컬 없음</i></span>
-            <span class="focus-mix-meta"><b>Chillhop Essentials · Spring</b><small>Chillhop Music</small><em>반복 작업 · 디자인 · 야간 작업</em></span>
-            <span class="focus-energy"><i style="width:68%"></i></span>
-          </button><button class="focus-mix " data-focus-mix="asian-focus" style="--mix:#d39af7">
-            <span class="focus-mix-art" style="background-image:url(https://i.ytimg.com/vi/EtD7_8kCMHA/hqdefault.jpg)"><i>보컬 없음</i></span>
-            <span class="focus-mix-meta"><b>Flow of Time · Japanese Lofi</b><small>Deebu</small><em>기획 · 리서치 · 메일 정리</em></span>
-            <span class="focus-energy"><i style="width:44%"></i></span>
-          </button>
-        </div>
-      </section>
-
-      <section class="focus-native-sec work-native-sec">
-        <div class="focus-native-copy">
-          <h2>Mac에서는<br>더 자연스럽게</h2>
-          <p>컴퓨터를 켜면 메뉴바에서 바로 재생하고, 회의나 업무 알림이 오면 음악이 먼저 자리를 비웁니다.</p>
-        </div>
-        <div class="focus-menubar-demo">
-          <div class="fmd-top"><b>Lilac</b><span>⌁</span></div>
-          <div class="fmd-track"><span class="fmd-art"></span><div><b id="focusMenuTitle">Best of Lofi Hip Hop</b><p id="focusMenuCreator">Lofi Girl</p></div></div>
-          <div class="fmd-controls"><button>이전</button><button class="main">▶</button><button>다음</button></div>
-          <div class="fmd-rule"><span>업무 알림에 맞춰 볼륨 낮추기</span><i>켬</i></div>
-          <div class="fmd-rule"><span>Mac을 켤 때 함께 시작</span><i>켬</i></div>
-        </div>
-        <div class="focus-native-points">
-          <div><span>⌁</span><b>열어둘 필요 없이</b><p>메뉴바에서 재생과 세션을 제어합니다.</p></div>
-          <div><span>◒</span><b>알림은 놓치지 않게</b><p>회의와 업무 앱이 활성화되면 볼륨을 낮춥니다.</p></div>
-          <div><span>↗</span><b>업무로 바로 돌아오게</b><p>알림이 끝나면 원래 볼륨으로 복원합니다.</p></div>
-        </div>
-      </section>
-    </section></main>
-        <footer class="footer">
-          <p>Lilac demo — Vite · Express · 로컬 폴더 DB · <a href="#/help" class="footer-link">서비스 안내 · 데이터 출처</a> · <a href="#/artists" class="footer-link">아티스트</a> · <a href="#/orders" class="footer-link">주문 내역</a> · <a href="#/status" class="footer-link">서비스 상태</a></p>
-          <p>미리듣기는 Apple Music 카탈로그 30초 프리뷰, MV는 YouTube 공식 임베드로 재생됩니다. 상품·일정은 데모 데이터이며 가사 패널 문구는 자체 제작 예시입니다.</p>
-        </footer>
-      </div>
-
-      <!-- 우측 도크: 대기열 -->
-      <aside class="right-dock" id="queuePanel">
-        <div class="dock-head"><span>대기열</span>
-          <span class="dock-head-actions">
-            <button class="tbtn small-txt" id="queueSave">플레이리스트로 저장</button>
-            <button class="tbtn" id="queueClose"><svg class="ic"><use href="#i-close"></use></svg></button>
-          </span>
-        </div>
-        <div class="dock-body" id="queueBody"><div class="empty-box sm"><svg class="ic eb"><use href="#i-queue"></use></svg><p>대기열이 비어 있습니다</p></div></div>
-      </aside>
-
-      <!-- 우측 도크: 가사 -->
-      <aside class="right-dock" id="lyricsPanel">
-        <div class="dock-head"><span>가사 미리보기</span><button class="tbtn" id="lyricsClose"><svg class="ic"><use href="#i-close"></use></svg></button></div>
-        <div class="dock-body ly-body" id="lyricsBody"></div>
-        <p class="ly-note">자체 제작 데모 문구입니다. 실서비스에서는 가사 라이선스 계약 후 원문·독음·번역 3단 싱크로 제공됩니다.</p>
-      </aside>
-    </div>
-
-    <!-- 모바일 하단 네비 -->
-    <a class="m-work-mode" id="mWorkMode" data-r="home" href="#/"><svg class="ic"><use href="#i-clock"></use></svg><span>J‑POP 둘러보기</span></a>
-    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"><a data-r="home" href="#/" class=""><svg class="ic"><use href="#i-home"></use></svg><span>홈</span></a><a data-r="chart" href="#/chart" class=""><svg class="ic"><use href="#i-chart"></use></svg><span>차트</span></a><a data-r="store" href="#/store" class=""><svg class="ic"><use href="#i-bag"></use></svg><span>스토어</span></a><a data-r="schedule" href="#/schedule" class=""><svg class="ic"><use href="#i-cal"></use></svg><span>일정</span></a><a data-r="library" href="#/library"><svg class="ic"><use href="#i-lib"></use></svg><span>보관함</span></a></nav>
-
-    <!-- 플레이어 -->
-    <div class="player show idle" id="player" role="region" aria-label="재생 플레이어">
-      <div class="pl-left">
-        <div class="pl-artwrap" id="plArtWrap">
-          <span class="vinyl" id="vinyl"></span>
-          <div class="pl-art" id="playerArt"></div>
-          <button class="pl-expand" id="btnExpand" title="전체 화면"><svg class="ic"><use href="#i-expand"></use></svg></button>
-        </div>
-        <div class="pl-meta">
-          <div class="pl-title-wrap"><div class="pl-title" id="playerTitle">재생 중이 아님</div></div>
-          <div class="pl-artist" id="playerArtist">곡을 선택해 주세요</div>
-        </div>
-        <button class="tbtn" id="btnLike" title="좋아요"><svg class="ic"><use href="#i-heart"></use></svg></button>
-        <button class="tbtn" id="btnAddPl" title="플레이리스트에 추가"><svg class="ic"><use href="#i-plus"></use></svg></button>
-      </div>
-      <div class="pl-center">
-        <div class="pl-transport">
-          <button class="tbtn" id="btnShuffle" title="셔플"><svg class="ic"><use href="#i-shuffle"></use></svg></button>
-          <button class="tbtn" id="btnPrev" title="이전 곡"><svg class="ic"><use href="#i-prev"></use></svg></button>
-          <button class="tbtn main" id="btnPlay"><svg class="ic" id="playIcon"><use href="#i-play"></use></svg></button>
-          <button class="tbtn" id="btnNext" title="다음 곡"><svg class="ic"><use href="#i-next"></use></svg></button>
-          <button class="tbtn rep" id="btnRepeat" title="반복"><svg class="ic"><use href="#i-repeat"></use></svg><span id="repeatOne">1</span></button>
-        </div>
-        <div class="pl-progress">
-          <span class="pl-time" id="tCur">0:00</span>
-          <div class="pl-bar" id="progressBar"><div class="pl-fill" id="progressFill"></div></div>
-          <span class="pl-time" id="tDur">0:30</span>
-        </div>
-      </div>
-      <div class="pl-right">
-        <button class="tbtn mode" id="btnMode" title="플레이 모드로"><svg class="ic"><use href="#i-lib"></use></svg></button>
-        <button class="tbtn" id="btnLyrics" title="가사 (L)"><svg class="ic"><use href="#i-mic"></use></svg></button>
-        <button class="tbtn" id="btnQueue" title="대기열 (Q)"><svg class="ic"><use href="#i-queue"></use></svg></button>
-        <svg class="ic vol"><use href="#i-vol"></use></svg>
-        <div class="pl-vol" id="volBar"><div class="pl-vol-fill" id="volFill"></div></div>
-      </div>
-      <audio id="audio"></audio>
-    </div>
-
-    <!-- 전체화면 나우플레잉 -->
-    <div class="np-full" id="npFull">
-      <button class="np-close" id="npClose"><svg class="ic"><use href="#i-close"></use></svg></button>
-      <div class="np-stage">
-        <div class="np-disc" id="npDisc"><div class="np-cover" id="npCover"></div></div>
-        <div class="np-text">
-          <p class="np-label">지금 재생 중</p>
-          <h2 id="npTitle"></h2>
-          <p id="npArtist"></p>
-        </div>
+      <div class="rk-side">
+        <span class="rk-srcn" title="5개 차트에 올라 있습니다">5곳</span>
+        <span class="rk-ranks"><span class="mini-rank melon" title="멜론 순위">M 1</span><span class="mini-rank genie" title="지니 순위">G 2</span><span class="mini-rank apple" title="Apple Music 순위">A 5</span><span class="mini-rank appleRss" title="Apple 공식 RSS 순위">R 5</span><span class="mini-rank youtube" title="YouTube 조회수 순위">Y 20</span></span>
+        <span class="rk-views">868만회</span>
+        <button class="rk-mv" data-yt="L8ZnXgbyUuc" title="뮤직비디오"><svg class="ic"><use href="#i-ext"></use></svg></button>
       </div>
     </div>
-
-    <!-- 컨텍스트 메뉴 -->
-    <div class="ctx" id="ctxMenu"></div>
-
-    <!-- 플레이리스트 피커 -->
-    <div class="modal" id="plPicker">
-      <div class="modal-box sheet">
-        <button class="modal-x" id="plPickerClose"><svg class="ic"><use href="#i-close"></use></svg></button>
-        <h3>플레이리스트에 추가</h3>
-        <div id="plPickerBody"></div>
-      </div>
-    </div>
-
-    <!-- 유튜브 모달 -->
-    <div class="modal" id="ytModal">
-      <div class="modal-box">
-        <button class="modal-x" id="ytClose"><svg class="ic"><use href="#i-close"></use></svg></button>
-        <div class="yt-wrap" id="ytFrameWrap"></div>
-      </div>
-    </div>
-
-    <!-- Apple Music 연동 모달 -->
-    <div class="modal" id="appleModal">
-      <div class="modal-box sheet">
-        <button class="modal-x" id="appleClose"><svg class="ic"><use href="#i-close"></use></svg></button>
-        <h3>Apple Music 연동</h3>
-        <p>실서비스에서는 개발자 토큰(JWT)과 Apple ID 1회 인증으로 구독자에게 <b>앱 안 풀트랙 재생</b>을 제공합니다.</p>
-        <p class="dim">이 데모는 토큰 없이 동작하는 공개 30초 미리듣기로 동일한 UX를 시연합니다. <code>src/musickit.ts</code>에 토큰 엔드포인트를 넣으면 MusicKit JS가 활성화됩니다.</p>
-        <button class="btn-pill" id="appleDemoOk">데모 모드로 계속</button>
-      </div>
-    </div>
-
-    <!-- 첫 방문 온보딩 -->
-    
-
-    <div class="toast" role="status" aria-live="polite"></div>
-    
-    
-  
-
-</body></html>
+    </div></div></div></body></html>
