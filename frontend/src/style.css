@@ -3181,3 +3181,32 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
   transition: border-color var(--dur-micro), background var(--dur-micro);
 }
 .topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }
+
+/* ═══ View Transitions — 페이지 전환 ═══════════════════════
+   셸(톱바·사이드바·플레이어)은 고정하고 내용만 넘어가게 한다.
+   전환은 짧고(280ms) 방향이 느껴지는 정도로만. */
+
+#topbar { view-transition-name: lilac-topbar; }
+#player { view-transition-name: lilac-player; }
+.sidebar { view-transition-name: lilac-sidebar; }
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vtLeave 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: vtEnter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes vtLeave {
+    to { opacity: 0; transform: translateY(-10px) scale(0.994); }
+  }
+  @keyframes vtEnter {
+    from { opacity: 0; transform: translateY(14px) scale(0.996); }
+  }
+  /* 셸은 스냅숏이 동일하므로 애니메이션을 걸지 않는다 */
+  ::view-transition-old(lilac-topbar), ::view-transition-new(lilac-topbar),
+  ::view-transition-old(lilac-player), ::view-transition-new(lilac-player),
+  ::view-transition-old(lilac-sidebar), ::view-transition-new(lilac-sidebar) {
+    animation: none;
+  }
+}

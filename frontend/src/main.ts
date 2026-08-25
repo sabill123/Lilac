@@ -247,18 +247,10 @@ function initFocusTrap() {
 
 /* ---------- 라우터 ---------- */
 let navDepth = 0;
-async function route() {
-  const hash = location.hash.replace(/^#\/?/, '');
-  const [seg, sub] = hash.split('?')[0].split('/');
-  const qs = new URLSearchParams(hash.split('?')[1] || '');
+
+/** 실제 페이지 렌더 — route()와 분리해 View Transition 콜백으로 쓸 수 있게 한다 */
+async function renderRoute(seg: string, sub: string | undefined, qs: URLSearchParams) {
   const panel = $('#mainPanel');
-  rememberScroll();
-  // 이전 페이지의 3D 씬을 정리한다 (GPU 리소스·렌더 루프 누수 방지)
-  disposeScene();
-  document.body.classList.remove('has-3d-hero', 'has-3d-chart');
-  applyMode();
-  markActive();
-  setTitle(seg || 'home');
   try {
     switch (seg || 'home') {
       case 'home': await pageHome(); break;
@@ -266,12 +258,11 @@ async function route() {
       case 'store': sub ? await pageProduct(sub) : await pageStore(); break;
       case 'schedule': await pageSchedule(); break;
       case 'work': await pageFocus(); break;
-      case 'focus': location.replace('#/work'); return;
       case 'artist': await pageArtist(sub); break;
       case 'artists': await pageArtists(); break;
       case 'orders': sub ? await pageOrderDetail(sub) : await pageOrders(); break;
-      case 'status': return pageStatus();
-    case 'help': pageHelp(); break;
+      case 'status': pageStatus(); break;
+      case 'help': pageHelp(); break;
       case 'library': await pageLibrary(sub); break;
       case 'playlist': await pagePlaylist(sub); break;
       case 'login': pageLogin(); break;
@@ -285,7 +276,39 @@ async function route() {
   bindTilt(panel); bindHoverExpand(panel); bindReveal(panel, panel);
   // 3D 모션 — 스크롤 연동은 CSS가 처리하므로 클래스만 붙인다
   mountMotion3D(panel);
-  playEnter(document.getElementById('page'));
+}
+
+async function route() {
+  const hash = location.hash.replace(/^#\/?/, '');
+  const [seg, sub] = hash.split('?')[0].split('/');
+  const qs = new URLSearchParams(hash.split('?')[1] || '');
+  if (seg === 'focus') { location.replace('#/work'); return; }
+  rememberScroll();
+  // 이전 페이지의 3D 씬을 정리한다 (GPU 리소스·렌더 루프 누수 방지)
+  disposeScene();
+  document.body.classList.remove('has-3d-hero', 'has-3d-chart');
+  applyMode();
+  markActive();
+  setTitle(seg || 'home');
+
+  /* View Transitions —
+     라우트 전환을 브라우저가 이전/다음 화면 스냅숏으로 부드럽게 이어준다.
+     톱바·사이드바·플레이어는 view-transition-name 으로 고정해
+     '내용만 넘어가는' 앱다운 전환이 된다.
+     미지원 브라우저·모션 최소화에서는 기존 즉시 렌더로 동작한다. */
+  const vt = (document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> } }).startViewTransition?.bind(document);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const firstLoad = !lastHash;
+
+  if (vt && !reduced && !firstLoad) {
+    try {
+      await vt(() => renderRoute(seg, sub, qs)).finished;
+    } catch { /* 전환 실패는 무시 — 렌더 자체는 이미 끝났다 */ }
+  } else {
+    await renderRoute(seg, sub, qs);
+    playEnter(document.getElementById('page'));
+  }
+
   restoreScroll(location.hash);
   lastHash = location.hash;
   onScroll();
