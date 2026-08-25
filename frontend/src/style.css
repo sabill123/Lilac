@@ -3163,3 +3163,21 @@ body.has-3d-chart .stage-hint { right: 4%; bottom: 56px; }
 }
 .nm-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .nm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+.nm-msg { font-size: 14px; line-height: 1.6; }
+.nm-danger { background: var(--danger); color: #fff; }
+.nm-danger:hover { filter: brightness(1.1); }
+
+.dim-sm { font-size: 12px; color: var(--ink-muted); margin: -6px 0 12px; }
+.topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.topup-opt {
+  padding: 14px 10px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-micro), background var(--dur-micro);
+}
+.topup-opt:hover { border-color: var(--accent); background: var(--bg-soft); }

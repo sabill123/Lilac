@@ -2,7 +2,7 @@ import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
 import { smartMatch } from './koja';
 import { mountHero3D, mountChart3D, can3D } from './three';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
-import { playQueue, openYt, toast, enqueue, openPlaylistPicker, askName } from './player';
+import { playQueue, openYt, toast, enqueue, openPlaylistPicker, askName, askConfirm } from './player';
 import { applyTone } from './colors';
 import { openContextMenu, bindTilt, bindDragReorder } from './interactions';
 import { t } from './i18n';
@@ -680,9 +680,11 @@ const sized = (url?: string | null, size = 300) => artUrl({ artwork: url || unde
 const artistSub = (a: Artist) => a.nameJa || a.nameOriginal || (a.searchTerm !== a.name ? a.searchTerm : '') || '';
 /** 국가 라벨 */
 const countryLabel = (c?: string) => (c === 'kr' ? '한국' : '일본');
-/** 주문의 구매자 통화 — 한국반 주문은 엔, 일본반 주문은 원 */
-const orderCur = (o: { breakdown?: { buyerCurrency?: string; localCurrency?: string } }) =>
-  (o.breakdown?.buyerCurrency ?? (o.breakdown?.localCurrency === 'KRW' ? 'JPY' : 'KRW')) as 'KRW' | 'JPY';
+/** 주문의 구매자 통화 — 한국반 주문은 엔, 일본반 주문은 원.
+ *  신규 주문은 최상위 buyerCurrency, 과거 주문은 breakdown에서 유추한다. */
+const orderCur = (o: { buyerCurrency?: string; breakdown?: { buyerCurrency?: string; localCurrency?: string } | null }) =>
+  ((o.buyerCurrency ?? o.breakdown?.buyerCurrency)
+    ?? (o.breakdown?.localCurrency === 'KRW' ? 'JPY' : 'KRW')) as 'KRW' | 'JPY';
 
 const money = (n: number, cur?: string) => (cur === 'JPY' ? `¥${n.toLocaleString()}` : `₩${n.toLocaleString()}`);
 const SIZE_FILTERS = [
@@ -1602,7 +1604,7 @@ export async function pagePlaylist(id: string) {
       { label: '이름 바꾸기', icon: 'i-mic', run: rename },
       { label: '대기열에 모두 추가', icon: 'i-queue', run: () => { rows.forEach((tr) => enqueue(tr)); } },
       { label: '플레이리스트 삭제', icon: 'i-close', danger: true, run: async () => {
-        if (!confirm(`‘${pl.name}’ 플레이리스트를 삭제할까요?`)) return;
+        if (!(await askConfirm(`‘${pl.name}’ 플레이리스트를 삭제할까요?`))) return;
         await api(`/api/playlists/${id}`, { method: 'DELETE' });
         document.dispatchEvent(new CustomEvent('lilac:playlists'));
         location.hash = '#/library/playlists';
@@ -1703,6 +1705,7 @@ export async function pageArtists() {
 interface Order {
   id: string; productId: string; name: string; brand: string; option: string;
   qty: number; unit?: number; total: number; status: string; orderedAt: string;
+  buyerCurrency?: string; chargedKrw?: number;
   artwork?: string;
   breakdown?: {
     jpy?: number; localAmount?: number; localCurrency?: string; buyerCurrency?: string;
@@ -1780,6 +1783,9 @@ export async function pageOrderDetail(id: string) {
           <tr><th>수량</th><td>${o.qty}개</td></tr>
           <tr><th>단가</th><td>${money(o.unit ?? Math.round(o.total / o.qty), orderCur(o))}</td></tr>
           <tr><th>결제 금액</th><td><b>${money(o.total, orderCur(o))}</b> <span class="dim">(데모 크레딧)</span></td></tr>
+          ${orderCur(o) === 'JPY' && o.chargedKrw
+            ? `<tr><th>크레딧 차감</th><td>₩${o.chargedKrw.toLocaleString()} <span class="dim">엔화 주문 · 실시간 환율 환산</span></td></tr>`
+            : ''}
           <tr><th>상태</th><td><span class="mp-status">${esc(o.status)}</span></td></tr>
         </tbody></table>
       </div>
@@ -2260,9 +2266,34 @@ export async function pageAccount() {
     await api('/api/me', { method: 'PATCH', body: JSON.stringify({ name: ($('#acName') as HTMLInputElement).value }) });
     await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me')); toast('저장되었습니다');
   });
-  $('#acTopup').addEventListener('click', async () => {
-    await api('/api/me', { method: 'PATCH', body: JSON.stringify({ action: 'topup', amount: 50000 }) });
-    await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me')); pageAccount();
+  $('#acTopup').addEventListener('click', () => {
+    /* 고정 금액 대신 선택지를 준다 — 실서비스 충전 UX의 최소형 */
+    document.getElementById('nameModal')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'nameModal';
+    wrap.className = 'modal show name-modal';
+    wrap.setAttribute('role', 'dialog');
+    wrap.innerHTML = `
+      <div class="modal-card nm-card">
+        <h3 class="nm-title">크레딧 충전 (데모)</h3>
+        <p class="nm-msg dim-sm">실제 결제 없이 즉시 충전됩니다.</p>
+        <div class="topup-grid">
+          ${[10000, 30000, 50000, 100000].map((a) => `<button class="topup-opt" data-amt="${a}">₩${a.toLocaleString()}</button>`).join('')}
+        </div>
+        <div class="nm-actions"><button class="btn-out nm-cancel" type="button">취소</button></div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('.nm-cancel')!.addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelectorAll<HTMLButtonElement>('.topup-opt').forEach((b) =>
+      b.addEventListener('click', async () => {
+        await api('/api/me', { method: 'PATCH', body: JSON.stringify({ action: 'topup', amount: Number(b.dataset.amt) }) });
+        close();
+        await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me'));
+        toast(`₩${Number(b.dataset.amt).toLocaleString()} 충전 완료`);
+        pageAccount();
+      }));
   });
   $('#acUpgrade')?.addEventListener('click', async () => {
     await api('/api/me', { method: 'PATCH', body: JSON.stringify({ action: 'upgrade' }) });

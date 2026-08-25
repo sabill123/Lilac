@@ -224,6 +224,37 @@ export function askName(title: string, defaultValue = ''): Promise<string | null
   });
 }
 
+/** 파괴적 동작 확인 모달 — confirm() 대체 (자동화·스타일 문제 동일) */
+export function askConfirm(message: string, okLabel = '삭제'): Promise<boolean> {
+  return new Promise((resolve) => {
+    document.getElementById('nameModal')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'nameModal';
+    wrap.className = 'modal show name-modal';
+    wrap.setAttribute('role', 'alertdialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = `
+      <div class="modal-card nm-card">
+        <p class="nm-msg"></p>
+        <div class="nm-actions">
+          <button class="btn-out nm-cancel" type="button">취소</button>
+          <button class="btn-pill nm-ok nm-danger" type="button"></button>
+        </div>
+      </div>`;
+    wrap.querySelector('.nm-msg')!.textContent = message;
+    const ok = wrap.querySelector('.nm-ok') as HTMLButtonElement;
+    ok.textContent = okLabel;
+    document.body.appendChild(wrap);
+
+    const done = (v: boolean) => { wrap.remove(); resolve(v); };
+    ok.addEventListener('click', () => done(true));
+    wrap.querySelector('.nm-cancel')!.addEventListener('click', () => done(false));
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) done(false); });
+    wrap.addEventListener('keydown', (e) => { if ((e as KeyboardEvent).key === 'Escape') done(false); });
+    requestAnimationFrame(() => ok.focus());
+  });
+}
+
 export async function openPlaylistPicker(tr: PlayableTrack) {
   const lists = await api('/api/playlists').catch(() => []);
   const box = $('#plPickerBody');
