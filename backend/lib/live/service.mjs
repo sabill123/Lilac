@@ -15,6 +15,7 @@ import { cached, initCache, KV, peek, revalidate, cacheEvents } from './cache.mj
 import { fetchKrConcerts, fetchKrTicketOpens } from './tickets-kr.mjs';
 import { fetchJpConcerts, searchJpConcerts } from './tickets-jp.mjs';
 import { searchGoods, STORES, tidyOffer, aladinReleaseDate } from './goods.mjs';
+import { carryFailed } from './vendors-extra.mjs';
 import { newsFeed, looksLikeDomain, publisherName } from './news.mjs';
 import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanNamesFor, japaneseNamesFor, checkAppleIdentity, koreanNameFits } from './artist-info.mjs';
 import { todayKst } from './http.mjs';
@@ -350,11 +351,18 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
 
   /* ---------- 원천 캐시 ---------- */
   /* 원천 수집 함수 — 요청 경로(cached)와 백그라운드 동기화(revalidate)가 같은 걸 쓴다 */
+  /* 이번 갱신에서 실패한 소스의 공연은 직전 값에서 가져와 유지한다 — 티켓링크 하나가 느려 실패했다고 219건이 목록에서 사라지지 않게 */
+  const keepFailed = (key, fn) => async () => {
+    const r = await fn();
+    if (!(r.sources || []).some((s) => !s.ok)) return r;
+    const prev = await peek(key).catch(() => null);
+    return carryFailed(r, prev?.items || []);
+  };
   const SRC_FN = {
-    'kr-visiting': () => fetchKrConcerts({ category: 'visiting' }),
-    'kr-domestic': () => fetchKrConcerts({ category: 'kpop' }),
-    'kr-opens': () => fetchKrTicketOpens(),
-    'jp-kpop': () => fetchJpConcerts({ category: 'kpop' }),
+    'kr-visiting': keepFailed('kr-visiting', () => fetchKrConcerts({ category: 'visiting' })),
+    'kr-domestic': keepFailed('kr-domestic', () => fetchKrConcerts({ category: 'kpop' })),
+    'kr-opens': keepFailed('kr-opens', () => fetchKrTicketOpens()),
+    'jp-kpop': keepFailed('jp-kpop', () => fetchJpConcerts({ category: 'kpop' })),
   };
   const src = {
     krVisiting: () => cached('kr-visiting', 60 * MIN, SRC_FN['kr-visiting'], { budgetMs: 12000 }),

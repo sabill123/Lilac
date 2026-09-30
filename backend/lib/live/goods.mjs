@@ -260,10 +260,13 @@ export async function ktown4uSearch(query, { limit = 24, host = 'jp.ktown4u.com'
     });
 }
 
+/* 소스 하나가 느려도(페이지마다 타임아웃·재시도가 쌓이면 수 분) 나머지 소스의 갱신을 붙잡지 않게 소스별 상한 */
+const SOURCE_CAP_MS = Number(process.env.LILAC_SOURCE_CAP_MS) || 90_000;
 async function timed(store, fn) {
   const t0 = Date.now();
   try {
-    const items = await fn();
+    let capT;
+    const items = await Promise.race([fn(), new Promise((_, rej) => { capT = setTimeout(() => rej(new Error(`source timeout ${Math.round(SOURCE_CAP_MS / 1000)}s`)), SOURCE_CAP_MS); capT.unref?.(); })]).finally(() => clearTimeout(capT));
     return { store, ok: true, count: items.length, ms: Date.now() - t0, items };
   } catch (e) {
     return { store, ok: false, count: 0, ms: Date.now() - t0, error: String(e?.message || e), items: [] };

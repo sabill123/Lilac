@@ -1,6 +1,6 @@
 /* 추가 예매처(티켓링크·YES24·로치케) 파서와 예매처 간 중복 묶기 — 실제 응답 모양으로 고정(네트워크 없음).
  * 실행: node tests/verify-vendors.mjs */
-import { mapTicketlink, ticketlinkList, parseYes24List, yes24List, parseLtikeEvents, ltikeItem, parseLtikeFesPage, mergeVendors, titleKey, collapseLead } from '../backend/lib/live/vendors-extra.mjs';
+import { mapTicketlink, ticketlinkList, parseYes24List, yes24List, parseLtikeEvents, ltikeItem, parseLtikeFesPage, mergeVendors, titleKey, collapseLead, carryFailed } from '../backend/lib/live/vendors-extra.mjs';
 import { parseYes24Detail, parseLtikeDetail } from '../backend/lib/live/detail.mjs';
 
 let pass = 0, fail = 0;
@@ -54,6 +54,14 @@ const byPlace = mergeVendors([
 ]);
 ok('표기가 달라도 같은 날·같은 공연장·이름 토큰 공유면 한 공연(따옴표 차이 무시)', byPlace.length === 3 && byPlace[0].alsoAt?.[0]?.url === 'l' && byPlace[1].alsoAt?.[0]?.url === 'p2' && !byPlace[2].alsoAt, JSON.stringify(byPlace.map((x) => [x.title, x.alsoAt])));
 ok('제목 앞 이름 반복만 정리(원래 제목인 반복은 유지)', collapseLead('PENTAGON PENTAGON 10th Anniversary Tour') === 'PENTAGON 10th Anniversary Tour' && collapseLead('Baby Baby Tour') === 'Baby Baby Tour' && collapseLead('xikers xikers Live', 'xikers') === 'xikers Live');
+
+{
+  const now = { items: [{ id: 'nol:1', provider: 'nol' }], sources: [{ provider: 'nol:concert', ok: true }, { provider: 'ticketlink:concert', ok: false, error: 'source timeout 90s' }] };
+  const prev = [{ id: 'nol:1', provider: 'nol' }, { id: 'nol:9', provider: 'nol' }, { id: 'ticketlink:5', provider: 'ticketlink' }];
+  const r = carryFailed(now, prev);
+  ok('실패한 소스(티켓링크)만 직전 항목 유지, 성공한 소스(NOL)의 사라진 항목은 되살리지 않음', r.items.map((x) => x.id).join() === 'nol:1,ticketlink:5' && r.carried === 1, JSON.stringify(r.items));
+  ok('모두 성공하면 그대로', carryFailed({ items: [], sources: [{ provider: 'nol:x', ok: true }] }, prev).items.length === 0);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

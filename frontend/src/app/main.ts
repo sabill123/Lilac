@@ -325,7 +325,7 @@ const ST_KIND: Record<string, [string, string]> = {
 async function renderStatus(root: HTMLElement, alive: () => boolean) {
   const ja = getLocale() === 'ja';
   const L = (m: Record<string, [string, string]>, k: string) => m[k]?.[ja ? 1 : 0] || k;
-  const provName = (p: string) => { const [a, ...rest] = p.split(':'); const b = rest.join(':').replace(/^"|"$/g, ''); return [L(ST_PROV, a), b ? L(ST_KIND, b) : ''].filter(Boolean).join(' · '); };
+  const provName = (p: string) => { const [a, ...rest] = p.split(':'); const b = rest.join(':').replace(/"/g, '').replace(/\s+OR\s+/g, ', ').trim(); return [L(ST_PROV, a), b ? L(ST_KIND, b) : ''].filter(Boolean).join(' · '); };
   const stateName = (st: string, err?: string) => (err ? (ja ? '更新失敗(前回の値を表示)' : '갱신 실패(이전 값 표시 중)') : st === 'fresh' ? (ja ? '正常' : '정상') : st === 'pending' ? (ja ? '収集中' : '수집 중') : st === 'stale' ? (ja ? '更新待ち' : '갱신 대기') : st);
   const every = (sec: number) => (sec >= 3600 ? (ja ? `${Math.round(sec / 3600)}時間` : `${Math.round(sec / 3600)}시간`) : ja ? `${Math.round(sec / 60)}分` : `${Math.round(sec / 60)}분`);
   const n = (v: number) => (ja ? `${v.toLocaleString('ja-JP')}件` : `${v.toLocaleString('ko-KR')}건`);

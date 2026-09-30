@@ -206,3 +206,12 @@ export function mergeVendors(items) {
   }
   return out;
 }
+
+/* 이번 갱신에서 실패한 소스의 항목은 직전 값에서 가져와 유지(성공한 소스는 새 값만) */
+export function carryFailed(r, prevItems = []) {
+  const failed = new Set((r?.sources || []).filter((s) => !s.ok).map((s) => String(s.provider).split(':')[0]));
+  if (!failed.size) return r;
+  const have = new Set((r.items || []).map((x) => x.id));
+  const carried = (prevItems || []).filter((x) => failed.has(x.provider) && !have.has(x.id));
+  return carried.length ? { ...r, items: [...(r.items || []), ...carried], carried: carried.length } : r;
+}
