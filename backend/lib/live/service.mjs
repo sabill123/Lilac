@@ -536,7 +536,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       for (let n = 0; n < 10 && pubQueue.length; n++) {
         const d = pubQueue.shift();
         const had = publishers.get(d);
-        if (had && Date.now() - had.at < 30 * 24 * HOUR) continue;
+        /* 찾은 이름은 30일, 못 찾은 경우는 하루 뒤 다시(일시적인 차단·장애를 영구 실패로 굳히지 않게) */
+        if (had && Date.now() - had.at < (had.name ? 30 * 24 : 24) * HOUR) continue;
         const name = await publisherName(d).catch(() => undefined);
         if (name !== undefined) publishers.set(d, { name, at: Date.now() });
       }
@@ -548,8 +549,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       const d = x.source.toLowerCase().replace(/^www\./, '');
       const hit = publishers.get(d);
       if (hit?.name) return { ...x, source: hit.name };
-      if (!hit && !pubQueue.includes(d) && pubQueue.length < 100) pubQueue.push(d);
-      return x;
+      const stale = !hit || (!hit.name && Date.now() - hit.at > 24 * HOUR);
+      if (stale && !pubQueue.includes(d) && pubQueue.length < 100) pubQueue.push(d);
+      /* 이름을 아직 모르면 보조 주소(v. m. www.)만 뗀 도메인으로 — v.daum.net → daum.net */
+      return { ...x, source: d.replace(/^(?:www|m|v|news|n)\.(?=[^.]+\.[^.]+)/, '') };
     };
     /* 동영상·SNS는 기사로 치지 않는다(도메인으로 들어와 이름을 알아낸 뒤에야 드러나는 경우 포함) */
     const social = (x) => /^(YouTube|TikTok|Instagram|X|Twitter|Facebook|note|youtu\.be)$/i.test(String(x?.source || '').trim());
