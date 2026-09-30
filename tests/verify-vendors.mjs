@@ -33,8 +33,8 @@ ok('로치케 페스 특집: “제목（현）날짜” 링크만 페스티벌'
 const ld = parseLtikeDetail(lt, 'https://l-tike.com/concert/mevent/?mid=482316');
 ok('로치케 상세: 기간·가격(offers)', ld.facts.period?.join() === '2026-10-24,2026-10-25' && ld.prices[0]?.price === 13200 && ld.prices[0]?.grade === '指定席', JSON.stringify(ld.prices));
 
-const yd = parseYes24Detail('<dl><dt>등급</dt><dd>&nbsp;7세 이상 관람가</dd><dt>관람시간</dt><dd>&nbsp;90분 (인터미션 없음)</dd></dl><div>가격</div><ul><li><span>스탠딩석 </span><span>88,000</span><span>원</span></li><li><span>지정석 </span><span>99,000</span><span>원</span></li></ul><div>혜택</div><div>공연시간 안내</div><p>2026년 11월 28일(토) 오후 6시</p><p>본 상품은 일괄배송 상품으로 2026년 11월 06일부터 순차 배송됩니다.</p>', 'https://ticket.yes24.com/Perf/59771');
-ok('YES24 상세: 등급·관람시간·가격·공연시간(배송 안내 제외)', yd.facts.age === '7세 이상 관람가' && yd.facts.runningMin === 90 && yd.prices.map((p) => `${p.grade}:${p.price}`).join() === '스탠딩석:88000,지정석:99000' && yd.facts.times.join() === '2026년 11월 28일(토) 오후 6시', JSON.stringify({ f: yd.facts, p: yd.prices }));
+const yd = parseYes24Detail('<dl><dt>등급</dt><dd>&nbsp;7세 이상 관람가</dd><dt>관람시간</dt><dd>&nbsp;90분 (인터미션 없음)</dd></dl><div>가격</div><ul><li><span>스탠딩석 </span><span>88,000</span><span>원</span></li><li><span>지정석 </span><span>99,000</span><span>원</span></li></ul><div>혜택</div><div>공연시간 안내</div><p>2026년 11월 28일(토) 오후 6시</p><p>본 상품은 일괄배송 상품으로 2026년 11월 06일부터 순차 배송됩니다.</p><div>배송정보</div><p>현장 수령만 가능</p>', 'https://ticket.yes24.com/Perf/59771');
+ok('YES24 상세: 등급·관람시간·가격·공연시간(배송 안내 제외)', yd.facts.age === '7세 이상 관람가' && yd.facts.runningMin === 90 && yd.prices.map((p) => `${p.grade}:${p.price}`).join() === '스탠딩석:88000,지정석:99000' && yd.facts.times.join() === '2026년 11월 28일(토) 오후 6시' && yd.booking.delivery.join() === '현장수령', JSON.stringify({ f: yd.facts, p: yd.prices }));
 
 ok('제목 키: 지역 머리표·기호·띄어쓰기 무시', titleKey('[서울] 2026 ELLEGARDEN ‘Bad For Education Tour II’') === titleKey('2026 ELLEGARDEN Bad For Education Tour II'));
 const merged = mergeVendors([

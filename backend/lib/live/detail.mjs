@@ -250,11 +250,14 @@ export function parseYes24Detail(html, url) {
   const times = ti >= 0 ? t.slice(ti + 1, ti + 6).filter((x) => /\d{4}년|\d{1,2}월|오후|오전|\d{1,2}:\d{2}/.test(x) && !/배송|수령|발송/.test(x)) : [];
   const run = (after('관람시간') || '').match(/(\d+)\s*분/);
   const text = t.join('\n');
+  /* 배송정보 줄: "현장 수령만 가능" / "일괄배송 상품으로 …부터 순차 배송" 등 페이지 문장을 그대로 해석 */
+  const ship = after('배송정보') || '';
+  const delivery = [/현장\s*수령/.test(ship) ? '현장수령' : '', /배송/.test(ship.replace(/배송정보/, '')) && !/배송\s*불가/.test(ship) ? '배송' : '', /모바일\s*티켓/.test(ship) ? '모바일 티켓' : ''].filter(Boolean);
   return {
     provider: 'yes24', url,
     facts: { period: null, venue: null, times, runningMin: run ? Number(run[1]) : null, intermissionMin: null, age: after('등급'), genre: null, organizer: null, contact: null },
     prices: prices.slice(0, 20),
-    booking: { openAt: null, endAt: null, endRule: null, cancelUntil: null, delivery: /배송/.test(text) ? ['배송'] : [], deliveryFee: null, global: null, openInfo: [], ...commonFlags(text) },
+    booking: { openAt: null, endAt: null, endRule: null, cancelUntil: null, delivery, deliveryNote: ship || null, deliveryFee: null, global: null, openInfo: [], ...commonFlags(text) },
     refund: [], fetchedAt: new Date().toISOString(),
   };
 }

@@ -994,7 +994,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   async function detail({ provider, url, artistId, performer }) {
     let d = null;
     if (PROVIDER_GUIDE[provider] && url) {
-      const key = `detail-${createHash('sha1').update(url).digest('hex').slice(0, 16)}`;
+      const key = `detail-${provider === 'yes24' ? 'v2-' : ''}${createHash('sha1').update(url).digest('hex').slice(0, 16)}`;
       const r = await cached(key, 6 * HOUR, async () => ({ items: [], d: await concertDetail(provider, url), sources: [{ provider, ok: true }] }), { budgetMs: 9000 });
       d = r?.d ? { ...r.d, cache: r.cache } : null;
     }

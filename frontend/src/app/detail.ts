@@ -40,14 +40,14 @@ function priceCell(v: number, cur: string, fx: { jpyKrw?: number } | null) {
 
 function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Record<string, string> | null) {
   const ja = getLocale() === 'ja';
-  const kr = c.provider === 'nol' || c.provider === 'melon';
+  const kr = c.provider === 'nol' || c.provider === 'melon' || c.provider === 'yes24' || c.provider === 'ticketlink';
   const steps: [string, string][] = [];
   const link = (href: string, label: string) => { const url = safeHref(href, false); return url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}${icon('i-ext', 'ic xs')}</a>` : esc(label); };
   const b = d?.booking;
   if (c.provider === 'fanclub') return '';
   if (kr) {
-    const prov = c.provider === 'nol' ? 'NOL 티켓' : '멜론티켓';
-    if (ja || state.edition === 'jp') {
+    const prov = providerLabel(c.provider);
+    if ((ja || state.edition === 'jp') && (c.provider === 'nol' || c.provider === 'melon')) {
       steps.push([t('d.s.overseas'), b?.global ? `${link(b.global.url, c.provider === 'nol' ? 'NOL World' : 'Melon Ticket Global')}${b.global.langs.length ? ` · ${esc(b.global.langs.join(' / '))}` : ''}` : esc(t('d.s.noGlobal'))]);
     }
     steps.push([t('d.s.login'), esc([t('d.s.loginD', { p: prov }), b?.identityBooking ? t('d.s.identity') : ''].filter(Boolean).join(' · '))]);
@@ -72,6 +72,11 @@ function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Re
       const recv = [b?.delivery?.length ? b.delivery.map(jpWord).join(' · ') : '', b?.jpPhone ? t('d.s.jpPhone') : '', b?.systemFee ? t('d.s.sysFee', { v: money(b.systemFee, 'JPY') }) : ''].filter(Boolean);
       if (recv.length) steps.push([t('d.s.receive'), esc(recv.join(' · '))]);
       if (b?.perPerson) steps.push([t('d.s.seat'), esc(t('d.s.per', { n: b.perPerson }))]);
+    } else if (c.provider === 'ltike') {
+      steps.push([t('d.s.login'), esc(t('d.s.loginD', { p: providerLabel(c.provider) }))]);
+      const grades = [...new Set((d?.prices || []).map((p) => p.grade).filter(Boolean))];
+      steps.push([t('d.s.seat'), esc([grades.length ? t('d.s.grades', { v: grades.join(' · ') }) : t('d.s.seatD'), b?.perPerson ? t('d.s.per', { n: b.perPerson }) : ''].filter(Boolean).join(' · '))]);
+      if (b?.jpPhone) steps.push([t('d.s.receive'), esc(t('d.s.jpPhone'))]);
     }
     if (fc) steps.push([t('d.s.fcFirst'), esc(t('d.s.fcFirstD', { name: fc.name ? `「${fc.name}」` : '' }).replace(/\s{2,}/g, ' '))]);
   }
@@ -139,5 +144,5 @@ const STATUS_KO: Record<string, string> = { 受付前: '접수 전', 受付中: 
 function statusJa(s: string) { return getLocale() === 'ja' ? s : STATUS_KO[s] || s; }
 function providerLabel(p: string) {
   const ja = getLocale() === 'ja';
-  return ({ nol: ja ? 'NOLチケット' : 'NOL 티켓', melon: ja ? 'メロンチケット' : '멜론티켓', eplus: ja ? 'イープラス' : 'e+', pia: ja ? 'チケットぴあ' : '티켓피아' } as Record<string, string>)[p] || p;
+  return ({ nol: ja ? 'NOLチケット' : 'NOL 티켓', melon: ja ? 'メロンチケット' : '멜론티켓', eplus: ja ? 'イープラス' : 'e+', pia: ja ? 'チケットぴあ' : '티켓피아', yes24: ja ? 'YES24チケット' : 'YES24 티켓', ticketlink: ja ? 'チケットリンク' : '티켓링크', ltike: ja ? 'ローチケ' : '로치케' } as Record<string, string>)[p] || p;
 }
