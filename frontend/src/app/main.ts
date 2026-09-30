@@ -4,7 +4,7 @@ import './editorial.css';
 import { state, setEdition, setLang, onChange, loadSession } from './state';
 import type { Edition } from './state';
 import { t, getLocale } from './i18n';
-import { esc, icon, ago, toast, until } from './ui';
+import { esc, icon, ago, toast, until, fmtTime } from './ui';
 import { startLive, onLive, onLiveStatus, live, userBusy, relevance } from './live';
 import type { LiveTopic } from './live';
 import { initPlayer, markPlaying, localizePlayer } from './player';
@@ -307,7 +307,28 @@ async function softRoute(): Promise<boolean> {
   return true;
 }
 
+/* 데이터 상태 — 사용자에게 보이는 페이지라 내부 키·ISO 시각·영문 상태를 그대로 내지 않는다 */
+const ST_KEY: Record<string, [string, string]> = {
+  'kr-visiting': ['내한 공연', '来韓公演'], 'kr-opens': ['티켓 오픈(한국)', 'チケット発売(韓国)'], 'kr-domestic': ['국내 공연', '韓国国内公演'],
+  'jp-kpop': ['일본 K-POP 공연', '日本のK-POP公演'], 'news-kr': ['뉴스(한국)', 'ニュース(韓国)'], 'news-jp': ['뉴스(일본)', 'ニュース(日本)'],
+  festivals: ['페스티벌', 'フェス'], news: ['뉴스', 'ニュース'], 'fanclub-windows': ['팬클럽 선행 접수', 'FC先行受付'], goods: ['앨범·굿즈 가격', 'CD・グッズ価格'],
+  'roster-identity': ['아티스트 정보 보정', 'アーティスト情報の補正'], photos: ['아티스트 사진', 'アーティスト写真'],
+};
+const ST_PROV: Record<string, [string, string]> = {
+  nol: ['NOL 티켓', 'NOLチケット'], melon: ['멜론티켓', 'メロンチケット'], yes24: ['YES24 티켓', 'YES24チケット'], ticketlink: ['티켓링크', 'チケットリンク'],
+  eplus: ['e+', 'イープラス'], pia: ['티켓피아', 'チケットぴあ'], ltike: ['로치케', 'ローチケ'], 'google-news': ['Google 뉴스', 'Googleニュース'],
+};
+const ST_KIND: Record<string, [string, string]> = {
+  concert: ['콘서트', 'コンサート'], fanmeeting: ['팬미팅', 'ファンミ'], visiting: ['내한', '来韓'], open: ['티켓 오픈', '発売'], 'open-fan': ['팬미팅 오픈', 'ファンミ発売'],
+  overseas: ['해외 아티스트', '海外アーティスト'], 'k-pop': ['K-POP', 'K-POP'], festival: ['페스티벌', 'フェス'],
+};
 async function renderStatus(root: HTMLElement, alive: () => boolean) {
+  const ja = getLocale() === 'ja';
+  const L = (m: Record<string, [string, string]>, k: string) => m[k]?.[ja ? 1 : 0] || k;
+  const provName = (p: string) => { const [a, ...rest] = p.split(':'); const b = rest.join(':').replace(/^"|"$/g, ''); return [L(ST_PROV, a), b ? L(ST_KIND, b) : ''].filter(Boolean).join(' · '); };
+  const stateName = (st: string, err?: string) => (err ? (ja ? '更新失敗(前回の値を表示)' : '갱신 실패(이전 값 표시 중)') : st === 'fresh' ? (ja ? '正常' : '정상') : st === 'pending' ? (ja ? '収集中' : '수집 중') : st === 'stale' ? (ja ? '更新待ち' : '갱신 대기') : st);
+  const every = (sec: number) => (sec >= 3600 ? (ja ? `${Math.round(sec / 3600)}時間` : `${Math.round(sec / 3600)}시간`) : ja ? `${Math.round(sec / 60)}分` : `${Math.round(sec / 60)}분`);
+  const n = (v: number) => (ja ? `${v.toLocaleString('ja-JP')}件` : `${v.toLocaleString('ko-KR')}건`);
   root.innerHTML = `<section class="page-head"><h1>${t('foot.status')}</h1></section><div class="sk sk-block"></div>`;
   const [r, refs] = await Promise.all([
     fetch('/api/live/status').then((x) => x.json()).catch(() => null),
@@ -315,16 +336,18 @@ async function renderStatus(root: HTMLElement, alive: () => boolean) {
   ]);
   if (!alive()) return;
   if (!r) { root.innerHTML += `<p>${t('err.generic')}</p>`; return; }
+  const H = ja ? ['データ', '件数', '最終更新', 'ソース別'] : ['데이터', '건수', '마지막 갱신', '출처별'];
+  const J = ja ? ['処理', '周期', '前回', '次回', '回数', 'エラー'] : ['작업', '주기', '마지막 실행', '다음 실행', '실행 횟수', '오류'];
   root.innerHTML = `<section class="page-head"><h1>${t('foot.status')}</h1></section>
-    <div class="table-wrap"><table class="tbl"><thead><tr><th>key</th><th>items</th><th>updated</th><th>sources</th></tr></thead><tbody>
-    ${Object.entries(r.sources as Record<string, { count: number; cache: { updatedAt: string; state: string; lastError?: string }; sources: { provider: string; ok: boolean; count: number; error?: string }[] }>).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.count}</td><td>${esc(v.cache?.updatedAt || '')} ${esc(v.cache?.state || '')}</td><td>${(v.sources || []).map((s) => `${esc(s.provider)}: ${s.ok ? s.count : `<span class="bad">${esc(s.error || 'fail')}</span>`}`).join('<br>')}</td></tr>`).join('')}
-    </tbody></table></div><p class="method">origin cache ${r.originCache} · queue ${r.classifyQueue}</p>
-    ${r.realtime ? `<h2 class="day-h">${getLocale() === 'ja' ? 'リアルタイム同期' : '실시간 동기화'}</h2><p class="method">${getLocale() === 'ja' ? `接続中の画面 ${r.realtime.clients}` : `연결된 화면 ${r.realtime.clients}개`}</p>
-    <div class="table-wrap"><table class="tbl"><thead><tr><th>job</th><th>every</th><th>last</th><th>next</th><th>runs</th><th>error</th></tr></thead><tbody>
-    ${Object.entries(r.realtime.jobs as Record<string, { every: number; lastAt: string | null; next: string | null; runs: number; lastError: string | null; lastMs: number | null }>).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${Math.round(v.every / 60)}m</td><td>${v.lastAt ? esc(ago(v.lastAt)) : '-'}${v.lastMs != null ? ` · ${(v.lastMs / 1000).toFixed(1)}s` : ''}</td><td>${v.next ? esc(new Date(v.next).toLocaleTimeString()) : '-'}</td><td>${v.runs}</td><td>${v.lastError ? `<span class="bad">${esc(v.lastError)}</span>` : ''}</td></tr>`).join('')}
+    <div class="table-wrap"><table class="tbl"><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>
+    ${Object.entries(r.sources as Record<string, { count: number; cache: { updatedAt: string; state: string; lastError?: string }; sources: { provider: string; ok: boolean; count: number; error?: string }[] }>).map(([k, v]) => `<tr><td>${esc(L(ST_KEY, k))}</td><td>${n(v.count || 0)}</td><td>${v.cache?.updatedAt ? esc(ago(v.cache.updatedAt)) : '-'} · ${esc(stateName(v.cache?.state || '', v.cache?.lastError))}</td><td>${(v.sources || []).map((s) => `${esc(provName(s.provider))} ${s.ok ? n(s.count || 0) : `<span class="bad">${ja ? '失敗' : '실패'}</span>`}`).join('<br>')}</td></tr>`).join('')}
+    </tbody></table></div><p class="method">${ja ? `国籍判定キャッシュ ${r.originCache}件 · 判定待ち ${r.classifyQueue}件` : `국적 판정 저장 ${r.originCache}건 · 판정 대기 ${r.classifyQueue}건`}</p>
+    ${r.realtime ? `<h2 class="day-h">${ja ? 'リアルタイム同期' : '실시간 동기화'}</h2><p class="method">${ja ? `接続中の画面 ${r.realtime.clients}` : `연결된 화면 ${r.realtime.clients}개`}</p>
+    <div class="table-wrap"><table class="tbl"><thead><tr>${J.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>
+    ${Object.entries(r.realtime.jobs as Record<string, { every: number; lastAt: string | null; next: string | null; runs: number; lastError: string | null; lastMs: number | null }>).map(([k, v]) => `<tr><td>${esc(L(ST_KEY, k))}</td><td>${every(v.every)}</td><td>${v.lastAt ? esc(ago(v.lastAt)) : '-'}${v.lastMs != null ? ` · ${(v.lastMs / 1000).toFixed(1)}${ja ? '秒' : '초'}` : ''}</td><td>${v.next ? esc(fmtTime(v.next)) : '-'}</td><td>${v.runs}</td><td>${v.lastError ? `<span class="bad">${ja ? '失敗' : '실패'}</span>` : ''}</td></tr>`).join('')}
     </tbody></table></div>` : ''}
     <h2 class="day-h">${t('st.fcRefs')}</h2><p class="method">${t('st.fcRefs.sub')}</p>
-    ${(refs.items || []).length ? `<div class="table-wrap"><table class="tbl"><thead><tr><th>artist</th><th>${t('st.fcJoin')}</th><th>${t('st.fcSale')}</th><th>7d</th></tr></thead><tbody>${(refs.items as { artistId: string; join: number; sale: number; byDay: Record<string, number> }[]).map((x) => { const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); const d7 = Object.entries(x.byDay || {}).filter(([d]) => d >= since).reduce((n, [, v]) => n + v, 0); return `<tr><td>${esc(x.artistId)}</td><td>${x.join}</td><td>${x.sale}</td><td>${d7}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="note">${t('empty.generic')}</p>`}`;
+    ${(refs.items || []).length ? `<div class="table-wrap"><table class="tbl"><thead><tr><th>${ja ? 'アーティスト' : '아티스트'}</th><th>${t('st.fcJoin')}</th><th>${t('st.fcSale')}</th><th>${ja ? '直近7日' : '최근 7일'}</th></tr></thead><tbody>${(refs.items as { artistId: string; join: number; sale: number; byDay: Record<string, number> }[]).map((x) => { const since = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); const d7 = Object.entries(x.byDay || {}).filter(([d]) => d >= since).reduce((m, [, v]) => m + v, 0); return `<tr><td>${esc(x.artistId)}</td><td>${x.join}</td><td>${x.sale}</td><td>${d7}</td></tr>`; }).join('')}</tbody></table></div>` : `<p class="note">${t('empty.generic')}</p>`}`;
 }
 
 document.addEventListener('click', (e) => {

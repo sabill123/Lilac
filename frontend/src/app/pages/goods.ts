@@ -2,7 +2,7 @@ import { safeExternal, bindSectionLink } from './_safety';
 import { api } from '../../api';
 import { state, buyerCurrency } from '../state';
 import { t } from '../i18n';
-import { esc, icon, img, skeletonRows, errorState, emptyState, freshness, params, money, convert, fmtDay } from '../ui';
+import { esc, icon, img, skeletonRows, errorState, emptyState, freshness, params, money, convert, fmtDay, approxMoney } from '../ui';
 import { likeBtn, shareBtn, bindSocial, commentsHtml, bindComments, targetAdapter, releaseTarget } from '../social';
 import { ct } from '../cm-i18n';
 import { goodsCard, releaseCard } from '../cards';
@@ -160,7 +160,7 @@ export async function renderRelease(root: HTMLElement, alive: () => boolean, id:
     </section>
     ${[...byEdition].map(([label, list]) => `
       <section class="sec">
-        <div class="sec-head"><h2>${esc(label)}</h2><span class="muted">${esc(list[0].catalogNo || '')} · ${money(list[0].listPrice, list[0].listCurrency)}${list[0].listCurrency !== buyer && d.comparison.fx ? ` (${t('g.approx', { v: money(convert(list[0].listPrice, list[0].listCurrency, buyer, d.comparison.fx), buyer) })})` : ''}</span></div>
+        <div class="sec-head"><h2>${esc(label)}</h2><span class="muted">${esc(list[0].catalogNo || '')} · ${money(list[0].listPrice, list[0].listCurrency)}${list[0].listCurrency !== buyer && d.comparison.fx ? ` (${approxMoney(list[0].listPrice, list[0].listCurrency, buyer, d.comparison.fx)})` : ''}</span></div>
         <div class="table-wrap"><table class="tbl">
           <thead><tr><th>${t('g.stores')}</th><th>${t('g.bonus')}</th><th>${ja ? '韓国直送' : '한국 직배송'}</th><th></th></tr></thead>
           <tbody>${list.map((o) => `<tr>

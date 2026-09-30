@@ -3,7 +3,7 @@
  * 값이 없으면 칸을 만들지 않는다(추측 금지). 예매 방법은 보는 사람(에디션·언어)과 예매처에 따라 달라진다. */
 import { state } from './state';
 import { t, getLocale } from './i18n';
-import { esc, safeHref, icon, money, convert, fmtDateTime, fmtDay, ago } from './ui';
+import { esc, safeHref, icon, money, fmtDateTime, fmtDay, ago, approxMoney } from './ui';
 import type { Concert } from './cards';
 import { withUtm, payNames } from './fanclub';
 
@@ -29,12 +29,17 @@ const TIME_KO = (s: string) => s
   .replace(/(\d{1,2})시\s*(\d{1,2})분/g, (_, h: string, m: string) => `${h.padStart(2, '0')}:${m.padStart(2, '0')}`)
   .replace(/(\d{1,2})시/g, (_, h: string) => `${h.padStart(2, '0')}:00`);
 
+/* 공연 시각: 날짜만 되풀이하는 줄("2026년 12월 19일(토) ~ 12월 20일(일)")은 위 일정과 같아서 뺀다 — 시각이 있는 줄만 */
+function timesNote(times?: string[] | null) {
+  const withClock = (times || []).filter((x) => /\d{1,2}\s*[:：]\s*\d{2}|\d{1,2}\s*시|오전|오후|開演|開場|\bPM\b|\bAM\b/i.test(x));
+  return withClock.length ? `<small>${esc(withClock.map(TIME_KO).join(' · '))}</small>` : '';
+}
+
 function priceCell(v: number, cur: string, fx: { jpyKrw?: number } | null) {
   const ja = getLocale() === 'ja';
   const other = cur === 'JPY' ? 'KRW' : 'JPY';
   const want = (state.edition === 'jp' || (state.edition === 'all' && ja)) ? 'JPY' : 'KRW';
-  const c = want !== cur ? convert(v, cur, other, fx) : null;
-  const approx = c ? (other === 'KRW' ? t('fcp.approxWon', { v: (Math.round(c / 100) * 100).toLocaleString('ko-KR') }) : `約¥${(Math.round(c / 10) * 10).toLocaleString('ja-JP')}`) : '';
+  const approx = want !== cur ? approxMoney(v, cur, other, fx) : '';
   return `<b>${money(v, cur)}</b>${approx ? `<small>${esc(approx)}</small>` : ''}`;
 }
 
@@ -51,7 +56,9 @@ function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Re
       steps.push([t('d.s.overseas'), b?.global ? `${link(b.global.url, c.provider === 'nol' ? 'NOL World' : 'Melon Ticket Global')}${b.global.langs.length ? ` · ${esc(b.global.langs.join(' / '))}` : ''}` : esc(t('d.s.noGlobal'))]);
     }
     steps.push([t('d.s.login'), esc([t('d.s.loginD', { p: prov }), b?.identityBooking ? t('d.s.identity') : ''].filter(Boolean).join(' · '))]);
-    const open = b?.openAt && Date.parse(b.openAt) > Date.now() ? t('d.s.openAt', { t: fmtDateTime(b.openAt) }) : t('d.s.onsale');
+    /* 상품 페이지에 오픈 시각이 없어도 목록의 판매 일정(일반 예매 10.1 12:00)이 미래면 "지금 예매 중"이 아니다 */
+    const future = [b?.openAt, c.ticketOpenAt, ...((c.openSchedule || []) as { at?: string | null }[]).map((o) => o.at)].filter((x): x is string => !!x && Date.parse(x) > Date.now()).sort()[0];
+    const open = future ? t('d.s.openAt', { t: fmtDateTime(future) }) : c.status === 'upcoming' ? t('d.s.openSoon') : t('d.s.onsale');
     steps.push([t('d.s.open'), esc([open, b?.endRule ? t('d.s.until', { v: b.endRule }) : ''].filter(Boolean).join(' · '))]);
     const grades = [...new Set((d?.prices || []).map((p) => p.grade).filter(Boolean))];
     steps.push([t('d.s.seat'), esc([grades.length ? t('d.s.grades', { v: grades.join(' · ') }) : t('d.s.seatD'), b?.perPerson ? t('d.s.per', { n: b.perPerson }) : ''].filter(Boolean).join(' · '))]);
@@ -116,7 +123,7 @@ export function detailHtml(c: Concert, r: DetailResponse | null, fx: { jpyKrw?: 
   const f = d?.facts;
   const info: string[] = [];
   const period = f?.period?.length ? (f.period[0] === f.period[f.period.length - 1] ? fmtDay(f.period[0]) : `${fmtDay(f.period[0])} – ${fmtDay(f.period[f.period.length - 1])}`) : '';
-  info.push(`<dt>${t('c.date')}</dt><dd>${esc(period || [c.startDate ? fmtDay(c.startDate) : '', c.endDate && c.endDate !== c.startDate ? fmtDay(c.endDate) : ''].filter(Boolean).join(' – ') || '-')}${f?.times?.length ? `<small>${esc(f.times.map(TIME_KO).join(' · '))}</small>` : ''}</dd>`);
+  info.push(`<dt>${t('c.date')}</dt><dd>${esc(period || [c.startDate ? fmtDay(c.startDate) : '', c.endDate && c.endDate !== c.startDate ? fmtDay(c.endDate) : ''].filter(Boolean).join(' – ') || '-')}${timesNote(f?.times)}</dd>`);
   if (d?.shows?.length) info.push(`<dt>${t('d.times')}</dt><dd>${d.shows.slice(0, 6).map((s) => `<span class="sd-show">${esc(fmtDay(s.date))} ${s.open ? `${esc(t('d.doors'))} ${esc(s.open)} · ` : ''}${s.start ? `${esc(t('d.start'))} ${esc(s.start)}` : ''}</span>`).join('')}</dd>`);
   info.push(`<dt>${t('c.venue')}</dt><dd>${esc(f?.venue || c.venue || '-')}</dd>`);
   if (f?.runningMin) info.push(`<dt>${t('d.running')}</dt><dd>${esc(t('d.min', { n: f.runningMin }))}${f.intermissionMin ? ` <small>${esc(t('d.inter', { n: f.intermissionMin }))}</small>` : ''}</dd>`);

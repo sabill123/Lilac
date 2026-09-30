@@ -27,7 +27,7 @@ const KO: Record<Tab, { title: string; lead: string; blocks: Block[] }> = {
   },
   kr: {
     title: '한국 공연 예매',
-    lead: '한국 공연은 대부분 NOL 티켓(인터파크)이나 멜론티켓에서 선착순으로 팝니다. 외국인 예매 경로가 있는 공연은 상품 페이지에 따로 연결됩니다.',
+    lead: '한국 공연은 주로 NOL 티켓(인터파크)·멜론티켓·YES24 티켓·티켓링크에서 선착순으로 팝니다. 같은 공연을 여러 곳에서 팔면 Lilac 공연 상세의 "다른 예매처"에 함께 표시합니다. 외국인 예매 경로가 있는 공연은 상품 페이지에 따로 연결됩니다.',
     blocks: [
       { h: '외국인 예매', items: ['NOL 티켓: 상품 페이지의 "For international users" → NOL World(영어·일본어·중국어)', '멜론티켓: 상품 페이지의 "Foreigner / 外國人" → Melon Ticket Global', 'Lilac 공연 상세에서 그 공연에 외국인 예매 연결이 있는지 표시합니다'], src: [['NOL World', 'https://world.nol.com/'], ['Melon Ticket Global', 'https://tkglobal.melon.com/main/index.htm?langCd=EN']] },
       { h: '인증예매·수령', items: ['멜론티켓 "인증예매" 표시 공연은 본인 인증을 한 회원만 예매할 수 있습니다', '현장수령: 예매번호가 있는 예매확인서와 예매자 실물 신분증(사본·사진 불가)을 매표소에 제출', '배송: 배송이 시작된 뒤 취소하려면 티켓을 반송해야 합니다'], src: [['멜론티켓', 'https://ticket.melon.com/main/index.htm']] },
@@ -46,7 +46,7 @@ const KO: Record<Tab, { title: string; lead: string; blocks: Block[] }> = {
 const JA: Record<Tab, { title: string; lead: string; blocks: Block[] }> = {
   kr: {
     title: '韓国公演のチケット',
-    lead: '韓国の公演は主にNOLチケット(インターパーク)かメロンチケットで先着販売されます。海外向け予約がある公演は商品ページから専用サイトにつながります。',
+    lead: '韓国の公演は主にNOLチケット(インターパーク)・メロンチケット・YES24チケット・チケットリンクで先着販売されます。複数のプレイガイドで扱う公演はLilacの公演詳細「ほかのプレイガイド」にまとめて表示します。海外向け予約がある公演は商品ページから専用サイトにつながります。',
     blocks: [
       { h: '海外からの予約', items: ['NOLチケット: 商品ページの「For international users」→ NOL World(英語・日本語・中国語)', 'メロンチケット: 商品ページの「Foreigner / 外國人」→ Melon Ticket Global', 'Lilacの公演詳細で、その公演に海外向け予約があるかを表示します'], src: [['NOL World', 'https://world.nol.com/'], ['Melon Ticket Global', 'https://tkglobal.melon.com/main/index.htm?langCd=EN']] },
       { h: '本人認証・受け取り', items: ['メロンチケットの「인증예매(認証予約)」公演は本人認証済みの会員のみ予約できます', '現地受け取り: 予約番号入りの予約確認書と予約者本人の身分証(原本)を提示'], src: [['メロンチケット', 'https://ticket.melon.com/main/index.htm']] },

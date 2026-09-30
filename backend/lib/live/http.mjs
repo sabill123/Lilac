@@ -106,7 +106,8 @@ export function clean(s) {
 export function halfwidth(s) {
   return String(s || '')
     .replace(/[\uFF01-\uFF5E]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-    .replace(/\u3000/g, ' ');
+    .replace(/\u3000/g, ' ')
+    .replace(/\uFF65/g, '・'); // 반각 가운뎃점(ｷﾑ･…) → 전각 — 같은 이름이 두 표기로 갈리지 않게
 }
 
 /* 작업을 동시에 n개까지만 */
@@ -139,4 +140,14 @@ export function normDate(s) {
 
 export function todayKst() {
   return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+}
+
+/* 제목에 이 이름이 들어 있나 — 로마자 이름은 단어 경계를 지킨다("Viva Espana"의 vivAESPAna가 aespa로 잡히던 문제). 한자·가나·한글은 부분 일치 */
+export function nameInTitle(title, name) {
+  const t = halfwidth(String(title || '')).toLowerCase();
+  const n = halfwidth(String(name || '')).toLowerCase().trim();
+  if (n.length < 2) return false;
+  if (!/[a-z0-9]/.test(n) || /[\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7a3]/.test(n)) return t.replace(/[\s・·.]/g, '').includes(n.replace(/[\s・·.]/g, ''));
+  const pat = n.split(/[\s.·・]+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s.·・]*');
+  return new RegExp(`(^|[^a-z0-9])${pat}([^a-z0-9]|$)`).test(t);
 }

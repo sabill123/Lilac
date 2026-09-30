@@ -506,6 +506,8 @@ export function parseSalesPage(html, pageUrl, { fcName = null, now = new Date() 
   const hintYear = Number((pageTitle.match(/(?:^|[^0-9])(20[2-9][0-9])(?:[^0-9]|$)/) || String(pageUrl).match(/(?:\/|d-|=)(20[2-9][0-9])/) || [])[1]) || null;
   const showYear = (m, dd) => {
     if (hintYear && hintYear >= year && hintYear <= year + 2) return hintYear;
+    /* 제목에 지난 연도가 박힌 페이지("… TOUR 2023")는 지난 공연 — 다음 해로 밀면 끝난 투어가 미래 공연으로 뜬다 */
+    if (hintYear && hintYear < year) return hintYear;
     return Date.UTC(year, m - 1, dd) < now.getTime() - 60 * 864e5 ? year + 1 : year;
   };
   const sales = [];
@@ -529,7 +531,7 @@ export function parseSalesPage(html, pageUrl, { fcName = null, now = new Date() 
     const condition = condIdx >= 0 ? ctxLines.slice(condIdx + 1, condIdx + 3).join(' ').replace(/[┗└→][^/]*?(こちら|はこちら)\s*/g, '').replace(/\s*(新規入会|ご入会)は\s*こちら.*$/, '').replace(/\s+/g, ' ').trim().slice(0, 140) || null : null;
     const ctx = `${label} ${ctxLines.join(' ')}`;
     const fcOnly0 = /ともに[^。]{0,90}(会員|FAN CLUB|ファンクラブ)|会員限定|ファンクラブ限定|FC限定|会員のみ|会員の方のみ/.test(ctx);
-    const isPublic = /どなたでも|どなた様でも|会員登録不要|会員でなくても/.test(ctx) || (/セブン|ローソン|ローチケ|ぴあ|イープラス|e\+|プレイガイド|一般発売|一般先行|オフィシャル先行|公式先行/.test(label) && !(fcName && label.includes(fcName)) && !/会員/.test(label));
+    const isPublic = /どなたでも|どなた様でも|会員登録不要|会員でなくても/.test(ctx) || (/セブン|ローソン|ローチケ|ぴあ|イープラス|e\+|プレイガイド|一般発売|一般先行|一般抽選|一般受付|一般販売|オフィシャル先行|公式先行/.test(label) && !(fcName && label.includes(fcName)) && !/会員/.test(label));
     const fcOnly = fcOnly0 && !/どなたでも/.test(ctx);
     const fcFirst = !isPublic && (/会員先行|ファンクラブ先行|FC先行|全会員先行|年会員|会員\S*先行|OFFICIAL FAN CLUB|VAWS|会員さま/.test(ctx) || !!(fcName && ctx.includes(fcName)));
     const overseas = /海外在住|海外にお住まい|Overseas|海外の方/.test(label + ' ' + (condition || ''));

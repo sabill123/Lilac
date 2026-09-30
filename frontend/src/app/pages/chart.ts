@@ -1,8 +1,32 @@
 import { api } from '../../api';
 import { state, musicCountries } from '../state';
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import { esc, img, icon, skeletonRows, errorState, emptyState, ago } from '../ui';
-import { chartRow } from '../cards';
+import { chartRow, artistName } from '../cards';
+
+let jaNamesP: Promise<Map<string, string>> | null = null;
+const nk = (s: string) => s.normalize('NFKC').toLowerCase().replace(/[\s.·・()（）'’-]/g, '');
+function jaArtistNames() {
+  jaNamesP ||= api('/api/live/artists?edition=all').then((r: { items: { name: string; nameOriginal?: string | null; nameJa?: string | null; nameKo?: string | null }[] }) => {
+    const m = new Map<string, string>();
+    for (const a of r.items || []) {
+      const show = artistName(a);
+      if (/[가-힣]/.test(show)) continue;
+      for (const n of [a.name, a.nameKo, a.nameOriginal]) if (n) m.set(nk(n), show);
+    }
+    return m;
+  }).catch(() => new Map());
+  return jaNamesP;
+}
+/* "RESCENE (리센느)" "화사 (HWASA)"처럼 두 표기가 붙은 이름은 한글이 아닌 쪽 */
+function jaArtist(name: string, m: Map<string, string>) {
+  if (!/[가-힣]/.test(name)) return name;
+  const hit = m.get(nk(name));
+  if (hit) return hit;
+  const pair = name.match(/^(.+?)\s*[(（]([^)）]+)[)）]\s*$/);
+  if (pair) { const [a, b] = [pair[1].trim(), pair[2].trim()]; if (!/[가-힣]/.test(a)) return a; if (!/[가-힣]/.test(b)) return b; return m.get(nk(a)) || name; }
+  return name;
+}
 import type { ChartEntry } from '../cards';
 import { playList, markPlaying } from '../player';
 import { bindSocial } from '../social';
@@ -29,15 +53,25 @@ export async function renderChart(root: HTMLElement, alive: () => boolean, sub?:
     return;
   }
   if (!alive()) return;
-  const labels: Record<string, string> = { combined: state.edition === 'jp' ? 'Lilac統合' : 'Lilac 통합', ...(d.sourceLabels || {}), apple: 'Apple Music', appleRss: state.edition === 'jp' ? 'Apple 公式フィード' : 'Apple 공식 피드', youtube: 'YouTube MV' };
-  const short: Record<string, string> = { billboard: 'Billboard', oricon: 'Oricon', melon: 'Melon', genie: 'Genie', apple: 'Apple', appleRss: 'Apple RSS', youtube: 'YouTube' };
+  const labels: Record<string, string> = { combined: getLocale() === 'ja' ? 'Lilac統合' : 'Lilac 통합', ...(d.sourceLabels || {}), ...(getLocale() === 'ja' ? { oricon: 'オリコン週間シングル', melon: 'Melon TOP100', genie: 'genie チャート' } : {}), apple: 'Apple Music', appleRss: getLocale() === 'ja' ? 'Apple 公式フィード' : 'Apple 공식 피드', youtube: 'YouTube MV' };
+  const ja = getLocale() === 'ja';
+  const short: Record<string, string> = ja
+    ? { billboard: 'Billboard', oricon: 'オリコン', melon: 'Melon', genie: 'genie', apple: 'Apple Music', appleRss: 'Apple 公式フィード', youtube: 'YouTube' }
+    : { billboard: '빌보드', oricon: '오리콘', melon: '멜론', genie: '지니', apple: 'Apple Music', appleRss: 'Apple 공식 피드', youtube: 'YouTube' };
   root.querySelector('#chTools')!.innerHTML = `<div class="chips">${['combined', ...d.sources].map((s) => `<a class="chip ${s === source ? 'on' : ''}" href="#/chart/${country}/${encodeURIComponent(s)}">${esc(labels[s] || s)}</a>`).join('')}</div>
     <span class="fresh">${d.live ? 'LIVE · ' : ''}${esc(t('updated', { t: ago(d.updated) }))}</span>`;
-  const list = d.list || [];
+  let list = d.list || [];
+  /* 일본어 화면: 한국 차트의 한글 아티스트명을 로스터의 일본어·로마자 표기로(아이유 → IU, 한로로 → HANRORO) */
+  if (ja && list.some((e) => /[가-힣]/.test(e.artist))) {
+    const names = await jaArtistNames();
+    if (!alive()) return;
+    list = list.map((e) => ({ ...e, artist: jaArtist(e.artist, names) }));
+  }
   root.querySelector('#chList')!.innerHTML = list.length ? list.map((e, i) => chartRow(e, i, { sourceLabels: short })).join('') : `<li>${emptyState(t('empty.generic'))}</li>`;
   const tracks: Track[] = list.map((e) => ({ title: e.title, artist: e.artist, artwork: e.artwork, appleUrl: e.appleUrl }));
   root.querySelectorAll<HTMLElement>('#chList [data-play]').forEach((b) => b.addEventListener('click', () => playList(tracks, Number(b.dataset.play))));
-  root.querySelector('#chMethod')!.textContent = source === 'combined' ? t('ch.method') : d.method || '';
+  const mk = `ch.m.${source}`;
+  root.querySelector('#chMethod')!.textContent = source === 'combined' ? t('ch.method') : t(mk) !== mk ? t(mk) : d.method || '';
   markPlaying();
   void bindSocial(root.querySelector<HTMLElement>('#chList')!);
   void paintMoves(root, country, alive);

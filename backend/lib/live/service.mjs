@@ -14,14 +14,14 @@ import { exposeMembership, matchesMembershipOwner } from './membership-policy.mj
 import { cached, initCache, KV, peek, revalidate, cacheEvents } from './cache.mjs';
 import { fetchKrConcerts, fetchKrTicketOpens } from './tickets-kr.mjs';
 import { fetchJpConcerts, searchJpConcerts } from './tickets-jp.mjs';
-import { searchGoods, STORES } from './goods.mjs';
-import { newsFeed } from './news.mjs';
+import { searchGoods, STORES, tidyOffer, aladinReleaseDate } from './goods.mjs';
+import { newsFeed, looksLikeDomain, publisherName } from './news.mjs';
 import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanNamesFor, japaneseNamesFor, checkAppleIdentity, koreanNameFits } from './artist-info.mjs';
 import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts, searchEngine } from './fanclub.mjs';
 import { eventPoster, ogImage } from './posters.mjs';
 import { krFestivals, eplusFestivals, jpFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation, eplusOfficialSite, findFestivalSite } from './festivals.mjs';
-import { fetchText } from './http.mjs';
+import { fetchText, halfwidth, nameInTitle } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
 import { createHash } from 'node:crypto';
 
@@ -45,6 +45,40 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const festLineups = new KV('fest-lineups');
   const melonNations = new KV('melon-nation');
   const melonByName = new KV('melon-name');
+  /* 알라딘 상품번호 → 정확한 발매일(목록은 월까지만). 발매일은 바뀌지 않으니 한 번 읽으면 계속 쓴다 */
+  const aladinDates = new KV('aladin-dates');
+  /* ぴあ 이벤트(eventCd)의 출연자 확인 결과 — eventCd|이름 → true/false */
+  const piaCast = new KV('pia-cast-v2');
+  async function piaPerforms(url, names) {
+    const cd = (String(url).match(/eventCd=(\d+)/) || [])[1];
+    if (!cd) return false;
+    await piaCast.ready();
+    const keys = [...new Set(names.map((n) => norm(n)).filter((k) => k.length >= 2))];
+    const ck = `${cd}|${keys.join(',')}`;
+    const had = piaCast.get(ck);
+    if (had && Date.now() - had.at < 7 * 24 * HOUR) return had.ok;
+    try {
+      const html = await fetchText(`https://t.pia.jp/pia/event/event.do?eventCd=${cd}`, { timeout: 8000, retries: 0 });
+      const body = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ');
+      const ok = names.some((n) => nameInTitle(body, n));
+      piaCast.set(ck, { ok, at: Date.now() });
+      return ok;
+    } catch { return false; } // 확인 못 하면 연결하지 않는다(다음 요청에 다시)
+  }
+  const aladinDateQueue = [];
+  let aladinDateBusy = false;
+  async function pumpAladinDates() {
+    if (aladinDateBusy) return;
+    aladinDateBusy = true;
+    try {
+      for (let n = 0; n < 12 && aladinDateQueue.length; n++) {
+        const { id, url } = aladinDateQueue.shift();
+        if (aladinDates.get(id)) continue;
+        try { const d = await aladinReleaseDate(url); if (d) aladinDates.set(id, { date: d, at: Date.now() }); } catch { /* 다음에 */ }
+        await new Promise((r) => setTimeout(r, 400));
+      }
+    } finally { aladinDateBusy = false; }
+  }
   const festSites = new KV('fest-sites');
   eventPosters.ready().catch(() => {});
   const posterQueue = [];
@@ -163,7 +197,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       /* 일본어판 위키백과가 없으면 신원 확인을 거친 Apple 로마자 표기(HANRORO, TUIDE)를 일본어 화면 이름으로 — 한글만 보이지 않게 */
       const appleLatin = a.appleArtistId && a.appleFix?.status !== 'none' && /[A-Za-z]/.test(a.searchTerm || '') && !/[가-힣]/.test(a.searchTerm || '') ? a.searchTerm : null;
       const jaName = a.nameJa || jaNames.get(a.id)?.name || (/[가-힣]/.test(a.name || '') ? appleLatin : null) || null;
-      out.push({ ...a, origin, names: jaName && !names.includes(jaName) ? [...names, jaName] : names, nameJa: jaName, nameKo: ko[0] || (/[가-힣]/.test(a.name) ? a.name : null) });
+      /* 일본 아티스트인데 대표 이름이 한글로만 들어온 행(요루시카): 원어(ヨルシカ)를 대표로, 한글은 부제로 — 다른 일본 아티스트와 같은 표기 규칙 */
+      const hangulOnly = /[가-힣]/.test(a.name || '') && !/[A-Za-z぀-ヿ一-龯]/.test(a.name || '');
+      const display = origin === 'jp' && hangulOnly && jaName && !/[가-힣]/.test(jaName) ? jaName : a.name;
+      out.push({ ...a, name: display, origin, names: jaName && !names.includes(jaName) ? [...names, jaName] : names, nameJa: jaName, nameKo: ko[0] || (/[가-힣]/.test(a.name) ? a.name : null) });
     }
     rosterCache = out;
     rosterAt = Date.now();
@@ -352,9 +389,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const names = artists.map((a) => /[A-Za-z぀-ヿ一-龯]/.test(a.nameOriginal || '') ? a.nameOriginal : a.name).filter(Boolean);
     const r = await src.eplusFor(names);
     const list = await roster();
-    const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => norm(it.title).includes(norm(n))))
+    const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => nameInTitle(it.title, n)))
       .map((it) => {
-        const a = artists.find((x) => [x.name, x.nameOriginal, x.nameJa].some((n) => n && norm(it.title).includes(norm(n))));
+        const a = artists.find((x) => [x.name, x.nameOriginal, x.nameJa].some((n) => n && nameInTitle(it.title, n)));
         const ph = a ? photos.get(a.id) : null;
         return { ...it, poster: it.poster || ph?.medium || a?.artwork || null, posterKind: it.poster ? 'official' : 'artist', performer: a?.name || it.title, artistId: a?.id || null, origin: 'jp', originSource: 'search-artist' };
       });
@@ -368,9 +405,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const artists = await topArtists('kr', 10);
     const names = artists.map((a) => /[A-Za-z]/.test(a.nameOriginal || a.name) ? (a.nameOriginal || a.name) : (a.aliases || []).find((x) => /[A-Za-z]/.test(x)) || a.name);
     const r = await src.eplusFor(names);
-    const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => norm(it.title).includes(norm(n))))
+    const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => nameInTitle(it.title, n)))
       .map((it) => {
-        const a = artists.find((x) => [x.name, x.nameOriginal, ...(x.aliases || [])].some((n) => n && norm(it.title).includes(norm(n))));
+        const a = artists.find((x) => [x.name, x.nameOriginal, ...(x.aliases || [])].some((n) => n && nameInTitle(it.title, n)));
         const ph = a ? photos.get(a.id) : null;
         return { ...it, poster: it.poster || ph?.medium || a?.artwork || null, posterKind: it.poster ? 'official' : 'artist', performer: a?.name || it.title, artistId: a?.id || null, origin: 'kr', originSource: 'search-artist' };
       });
@@ -488,7 +525,43 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
 
   /* ---------- 뉴스 ---------- */
-  async function news({ edition = 'kr', artist = null, force = false } = {}) {
+  /* 뉴스 출처가 도메인으로 온 매체 → 공식 사이트명(한 번 찾으면 30일) */
+  const publishers = new KV('publishers');
+  const pubQueue = [];
+  let pubBusy = false;
+  async function pumpPublishers() {
+    if (pubBusy) return;
+    pubBusy = true;
+    try {
+      for (let n = 0; n < 10 && pubQueue.length; n++) {
+        const d = pubQueue.shift();
+        const had = publishers.get(d);
+        if (had && Date.now() - had.at < 30 * 24 * HOUR) continue;
+        const name = await publisherName(d).catch(() => undefined);
+        if (name !== undefined) publishers.set(d, { name, at: Date.now() });
+      }
+    } finally { pubBusy = false; }
+  }
+  function withPublishers(r) {
+    const fix = (x) => {
+      if (!x || !looksLikeDomain(x.source)) return x;
+      const d = x.source.toLowerCase().replace(/^www\./, '');
+      const hit = publishers.get(d);
+      if (hit?.name) return { ...x, source: hit.name };
+      if (!hit && !pubQueue.includes(d) && pubQueue.length < 100) pubQueue.push(d);
+      return x;
+    };
+    /* 동영상·SNS는 기사로 치지 않는다(도메인으로 들어와 이름을 알아낸 뒤에야 드러나는 경우 포함) */
+    const social = (x) => /^(YouTube|TikTok|Instagram|X|Twitter|Facebook|note|youtu\.be)$/i.test(String(x?.source || '').trim());
+    const items = (r?.items || []).map((x) => { const y = fix(x); return y.related?.length ? { ...y, related: y.related.map(fix).filter((z) => !social(z)) } : y; }).filter((x) => !social(x));
+    if (pubQueue.length) void pumpPublishers();
+    return { ...r, items };
+  }
+  async function news(opts = {}) {
+    await publishers.ready();
+    return withPublishers(await newsRaw(opts));
+  }
+  async function newsRaw({ edition = 'kr', artist = null, force = false } = {}) {
     const list = await roster();
     const lang = edition === 'jp' ? 'ja' : 'ko';
     if (artist) {
@@ -530,7 +603,18 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     /* 최근에 누가 본 굿즈 검색은 백그라운드에서 계속 새로 받는다(가격·재고·예약 상태) */
     recentGoods.set(key, { query, market, at: Date.now() });
     if (recentGoods.size > 200) recentGoods.delete(recentGoods.keys().next().value);
-    return cached(key, 30 * MIN, () => searchGoods(query, { market }), { budgetMs: 12000 });
+    const r = await cached(key, 30 * MIN, () => searchGoods(query, { market }), { budgetMs: 12000 });
+    await aladinDates.ready();
+    const items = (r.items || []).map((o) => {
+      const x = tidyOffer(o);
+      if (x.store !== 'aladin' || !/^\d{4}-\d{2}$/.test(x.releaseDate || '')) return x;
+      const hit = aladinDates.get(x.id);
+      if (hit?.date) return { ...x, releaseDate: hit.date, releaseDatePrecision: 'day' };
+      if (!aladinDateQueue.some((q) => q.id === x.id) && aladinDateQueue.length < 200) aladinDateQueue.push({ id: x.id, url: x.url });
+      return x;
+    });
+    if (aladinDateQueue.length) void pumpAladinDates();
+    return { ...r, items };
   }
 
   /* ---------- 아티스트 ---------- */
@@ -561,11 +645,18 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     for (const p of pools) shows.push(...(p.items || []));
     shows = await annotate(upcomingOnly(shows), { classify: false });
     const keys = names.map(norm).filter((k) => k.length >= 2);
-    shows = shows.filter((s) => (a && s.artistId === a.id) || keys.some((k) => norm(s.performer) === k || norm(s.title).includes(k)));
+    shows = shows.filter((s) => (a && s.artistId === a.id) || keys.some((k) => norm(s.performer) === k) || names.some((n) => nameInTitle(s.title, n)));
     try {
       const jpName = names.find((n) => /[A-Za-z぀-ヿ一-龯]/.test(n)) || display;
       const e = await cached(`eplus-search-${norm(jpName)}`, 3 * HOUR, () => searchJpConcerts([jpName]), { budgetMs: 2500 });
-      shows.push(...(e.items || []).filter((s) => s.provider === 'pia' || norm(s.title).includes(norm(jpName))).map((s) => ({ ...s, performer: display, artistId: a?.id || null })));
+      /* ぴあ 키워드 검색은 가나로 느슨하게 맞춘다("aespa" → エスパ → 「Viva Espana(エスパーニャ)」).
+         제목에 이름이 없으면 ぴあ 이벤트 페이지의 출연자 목록에서 이름을 확인한 것만 이 아티스트 공연으로 */
+      const hits = [];
+      for (const s of e.items || []) {
+        if (names.some((n) => nameInTitle(s.title, n))) hits.push(s);
+        else if (s.provider === 'pia' && await piaPerforms(s.url, names)) hits.push(s);
+      }
+      shows.push(...hits.map((s) => ({ ...s, performer: display, artistId: a?.id || null })));
     } catch { /* e+ 실패는 무시 */ }
     const seen = new Set();
     await photos.ready();
@@ -978,7 +1069,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const pools = await Promise.all([src.krVisiting(), src.jpKpop(), src.krDomestic()]);
     let shows = [];
     for (const p of pools) shows.push(...(p.items || []));
-    shows = upcomingOnly(shows).filter((x) => norm(x.title).includes(k) || artistHits.some((a) => a.names.some((n) => norm(n).length >= 2 && norm(x.title).includes(norm(n)))));
+    shows = upcomingOnly(shows).filter((x) => nameInTitle(x.title, query) || artistHits.some((a) => a.names.some((n) => nameInTitle(x.title, n))));
     shows = await annotate(shows, { classify: false });
     const seen = new Set();
     shows = groupTours(shows.filter((x) => (seen.has(x.id) ? false : seen.add(x.id)))).sort((a, b) => (a.startDate || '9999').localeCompare(b.startDate || '9999')).slice(0, 30);
@@ -1195,7 +1286,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     };
     const reEsc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const clubLabel = club.name ? new RegExp(`^(OFFICIAL FAN CLUB|公式ファンクラブ|オフィシャルファンクラブ)?\\s*「?${reEsc(club.name)}」?\\s*`, 'i') : null;
-    const cleanLabel = (l) => (clubLabel ? l.replace(clubLabel, '') : l).replace(/^OFFICIAL FAN CLUB\s*「[^」]*」\s*/i, '').replace(/\s*\[\s*/g, ' [').replace(/\s*\]\s*/g, ']').trim() || l;
+    /* 공지 제목·판매 구분의 앞뒤 장식(★…★, ☆, <…>, 〈…〉)은 정보가 아니다 */
+    const deco = (x) => String(x || '').replace(/^[\s★☆◆◇■□●○♪※]+|[\s★☆◆◇■□●○♪※]+$/g, '').replace(/^[<＜〈《]\s*(.+?)\s*[>＞〉》]$/, '$1').trim();
+    const cleanLabel = (l) => deco((clubLabel ? l.replace(clubLabel, '') : l).replace(/^OFFICIAL FAN CLUB\s*「[^」]*」\s*/i, '').replace(/\s*\[\s*/g, ' [').replace(/\s*\]\s*/g, ']').trim()) || l;
     const vkey = (v) => String(v || '').normalize('NFKC').replace(/[\s()（）・·]/g, '').toLowerCase();
     const uniqVenues = (list) => { const m = new Map(); for (const x of list) if (!m.has(vkey(x.venue))) m.set(vkey(x.venue), x.venue); return [...m.values()]; };
     const windows = [];
@@ -1215,7 +1308,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
         const sorted = [...shows].sort((x, y) => x.date.localeCompare(y.date)).filter((x, i, arr) => arr.findIndex((y) => y.date === x.date && vkey(y.venue) === vkey(x.venue)) === i);
         const venues = uniqVenues(sorted);
         return {
-          provider: 'fanclub', title: page.title, performer: a.name, artistId: a.id, origin: a.origin, originSource: 'roster',
+          provider: 'fanclub', title: deco(page.title) || page.title, performer: a.name, artistId: a.id, origin: a.origin, originSource: 'roster',
           venue: venues[0] || null, venueCount: venues.length, city: null, country: dir === 'kr-visiting' ? 'KR' : 'JP',
           startDate: sorted[0]?.date || null, endDate: sorted[sorted.length - 1]?.date || null,
           shows: sorted.slice(0, 60).map((x) => ({ date: x.date, endDate: x.date, venue: x.venue, city: null, url: page.url })),

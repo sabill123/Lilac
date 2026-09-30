@@ -118,6 +118,15 @@ export function convert(v: number | null | undefined, from: string, to: string, 
   return null;
 }
 
+/* 환산가는 영수증이 아니라 감을 잡는 숫자 — 원화는 백 원, 엔화는 십 엔 단위로, 화면 전체에서 한 가지 표기로 */
+export function approxMoney(v: number | null | undefined, from: string, to: string, fx: { jpyKrw?: number } | null) {
+  const c = convert(v, from, to, fx);
+  if (!c) return '';
+  if (to === 'KRW') return t('fx.approxKrw', { v: (Math.round(c / 100) * 100).toLocaleString('ko-KR') });
+  if (to === 'JPY') return t('fx.approxJpy', { v: (Math.round(c / 10) * 10).toLocaleString('ja-JP') });
+  return '';
+}
+
 /* 이미지 — 핫링크 차단을 피하려 referrer 없이. 실패하면 이니셜 판으로 바꾼다 */
 export function img(src: string | null | undefined, alt: string, cls = '', { ratio = '', initial = '', text = false } = {}) {
   const label = (initial || alt || '·').trim();
@@ -179,6 +188,7 @@ export function toast(msg: string) {
 
 /* 예매처가 쓰는 판매 구분 문구를 화면 언어로 */
 const KO2JA: [RegExp, string][] = [
+  [/국내\s*멤버십\s*선구매/g, 'メンバーシップ先行購入'], [/글로벌\s*멤버십\s*선구매/g, 'グローバル メンバーシップ先行購入'], [/멤버십\s*선구매/g, 'メンバーシップ先行購入'], [/선구매/g, '先行購入'],
   [/국내\s*페이지\s*/g, ''], [/글로벌\s*페이지\s*/g, 'グローバル '], [/팬클럽\s*선예매/g, 'ファンクラブ先行'], [/아티스트\s*선예매/g, 'アーティスト先行'],
   [/추가\s*티켓\s*오픈/g, '追加販売'], [/선예매/g, '先行予約'], [/일반\s*예매일?/g, '一般発売'], [/티켓\s*오픈일?/g, '発売日'], [/예매\s*오픈/g, '発売'],
   [/단독판매/g, '独占販売'], [/기타\s*오픈/g, 'その他の販売'],

@@ -54,6 +54,71 @@ export function formatOf(title) {
 /* 알라딘 제목 앞 머리표([수입] [LP] [미개봉] [예약] …)는 형식을 읽은 뒤 떼어 낸다 */
 export const stripTags = (t) => String(t || '').replace(/^(\s*\[[^\]]{1,12}\]\s*)+/, '').trim();
 
+/* ---------- 화면용 정제(모든 판매처 공통, 여러 번 거쳐도 같은 결과) ----------
+   판매처마다 제목에 붙이는 머리표가 달라 화면에 그대로 내면 같은 정보가 두세 번 반복된다.
+     알라딘  "Radwimps (라드윔프스) - あにゅ- (CD)"        → 아티스트 크레딧·형식 꼬리 제거
+     알라딘  "(일본반) 에스파(aespa) - 일본 미니 1집 …"   → 일본반 표시는 edition으로
+     HMV    "《特典付》 …" "《4種セット》 …"               → 특전·세트 수는 필드로
+     Ktown4u "aespa - [2026 LIVE TOUR …] BADGE"           → 아티스트 크레딧 제거
+   형식은 판매처 분류를 공통 코드로 맞춘다(화면에서 언어별로 번역). */
+const nrm = (x) => String(x || '').normalize('NFKC').toLowerCase().replace(/[\s.・·'’()\[\]（）-]/g, '');
+const FORMAT_CODE = [
+  [/^(グッズ|goods|md)$/i, 'Goods'], [/^CDシングル$/i, 'CD Single'], [/^(Blu-?ray( Disc)?|ブルーレイ)$/i, 'Blu-ray'],
+  [/^(アナログ|LP|アナログレコード|Vinyl)$/i, 'LP'], [/^カセット$/i, 'Cassette'], [/^(書籍|本|雑誌)$/i, 'Book'],
+];
+export function formatCode(f) {
+  if (!f) return null;
+  return String(f).split('+').map((p) => { const x = p.trim(); const hit = FORMAT_CODE.find(([re]) => re.test(x)); return hit ? hit[1] : x; }).join('+');
+}
+const creditMatches = (credit, artist, store) => {
+  const c = nrm(credit);
+  if (!c) return false;
+  if (artist && (c.includes(nrm(artist)) || nrm(artist).includes(c))) return true;
+  /* 알라딘은 항상 "아티스트 (별칭) - 제목" 형식: 괄호 별칭이 붙은 짧은 크레딧이면 크레딧으로 본다 */
+  if (store !== 'aladin') return false;
+  /* 알라딘은 항상 "아티스트 (별칭) - 제목" 형식: 괄호 별칭이 붙은 짧은 크레딧, 또는 아티스트 칸이 비어 있을 때의 짧은 크레딧 */
+  return credit.length <= 50 && (/[(（][^)）]+[)）]\s*$/.test(credit.trim()) || (!artist && credit.length <= 40 && !/[\[\]【】「」]/.test(credit)));
+};
+export function tidyOffer(o) {
+  if (!o || typeof o.title !== 'string') return o;
+  let t = o.title.trim();
+  let { edition = null, bonus = null, set = null, artist = null } = o;
+  let region = o.region || null;
+  if (bonus === 'HMV 오리지널 특전') bonus = 'hmv';
+  for (let m; (m = t.match(/^\s*《([^》]{1,16})》\s*/));) {
+    const k = m[1];
+    if (/特典/.test(k)) bonus = bonus || 'bonus';
+    else if (/(\d+)\s*(種|形態|枚)\s*セット/.test(k)) set = Number(k.match(/(\d+)/)[1]);
+    else edition = edition || k;
+    t = t.slice(m[0].length);
+  }
+  for (let m; (m = t.match(/^\s*[(\[]\s*(일본반|한국반|국내반|수입|미개봉|예약)\s*[)\]]\s*/));) {
+    if (m[1] === '일본반') region = 'JP';
+    if (m[1] === '한국반' || m[1] === '국내반') region = 'KR';
+    t = t.slice(m[0].length);
+  }
+  if (o.store === 'aladin' || o.store === 'ktown4u') {
+    const cm = t.match(/^(.{1,60}?)\s+-\s+(.+)$/);
+    if (cm && creditMatches(cm[1], artist, o.store)) {
+      if (!artist) artist = cm[1].replace(/\s*[(（][^)）]*[)）]\s*$/, '').trim() || null;
+      t = cm[2].trim();
+    }
+  }
+  const format = formatCode(o.format);
+  /* 꼬리의 "(CD)" "(Blu-ray)"처럼 형식과 똑같은 표시는 뺀다. "(2LP)" "(CD+DVD)"처럼 정보가 더 있으면 둔다 */
+  const toks = new Set(String(format || '').toLowerCase().split('+').flatMap((x) => [x, x.split(' ')[0]]));
+  t = t.replace(/\s*[(（\[]\s*(CD|LP|DVD|Blu-?ray)\s*[)）\]]\s*$/i, (all, f) => (toks.has(f.toLowerCase().replace(/^blu-?ray$/, 'blu-ray')) ? '' : all)).trim();
+  return { ...o, title: t || o.title, artist, format, edition, bonus, set, region };
+}
+/** 알라딘 상품 페이지의 정확한 발매일(목록에는 월까지만 나온다) */
+export function parseAladinDate(html) {
+  const m = String(html).match(/<meta itemprop="datePublished" content="(\d{4}-\d{2}-\d{2})"/);
+  return m ? m[1] : null;
+}
+export async function aladinReleaseDate(url) {
+  return parseAladinDate(await fetchText(url, { timeout: 12000, retries: 1 }));
+}
+
 function editionOf(title) {
   const m = (title || '').match(/【([^】]*(?:限定|通常|盤|Edition|ver)[^】]*)】|\(([^)]*(?:Limited|Edition|Ver\.?|限定|通常盤)[^)]*)\)|（([^）]*(?:限定|通常)[^）]*)）/i);
   return m ? (m[1] || m[2] || m[3]).trim() : null;
@@ -81,7 +146,9 @@ export async function hmvSearch(query, { limit = 20 } = {}) {
     const list = prices.find((p) => p.label === '価格');
     const member = prices.find((p) => /会員/.test(p.label));
     const rel = (b.match(/発売日<\/div>\s*<span class="separate">[^<]*<\/span>\s*<div class="right">(\d{4})年(\d{2})月(\d{2})日/) || []);
-    const bonus = /オリジナル特典|特典/.test(b.match(/<p class="itemCategory">[\s\S]*?<\/p>/g)?.join(' ') || '');
+    const catText = b.match(/<p class="itemCategory">[\s\S]*?<\/p>/g)?.join(' ') || '';
+    const bonus = /オリジナル特典/.test(catText) || cats.includes('オリジナル特典') ? 'hmv' : /特典/.test(catText) || cats.includes('特典') ? 'bonus' : null;
+    const imported = cats.includes('輸入盤') || /輸入盤/.test(catText);
     const sku = (href.match(/_(\d+)(?:[#?].*)?$/) || [])[1];
     const cartTxt = clean((b.match(/<div class="cartBtn">([\s\S]*?)<\/div>/) || [])[1]);
     const releaseDate = rel[1] ? `${rel[1]}-${rel[2]}-${rel[3]}` : null;
@@ -90,7 +157,7 @@ export async function hmvSearch(query, { limit = 20 } = {}) {
       id: `hmv:${sku || href}`,
       store: 'hmv', storeLabel: STORE_BY_ID.hmv.label,
       title, artist,
-      format: cats.find((c) => /CD|DVD|Blu|LP|アナログ|カセット/i.test(c)) || formatOf(title),
+      format: cats.find((c) => /^(グッズ|CDシングル|CD|DVD|Blu-?ray.*|LP|アナログ.*|カセット|書籍|雑誌)$/i.test(c)) || formatOf(title),
       edition: editionOf(title) || cats.find((c) => /限定|通常/.test(c)) || null,
       catalogNo: null,
       price: list?.value ?? null,
@@ -98,7 +165,8 @@ export async function hmvSearch(query, { limit = 20 } = {}) {
       currency: 'JPY', priceIncludesTax: list ? true : null,
       releaseDate,
       image: img,
-      bonus: bonus ? 'HMV 오리지널 특전' : null,
+      bonus,
+      imported,
       availability: /予約/.test(cartTxt) || future ? 'preorder' : /カート/.test(cartTxt) ? 'instock' : /販売終了|完売/.test(b) ? 'soldout' : 'unknown',
       url: href.replace(/#.*$/, ''),
       fetchedAt,
@@ -202,12 +270,16 @@ async function timed(store, fn) {
   }
 }
 
-function relevance(it, q) {
+export function relevance(it, q) {
   const n = (s) => String(s || '').toLowerCase().replace(/[\s.・]/g, '');
   const qq = n(q);
   let s = 0;
-  if (n(it.artist).includes(qq) || qq.includes(n(it.artist))) s += 3;
-  if (n(it.title).includes(qq)) s += 2;
+  const na = n(it.artist);
+  if (na.length >= 2 && (na.includes(qq) || qq.includes(na))) s += 3; // 빈 아티스트('')는 모든 검색어에 포함돼 버린다
+  /* 로마자 검색어는 단어 경계로("aespa"가 "Viva Espana"에 걸리지 않게) */
+  const latin = /^[\x20-\x7E]+$/.test(String(q || '').trim());
+  const esc = String(q || '').trim().toLowerCase().split(/[\s.·・]+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, (c) => '\\' + c)).join('[\\s.·・]*');
+  if (latin ? esc && new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(halfwidth(String(it.title || '')).toLowerCase()) : n(it.title).includes(qq)) s += 2;
   return s;
 }
 

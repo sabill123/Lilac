@@ -1,5 +1,5 @@
 /* 목록 카드 — 공연·티켓 오픈·뉴스·상품·발매·아티스트·차트 */
-import { esc, safeHref, safeImage, icon, img, fmtRange, fmtDateTime, fmtTime, fmtDay, until, ddayOf, ago, money, convert, saleLabel, genreLabel } from './ui';
+import { esc, safeHref, safeImage, icon, img, fmtRange, fmtDateTime, fmtTime, fmtDay, until, ddayOf, ago, money, saleLabel, genreLabel, approxMoney } from './ui';
 import { withUtm } from './fanclub';
 import { detailHtml } from './detail';
 import type { DetailResponse } from './detail';
@@ -31,7 +31,7 @@ export interface News { id: string; title: string; source: string | null; url: s
 export interface Offer {
   id: string; store: string; storeLabel: string; title: string; artist: string | null; format: string | null; edition: string | null;
   price: number | null; listPrice?: number | null; memberPrice?: number | null; currency: string; releaseDate: string | null; image: string | null;
-  availability: string; url: string; bonus?: string | null; imported?: boolean;
+  availability: string; url: string; bonus?: string | null; imported?: boolean; set?: number | null; region?: string | null; releaseDatePrecision?: string | null;
 }
 export interface Release { id: string; tier: string; artist: string; artistKo?: string; artistId?: string; title: string; titleKo?: string; country: string; type?: string; releaseDate: string; artwork: string | null; trackCount?: number | null; offerCount?: number; upcoming?: boolean }
 export interface ArtistLite { id: string; name: string; nameOriginal?: string | null; nameKo?: string | null; nameJa?: string | null; origin?: string; genre?: string | null; photo?: string | null; artwork?: string | null }
@@ -44,10 +44,15 @@ export const concertRegistry = new ConcertRegistry();
 let closeActiveSheet: (() => void) | null = null;
 let sheetVersion = 0;
 
+/* 예매처마다 "서울특별시" "인천시" "인천"처럼 달라서 한 가지로 */
+export function cityName(city: string | null | undefined) {
+  return String(city || '').trim().replace(/^(서울|부산|대구|인천|광주|대전|울산|세종)(특별자치시|특별시|광역시|시)$/, '$1');
+}
 export function placeOf(c: Concert) {
   const v = c.venue || '';
   if ((c.venueCount || 0) > 1) return t('c.venues', { v, n: (c.venueCount || 1) - 1 });
-  return [v, c.city && c.city !== v ? c.city : ''].filter(Boolean).join(' · ');
+  const city = cityName(c.city);
+  return [v, city && city !== v && !v.includes(city) ? city : ''].filter(Boolean).join(' · ');
 }
 export function whenOf(c: Concert) {
   const r = fmtRange(c.startDate, c.endDate);
@@ -98,7 +103,7 @@ function dateBox(c: Concert) {
   const wd = d ? new Intl.DateTimeFormat(ja ? 'ja-JP' : 'ko-KR', { weekday: 'short', timeZone: 'Asia/Seoul' }).format(d) : '';
   const md = validStart ? `${Number(c.startDate.slice(5, 7))}.${Number(c.startDate.slice(8, 10))}` : (ja ? '日程未定' : '일정 미정');
   const multi = c.endDate && fmtDay(c.endDate) && c.endDate !== c.startDate ? `~ ${Number(c.endDate.slice(5, 7))}.${Number(c.endDate.slice(8, 10))}` : '';
-  return `<span class="datebox" aria-hidden="true"><em>${esc(c.startDate ? c.startDate.slice(0, 4) : '')}</em><b>${esc(md)}</b><span>${esc([wd, multi].filter(Boolean).join(' '))}</span><i>${esc(c.city || c.venue || '')}</i></span>`;
+  return `<span class="datebox" aria-hidden="true"><em>${esc(c.startDate ? c.startDate.slice(0, 4) : '')}</em><b>${esc(md)}</b><span>${esc([wd, multi].filter(Boolean).join(' '))}</span><i>${esc(cityName(c.city) || c.venue || '')}</i></span>`;
 }
 
 export function posterCard(c: Concert) {
@@ -180,26 +185,58 @@ export function newsRow(n: News) {
 
 const AV: Record<string, string> = { preorder: 'g.preorder', instock: 'g.instock', soldout: 'g.soldout', backorder: 'g.backorder' };
 
+/* 판매처 분류를 화면 언어로. 모르는 분류는 그대로 */
+const FORMAT_L: Record<string, [string, string]> = {
+  'CD': ['CD', 'CD'], 'CD Single': ['CD 싱글', 'CDシングル'], 'LP': ['LP', 'LP'], 'DVD': ['DVD', 'DVD'], 'Blu-ray': ['Blu-ray', 'Blu-ray'],
+  'Cassette': ['카세트', 'カセット'], 'Book': ['도서', '書籍'], 'Goods': ['굿즈', 'グッズ'], 'Album': ['앨범', 'アルバム'], 'CD/LP': ['음반', 'CD・LP'],
+  'Kit Album': ['키트 앨범', 'キットアルバム'], 'Photocards': ['포토카드', 'トレカ'], 'Card': ['카드', 'カード'], 'Badge': ['배지', 'バッジ'],
+  'Bag': ['가방', 'バッグ'], 'Slogan': ['슬로건', 'スローガン'], 'Bracelet': ['팔찌', 'ブレスレット'], 'Wallet': ['지갑', '財布'], 'Hat': ['모자', '帽子'],
+  'T-Shirts': ['티셔츠', 'Tシャツ'], 'Pants': ['바지', 'パンツ'], 'Toy': ['토이', 'トイ'], 'Keyring': ['키링', 'キーホルダー'], 'Plush Toys': ['인형', 'ぬいぐるみ'],
+  'Magazines': ['잡지', '雑誌'], 'Season Greeting/Kit': ['시즌 그리팅', 'シーズングリーティング'], 'Snack': ['간식', 'お菓子'], 'Photobook': ['포토북', '写真集'],
+  'Lightstick': ['응원봉', 'ペンライト'], 'Poster': ['포스터', 'ポスター'],
+};
+export function formatLabel(f: string | null | undefined) {
+  if (!f) return '';
+  const i = getLocale() === 'ja' ? 1 : 0;
+  return f.split('+').map((p) => FORMAT_L[p.trim()]?.[i] || p.trim()).join('+');
+}
+const gdate = (d: string) => d.replace(/-/g, '.');
+
 export function goodsCard(g: Offer, fx: { jpyKrw?: number } | null, buyer: string) {
-  const conv = convert(g.price, g.currency, buyer, fx);
   const av = AV[g.availability] ? t(AV[g.availability]) : '';
+  const approx = g.currency !== buyer ? approxMoney(g.price, g.currency, buyer, fx) : '';
+  const meta = [
+    g.releaseDate ? `${gdate(g.releaseDate)} ${t('g.release')}` : '',
+    formatLabel(g.format),
+    g.set ? t('g.set', { n: g.set }) : '',
+    g.region === 'JP' && state.edition !== 'jp' ? t('g.jpPress') : '',
+    g.bonus === 'hmv' ? t('g.bonusHmv') : g.bonus ? t('g.bonusAny') : '',
+  ].filter(Boolean);
   return `<a class="gcard" href="${esc(safeHref(g.url, false))}" target="_blank" rel="noopener">
     ${img(g.image, '', 'square', { ratio: '1/1', initial: g.artist || g.title })}
-    <span class="gcard-store">${esc(g.storeLabel)}${av ? ` · <span class="av av-${esc(g.availability)}">${esc(av)}</span>` : ''}</span>
+    <span class="gcard-store"><span>${esc(g.storeLabel)}</span>${av ? `<span class="gav gav-${esc(g.availability)}">${esc(av)}</span>` : ''}</span>
     <span class="gcard-title">${esc(g.title)}</span>
-    <span class="gcard-price"><b>${money(g.price, g.currency)}</b>${conv ? `<span class="approx">${t('g.approx', { v: money(conv, buyer) })}</span>` : ''}</span>
-    <span class="gcard-meta">${[g.releaseDate ? `${g.releaseDate.replace(/-/g, '.')} ${t('g.release')}` : '', g.format || '', g.bonus ? t('g.bonus') : ''].filter(Boolean).map(esc).join(' · ')}</span>
+    <span class="gcard-price"><b>${money(g.price, g.currency)}</b>${approx ? `<span class="approx">${esc(approx)}</span>` : ''}</span>
+    ${meta.length ? `<span class="gcard-meta">${meta.map(esc).join(' · ')}</span>` : ''}
   </a>`;
 }
 
+/* Apple 표기 꼬리(" - Single" " - EP")는 제목이 아니라 유형이다 */
+export function releaseTitle(title: string) {
+  return String(title || '').replace(/\s+-\s+(Single|EP)$/i, '').trim();
+}
+const REL_TYPE: Record<string, [string, string]> = { single: ['싱글', 'シングル'], ep: ['EP', 'EP'], mini: ['미니앨범', 'ミニアルバム'], album: ['앨범', 'アルバム'] };
 export function releaseCard(r: Release) {
   const href = r.tier === 'curated' ? `#/release/${encodeURIComponent(r.id)}` : `#/goods?q=${encodeURIComponent(r.artist)}`;
-  const artist = state.edition !== 'jp' && r.artistKo ? r.artistKo : r.artist;
+  /* 한글 표기는 원어가 라틴 문자가 아닐 때만(米津玄師 → 요네즈 켄시). Mrs. GREEN APPLE·TWS는 다른 화면처럼 원어 그대로 */
+  const artist = state.edition !== 'jp' && r.artistKo && !/^[\x20-\x7E]+$/.test(r.artist) ? r.artistKo : r.artist;
+  const type = / - EP$/i.test(r.title) ? 'ep' : (r.type || '');
+  const typeL = REL_TYPE[type]?.[getLocale() === 'ja' ? 1 : 0] || '';
   return `<a class="rcard" href="${href}">
     ${img(r.artwork, '', 'square', { ratio: '1/1', initial: r.artist })}
-    <span class="rcard-title">${esc(r.title)}</span>
+    <span class="rcard-title">${esc(releaseTitle(r.title))}</span>
     <span class="rcard-artist">${esc(artist)}</span>
-    <span class="rcard-meta">${r.upcoming ? `<span class="tag tag-accent">${t('g.upcoming')}</span>` : ''}${esc(fmtDay(r.releaseDate, { year: true }))}${r.offerCount ? ` · ${t('g.compare')}` : ''}</span>
+    <span class="rcard-meta">${r.upcoming ? `<span class="tag tag-accent">${t('g.upcoming')}</span>` : ''}${esc([fmtDay(r.releaseDate, { year: true }), typeL].filter(Boolean).join(' · '))}${r.offerCount ? ` · ${t('g.compare')}` : ''}</span>
   </a>`;
 }
 
@@ -247,7 +284,10 @@ export interface ChartEntry { rank: number; title: string; artist: string; artwo
 
 export function chartRow(e: ChartEntry, i: number, { compact = false, sourceLabels = {} as Record<string, string> } = {}) {
   const tr: Track = { title: e.title, artist: e.artist, artwork: e.artwork, appleUrl: e.appleUrl };
-  const src = !compact && e.ranks ? Object.entries(e.ranks).filter(([, v]) => v).map(([k, v]) => `${esc(sourceLabels[k] || k)} ${esc(v)}`).join(' · ') : '';
+  /* 소스별 순위: "Apple Music 6위"처럼. Apple 공식 피드가 Apple Music과 같은 순위면 한 번만 */
+  const rk = e.ranks ? { ...e.ranks } as Record<string, number | null> : null;
+  if (rk && rk.appleRss && rk.apple === rk.appleRss) delete rk.appleRss;
+  const src = !compact && rk ? Object.entries(rk).filter(([, v]) => v).map(([k, v]) => `${esc(sourceLabels[k] || k)} ${esc(t('ch.rankN', { n: v as number }))}`).join(' · ') : '';
   return `<li class="crow" data-track-key="${esc(keyOf(tr))}">
     <span class="crow-rank">${esc(e.rank ?? i + 1)}</span>
     <button class="crow-art" data-play="${i}" aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist })}<span class="crow-play">${icon('i-play', 'ic')}</span><span class="crow-eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
@@ -350,7 +390,7 @@ export function openConcert(id: string) {
     return `<section class="sd-sec fest-sec">${lineHtml}${links}</section>`;
   })() : '';
   /* 같은 공연을 파는 다른 예매처 */
-  const alsoPart = c.kind !== 'festival' && c.alsoAt?.length ? `<section class="sd-sec fest-sec"><h3 class="sheet-h">${getLocale() === 'ja' ? 'ほかのプレイガイド' : '다른 예매처'}</h3><ul class="fest-links">${c.alsoAt.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(providerName({ ...c, provider: l.provider, providerLabel: l.providerLabel || l.provider } as Concert))}</b>${esc(c.title)} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}</ul></section>` : '';
+  const alsoPart = c.kind !== 'festival' && c.alsoAt?.length ? `<section class="sd-sec fest-sec"><h3 class="sheet-h">${getLocale() === 'ja' ? 'ほかのプレイガイド' : '다른 예매처'}</h3><ul class="fest-links">${c.alsoAt.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(providerName({ ...c, provider: l.provider, providerLabel: l.providerLabel || l.provider } as Concert))}</b>${esc(t('d.vendorPage'))} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}</ul></section>` : '';
   if (festPart || alsoPart) sheet.querySelector('#sheetBody')?.insertAdjacentHTML('afterbegin', festPart + alsoPart);
   // 예매처 상품 페이지에서 가격·관람 시간·수령 방법·외국인 예매·팬클럽 회비를 더 불러온다
   const fcPart = c.provider === 'fanclub' ? (sheet.querySelector('.fc-callout')?.outerHTML || '') : '';

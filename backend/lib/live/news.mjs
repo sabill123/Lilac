@@ -32,7 +32,7 @@ export async function googleNews(query, { lang = 'ko', days = 30, limit = 40 } =
     const guid = decodeXml((it.match(/<guid[^>]*>([\s\S]*?)<\/guid>/) || [])[1]);
     if (!title || !link) continue;
     if (SPAM.test(title) || SPAM.test(source || '')) continue;
-    if (/^(YouTube|TikTok|Instagram|X|Twitter|Facebook|note|Hypebeast\.KR)$/i.test(source || '')) continue;
+    if (/^(YouTube|youtu\.be|youtube\.com|m\.youtube\.com|TikTok|tiktok\.com|Instagram|instagram\.com|X|x\.com|Twitter|twitter\.com|Facebook|facebook\.com|note|note\.com|Hypebeast\.KR)$/i.test(source || '')) continue;
     const t = Date.parse(pub);
     items.push({
       id: `gn:${guid || link}`.slice(0, 200),
@@ -143,4 +143,34 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const r = await newsFeed(process.argv.slice(2).length ? process.argv.slice(2) : ['J팝 내한', '일본 밴드 내한 공연'], { lang: 'ko' });
   for (const s of r.sources) console.log(s);
   for (const it of r.items.slice(0, 15)) console.log(it.publishedAt, '|', it.source, '|', it.title, '|', it.topics.join(','));
+}
+
+/* ---------- 매체 이름 ----------
+   Google 뉴스는 일부 매체를 이름 대신 도메인(econovill.com, sports.khan.co.kr)으로 준다.
+   매체 홈페이지의 공식 사이트명(og:site_name, 없으면 <title>의 첫 토막)을 읽어 바꾼다.
+   홈이 없으면(v.daum.net) 상위 도메인(daum.net)으로 한 번 더. 끝내 못 찾으면 null — 도메인을 그대로 둔다. */
+export const looksLikeDomain = (s) => /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(String(s || '').trim());
+export function pickSiteName(html) {
+  const dec = (x) => decodeXml(String(x || '')).replace(/\s+/g, ' ').trim();
+  const og = dec((String(html).match(/<meta[^>]+property=["']og:site_name["'][^>]*content=["']([^"']+)/i) || String(html).match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:site_name/i) || [])[1]);
+  const title = dec((String(html).match(/<title[^>]*>([^<]*)/i) || [])[1]);
+  const short = (x) => x && x.length <= 24 && !/^(home|top|index|トップ|홈)$/i.test(x) && !looksLikeDomain(x);
+  if (short(og)) return og;
+  const seg = title.split(/\s*[|｜—–:：]\s*|\s+-\s+/).map((x) => x.trim()).filter(short).sort((a, b) => a.length - b.length)[0];
+  return seg || null;
+}
+export async function publisherName(domain, { get } = {}) {
+  const d = String(domain || '').toLowerCase().replace(/^www\./, '');
+  if (!looksLikeDomain(d)) return null;
+  const load = get || (async (u) => (await import('./http.mjs')).fetchText(u, { timeout: 9000, retries: 0 }));
+  const tries = [d];
+  const labels = d.split('.');
+  if (labels.length > 2 && !/^(co|or|go|ne|ac)\.[a-z]{2}$/.test(labels.slice(-2).join('.'))) tries.push(labels.slice(1).join('.'));
+  else if (labels.length > 3) tries.push(labels.slice(1).join('.'));
+  for (const host of tries) {
+    for (const scheme of ['https', 'http']) {
+      try { const name = pickSiteName(await load(`${scheme}://${host}/`)); if (name) return name; break; } catch { /* 다음 */ }
+    }
+  }
+  return null;
 }

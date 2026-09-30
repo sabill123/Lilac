@@ -167,17 +167,42 @@ export function titleKey(t) {
     .replace(/^\s*[[［【(（]\s*[^\]］】)）]{1,6}\s*[\]］】)）]\s*/, '') // [서울] [대전] 【東京】
     .replace(/[\s'‘’"“”「」『』〈〉<>《》【】\[\]()（）・·.,:：!！?？~〜～\-–—_/|]/g, '');
 }
+/* 제목 앞의 같은 말 반복("PENTAGON PENTAGON 10th …")은 예매처가 아티스트명과 공연명을 이어 붙인 흔적 */
+export function collapseLead(t, performer = null) {
+  const m = String(t || '').match(/^(.{2,40}?)\s+\1(?=\s|$)/u);
+  if (!m) return String(t || '');
+  const lead = m[1];
+  /* "Baby Baby"처럼 원래 제목인 반복은 두고, 출연자 이름이거나 대문자 표기 이름(PENTAGON)일 때만 */
+  const isName = (performer && halfwidth(performer).toLowerCase() === halfwidth(lead).toLowerCase()) || (lead.length >= 4 && lead === lead.toUpperCase() && /[A-Z]/.test(lead));
+  return isName ? String(t).replace(m[0], lead) : String(t);
+}
+const STOP = new Set(['live', 'tour', 'japan', 'korea', 'seoul', 'tokyo', 'osaka', 'concert', 'fanmeeting', 'fan', 'meeting', 'show', 'world', 'asia', 'arena', 'hall', 'zepp', 'special', 'official', 'edition', 'anniversary', 'album', 'project', 'ライブ', 'ツアー', 'コンサート', 'ファンミーティング', '콘서트', '팬미팅', '내한공연']);
+const tokensOf = (t) => new Set(halfwidth(String(t || '')).toLowerCase().split(/[^a-z0-9\u3040-\u30ff\u4e00-\u9fff\uac00-\ud7a3]+/).filter((x) => x.length >= 4 && !STOP.has(x) && !/^\d+$/.test(x)));
+const venueKey = (v) => halfwidth(String(v || '')).toLowerCase().replace(/[\s()（）・·.\-_/'’‘]/g, '');
+function attach(g, it) {
+  (g.alsoAt ||= []).push({ provider: it.provider, providerLabel: it.providerLabel, url: it.url, status: it.status || null });
+  if (!g.poster && it.poster) g.poster = it.poster;
+  if (it.endDate && (!g.endDate || it.endDate > g.endDate)) g.endDate = it.endDate;
+}
 export function mergeVendors(items) {
+  for (const it of items) if (it && it.title) it.title = collapseLead(it.title, it.performer || null);
   const byKey = new Map();
+  const byPlace = new Map(); // 시작일|공연장 → 대표
   const out = [];
   for (const it of items) {
+    /* 제목 표기가 예매처마다 달라도(キム・キュジョン ↔ KIM KYUJONG(キム・キュジョン)) 같은 날 같은 공연장이고 이름 토큰을 공유하면 같은 공연 */
+    const pk = it.startDate && it.venue ? `${it.startDate}|${venueKey(it.venue)}` : null;
+    const pg = pk && venueKey(it.venue).length >= 3 ? byPlace.get(pk) : null;
+    if (pg && pg.provider !== it.provider && !(pg.alsoAt || []).some((a) => a.provider === it.provider)) {
+      const a = tokensOf(pg.title), b = tokensOf(it.title);
+      const ka = titleKey(pg.title), kb = titleKey(it.title);
+      if ([...a].some((x) => b.has(x)) || (ka.length >= 4 && kb.length >= 4 && (ka.includes(kb) || kb.includes(ka)))) { attach(pg, it); continue; }
+    }
     const k = it.startDate ? `${titleKey(it.title)}|${it.startDate}` : null;
     const g = k && k.length > 12 ? byKey.get(k) : null;
-    if (!g) { if (k) byKey.set(k, it); out.push(it); continue; }
+    if (!g) { if (k) byKey.set(k, it); if (pk && !byPlace.has(pk)) byPlace.set(pk, it); out.push(it); continue; }
     if (g.provider === it.provider) { out.push(it); continue; }
-    (g.alsoAt ||= []).push({ provider: it.provider, providerLabel: it.providerLabel, url: it.url, status: it.status || null });
-    if (!g.poster && it.poster) g.poster = it.poster;
-    if (it.endDate && (!g.endDate || it.endDate > g.endDate)) g.endDate = it.endDate;
+    attach(g, it);
   }
   return out;
 }

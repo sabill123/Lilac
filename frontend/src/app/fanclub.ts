@@ -2,7 +2,7 @@
  *
  * 예매처에 없는 공연도 팬클럽 선행·전용으로 신청할 수 있다. 팬에게는 신청 경로를,
  * 소속사에는 팬클럽 가입 유입을 만든다(가입 버튼은 utm_source=lilac 을 붙이고 클릭 수를 센다). */
-import { esc, icon, img, money, convert, fmtDateTime, until } from './ui';
+import { esc, icon, img, money, fmtDateTime, until, approxMoney } from './ui';
 import { t, getLocale } from './i18n';
 import { buyerCurrency } from './state';
 import { platformOf, clubName, PLATFORM_NAME } from './fcguide';
@@ -55,9 +55,7 @@ export function installFcTracking() {
 /* 원화 환산은 백 원 단위로 — 영수증이 아니라 감을 잡는 숫자 */
 export function approx(v: number | null | undefined, fx: { jpyKrw?: number } | null) {
   const buyer = buyerCurrency();
-  const c = convert(v, 'JPY', buyer, fx);
-  if (!c) return '';
-  return buyer === 'KRW' ? t('fcp.approxWon', { v: (Math.round(c / 100) * 100).toLocaleString('ko-KR') }) : '';
+  return buyer === 'KRW' ? approxMoney(v, 'JPY', 'KRW', fx) : '';
 }
 
 /* 결제 수단 이름 — 한국어 화면에서는 흔한 것만 옮기고 나머지는 원문 그대로 */
@@ -91,11 +89,11 @@ export function fanclubSection(fc: Fanclub | null, artist: { id: string | null; 
   const krw = annual && annual.cur === 'JPY' ? approx(annual.v, fx) : '';
   const href = artist.id ? `#/fanclub/${encodeURIComponent(artist.id)}` : withUtm(fc.entry || fc.home, 'fanclub_join');
   return `<section class="sec fc" id="fanclub">
-    <div class="sec-head"><h2>${t('fc.title')}</h2>${artist.id ? `<a class="more" href="${href}">${t('fc.detail')}</a>` : ''}</div>
+    <div class="sec-head"><h2>${t('fc.title')}</h2></div>
     <a class="fcp-card" href="${href}">
       ${img(f?.image || artist.photo || null, '', 'fcp-img', { ratio: '1/1', initial: club })}
       <span class="fcp-body">
-        <span class="fcp-kicker">${esc([PLATFORM_NAME[plat], t('fc.official')].filter(Boolean).join(' · '))}</span>
+        ${PLATFORM_NAME[plat] ? `<span class="fcp-kicker">${esc(PLATFORM_NAME[plat])}</span>` : ''}
         <b class="fcp-name">${esc(club)}</b>
         <span class="fcp-price">${price ? `<strong>${esc(price)}</strong><em>${esc(per)}${ov ? ` · ${esc(t('fcl.ovs'))}` : ''}</em>${krw ? `<small>${esc(krw)}</small>` : ''}` : `<em>${esc(t('fcp.seePage'))}</em>`}</span>
         <span class="fcp-flags">${ovsState === 'yes' ? `<i class="ok">${esc(t('fc.overseas.yes2'))}</i>` : ovsState === 'no' ? `<i class="ng">${esc(t('fc.overseas.no2'))}</i>` : ''}${f?.languages?.includes('한국어') && getLocale() === 'ko' ? `<i>${esc(t('fc.step1.ko'))}</i>` : ''}${open.length ? `<i class="hot">${esc(t('fcp.openNow'))} ${open.length}</i>` : ''}</span>

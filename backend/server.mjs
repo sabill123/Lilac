@@ -1150,6 +1150,21 @@ async function liveAppleRss(country, budgetMs = 3500) {
   return null;   // 실패·지연 시 호출부가 수집본으로 폴백
 }
 
+let chartNames = { at: 0, map: new Map() };
+async function chartArtistNames() {
+  if (Date.now() - chartNames.at < 10 * 60_000) return chartNames.map;
+  const list = await readJson('artists', []).catch(() => []);
+  const map = new Map();
+  for (const a of Array.isArray(list) ? list : list.artists || []) {
+    for (const n of [a.name, a.nameOriginal, a.nameJa, ...(a.aliases || [])]) {
+      if (!n || !/[A-Za-z]/.test(n)) continue;
+      const k = norm(n);
+      if (k && !map.has(k)) map.set(k, a.nameOriginal && /[A-Za-z]/.test(a.nameOriginal) ? a.nameOriginal : a.name);
+    }
+  }
+  chartNames = { at: Date.now(), map };
+  return map;
+}
 app.get('/api/charts', async (req, res) => {
   const data = await loadCharts();
   if (!data) return res.status(503).json({ error: 'charts not collected yet', hint: 'node backend/collect-charts.mjs' , code: 'ERROR' });
@@ -1161,8 +1176,10 @@ app.get('/api/charts', async (req, res) => {
   /* 전체를 그대로 내보내면 응답이 수백 KB가 되어 파싱만 2초 넘게 걸린다.
      화면이 실제로 쓰는 필드만, 요청한 개수만 보낸다. */
   const limit = Math.min(Math.max(Number(req.query.limit) || 100, 1), 300);
+  /* 차트마다 같은 아티스트를 다르게 쓴다("Mrs.GREEN APPLE" ↔ "Mrs. GREEN APPLE"). 띄어쓰기·기호만 다르면 로스터 표기로 */
+  const canon = await chartArtistNames();
   const slim = (e) => ({
-    rank: e.rank, title: e.title, artist: e.artist,
+    rank: e.rank, title: e.title, artist: canon.get(norm(e.artist)) || e.artist,
     artwork: e.artwork || null, appleUrl: e.appleUrl || null,
     youtubeId: e.youtubeId || null, ytViews: e.ytViews || null,
     ranks: e.ranks || null, sources: e.sources || null, score: e.score,
@@ -2632,7 +2649,14 @@ app.get('/api/artist/:id/tracks', async (req, res) => {
       if (pa !== pb) return pa - pb;                       // 괄호 없는 쪽 먼저
       return (b.releaseDate || '').localeCompare(a.releaseDate || '');
     })
-    .filter((t) => { const k = baseTitle(t.title); if (seenBase.has(k)) return false; seenBase.add(k); return true; })
+    /* 같은 곡이 스토어마다 번역 제목으로 들어온다(あにゅー의 "ピアフ" ↔ Anew의 "Piaf"). 제목은 달라도 발매일과 길이(ms)가 같으면 같은 음원 */
+    .filter((t) => {
+      const k = baseTitle(t.title);
+      const same = t.durationMs && t.releaseDate ? `${t.releaseDate}|${t.durationMs}` : null;
+      if (seenBase.has(k) || (same && seenBase.has(same))) return false;
+      seenBase.add(k); if (same) seenBase.add(same);
+      return true;
+    })
     .slice(0, 10)
     .map((t) => ({ ...t, charted: chartRank.has(norm(t.title)) || chartRank.has(baseTitle(t.title)) }));
 

@@ -306,10 +306,13 @@ img { display: block; max-width: 100%; }
 .gcard, .rcard { display: grid; gap: 4px; min-width: 0; align-content: start; }
 .gcard .media, .rcard .media { margin-bottom: 10px; }
 .gcard .media img { object-fit: contain; background: #fff; }
-.gcard-store { font-size: 12.5px; color: var(--ink-3); font-weight: 600; }
-.av-preorder { color: var(--brand-2); }
-.av-instock { color: var(--ok); }
-.av-soldout { color: var(--ink-4); }
+.gcard-store { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; color: var(--ink-3); font-weight: 600; }
+.gcard-store > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gav { flex: none; white-space: nowrap; }
+.gav::before { content: "·"; margin-right: 6px; color: var(--ink-4); font-weight: 400; }
+.gav-preorder { color: var(--brand-2); }
+.gav-instock { color: var(--ok); }
+.gav-soldout { color: var(--ink-4); }
 .gcard-title, .rcard-title { font-size: 15.5px; line-height: 1.4; font-weight: 600; letter-spacing: -.02em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .gcard-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin-top: 2px; }
 .gcard-price b { font-size: 17px; font-weight: 700; }
@@ -373,7 +376,8 @@ img { display: block; max-width: 100%; }
 .crow-main .crow-src { font-size: 12px; color: var(--ink-4); }
 .crow:hover .crow-main b { text-decoration: underline; text-underline-offset: 3px; }
 .crow.is-playing .crow-main b { color: var(--brand-2); }
-.shelves { display: grid; gap: 40px; margin-bottom: 16px; }
+.shelves { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; margin-bottom: 16px; }
+.shelf-sec { min-width: 0; }
 .shelf-h { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 14px; }
 .shelf { display: grid; grid-auto-flow: column; grid-auto-columns: 156px; gap: 18px; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 6px; scrollbar-width: none; }
 .shelf::-webkit-scrollbar { display: none; }
@@ -1367,8 +1371,8 @@ body { letter-spacing: -.012em; }
 .dday { height: auto; margin-left: 6px; padding: 0; background: none; color: var(--hot); font-size: 12.5px; font-weight: 700; }
 .st-onsale { color: var(--ink); }
 .st-upcoming { color: var(--hot); }
-.av-preorder { color: var(--ink); }
-.av-instock { color: var(--ink-2); }
+.gav-preorder { color: var(--ink); }
+.gav-instock { color: var(--ink-2); }
 .crow:nth-child(-n+3) .crow-rank, .gal-rank li:nth-child(-n+3) .rk { color: var(--ink); }
 .crow.is-playing .crow-main b, .shelf-move, .fcl-open, .fcp-kicker, .fcp-flags .hot, .fc-mini-t em, .like-list em, .sd-more summary, .pdp-tabs a em, .pstep-n, .doc-kicker, .rc, .mini-list .mu, .cmts-n em, .doc-list a, .pd-body a, .cmt-body a { color: var(--brand-2); }
 .pc-best { background: var(--ink); color: #fff; }

@@ -167,5 +167,12 @@ globalThis.fetch = origFetch;
   ok('회원 규약: 회비 5,200엔 · 일본 거주자만', k.fees.annual === 5200 && k.overseas === 'no', JSON.stringify({ a: k.fees.annual, ov: k.overseas }));
 }
 
+{
+  /* 제목에 지난 연도(2023)가 박힌 투어 페이지의 연도 없는 날짜는 다음 해로 밀지 않는다(끝난 투어가 2027년 공연으로 뜨던 문제) */
+  const html = '<html><head><meta property="og:title" content="BACK TO THE LIVE HOUSE TOUR 2023"></head><body><p>6/13(火) Zepp Nagoya</p><p>6/21(水) KT Zepp Yokohama</p></body></html>';
+  const r = parseSalesPage(html, 'https://radwimps.jp/backtothelivehouse/', { now: new Date('2026-09-30T00:00:00Z') });
+  ok('지난 연도 제목의 투어는 그 해 날짜로(미래로 밀지 않음)', r.shows.every((x) => x.date.startsWith('2023-')), JSON.stringify(r.shows));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
