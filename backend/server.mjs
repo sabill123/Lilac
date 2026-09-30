@@ -25,6 +25,7 @@ import { syncReleases } from './lib/sync-releases.mjs';
 import { createLiveService } from './lib/live/service.mjs';
 import { createCommunity } from './lib/community.mjs';
 import { createPersistence } from './lib/persist.mjs';
+import { flushAllKv } from './lib/live/cache.mjs';
 import { cp, access } from 'node:fs/promises';
 
 const DB_DIR = process.env.LILAC_DB_DIR ? path.resolve(process.env.LILAC_DB_DIR) : path.join(__dirname, '..', 'db');
@@ -45,7 +46,7 @@ const PORT = process.env.PORT || 4600;
   }
 }
 /* 사용자 데이터 영속화(DATABASE_URL이 있을 때만). 서버가 파일을 읽기 전에 내려받는다 */
-const persistence = createPersistence({ dbDir: DB_DIR });
+const persistence = createPersistence({ dbDir: DB_DIR, beforeCollected: flushAllKv });
 if (persistence.enabled) {
   try { await persistence.hydrate(); persistence.start(); }
   catch (e) {
@@ -352,7 +353,7 @@ async function fetchJsonRetry(url, tries = 3) {
   return null;
 }
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.4' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.4', uptimeSec: Math.round(process.uptime()), rssMb: Math.round(process.memoryUsage().rss / 1048576) }));
 
 /* ================= Focus Desk / AI 큐레이터 =================
    YouTube ID는 사람이 확인한 허용 목록만 사용한다. LLM은 URL을 만들지 않고
@@ -2732,8 +2733,19 @@ const server = app.listen(PORT, () => { void runBackground(async () => {
   /* 실시간 공연·티켓·뉴스 — 기동 직후 데우고 45분마다 다시 데운다(캐시 TTL보다 짧게) */
   scheduleBackground(() => live.warm(), 1500);
   scheduleBackground(() => live.warm(), LIVE_WARM_MS, true);
-  /* 원천별 주기 동기화 + SSE 알림 (티켓 오픈·뉴스 5분, 공연 10~20분, 팬클럽 접수 30분) */
+  /* 원천별 주기 동기화 + SSE 알림 (티켓 오픈·뉴스 5분, 공연 10~20분, 팬클럽 접수 30분, 페스티벌 1시간) */
   live.startRealtime();
+
+  /* 무료 호스팅(Render free)은 15분 동안 외부 요청이 없으면 잠들고, 잠들면 위 주기 수집이 모두 멈춘다.
+     자기 공개 주소로 10분마다 요청해 깨어 있게 한다(Render 프록시를 거치므로 외부 요청으로 센다).
+     GitHub Actions keepalive는 저장소가 60일 조용하면 꺼지므로 보조로만 둔다. */
+  const selfUrl = process.env.LILAC_SELF_PING_URL || process.env.RENDER_EXTERNAL_URL;
+  if (IS_PRODUCTION && selfUrl && process.env.LILAC_SELF_PING !== '0') {
+    scheduleBackground(async () => {
+      try { await fetch(`${selfUrl.replace(/\/$/, '')}/api/health`, { signal: AbortSignal.timeout(20_000), headers: { 'User-Agent': 'lilac-self-ping' } }); }
+      catch (e) { console.warn('[lilac] self-ping 실패:', e?.message || e); }
+    }, 10 * 60_000, true);
+  }
 
   /* 릴리스 동기화 — 기동 직후 한 번, 이후 6시간마다.
      외부 API 를 44번 호출하므로 부팅을 막지 않도록 백그라운드로 돌린다. */

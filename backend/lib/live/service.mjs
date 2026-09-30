@@ -1455,6 +1455,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     { name: 'goods', every: 20 * MIN, first: 3 * MIN, run: () => refreshRecentGoods() },
     { name: 'roster-identity', every: 15 * MIN, first: 60_000, run: () => repairRoster({ max: 8 }) },
     { name: 'photos', every: 30 * MIN, first: 5 * MIN, run: () => fillPhotos(40) },
+    /* 페스티벌: 6개 예매처 목록 + 라인업·공식 사이트 이미지 보강(사이클당 상한이 있어 매시간 조금씩 채운다) */
+    { name: 'festivals', every: 60 * MIN, first: 4 * MIN, run: async () => { await revalidate('festivals', fetchFestivals); return festivals({ edition: 'kr' }).then((r) => ({ count: r.items?.length ?? null })); } },
   ];
   const syncState = {};
   let realtimeStarted = false;

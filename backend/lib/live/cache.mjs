@@ -150,8 +150,11 @@ export async function peek(key, { ttlMs = null } = {}) {
 }
 
 /* 영속 키-값 (출신국 판정 캐시 등) */
+/* 모든 KV — 종료·백업 직전에 메모리의 변경분을 디스크로 내린다 */
+const ALL_KV = new Set();
+export async function flushAllKv() { await Promise.allSettled([...ALL_KV].map((k) => { clearTimeout(k.timer); return k.flush(); })); }
 export class KV {
-  constructor(name) { this.name = name; this.map = null; this.dirty = false; this.timer = null; }
+  constructor(name) { this.name = name; this.map = null; this.dirty = false; this.timer = null; ALL_KV.add(this); }
   async ready() {
     if (this.map) return this.map;
     this.map = new Map();

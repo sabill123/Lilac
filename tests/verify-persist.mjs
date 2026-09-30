@@ -4,7 +4,7 @@
 import { mkdtemp, mkdir, writeFile, readFile, rm, utimes } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { createPersistence, listUserFiles } from '../backend/lib/persist.mjs';
+import { createPersistence, listUserFiles, mergeCollected, listCollectedFiles } from '../backend/lib/persist.mjs';
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail = '') => { if (cond) { pass++; console.log(`  PASS ${name}`); } else { fail++; console.log(`  FAIL ${name} ${detail}`); } };
@@ -18,6 +18,8 @@ function fakePg() {
     async query(sql, params = []) {
       if (/^CREATE TABLE/.test(sql)) return { rows: [] };
       if (/^SELECT/.test(sql)) return { rows: [...rows.values()] };
+      if (/^INSERT/.test(sql) && Array.isArray(params[0])) { writes++; params[0].forEach((rel, i) => rows.set(rel, { path: rel, body: Buffer.from(params[1][i]), hash: params[2][i], deleted: false })); return { rows: [] }; }
+      if (/^DELETE/.test(sql)) return { rows: [] };
       if (/^INSERT/.test(sql)) { writes++; rows.set(params[0], { path: params[0], body: Buffer.from(params[1]), hash: params[2], deleted: false }); return { rows: [] }; }
       if (/^UPDATE/.test(sql)) { writes++; const r = rows.get(params[0]); if (r) r.deleted = true; return { rows: [] }; }
       throw new Error(`unexpected sql ${sql}`);
@@ -80,6 +82,42 @@ ok('경로 탈출·허용 목록 밖 파일은 복원하지 않는다', !escaped
 ok('DATABASE_URL이 없으면 꺼진다', createPersistence({ dbDir: dirA, url: '' }).enabled === false);
 ok('목록 함수는 허용 경로만', (await listUserFiles(dirA)).every((f) => !/charts|\.tmp$/.test(f.rel)));
 
-for (const d of [dirA, dirB, dirC]) await rm(d, { recursive: true, force: true });
+/* 수집 캐시(live-cache): 1시간 주기 묶음 저장 + 재시작 때 병합 복원 */
+const env = (at, n) => JSON.stringify({ value: { items: Array.from({ length: n }, (_, i) => ({ id: i })) }, at, checkedAt: at });
+ok('병합: 목록 캐시는 수집 시각이 더 새로운 쪽', mergeCollected('live-cache/kr-visiting.json', env(100, 1), env(200, 2)) === env(200, 2) && mergeCollected('live-cache/kr-visiting.json', env(300, 1), env(200, 2)) === null);
+const kvMerged = JSON.parse(mergeCollected('live-cache/kv-name-photos.json', JSON.stringify({ a: { photo: 'seed', at: 5 }, b: { photo: 'seedB', at: 9 } }), JSON.stringify({ a: { photo: 'prod', at: 7 }, b: { photo: 'old', at: 1 }, c: { photo: 'new', at: 3 } })));
+ok('병합: KV는 키마다 더 새로운 값, 양쪽 키 합집합', kvMerged.a.photo === 'prod' && kvMerged.b.photo === 'seedB' && kvMerged.c.photo === 'new', JSON.stringify(kvMerged));
+ok('병합: 디스크에 없으면 저장본', mergeCollected('live-cache/x.json', null, '{"value":1}') === '{"value":1}');
+
+const pg2 = fakePg();
+const dirD = await mkdtemp(path.join(tmpdir(), 'lilac-persist-d-'));
+await mkdir(path.join(dirD, 'live-cache'), { recursive: true });
+await writeFile(path.join(dirD, 'live-cache', 'festivals.json'), env(1000, 3));
+await writeFile(path.join(dirD, 'live-cache', 'kv-event-posters.json'), JSON.stringify({ u1: { img: 'i1', at: 10 } }));
+await writeFile(path.join(dirD, 'live-cache', 'kv-fc-referrals.json'), '{"clicks":1}'); // 사용자 데이터 — 수집 캐시로 올리지 않는다
+await writeFile(path.join(dirD, 'live-cache', 'half.json'), '{"value":'); // 쓰는 중인 파일
+let kvFlushed = 0;
+const d = createPersistence({ dbDir: dirD, connect: async () => pg2, log: quiet, beforeCollected: async () => { kvFlushed++; } });
+await d.hydrate();
+const c1 = await d.flushCollected();
+ok('수집 캐시를 한 번에 묶어 올린다(사용자 파일·깨진 JSON 제외, 올리기 전 KV를 디스크로)', c1.uploaded === 2 && pg2.writes() === 1 && pg2.rows.has('live-cache/festivals.json') && !pg2.rows.has('live-cache/half.json') && kvFlushed === 1, JSON.stringify({ c1, keys: [...pg2.rows.keys()], w: pg2.writes() }));
+ok('수집 캐시가 그대로면 다시 올리지 않는다', (await d.flushCollected()).uploaded === 0);
+ok('사용자 데이터 경로 목록에 수집 캐시는 섞이지 않는다', (await listUserFiles(dirD)).every((f) => !/festivals|event-posters/.test(f.rel)) && (await listCollectedFiles(dirD)).every((f) => !/fc-referrals/.test(f.rel)));
+
+/* 재시작: 새 배포 시드(더 오래된 목록 · 일부 KV)가 깔린 디스크 위로 병합 */
+const dirE = await mkdtemp(path.join(tmpdir(), 'lilac-persist-e-'));
+await mkdir(path.join(dirE, 'live-cache'), { recursive: true });
+await writeFile(path.join(dirE, 'live-cache', 'festivals.json'), env(500, 1));
+await writeFile(path.join(dirE, 'live-cache', 'kv-event-posters.json'), JSON.stringify({ u2: { img: 'seed2', at: 20 } }));
+const e = createPersistence({ dbDir: dirE, connect: async () => pg2, log: quiet });
+const he = await e.hydrate();
+const fest = JSON.parse(await readFile(path.join(dirE, 'live-cache', 'festivals.json'), 'utf8'));
+const posters = JSON.parse(await readFile(path.join(dirE, 'live-cache', 'kv-event-posters.json'), 'utf8'));
+ok('재시작 복원: 더 새로운 저장본 목록 + 시드와 저장본 KV 합집합', fest.value.items.length === 3 && posters.u1?.img === 'i1' && posters.u2?.img === 'seed2' && he.merged === 2, JSON.stringify({ he, posters }));
+const w0 = pg2.writes();
+const ce = await e.flushCollected();
+ok('병합으로 바뀐 KV만 다시 올린다(저장본과 같은 목록은 건너뜀)', ce.uploaded === 1 && pg2.writes() === w0 + 1 && JSON.parse(pg2.rows.get('live-cache/kv-event-posters.json').body.toString()).u2, JSON.stringify(ce));
+
+for (const d of [dirA, dirB, dirC, dirD, dirE]) await rm(d, { recursive: true, force: true });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
