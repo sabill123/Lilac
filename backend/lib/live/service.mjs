@@ -20,7 +20,7 @@ import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanN
 import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts } from './fanclub.mjs';
 import { eventPoster, ogImage } from './posters.mjs';
-import { krFestivals, eplusFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation } from './festivals.mjs';
+import { krFestivals, eplusFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation, eplusOfficialSite } from './festivals.mjs';
 import { fetchText } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
 import { createHash } from 'node:crypto';
@@ -49,6 +49,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const posterQueue = [];
   let posterWorking = false;
   const siteOg = new Map();
+  /* 페스티벌 공식 사이트 첫 화면: 사이트 공통 이미지가 곧 그 페스티벌 이미지다(비교 없이 받는다) */
+  const officialUrls = new Set();
   const posterHost = (it) => { try { const h = new URL(it.url).host; return it.provider === 'fanclub' || /(^|\.)eplus\.jp$/.test(h) ? h : null; } catch { return null; } };
   function eventPosterOf(it) {
     if (!it?.url || it.posterKind === 'official' || !eventPosters.map || !posterHost(it)) return null;
@@ -66,7 +68,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       const siteImage = async (origin) => { if (!siteOg.has(origin)) siteOg.set(origin, fetchText(`${origin}/`, { timeout: 9000, retries: 0, headers: { 'Accept-Language': 'ja' } }).then((h) => ogImage(h, origin)).catch(() => undefined)); return siteOg.get(origin); };
       while (posterQueue.length) {
         const url = posterQueue.shift();
-        const r = await eventPoster(url, { siteImage, body: !/eplus\.jp/.test(url) });
+        const r = await eventPoster(url, officialUrls.has(url) ? { body: false } : { siteImage, body: !/eplus\.jp/.test(url) });
         if (r?.img) {
           /* 서로 다른 공연 페이지 셋 이상이 같은 이미지를 주면 사이트 공통 이미지다(e+ webclip.png) — 모두 없음으로 */
           const same = [...eventPosters.map.entries()].filter(([u, v]) => v?.img === r.img && u !== url);
@@ -786,11 +788,11 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     for (const f of [...items].sort((a, b) => hasMelon(b) - hasMelon(a))) {
       for (const l of f.links.filter((x) => x.provider === 'melon' || x.provider === 'eplus').slice(0, 2)) {
         const prev = festLineups.get(l.url);
-        if (prev && Date.now() - prev.at < 24 * HOUR) continue;
+        if (prev && Date.now() - prev.at < 24 * HOUR && (l.provider !== 'eplus' || 'official' in prev)) continue;
         if (fetched >= 150) break;
         try {
           const html = await fetchText(l.url, { timeout: 12000, retries: 1, headers: { 'Accept-Language': l.provider === 'eplus' ? 'ja' : 'ko' } });
-          festLineups.set(l.url, { names: l.provider === 'melon' ? melonLineup(html) : eplusLineup(html).map((name) => ({ name })), at: Date.now() });
+          festLineups.set(l.url, { names: l.provider === 'melon' ? melonLineup(html) : eplusLineup(html).map((name) => ({ name })), official: l.provider === 'eplus' ? eplusOfficialSite(html) : null, at: Date.now() });
         } catch { /* 다음에 다시 */ }
         fetched++;
         await new Promise((r) => setTimeout(r, 500));
@@ -849,6 +851,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   async function festivals({ edition = 'kr', country = null, budgetMs = 12000 } = {}) {
     const r = await cached('festivals', 3 * HOUR, fetchFestivals, { budgetMs });
     await festLineups.ready();
+    await eventPosters.ready();
     await melonNations.ready();
     await melonByName.ready();
     await origins.ready();
@@ -869,7 +872,15 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
         const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || script || (byName === 'jp' || byName === 'kr' ? byName : null);
         return { name: a ? a.name : n, artistId: a?.id || null, origin: o === 'jp' || o === 'kr' ? o : null };
       });
-      return withKo({ ...f, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });
+      /* 예매처 이미지가 없으면 공식 사이트의 대표 이미지(og:image) */
+      let poster = f.poster, posterKind = f.posterKind;
+      if (!poster) {
+        const off = f.links.map((l) => festLineups.get(l.url)?.official).find(Boolean);
+        const ep = off ? eventPosters.get(off) : null;
+        if (ep?.img && !/webclip|no_thumb|daitai|noimage/i.test(ep.img)) { poster = ep.img; posterKind = 'official'; }
+        else if (off && (!ep || Date.now() - ep.at > 24 * HOUR) && !posterQueue.includes(off)) { posterQueue.push(off); officialUrls.add(off); pumpPosters().catch(() => {}); }
+      }
+      return withKo({ ...f, poster, posterKind, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });
     }).filter((f) => !country || f.country === country);
     if (queue.length) pump().catch(() => {});
     /* 에디션에 맞는 순서: 한국 팬(kr)은 일본 아티스트가 많이 나오는 페스티벌·일본 페스티벌을 먼저 보지 않고 날짜순을 유지하되,

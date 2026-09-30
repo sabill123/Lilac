@@ -1,6 +1,6 @@
 /* 페스티벌 수집 규칙 — 실제 예매처 화면에서 본 배치로 고정한다(네트워크 없음).
  * 실행: node tests/verify-festivals.mjs */
-import { melonAgency, nameSearchNation, melonArtistResults, melonExactMatches, parseEplusFestivalList, eplusLineup, melonLineup, melonNation, groupFestivals, festivalKey, festivalTitle } from '../backend/lib/live/festivals.mjs';
+import { eplusOfficialSite, melonAgency, nameSearchNation, melonArtistResults, melonExactMatches, parseEplusFestivalList, eplusLineup, melonLineup, melonNation, groupFestivals, festivalKey, festivalTitle } from '../backend/lib/live/festivals.mjs';
 import { ogImage, eventPoster } from '../backend/lib/live/posters.mjs';
 
 let pass = 0, fail = 0;
@@ -53,6 +53,7 @@ ok('이름 검색 판정: 한국 법인 소속이면 KR', nameSearchNation([{ na
 ok('이름 검색 판정: 소속사 없는 동명이인은 모름(AsIs)', nameSearchNation([{ nation: 'kr', agency: null }]) === null);
 ok('이름 검색 판정: 그룹과 멤버가 같은 소속이면 KR(KickFlip)', nameSearchNation([{ nation: 'unknown', agency: '(주)JYP엔터테인먼트' }, { nation: 'unknown', agency: '(주)JYP엔터테인먼트' }]) === 'kr');
 ok('이름 검색 판정: 국적이 갈리면 모름(Exile)', nameSearchNation([{ nation: 'jp', agency: null }, { nation: 'other', agency: 'Warner (주)' }]) === null);
+ok('e+ 상세의 공식 사이트 주소', eplusOfficialSite('<p>オフィシャルサイト:<br><a href="https://a-nation.net/">https://a-nation.net/</a></p>') === 'https://a-nation.net/' && eplusOfficialSite('<p>オフィシャルサイト: https://eplus.jp/x</p>') === null);
 ok('og:image 절대 경로', ogImage('<meta property="og:image" content="/s/image/1_13.jpg">', 'https://eplus.jp/sf/detail/1') === 'https://eplus.jp/s/image/1_13.jpg');
 const html = (og, body = '') => `<html><head>${og ? `<meta property="og:image" content="${og}">` : ''}</head><body><header><img src="/logo.png"></header>${body}</body></html>`;
 let r = await eventPoster('https://ini-official.com/feature/tour', { read: async () => html('https://ini-official.com/ogp.jpg', '<img src="/img/btn_join.png"><img src="https://cdn.example.com/info/notice_cd.jpg"><img src="https://cdn.example.com/specialsite/kv.jpg">') });

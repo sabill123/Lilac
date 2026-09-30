@@ -565,6 +565,61 @@
     ]
   },
   {
+    "id": "ap-6817310490",
+    "tier": "discovered",
+    "artistId": "大森元貴",
+    "artist": "大森元貴",
+    "artistKo": "大森元貴",
+    "title": "Let's Start - Single",
+    "titleKo": "Let's Start - Single",
+    "country": "jp",
+    "type": "single",
+    "releaseDate": "2026-09-29",
+    "currency": "JPY",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ed/1c/de/ed1cde4c-9cf0-57a8-fa87-b841f2404bec/4550795047125_cover.png/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/lets-start-single/6817310490?uo=4",
+    "trackCount": 1,
+    "albumArtist": "大森元貴",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/jp/album/lets-start-single/6817310490?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 153,
+        "listCurrency": "JPY",
+        "feeKind": "single",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": false
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "TOWER RECORDS",
+        "storeKo": "타워레코드",
+        "searchUrl": "https://tower.jp/artist/search?kwd=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4"
+      },
+      {
+        "store": "HMV&BOOKS online",
+        "storeKo": "HMV",
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4/"
+      },
+      {
+        "store": "Amazon.co.jp",
+        "storeKo": "아마존 재팬",
+        "searchUrl": "https://www.amazon.co.jp/s?k=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4&i=popular"
+      }
+    ]
+  },
+  {
     "id": "ap-6815890816",
     "tier": "discovered",
     "artistId": "enhypen",
@@ -13289,61 +13344,6 @@
         "store": "알라딘",
         "storeKo": "알라딘",
         "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=%EB%B0%95%EC%9E%AC%EC%A0%95"
-      }
-    ]
-  },
-  {
-    "id": "ap-1877847736",
-    "tier": "discovered",
-    "artistId": "大森元貴",
-    "artist": "大森元貴",
-    "artistKo": "大森元貴",
-    "title": "OITOMA - EP",
-    "titleKo": "OITOMA - EP",
-    "country": "jp",
-    "type": "mini",
-    "releaseDate": "2026-02-24",
-    "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/be/f0/7abef0c4-11f1-4a5c-01e6-05bea707ab13/26UMGIM14302.rgb.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/oitoma-ep/1877847736?uo=4",
-    "trackCount": 6,
-    "albumArtist": "大森元貴",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/oitoma-ep/1877847736?uo=4",
-      "collectedAt": "2026-09-30",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 1120,
-        "listCurrency": "JPY",
-        "feeKind": "album",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": false
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "TOWER RECORDS",
-        "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4"
-      },
-      {
-        "store": "HMV&BOOKS online",
-        "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4/"
-      },
-      {
-        "store": "Amazon.co.jp",
-        "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4&i=popular"
       }
     ]
   },

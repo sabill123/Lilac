@@ -181,3 +181,11 @@ export function nameSearchNation(infos) {
   const set = [...new Set(v)];
   return set.length === 1 ? set[0] : null;
 }
+
+/** e+ 상세의 「オフィシャルサイト: https://…」 — 이미지 없는 페스티벌은 공식 사이트 대표 이미지로 채운다 */
+export function eplusOfficialSite(html) {
+  const t = String(html).replace(/<script[\s\S]*?<\/script>/g, ' ');
+  const m = t.match(/(?:オフィシャルサイト|公式サイト|公式HP|オフィシャルHP)\s*[:：]?\s*(?:<[^>]+>\s*)*(https?:\/\/[^\s"'<>]+)/);
+  if (!m) return null;
+  try { const u = new URL(m[1].replace(/&amp;/g, '&')); return /eplus\.jp$/.test(u.host) ? null : u.href; } catch { return null; }
+}
