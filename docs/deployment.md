@@ -6,6 +6,7 @@
 | 백엔드 | Render `lilac-api` (https://lilac-api-401k.onrender.com, 싱가포르, Free) | 상시 Node 서버: API, SSE, 수집기 |
 | 사용자 데이터 | Neon Postgres `lilac` (싱가포르, Free 0.5GB) | `backend/lib/persist.mjs`가 `lilac_files` 테이블에 동기화 |
 | 깨우기 | GitHub Actions `keepalive` | 10분마다 `/api/health` |
+| 백엔드 배포 | GitHub Actions `deploy-backend` | `backend/**`·`db/**` 변경이 main에 오면 Render 배포 훅 호출(저장소 비밀값 `RENDER_DEPLOY_HOOK`) |
 
 ## 백엔드 환경변수 (Render)
 

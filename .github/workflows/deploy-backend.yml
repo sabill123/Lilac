@@ -1,0 +1,27 @@
+# main에 백엔드 관련 변경이 올라오면 Render 배포 훅을 호출한다.
+# (Render 서비스가 공개 저장소 주소로 연결돼 있어 Render 자체 자동 배포가 꺼져 있다)
+name: deploy-backend
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "db/**"
+      - "package.json"
+      - "package-lock.json"
+      - "render.yaml"
+  workflow_dispatch:
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "RENDER_DEPLOY_HOOK secret missing"; exit 1; fi
+          curl -fsS -X POST "$HOOK" -o /dev/null -w "Render deploy hook HTTP %{http_code}\n"

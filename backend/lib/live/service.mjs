@@ -20,7 +20,7 @@ import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanN
 import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts } from './fanclub.mjs';
 import { eventPoster, ogImage } from './posters.mjs';
-import { krFestivals, eplusFestivals, groupFestivals, melonLineup, eplusLineup, melonNation } from './festivals.mjs';
+import { krFestivals, eplusFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation } from './festivals.mjs';
 import { fetchText } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
 import { createHash } from 'node:crypto';
@@ -44,6 +44,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const eventPosters = new KV('event-posters');
   const festLineups = new KV('fest-lineups');
   const melonNations = new KV('melon-nation');
+  const melonByName = new KV('melon-name');
   eventPosters.ready().catch(() => {});
   const posterQueue = [];
   let posterWorking = false;
@@ -809,6 +810,36 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       nationFetched++;
       await new Promise((r) => setTimeout(r, 300));
     }
+    /* 멜론 ID가 없는 출연자(e+ 라인업의 로마자 이름: CHANYEOL, WINNER …)는 멜론에서 이름이 정확히 같은 아티스트를 찾아 국적을 본다.
+       같은 이름이 여럿이고 국적이 다르면(미국 밴드 Exile ↔ 일본 EXILE) 판정하지 않는다. 한 번 찾은 이름은 30일 동안 다시 찾지 않는다 */
+    await melonByName.ready();
+    const rosterList = await roster();
+    let searched = 0;
+    const infoOf = async (id) => {
+      const known = melonNations.get(id);
+      if (known && 'agency' in known) return known;
+      const html = await fetchText(`https://www.melon.com/artist/detail.htm?artistId=${id}`, { timeout: 9000, retries: 1 });
+      const v = { nation: melonNation(html) || 'unknown', agency: melonAgency(html), at: Date.now() };
+      melonNations.set(id, v);
+      await new Promise((r) => setTimeout(r, 300));
+      return v;
+    };
+    for (const f of items) for (const l of f.links) for (const e of festLineups.get(l.url)?.names || []) {
+      const name = typeof e === 'string' ? e : e?.name;
+      if (!name || e?.melonId || searched >= 120) continue;
+      if (/[぀-ヿ가-힣]/.test(name) || rosterMatch(rosterList, name)) continue;
+      const prev = melonByName.get(norm(name));
+      if (prev && prev.v === 2 && Date.now() - prev.at < 30 * 24 * HOUR) continue;
+      try {
+        const html = await fetchText(`https://www.melon.com/search/artist/index.htm?q=${encodeURIComponent(name)}`, { timeout: 9000, retries: 1 });
+        const hits = melonExactMatches(name, melonArtistResults(html)).slice(0, 3);
+        const infos = [];
+        for (const h of hits) infos.push(await infoOf(h.id).catch(() => ({ nation: 'unknown', agency: null })));
+        melonByName.set(norm(name), { nation: nameSearchNation(infos), ids: hits.map((h) => h.id), v: 2, at: Date.now() });
+      } catch { /* 다음에 다시 */ }
+      searched++;
+      await new Promise((r) => setTimeout(r, 400));
+    }
     return {
       items,
       sources: [...(kr.status === 'fulfilled' ? kr.value.sources : [{ provider: 'kr:festival', ok: false }]), { provider: 'eplus:festival', ok: jp.status === 'fulfilled', count: jp.status === 'fulfilled' ? jp.value.length : 0 }],
@@ -819,6 +850,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const r = await cached('festivals', 3 * HOUR, fetchFestivals, { budgetMs });
     await festLineups.ready();
     await melonNations.ready();
+    await melonByName.ready();
     await origins.ready();
     const list = await roster();
     let queuedNames = 0;
@@ -832,7 +864,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
         const script = /[぀-ヿ]/.test(n) ? 'jp' : /[가-힣]/.test(n) ? 'kr' : f.country === 'JP' && /^[一-龯々〆ヵヶ\s]+$/.test(n) ? 'jp' : null;
         /* 라인업의 나라는 믿을 수 있는 근거만: 로스터, 멜론 아티스트 국적, 표기 문자.
            이름 검색 기반 출신 판정은 무명 밴드를 엉뚱한 나라로 붙여(일본 인디 밴드가 K-POP으로) 쓰지 않는다 */
-        const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || script;
+        const bn = melonByName.get(norm(n));
+        const byName = bn?.v === 2 ? bn.nation : null;
+        const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || script || (byName === 'jp' || byName === 'kr' ? byName : null);
         return { name: a ? a.name : n, artistId: a?.id || null, origin: o === 'jp' || o === 'kr' ? o : null };
       });
       return withKo({ ...f, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });

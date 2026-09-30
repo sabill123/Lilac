@@ -1,6 +1,6 @@
 /* 페스티벌 수집 규칙 — 실제 예매처 화면에서 본 배치로 고정한다(네트워크 없음).
  * 실행: node tests/verify-festivals.mjs */
-import { parseEplusFestivalList, eplusLineup, melonLineup, melonNation, groupFestivals, festivalKey, festivalTitle } from '../backend/lib/live/festivals.mjs';
+import { melonAgency, nameSearchNation, melonArtistResults, melonExactMatches, parseEplusFestivalList, eplusLineup, melonLineup, melonNation, groupFestivals, festivalKey, festivalTitle } from '../backend/lib/live/festivals.mjs';
 import { ogImage, eventPoster } from '../backend/lib/live/posters.mjs';
 
 let pass = 0, fail = 0;
@@ -40,6 +40,19 @@ ok('멜론 출연진: 이름만, 중복 제거', melonLineup(mel).map((x) => x.n
 ok('멜론 마지막 출연자 뒤 설명문을 끌어오지 않는다', melonLineup('<a href="/artist/index.htm?artistId=9" class="txt_name">Midnight Grand Orchestra\n  </a><div>더보기</div><p>공연시간 2026년</p><img src="z.jpg">').map((x) => x.name).join('|') === 'Midnight Grand Orchestra');
 ok('멜론 국적', melonNation('<dt>국적</dt><dd>일본</dd>') === 'jp' && melonNation('<dt>국적</dt>\n<dd>대한민국</dd>') === 'kr');
 
+{
+  const res = melonArtistResults('<a href="javascript:goArtistDetail(\'672857\')" class="x">찬열 ( CHANYEOL )</a><a href="javascript:goArtistDetail(\'724619\')">EXO</a><a href="javascript:goArtistDetail(\'2739460\')">세훈&amp;찬열</a>');
+  ok('멜론 검색: 괄호 속 로마자 이름은 같은 사람', melonExactMatches('CHANYEOL', res).map((x) => x.id).join() === '672857', JSON.stringify(melonExactMatches('CHANYEOL', res)));
+  const kf = [{ id: '1', name: 'KickFlip (킥플립)' }, { id: '2', name: '동현 ( KickFlip )' }, { id: '3', name: 'DJ Kickflip' }];
+  /* '동현 ( KickFlip )'(멤버)는 문법으로 '찬열 ( CHANYEOL )'(본인)과 구별되지 않는다. 멤버와 그룹은 국적이 같아 국적 판정에는 영향이 없다 */
+  ok('멜론 검색: 다른 이름(DJ Kickflip)은 제외', !melonExactMatches('KickFlip', kf).some((x) => x.id === '3') && melonExactMatches('KickFlip', kf).some((x) => x.id === '1'), JSON.stringify(melonExactMatches('KickFlip', kf)));
+  ok('멜론 검색: 동명 결과가 여럿이면 모두 돌려준다(호출자가 국적 충돌을 판단)', melonExactMatches('EXILE', [{ id: 'a', name: 'Exile' }, { id: 'b', name: 'Exile' }]).length === 2);
+}
+ok('소속사 추출', melonAgency('<dt>소속사</dt>\n<dd>(주)SM엔터테인먼트</dd>') === '(주)SM엔터테인먼트');
+ok('이름 검색 판정: 한국 법인 소속이면 KR', nameSearchNation([{ nation: 'other', agency: '(주)SM엔터테인먼트' }]) === 'kr');
+ok('이름 검색 판정: 소속사 없는 동명이인은 모름(AsIs)', nameSearchNation([{ nation: 'kr', agency: null }]) === null);
+ok('이름 검색 판정: 그룹과 멤버가 같은 소속이면 KR(KickFlip)', nameSearchNation([{ nation: 'unknown', agency: '(주)JYP엔터테인먼트' }, { nation: 'unknown', agency: '(주)JYP엔터테인먼트' }]) === 'kr');
+ok('이름 검색 판정: 국적이 갈리면 모름(Exile)', nameSearchNation([{ nation: 'jp', agency: null }, { nation: 'other', agency: 'Warner (주)' }]) === null);
 ok('og:image 절대 경로', ogImage('<meta property="og:image" content="/s/image/1_13.jpg">', 'https://eplus.jp/sf/detail/1') === 'https://eplus.jp/s/image/1_13.jpg');
 const html = (og, body = '') => `<html><head>${og ? `<meta property="og:image" content="${og}">` : ''}</head><body><header><img src="/logo.png"></header>${body}</body></html>`;
 let r = await eventPoster('https://ini-official.com/feature/tour', { read: async () => html('https://ini-official.com/ogp.jpg', '<img src="/img/btn_join.png"><img src="https://cdn.example.com/info/notice_cd.jpg"><img src="https://cdn.example.com/specialsite/kv.jpg">') });

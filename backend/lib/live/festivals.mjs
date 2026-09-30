@@ -145,3 +145,39 @@ export function groupFestivals(items, { today = new Date(Date.now() + 9 * 3600e3
   }
   return [...map.values()].sort((a, b) => (a.startDate || '9999').localeCompare(b.startDate || '9999'));
 }
+
+/* 멜론 아티스트 검색 결과 — [{ id, name }] */
+export function melonArtistResults(html) {
+  const out = [];
+  for (const m of String(html).matchAll(/goArtistDetail\('(\d+)'\)[^>]*>([\s\S]{0,200}?)<\/a>/g)) {
+    const name = m[2].replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+    if (name && !out.some((x) => x.id === m[1])) out.push({ id: m[1], name });
+  }
+  return out;
+}
+/* 검색어와 이름이 정확히 같은 결과만(괄호 안 표기 포함): "찬열 ( CHANYEOL )" ↔ CHANYEOL, "KickFlip (킥플립)" ↔ KickFlip.
+   "세훈&찬열"·"동현 ( KickFlip )"처럼 멤버·유닛 결과는 괄호 밖 이름이 달라 제외한다 */
+const nk = (s) => halfwidth(String(s || '')).toLowerCase().replace(/[\s'’"“”.·・!！?？\-_]/g, '');
+export function melonExactMatches(query, results) {
+  const q = nk(query);
+  if (!q) return [];
+  return results.filter((r) => {
+    const outside = r.name.replace(/\([^)]*\)/g, '').trim();
+    const inside = [...r.name.matchAll(/\(([^)]*)\)/g)].map((m) => m[1].trim());
+    if (nk(outside) === q) return true;
+    /* 괄호 안이 검색어: 같은 사람의 다른 표기(찬열 ( CHANYEOL ))이거나 소속 그룹 표기(동현 ( KickFlip )). 둘 다 국적은 같다 */
+    return inside.some((x) => nk(x) === q) && !/[&,]/.test(outside) && inside.length === 1 && !/[A-Za-z]/.test(outside);
+  });
+}
+
+/** 멜론 아티스트 페이지의 소속사 — 이름 검색으로 찾은 동명이인을 거르는 근거(소속사가 없는 무명 동명이인은 판정하지 않는다) */
+export function melonAgency(html) {
+  const m = String(html).match(/소속사<\/dt>\s*<dd[^>]*>([\s\S]{0,120}?)<\/dd>/);
+  return m ? m[1].replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim() || null : null;
+}
+/** 이름 검색 결과의 판정: 일본 국적이면 jp, 한국 법인(주식회사·(주)) 소속이면 kr, 그 밖에는 모른다 */
+export function nameSearchNation(infos) {
+  const v = infos.map((x) => (x.nation === 'jp' ? 'jp' : x.agency && /\(주\)|주식회사|㈜/.test(x.agency) ? 'kr' : x.nation === 'kr' && x.agency ? 'kr' : null)).filter(Boolean);
+  const set = [...new Set(v)];
+  return set.length === 1 ? set[0] : null;
+}
