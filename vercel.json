@@ -22,7 +22,7 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "https://lilac-api.onrender.com/api/$1"
+      "dest": "https://lilac-api-401k.onrender.com/api/$1"
     },
     {
       "src": "/(?:db|server|backend|scripts|tests|docs|node_modules|logs|tmp|credentials|__qa)(?:/.*)?",

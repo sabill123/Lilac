@@ -13,7 +13,7 @@ jobs:
       - name: ping backend
         run: |
           for i in 1 2 3; do
-            curl -fsS --max-time 60 "${{ vars.LILAC_API_URL || 'https://lilac-api.onrender.com' }}/api/health" && exit 0
+            curl -fsS --max-time 60 "${{ vars.LILAC_API_URL || 'https://lilac-api-401k.onrender.com' }}/api/health" && exit 0
             sleep 10
           done
           exit 1
