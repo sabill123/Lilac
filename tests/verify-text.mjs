@@ -43,5 +43,18 @@ for (const [title, name, want] of [
   ['Mrs.GREEN APPLE ARENA', 'Mrs. GREEN APPLE', true], ['EXO-SC', 'EXO', true], ['キム・キュジョン ライブ', 'キム・キュジョン', true], ['요네즈 켄시 내한', '요네즈켄시', true],
 ]) ok(`이름 일치: "${name}" in "${title}" = ${want}`, nameInTitle(title, name) === want);
 
+{
+  /* 끝나지 않는 원천 요청이 캐시 키를 영구히 막지 않는다: 상한을 넘기면 실패로 끝나고, 다음 요청은 새로 받는다 */
+  process.env.LILAC_REFRESH_DEADLINE_MS = '300';
+  const { cached, initCache } = await import('../backend/lib/live/cache.mjs');
+  const { mkdtemp } = await import('node:fs/promises'); const { tmpdir } = await import('node:os'); const path = await import('node:path');
+  initCache(await mkdtemp(path.join(tmpdir(), 'lilac-deadline-')));
+  const hung = () => new Promise(() => {});
+  const first = await cached('k-hung', 60000, hung, { budgetMs: 50, retryAfterMs: 0 });
+  await new Promise((r) => setTimeout(r, 450));
+  const second = await cached('k-hung', 60000, async () => ({ items: [{ id: 1 }], sources: [{ provider: 'x', ok: true }] }), { budgetMs: 500 });
+  ok('걸린 갱신은 상한 뒤 풀리고 다음 요청이 새로 받는다', first.pending === true && second.items?.length === 1, JSON.stringify({ first: first.cache?.state, second: second.cache?.state }));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

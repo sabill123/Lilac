@@ -68,13 +68,21 @@ function allFailed(v) {
   return s.length > 0 && s.every((x) => !x.ok);
 }
 
+/* 갱신 한 번의 상한. 원천 요청 하나가 끝나지 않으면(운영에서 굿즈 검색 하나가 수십 분 걸린 채 남았다) 그 키를 기다리는
+   모든 요청과 주기 작업이 함께 멈춘다. 상한을 넘기면 실패로 처리하고 이전 값을 지킨 채 다음 요청에서 다시 받는다.
+   가장 긴 정상 갱신(페스티벌 ~100초)보다 넉넉하게. */
+export const REFRESH_DEADLINE_MS = Number(process.env.LILAC_REFRESH_DEADLINE_MS) || 240_000;
+function withDeadline(p, ms, key) {
+  let t;
+  return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`refresh timeout ${Math.round(ms / 1000)}s: ${key}`)), ms); t.unref?.(); })]).finally(() => clearTimeout(t));
+}
 async function refresh(key, fn) {
   if (inflight.has(key)) return inflight.get(key);
   const p = Promise.resolve().then(async () => {
     const prev = mem.get(key);
     const t0 = Date.now();
     try {
-      const value = await fn();
+      const value = await withDeadline(Promise.resolve().then(fn), REFRESH_DEADLINE_MS, key);
       const empty = !value || (Array.isArray(value.items) && value.items.length === 0);
       if (empty && allFailed(value) && !prev?.value) {
         throw new Error((value.sources || []).map((s) => (s.provider || s.store) + ': ' + (s.error || 'unavailable')).join('; '));

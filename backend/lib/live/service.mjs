@@ -1563,7 +1563,12 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       const st = (syncState[job.name] = { every: job.every / 1000, runs: 0, lastAt: null, lastMs: null, lastError: null, next: null });
       const tick = async () => {
         const t0 = Date.now();
-        try { const r = await job.run(); st.lastResult = typeof r === 'number' ? r : r && typeof r === 'object' && !('value' in r) && !('items' in r) ? r : undefined; st.lastError = r?.lastError || r?.cache?.lastError || null; } catch (e) { st.lastError = String(e?.message || e); }
+        try {
+          /* 작업 하나가 끝나지 않으면 다음 주기가 영영 오지 않는다 — 주기의 3배(최소 5분)를 넘기면 실패로 넘긴다 */
+          const cap = Math.max(5 * MIN, job.every * 3);
+          let capT;
+          const r = await Promise.race([job.run(), new Promise((_, rej) => { capT = setTimeout(() => rej(new Error(`job timeout ${Math.round(cap / 1000)}s`)), cap); capT.unref?.(); })]).finally(() => clearTimeout(capT));
+          st.lastResult = typeof r === 'number' ? r : r && typeof r === 'object' && !('value' in r) && !('items' in r) ? r : undefined; st.lastError = r?.lastError || r?.cache?.lastError || null; } catch (e) { st.lastError = String(e?.message || e); }
         st.runs++;
         st.lastAt = new Date().toISOString();
         st.lastMs = Date.now() - t0;
