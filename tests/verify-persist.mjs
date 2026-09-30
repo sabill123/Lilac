@@ -118,6 +118,17 @@ const w0 = pg2.writes();
 const ce = await e.flushCollected();
 ok('병합으로 바뀐 KV만 다시 올린다(저장본과 같은 목록은 건너뜀)', ce.uploaded === 1 && pg2.writes() === w0 + 1 && JSON.parse(pg2.rows.get('live-cache/kv-event-posters.json').body.toString()).u2, JSON.stringify(ce));
 
+/* 무중단 배포: 옛 인스턴스가 종료 직전 올린 키(u9)를, 그보다 먼저 복원한 새 인스턴스의 업로드가 지우지 않는다 */
+const stored = JSON.parse(pg2.rows.get('live-cache/kv-event-posters.json').body.toString());
+stored.u9 = { img: 'old-instance-last', at: 99 };
+pg2.rows.set('live-cache/kv-event-posters.json', { path: 'live-cache/kv-event-posters.json', body: Buffer.from(JSON.stringify(stored)), hash: 'old', deleted: false });
+await writeFile(path.join(dirE, 'live-cache', 'kv-event-posters.json'), JSON.stringify({ ...posters, u3: { img: 'new-instance', at: 50 } }));
+const later2 = new Date(Date.now() + 9000);
+await utimes(path.join(dirE, 'live-cache', 'kv-event-posters.json'), later2, later2);
+await e.flushCollected();
+const after = JSON.parse(pg2.rows.get('live-cache/kv-event-posters.json').body.toString());
+ok('KV 업로드는 저장본과 키 단위 병합(옛 인스턴스 마지막 키 보존 + 새 키 추가)', after.u9?.img === 'old-instance-last' && after.u3?.img === 'new-instance' && after.u1 && after.u2, JSON.stringify(after));
+
 for (const d of [dirA, dirB, dirC, dirD, dirE]) await rm(d, { recursive: true, force: true });
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

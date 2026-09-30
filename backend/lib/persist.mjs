@@ -190,12 +190,24 @@ export function createPersistence({ url = process.env.DATABASE_URL, dbDir, inter
       }
       if (!batch.length) return { uploaded: 0 };
       const p = await db();
+      /* KV는 올리기 전에 저장본과 키 단위로 합친다. Render 무중단 배포는 새 인스턴스를 먼저 띄우고 옛 인스턴스를 나중에 끄므로,
+         옛 인스턴스가 종료 직전에 올린 키를 새 인스턴스의 파일 통째 업로드가 지우지 않게 */
+      const kvs = batch.filter((x) => /\/kv-[^/]+\.json$/.test(x.f.rel));
+      if (kvs.length) {
+        const { rows } = await p.query('SELECT path, body FROM lilac_files WHERE path = ANY($1::text[]) AND deleted = false', [kvs.map((x) => x.f.rel)]);
+        const byPath = new Map(rows.filter((r) => kvs.some((x) => x.f.rel === r.path)).map((r) => [r.path, Buffer.from(r.body).toString('utf8')]));
+        for (const x of kvs) {
+          const stored = byPath.get(x.f.rel);
+          const merged = stored ? mergeCollected(x.f.rel, x.buf.toString('utf8'), stored) : null;
+          if (merged != null && merged !== stored) x.upload = Buffer.from(merged);
+        }
+      }
       for (let i = 0; i < batch.length; i += 50) {
         const part = batch.slice(i, i + 50);
         await p.query(`INSERT INTO lilac_files (path, body, hash, updated_at, deleted)
           SELECT u.path, u.body, u.hash, now(), false FROM unnest($1::text[], $2::bytea[], $3::text[]) AS u(path, body, hash)
           ON CONFLICT (path) DO UPDATE SET body = EXCLUDED.body, hash = EXCLUDED.hash, updated_at = now(), deleted = false`,
-        [part.map((x) => x.f.rel), part.map((x) => x.buf), part.map((x) => x.hash)]);
+        [part.map((x) => x.f.rel), part.map((x) => x.upload || x.buf), part.map((x) => (x.upload ? sha(x.upload) : x.hash))]);
         for (const x of part) seenCollected.set(x.f.rel, { mtimeMs: x.f.mtimeMs, size: x.f.size, hash: x.hash });
       }
       await p.query(`DELETE FROM lilac_files WHERE path LIKE 'live-cache/detail-%' AND updated_at < now() - interval '14 days'`).catch(() => {});
