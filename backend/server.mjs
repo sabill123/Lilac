@@ -2740,9 +2740,13 @@ const server = app.listen(PORT, () => { void runBackground(async () => {
      자기 공개 주소로 10분마다 요청해 깨어 있게 한다(Render 프록시를 거치므로 외부 요청으로 센다).
      GitHub Actions keepalive는 저장소가 60일 조용하면 꺼지므로 보조로만 둔다. */
   const selfUrl = process.env.LILAC_SELF_PING_URL || process.env.RENDER_EXTERNAL_URL;
+  let selfPingLogged = false;
   if (IS_PRODUCTION && selfUrl && process.env.LILAC_SELF_PING !== '0') {
     scheduleBackground(async () => {
-      try { await fetch(`${selfUrl.replace(/\/$/, '')}/api/health`, { signal: AbortSignal.timeout(20_000), headers: { 'User-Agent': 'lilac-self-ping' } }); }
+      try {
+        const r = await fetch(`${selfUrl.replace(/\/$/, '')}/api/health`, { signal: AbortSignal.timeout(20_000), headers: { 'User-Agent': 'lilac-self-ping' } });
+        if (!selfPingLogged) { selfPingLogged = true; console.log(`[lilac] self-ping 동작 중 (HTTP ${r.status}, 10분 간격)`); }
+      }
       catch (e) { console.warn('[lilac] self-ping 실패:', e?.message || e); }
     }, 10 * 60_000, true);
   }
