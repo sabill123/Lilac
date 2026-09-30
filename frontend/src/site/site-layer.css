@@ -1,0 +1,9 @@
+/* 랜딩 스타일을 앱과 같은 레이어 체계에 얹는다.
+
+   왜: site.css 는 앱 style.css 와 별개로 자라온 파일이라 레이어 밖에 있었다.
+   레이어 밖 CSS 는 레이어 안의 모든 규칙을 이기므로, 앱 시스템(tokens/base/
+   components)이 랜딩에 닿지 않고 두 체계가 조용히 갈라진다.
+   site 레이어로 내려서, 필요하면 앱 시스템이 위에서 조정할 수 있게 한다. */
+@layer legacy, site, tokens, base, components, pages, motion;
+@import url('./site.css') layer(site);
+@import url('./landing-immersive.css') layer(pages);

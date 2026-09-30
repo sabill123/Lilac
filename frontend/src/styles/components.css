@@ -1,0 +1,165 @@
+/* 컴포넌트 — 화면 전체에서 같은 역할은 같은 모양이어야 한다.
+   옛 클래스명은 유지하되(마크업을 안 건드리려고) 모양만 시스템으로 맞춘다. */
+
+/* ── 섹션 헤더 ─────────────────────────────────────────── */
+.page-section { padding-top: var(--section-gap); padding-bottom: 0; }
+.page-section + .page-section { border-top: 0; }           /* 구분선 대신 간격으로 나눈다 (Spotify/Apple 방식) */
+.sec-head { display: flex; align-items: baseline; gap: var(--s-3); margin-bottom: var(--section-head-gap); }
+.sec-head h2 { margin: 0; }
+.sec-sub { font-size: var(--fs-sm); color: var(--ink-muted); font-weight: var(--fw-regular); }
+.sec-link { margin-left: auto; font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--ink-muted); min-height: 34px; padding: 0 var(--s-1); }
+.sec-link:hover { color: var(--ink); }
+.page-head { margin-bottom: var(--s-5); }
+.page-title { margin: 0 0 var(--s-2); }
+.page-desc { font-size: var(--fs-base); color: var(--ink-muted); max-width: 64ch; margin: 0; }
+
+/* ── 버튼 ─────────────────────────────────────────────── */
+.btn-play-w, .btn-pill, .btn-buy, .focus-primary, .fd-go.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  min-height: 44px; padding: 0 var(--s-5); border-radius: var(--r-sm);
+  background: var(--accent); color: var(--bg); font-size: var(--fs-base); font-weight: var(--fw-bold);
+  border: 0; text-decoration: none; cursor: pointer;
+}
+.btn-sec, .btn-out, .st-more, .tb-connect, .focus-quiet {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  min-height: 44px; padding: 0 var(--s-4); border-radius: var(--r-sm);
+  background: var(--surface-2); color: var(--ink); font-size: var(--fs-base); font-weight: var(--fw-medium);
+  border: 0; box-shadow: var(--hairline-1); text-decoration: none; cursor: pointer;
+}
+.btn-play-w .ic, .btn-sec .ic { width: 18px; height: 18px; }
+.play-big { width: 52px; height: 52px; border-radius: var(--r-pill); background: var(--accent-bright); color: var(--accent-bright-ink); }
+.btn-pill.sm { min-height: 36px; padding: 0 var(--s-4); font-size: var(--fs-sm); }
+
+/* ── 칩 / 세그먼트 ─────────────────────────────────────── */
+.chip, .seg-btn, .rel-filter, .faq-cat, .lib-tab, .fd-link {
+  display: inline-flex; align-items: center; gap: var(--s-2);
+  min-height: 36px; padding: 0 var(--s-4); border-radius: var(--r-pill);
+  background: var(--surface-2); color: var(--ink); font-size: var(--fs-sm); font-weight: var(--fw-medium);
+  border: 0; box-shadow: none; text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+.chip.on, .seg-btn.on, .rel-filter.on, .faq-cat.on, .lib-tab.on { background: var(--ink); color: var(--bg); }
+.chip .cnt { font-size: var(--fs-xs); color: var(--ink-muted); }
+.chip.on .cnt { color: inherit; opacity: .7; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.seg { display: inline-flex; gap: var(--s-1); padding: var(--s-1); border-radius: var(--r-pill); background: var(--surface-1); box-shadow: var(--hairline-1); }
+.seg .seg-btn { background: transparent; }
+.seg .seg-btn.on { background: var(--ink); color: var(--bg); }
+
+/* ── 배지 (정보성) ─────────────────────────────────────── */
+.src-badge, .p-flag, .p-ed, .rel-card-tag, .rel-card-tier, .fd-cc, .sch-type, .mini-rank, .rel-card-warn {
+  display: inline-flex; align-items: center; min-height: 20px; padding: 0 7px; border-radius: var(--r-sm);
+  font-size: 11px; font-weight: var(--fw-medium); letter-spacing: 0; line-height: 1;
+}
+
+/* ── 카드 (앨범·아티스트 셸프) ─────────────────────────── */
+.shelf { grid-auto-columns: clamp(144px, 13vw, 180px); gap: var(--s-4); }
+.card { padding: 0; background: transparent; border-radius: var(--r-md); }
+.card .cover { border-radius: var(--r-sm); box-shadow: var(--elev-1); overflow: hidden; aspect-ratio: 1; margin-bottom: var(--s-3); }
+.card.round .cover { border-radius: 50%; }
+.card .c-title { font-size: var(--fs-base); font-weight: var(--fw-medium); line-height: var(--lh-snug); margin: 0 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .c-sub { font-size: var(--fs-sm); color: var(--ink-muted); }
+.card .hover-play { width: 44px; height: 44px; right: var(--s-2); bottom: var(--s-2); background: var(--accent-bright); color: var(--accent-bright-ink); box-shadow: var(--elev-2); }
+.card.expanded, .card:hover { background: transparent; }
+.card.expanded { transform: none; }
+.card:hover .cover { box-shadow: var(--elev-2); }
+
+/* ── 상품 카드 ───────────────────────────────────────── */
+.store-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--s-5) var(--s-4); }
+.p-card { border-radius: var(--r-md); padding: 0; background: transparent; }
+.p-card .p-img { border-radius: var(--r-sm); box-shadow: var(--elev-1); margin-bottom: var(--s-3); }
+.p-card .p-brand { margin: 0 0 var(--s-1); font-size: var(--fs-xs); letter-spacing: 0; text-transform: none; color: var(--ink-muted); font-weight: var(--fw-medium); }
+.p-card .p-name { font-size: var(--fs-base); font-weight: var(--fw-medium); color: var(--ink); line-height: var(--lh-snug); margin: 0; }
+.p-card .p-price { font-size: var(--fs-base); font-weight: var(--fw-bold); margin-top: var(--s-1); }
+.p-sub { font-size: var(--fs-sm); color: var(--ink-muted); margin-top: 2px; }
+
+/* ── 릴리스 카드 (판매처 비교 진입) ────────────────────── */
+.rel-card {
+  display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: var(--s-4);
+  padding: var(--s-3); border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1);
+  transform: none;
+}
+.rel-card:hover { background: var(--surface-2); transform: none; }
+.rel-card-art { width: 72px; height: 72px; border-radius: var(--r-sm); overflow: hidden; display: grid; place-items: center; background: var(--surface-2); }
+.rel-card-art img { width: 100%; height: 100%; object-fit: cover; }
+.rel-card-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; align-items: flex-start; text-align: left; }
+.rel-card-top { display: flex; gap: var(--s-1); }
+.rel-card b { font-size: var(--fs-base); font-weight: var(--fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.rel-card i { font-size: var(--fs-sm); }
+.rel-card-facts { font-size: var(--fs-xs); margin: 0; }
+.rel-strip-cards { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--s-3); }
+
+/* ── 행 (차트·트랙·일정) ───────────────────────────────── */
+.rk-row, .rank-list.big .rk-row, .t-row { border-radius: var(--r-sm); }
+.rk-row:hover, .rank-list.big .rk-row:hover, .t-row:hover { background: var(--surface-2); }
+.rk-title, .t-title .tt b { font-size: var(--fs-base); font-weight: var(--fw-medium); }
+.rk-artist, .t-title .tt span { font-size: var(--fs-sm); color: var(--ink-muted); }
+.rk-n { font-size: var(--fs-base); font-weight: var(--fw-medium); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.sch-row { border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1); }
+.sch-row:hover { background: var(--surface-2); }
+.sch-title { font-size: var(--fs-base); font-weight: var(--fw-medium); }
+
+/* ── 입력 ───────────────────────────────────────────── */
+.auth-card input, .mp-field input, .st-bar select, .tb-search, .lib-search input, .contact-form input {
+  min-height: 44px; border-radius: var(--r-md); background: var(--surface-2); box-shadow: var(--hairline-1); border: 0;
+  color: var(--ink); font-size: var(--fs-base); padding: 0 var(--s-4);
+}
+.auth-card input:focus, .mp-field input:focus { box-shadow: var(--hairline-2), var(--focus-ring); border: 0; }
+.auth-card label { font-size: var(--fs-sm); color: var(--ink-muted); font-weight: var(--fw-medium); }
+.auth-card { border-radius: var(--r-lg); background: var(--surface-1); box-shadow: var(--hairline-1); padding: var(--s-6); }
+.auth-card h1 { font-size: var(--fs-2xl); }
+
+/* ── 빈 상태 · 안내 박스 ───────────────────────────────── */
+.empty-box { border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1); padding: var(--s-6); text-align: center; color: var(--ink-muted); font-size: var(--fs-base); }
+.empty-box p { margin: var(--s-2) 0 0; color: var(--ink); font-weight: var(--fw-medium); }
+.empty-box span { display: block; margin-top: var(--s-1); font-size: var(--fs-sm); }
+.help-note, .fd-note { font-size: var(--fs-sm); }
+
+/* ── 스켈레톤 ─────────────────────────────────────────── */
+.sk { border-radius: var(--r-sm); background: linear-gradient(90deg, var(--surface-1) 0%, var(--surface-3) 50%, var(--surface-1) 100%); background-size: 200% 100%; animation: sk-shimmer 1.4s var(--ease-standard) infinite; }
+@keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ── 토스트 ─────────────────────────────────────────── */
+.toast { border-radius: var(--r-md); background: var(--ink); color: var(--bg); font-size: var(--fs-sm); font-weight: var(--fw-medium); padding: var(--s-3) var(--s-4); box-shadow: var(--elev-2); }
+
+/* ── 상세 접기(details) ───────────────────────────────── */
+.fd-mech { border-radius: var(--r-md); }
+.fd-mech summary { font-size: var(--fs-base); }
+
+/* 차트 행 좋아요 — 호버 시 나타난다 (Spotify 패턴). 터치 기기는 상시 노출 */
+.rk-like { border: 0; background: none; color: var(--ink-faint); min-width: 34px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; opacity: 0; cursor: pointer; }
+.rk-like .ic { width: 18px; height: 18px; }
+.rk-row:hover .rk-like, .rk-row:focus-within .rk-like, .rk-like.on { opacity: 1; }
+.rk-like:hover { color: var(--ink); }
+.rk-like.on { color: var(--accent-bright); }
+html.touch .rk-like { opacity: 1; }
+.rel-card-noart { color: var(--ink-muted); }
+.fd-mech-links a { min-height: 34px; padding: 0 var(--s-3); }
+.fd-mech-links a { min-width: 40px; justify-content: center; }
+
+/* 스케일 밖 값 정리 — 실측으로 찾은 것만.
+   홈 라운드 14px(.mood)·3px(.mood-sq)·4px(.rk-art) 가 스케일 밖이었다. */
+.mood, .d3-glare { border-radius: var(--r-md); }
+.mood-sq { border-radius: var(--r-sm); }
+.rk-art { border-radius: var(--r-sm); }
+.ev-card { border-radius: var(--r-md); }
+/* 카드 자리표시 글자 — 32px 임의값이었다 */
+.card .ph, .cover .ph { font-size: var(--fs-xl); font-weight: var(--fw-bold); color: var(--ink-faint); }
+/* 배지 크기를 토큰으로 */
+.src-badge, .p-flag, .p-ed, .rel-card-tag, .rel-card-tier, .fd-cc, .sch-type, .mini-rank, .rel-card-warn, .ev-type, .stage-hint { font-size: var(--fs-2xs); }
+
+/* ── 공용 크롬(톱바·플레이어·사이드바·모달) ────────────────
+   #page 만 정규화하고 크롬은 빠져 있었다.
+   실측: 굵기 900 잔존, 라운드 12종(2·4·6·8·10·11·12·14·20·50%·pill·복합).
+   크롬은 늘 보이는 영역이라 여기가 어긋나면 앱 전체가 어긋나 보인다. */
+.topbar b, .topbar strong, [class*="player"] b, [class*="player"] strong,
+.side b, .side strong, footer b, footer strong { font-weight: var(--fw-bold); }
+
+.tb-item, .np-cover, .fmd-art { border-radius: var(--r-sm); }
+.tb-signup { border-radius: var(--r-pill); }
+.pl-art { border-radius: var(--r-sm); }
+.pl-bar, .pl-vol, .pl-vol-fill { border-radius: var(--r-pill); }
+.ctx, .ob-mode { border-radius: var(--r-md); }
+.modal-box, .modal-box.sheet, .ob-box { border-radius: var(--r-lg); }
+.skip-link { border-radius: 0 0 var(--r-sm) var(--r-sm); }
+/* 크롬에 남은 4px — 스케일의 6px 로 */
+.topbar [style*="4px"], .pl-thumb, .np-art, .q-art, .side .lib-art { border-radius: var(--r-sm); }

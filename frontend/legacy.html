@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lilac</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a78bfa'/%3E%3Ctext x='16' y='22' font-family='sans-serif' font-weight='800' font-size='18' fill='%23000' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="backdrop" aria-hidden="true"></div>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.14v13.72c0 .8.87 1.3 1.56.88l11.2-6.86a1.04 1.04 0 0 0 0-1.76L9.56 4.26A1.03 1.03 0 0 0 8 5.14Z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 5a1 1 0 0 1 2 0v6.3l9.4-6.1A1 1 0 0 1 19 6v12a1 1 0 0 1-1.6.8L8 12.7V19a1 1 0 1 1-2 0V5Z"/></symbol>
+      <symbol id="i-next" viewBox="0 0 24 24"><path d="M18 5a1 1 0 0 0-2 0v6.3L6.6 5.2A1 1 0 0 0 5 6v12a1 1 0 0 0 1.6.8l9.4-6.1V19a1 1 0 1 0 2 0V5Z"/></symbol>
+      <symbol id="i-shuffle" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+      <symbol id="i-repeat" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Zm10.4 2.9-4.8-4.8"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 10.4 12 4l8 6.4V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-9.6Z"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M5 8h14l1 12H4L5 8Zm3.5 0V6a3.5 3.5 0 1 1 7 0v2"/></symbol>
+      <symbol id="i-cal" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 6h16v14H4V6Zm0 5h16M8 3v4m8-4v4"/></symbol>
+      <symbol id="i-lib" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 4h4v16H4V4Zm7 0h3v16h-3V4Zm7.6.6 3 15.2"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M12 10.8c.6 0 1 .4 1 1v4.4a1 1 0 1 1-2 0v-4.4c0-.6.4-1 1-1Zm0-3.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"/></symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3Zm-7 8a7 7 0 0 0 14 0M12 18v3"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.5 5 5 10-11"/></symbol>
+      <symbol id="i-chev-r" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></symbol>
+      <symbol id="i-chev-l" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 5-7 7 7 7"/></symbol>
+      <symbol id="i-ext" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></symbol>
+      <symbol id="i-vol" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 8.5a5 5 0 0 1 0 7"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"/></symbol>
+      <symbol id="i-heart-f" viewBox="0 0 24 24"><path d="M12 20.3 4.8 13a4.6 4.6 0 0 1 0-6.6 4.7 4.7 0 0 1 6.7 0l.5.6.5-.6a4.7 4.7 0 0 1 6.7 0 4.6 4.6 0 0 1 0 6.6L12 20.3Z"/></symbol>
+      <symbol id="i-queue" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h10M4 18h10"/><path d="m17 13 5 3-5 3v-6Z"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7.5V12l3 2"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c2.5-2.2 4-5.4 4-9s-1.5-6.8-4-9m0 18c-2.5-2.2-4-5.4-4-9s1.5-6.8 4-9M3.5 9h17M3.5 15h17"/></symbol>
+      <symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></symbol>
+      <symbol id="i-rows" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1.5"/><rect x="3" y="10" width="18" height="4" rx="1.5"/><rect x="3" y="16" width="18" height="4" rx="1.5"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></symbol>
+    </svg>
+
+    <a class="skip-link" href="#page">본문으로 건너뛰기</a>
+    <div class="sr-only" id="srAnnounce" role="status" aria-live="polite"></div>
+
+    <div class="app" id="app">
+      <!-- 좌측 사이드바 -->
+      <aside class="sidebar" id="sidebar" aria-label="라이브러리">
+        <div class="sb-top">
+          <nav class="sb-nav" id="sbNav" aria-label="주요 메뉴"></nav>
+        </div>
+        <div class="sb-lib">
+          <div class="sb-lib-head">
+            <button class="sb-lib-title" id="sbCollapse" title="사이드바 접기">
+              <svg class="ic"><use href="#i-lib"/></svg><b id="sbLibLabel">내 보관함</b>
+            </button>
+            <span class="sb-head-btns">
+              <button class="sb-icon" id="sbAdd" title="플레이리스트 만들기"><svg class="ic"><use href="#i-plus"/></svg></button>
+              <a class="sb-icon" href="#/library/all" title="보관함 전체보기"><svg class="ic"><use href="#i-chev-r"/></svg></a>
+            </span>
+          </div>
+          <div class="sb-chips" id="sbChips"></div>
+          <div class="sb-tools">
+            <button class="sb-find-btn" id="sbFindBtn" title="보관함에서 찾기"><svg class="ic"><use href="#i-search"/></svg></button>
+            <input class="sb-find" id="sbFind" placeholder="보관함에서 찾기" />
+            <button class="sb-sort" id="sbSort">최근 순 <svg class="ic s"><use href="#i-rows"/></svg></button>
+          </div>
+          <div class="sb-list" id="sbList"></div>
+        </div>
+      </aside>
+
+      <!-- 메인 패널 -->
+      <div class="main-panel" id="mainPanel">
+        <header class="topbar" id="topbar" role="banner">
+          <a class="tb-brand" href="#/">Lilac</a>
+          <nav class="tb-menu" id="tbMenu" aria-label="주요 메뉴"></nav>
+          <div class="tb-nav">
+            <button class="tb-arrow" id="navBack" title="뒤로"><svg class="ic"><use href="#i-chev-l"/></svg></button>
+            <button class="tb-arrow" id="navFwd" title="앞으로"><svg class="ic"><use href="#i-chev-r"/></svg></button>
+          </div>
+          <div class="tb-search">
+            <svg class="ic"><use href="#i-search"/></svg>
+            <input id="searchInput" type="search" autocomplete="off" spellcheck="false" aria-label="검색" />
+          </div>
+          <div class="tb-right">
+            <a class="tb-work" id="tbWorkMode" data-r="work" href="#/work"><svg class="ic"><use href="#i-clock"/></svg><span>워크 모드</span></a>
+            <button id="connectApple" class="tb-connect"></button>
+            <div class="globe-wrap">
+              <button class="tb-icon" id="btnGlobe" title="Language"><svg class="ic"><use href="#i-globe"/></svg></button>
+              <div class="locale-menu" id="localeMenu"></div>
+            </div>
+            <span class="tb-acct" id="gnbAcct"></span>
+          </div>
+        </header>
+        <main id="page" tabindex="-1"></main>
+        <footer class="footer">
+          <div><span class="footer-brand">Lilac</span><p class="footer-tagline">좋아하는 음악과 더 가까이.</p></div>
+          <nav class="footer-links" aria-label="서비스 안내"><a href="#/about">서비스 소개</a><a href="#/faq">자주 묻는 질문</a><a href="#/help">이용 안내·데이터 출처</a><a href="#/artists">아티스트</a><a href="#/orders">주문 내역</a><a href="#/status">서비스 상태</a><a href="#/contact">제휴 문의</a><a href="#/terms">이용약관</a><a href="#/privacy">개인정보 처리방침</a><a href="#/subprocessors">처리위탁 현황</a></nav>
+          <p class="footer-disclosure">Lilac Demo · 미리듣기는 Apple Music 카탈로그의 30초 프리뷰, MV는 YouTube 공식 임베드로 제공됩니다. 일정·릴리스는 자동 수집한 정보이며, 결제·크레딧·배송은 데모입니다. 가사 패널에는 자체 제작한 예시 문구가 표시됩니다.</p>
+        </footer>
+      </div>
+
+      <!-- 우측 도크: 대기열 -->
+      <aside class="right-dock" id="queuePanel">
+        <div class="dock-head"><span>대기열</span>
+          <span class="dock-head-actions">
+            <button class="tbtn small-txt" id="queueSave">플레이리스트로 저장</button>
+            <button class="tbtn" id="queueClose" aria-label="대기열 닫기"><svg class="ic"><use href="#i-close"/></svg></button>
+          </span>
+        </div>
+        <div class="dock-body" id="queueBody"></div>
+      </aside>
+
+      <!-- 우측 도크: 가사 -->
+      <aside class="right-dock" id="lyricsPanel">
+        <div class="dock-head"><span>가사 미리보기</span><button class="tbtn" id="lyricsClose" aria-label="가사 닫기"><svg class="ic"><use href="#i-close"/></svg></button></div>
+        <div class="dock-body ly-body" id="lyricsBody"></div>
+        <p class="ly-note">자체 제작 데모 문구입니다. 실서비스에서는 가사 라이선스 계약 후 원문·독음·번역 3단 싱크로 제공됩니다.</p>
+      </aside>
+    </div>
+
+    <!-- 모바일 하단 네비 -->
+    <a class="m-work-mode" id="mWorkMode" data-r="work" href="#/work"><svg class="ic"><use href="#i-clock"/></svg><span>워크 모드</span></a>
+    <nav class="mnav" id="mnav" aria-label="모바일 내비게이션"></nav>
+
+    <!-- 플레이어 -->
+    <div class="player" id="player" role="region" aria-label="재생 플레이어">
+      <div class="pl-left">
+        <div class="pl-artwrap" id="plArtWrap">
+          <span class="vinyl" id="vinyl"></span>
+          <div class="pl-art" id="playerArt"></div>
+          <button class="pl-expand" id="btnExpand" title="전체 화면"><svg class="ic"><use href="#i-expand"/></svg></button>
+        </div>
+        <div class="pl-meta">
+          <div class="pl-title-wrap"><div class="pl-title" id="playerTitle"></div></div>
+          <div class="pl-artist" id="playerArtist"></div>
+        </div>
+        <button class="tbtn" id="btnLike" title="좋아요"><svg class="ic"><use href="#i-heart"/></svg></button>
+        <button class="tbtn" id="btnAddPl" title="플레이리스트에 추가"><svg class="ic"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="pl-center">
+        <div class="pl-transport">
+          <button class="tbtn" id="btnShuffle" title="셔플"><svg class="ic"><use href="#i-shuffle"/></svg></button>
+          <button class="tbtn" id="btnPrev" title="이전 곡"><svg class="ic"><use href="#i-prev"/></svg></button>
+          <button class="tbtn main" id="btnPlay" aria-label="재생 또는 일시정지"><svg class="ic" id="playIcon"><use href="#i-play"/></svg></button>
+          <button class="tbtn" id="btnNext" title="다음 곡"><svg class="ic"><use href="#i-next"/></svg></button>
+          <button class="tbtn rep" id="btnRepeat" title="반복"><svg class="ic"><use href="#i-repeat"/></svg><span id="repeatOne">1</span></button>
+        </div>
+        <div class="pl-progress">
+          <span class="pl-time" id="tCur">0:00</span>
+          <div class="pl-bar" id="progressBar"><div class="pl-fill" id="progressFill"></div></div>
+          <span class="pl-time" id="tDur">0:30</span>
+        </div>
+      </div>
+      <div class="pl-right">
+        <button class="tbtn mode" id="btnMode" title="플레이 모드"><svg class="ic"><use href="#i-lib"/></svg></button>
+        <button class="tbtn" id="btnLyrics" title="가사 (L)"><svg class="ic"><use href="#i-mic"/></svg></button>
+        <button class="tbtn" id="btnQueue" title="대기열 (Q)"><svg class="ic"><use href="#i-queue"/></svg></button>
+        <svg class="ic vol"><use href="#i-vol"/></svg>
+        <div class="pl-vol" id="volBar"><div class="pl-vol-fill" id="volFill"></div></div>
+      </div>
+      <audio id="audio"></audio>
+    </div>
+
+    <!-- 전체화면 나우플레잉 -->
+    <div class="np-full" id="npFull">
+      <button class="np-close" id="npClose" aria-label="전체 화면 닫기"><svg class="ic"><use href="#i-close"/></svg></button>
+      <div class="np-stage">
+        <div class="np-disc" id="npDisc"><div class="np-cover" id="npCover"></div></div>
+        <div class="np-text">
+          <p class="np-label">지금 재생 중</p>
+          <h2 id="npTitle"></h2>
+          <p id="npArtist"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 컨텍스트 메뉴 -->
+    <div class="ctx" id="ctxMenu"></div>
+
+    <!-- 플레이리스트 피커 -->
+    <div class="modal" id="plPicker">
+      <div class="modal-box sheet">
+        <button class="modal-x" id="plPickerClose"><svg class="ic"><use href="#i-close"/></svg></button>
+        <h3>플레이리스트에 추가</h3>
+        <div id="plPickerBody"></div>
+      </div>
+    </div>
+
+    <!-- 유튜브 모달 -->
+    <div class="modal" id="ytModal">
+      <div class="modal-box">
+        <button class="modal-x" id="ytClose"><svg class="ic"><use href="#i-close"/></svg></button>
+        <div class="yt-wrap" id="ytFrameWrap"></div>
+      </div>
+    </div>
+
+    <!-- Apple Music 연동 모달 -->
+    <div class="modal" id="appleModal">
+      <div class="modal-box sheet">
+        <button class="modal-x" id="appleClose"><svg class="ic"><use href="#i-close"/></svg></button>
+        <h3>Apple Music 연동</h3>
+        <p>실서비스에서는 개발자 토큰(JWT)과 Apple ID 1회 인증으로 구독자에게 <b>앱 안 풀트랙 재생</b>을 제공합니다.</p>
+        <p class="dim">이 데모는 토큰 없이 동작하는 공개 30초 미리듣기로 동일한 UX를 시연합니다. <code>src/musickit.ts</code>에 토큰 엔드포인트를 넣으면 MusicKit JS가 활성화됩니다.</p>
+        <button class="btn-pill" id="appleDemoOk">데모 모드로 계속</button>
+      </div>
+    </div>
+
+    <!-- 첫 방문 온보딩 -->
+    <div class="onboard" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+      <div class="ob-box">
+        <h2 id="obTitle">라일락에 오신 것을 환영해요</h2>
+        <div class="ob-modes">
+          <div class="ob-mode">
+            <span class="ob-ic"></span>
+            <b>브라우즈 모드</b>
+            <p>새로운 음악, 아티스트 소식, 앨범과 일정을 한곳에서 만나세요.</p>
+          </div>
+          <div class="ob-mode">
+            <b>플레이 모드</b>
+            <p>좋아하는 곡을 모아 감상하세요. 플레이어의 보관함 버튼으로 언제든 전환할 수 있어요.</p>
+          </div>
+        </div>
+        <ul class="ob-tips">
+          <li>상단 검색은 곡·아티스트·앨범·굿즈·일정을 한 번에 찾습니다</li>
+          <li>스토어 가격은 일본 정가 × 실시간 환율 + 대행 수수료로 자동 계산됩니다</li>
+          <li>단축키: 스페이스 재생 / Q 대기열 / L 가사 / 슬래시 검색</li>
+        </ul>
+        <div class="ob-actions">
+          <button class="btn-pill" id="obStart">둘러보기 시작</button>
+          <button class="ob-link" id="obPlay">플레이 모드로 시작</button>
+        </div>
+        <button class="ob-skip" id="obSkip" aria-label="닫기">건너뛰기</button>
+      </div>
+    </div>
+
+    <!-- 마케팅·법무 사이트 레이어 (약관·처리방침·위탁현황·FAQ·문의·소개).
+         앱 크롬과 분리된 별도 셸이 여기에 렌더된다. src/site/ 참고. -->
+    <div id="siteRoot"></div>
+
+    <div class="toast" role="status" aria-live="polite"></div>
+    <script>
+      window.__errs = [];
+      addEventListener('error', (e) => window.__errs.push('ERR ' + ((e.error && e.error.stack) || e.message)));
+      addEventListener('unhandledrejection', (e) => window.__errs.push('REJ ' + ((e.reason && e.reason.stack) || e.reason)));
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

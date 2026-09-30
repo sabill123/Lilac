@@ -8,12 +8,14 @@
  * 그래서 전시물을 하나로 줄였다.
  *   · 1위 앨범 한 점만 받침대 위에 올린다
  *   · 물체는 돌리지 않는다. 조명만 아주 느리게 돌아 재킷 표면을 훑는다
- *   · 순위가 바뀌면(다른 소스·국가) 작품을 교체하듯 페이드로 바꾼다
+ *   · 순위가 바뀌면(다른 소스·국가) 새 아트워크를 로드해 교체한다
  *   · 나머지 순위는 아래 목록이 담당한다
  *
  * 즉 3D는 배경이고, 주인공은 데이터다.
  */
 import * as THREE from 'three';
+import { createSceneLifecycle } from './lifecycle';
+import type { SceneHandle } from './lifecycle';
 
 export interface Chart3DItem {
   rank: number;
@@ -23,16 +25,22 @@ export interface Chart3DItem {
   onPick?: () => void;
 }
 
-interface Handle { destroy(): void; }
 
-export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle | null {
-  const top = items[0];
+
+export function createChart3D(host: HTMLElement, items: Chart3DItem[]): SceneHandle | null {
+  let top = items[0];
   if (!top?.artwork) return null;
 
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  let renderer: THREE.WebGLRenderer;
+  try { renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power', failIfMajorPerformanceCaveat: true }); }
+  catch { host.dataset.scene3d = 'fallback'; return null; }
+  let destroyed = false, requestId = 0;
+  let lifecycle: ReturnType<typeof createSceneLifecycle> | undefined;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.setSize(host.clientWidth, host.clientHeight, false);
   renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;cursor:pointer';
+  renderer.domElement.setAttribute('aria-hidden', 'true');
+  renderer.domElement.style.visibility = 'hidden';
   host.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -47,7 +55,7 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
   const key = new THREE.DirectionalLight(0xfff4e6, 1.45);
   key.position.set(-2.2, 4.2, 3.2);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xa78bfa, 0.65);
+  const rim = new THREE.DirectionalLight(0xcba6d8, 0.6);
   rim.position.set(3.4, 0.4, -1.8);
   scene.add(rim);
 
@@ -70,60 +78,68 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
      재킷 바로 아래 작은 그라데이션 원 하나로 '떠 있음'만 표현한다. */
   const shadowCanvas = document.createElement('canvas');
   shadowCanvas.width = shadowCanvas.height = 128;
-  const sg = shadowCanvas.getContext('2d')!;
+  const sg = shadowCanvas.getContext('2d');
+  if (sg) {
   const grad = sg.createRadialGradient(64, 64, 4, 64, 64, 62);
   grad.addColorStop(0, 'rgba(0,0,0,0.5)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
   sg.fillStyle = grad;
   sg.fillRect(0, 0, 128, 128);
+  }
   const shadowTex = new THREE.CanvasTexture(shadowCanvas);
-  const glowGeo = new THREE.PlaneGeometry(ART * 1.1, ART * 0.34);
-  const glowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.75, depthWrite: false });
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-  glow.rotation.x = -Math.PI / 2;
-  glow.position.y = -ART / 2 - 0.18;
-  group.add(glow);
+  const shadowGeo = new THREE.PlaneGeometry(ART * 1.1, ART * 0.34);
+  const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, opacity: 0.75, depthWrite: false });
+  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.position.y = -ART / 2 - 0.18;
+  group.add(shadow);
 
   const loader = new THREE.TextureLoader();
   loader.setCrossOrigin('anonymous');
   let currentTex: THREE.Texture | null = null;
 
-  /** 작품 교체 — 페이드 아웃 후 새 텍스처를 걸고 다시 페이드 인 */
-  let fadeTarget = 1;
-  let pendingUrl: string | null = null;
-
-  const applyArtwork = (url: string) => {
+  /** Latest request wins; late callbacks dispose their textures instead of reviving a scene. */
+  const applyArtwork = (item: Chart3DItem) => {
+    const id = ++requestId;
+    renderer.domElement.style.visibility = 'hidden';
+    host.dataset.scene3d = 'loading';
+    if (!item.artwork) { host.dataset.scene3d = 'fallback'; return; }
     loader.load(
-      url,
+      item.artwork.replace(/\/\d+x\d+bb\./, '/600x600bb.'),
       (tex) => {
+        if (destroyed || id !== requestId) { tex.dispose(); return; }
         tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-        currentTex?.dispose();
-        currentTex = tex;
+        tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+        currentTex?.dispose(); currentTex = tex;
         faceMat.map = tex;
         faceMat.color.set(0xffffff);
+        faceMat.emissiveMap = tex;
+        faceMat.emissive.set(0xffffff);
+        faceMat.emissiveIntensity = 0.35;
+        faceMat.opacity = 1;
         faceMat.needsUpdate = true;
-        fadeTarget = 1;
+        renderer.domElement.style.visibility = '';
+        host.dataset.scene3d = 'ready';
+        lifecycle?.invalidate();
       },
       undefined,
-      () => { fadeTarget = 0.16; },
+      () => { if (!destroyed && id === requestId) host.dataset.scene3d = 'fallback'; },
     );
   };
-
-  applyArtwork(top.artwork.replace(/\/\d+x\d+bb\./, '/600x600bb.'));
-
-  /** 바깥에서 순위가 바뀌면 호출 */
+  applyArtwork(top);
   const swapTo = (item: Chart3DItem) => {
-    if (!item?.artwork) return;
-    pendingUrl = item.artwork.replace(/\/\d+x\d+bb\./, '/600x600bb.');
-    fadeTarget = 0;      // 먼저 사라지고, 다 사라지면 교체한다
+    if (destroyed || !item) return;
+    top = item;
+    applyArtwork(item);
   };
-  (host as HTMLElement & { __swapTop?: (i: Chart3DItem) => void }).__swapTop = swapTo;
+  const swapHost = host as HTMLElement & { __swapTop?: (item: Chart3DItem) => void };
+  swapHost.__swapTop = swapTo;
 
   /* ---- 상호작용 ----
      마우스에 따라 아주 조금 기울기만 한다. 클릭하면 재생. */
   let tiltX = 0, tiltY = 0, tTX = 0, tTY = 0;
   const onMove = (e: PointerEvent) => {
+    if (!lifecycle?.isMoving() || e.pointerType === 'touch') return;
     const r = host.getBoundingClientRect();
     tTY = ((e.clientX - r.left) / Math.max(1, r.width) - 0.5) * 0.26;
     tTX = ((e.clientY - r.top) / Math.max(1, r.height) - 0.5) * 0.16;
@@ -136,75 +152,58 @@ export function createChart3D(host: HTMLElement, items: Chart3DItem[]): Handle |
   renderer.domElement.addEventListener('click', onClick);
 
   /* ---- 렌더 루프 ---- */
-  let frame = 0, visible = true;
-  const t0 = performance.now();
 
   const resize = () => {
     const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     // 작품과 좌대가 세로에 들어오는 거리
-    const needH = (ART + 1.1) / (2 * Math.tan((camera.fov * Math.PI) / 360));
-    camera.position.z = Math.max(5.2, needH);
+    const needH = (ART + 0.5) / (2 * Math.tan((camera.fov * Math.PI) / 360));   /* 여백을 줄여 작품이 무대를 채운다 */
+    camera.position.z = Math.max(4.2, needH, needH / camera.aspect);
     camera.updateProjectionMatrix();
   };
 
-  const tick = (now: number) => {
-    const t = (now - t0) * 0.001;
+  const tick = (t: number, delta: number, moving: boolean) => {
+    if (moving) {
+      const blend = 1 - Math.pow(0.95, delta * 60);
 
-    // 조명만 느리게 돈다 — 물체는 그대로 두고 빛이 표면을 훑는다
-    key.position.set(Math.sin(t * 0.12) * 3.2 - 0.6, 4.2, Math.cos(t * 0.12) * 1.6 + 2.8);
-    rim.position.set(Math.sin(t * 0.12 + Math.PI) * 3.4, 0.4, Math.cos(t * 0.12 + Math.PI) * 2.2 - 1.2);
+      // 조명만 느리게 돈다 — 물체는 그대로 두고 빛이 표면을 훑는다
+      key.position.set(Math.sin(t * 0.12) * 3.2 - 0.6, 4.2, Math.cos(t * 0.12) * 1.6 + 2.8);
+      rim.position.set(Math.sin(t * 0.12 + Math.PI) * 3.4, 0.4, Math.cos(t * 0.12 + Math.PI) * 2.2 - 1.2);
 
-    // 숨 쉬듯 아주 미세한 상하 움직임
-    group.position.y = Math.sin(t * 0.5) * 0.028;
+      // 숨 쉬듯 아주 미세한 상하 움직임
+      group.position.y = Math.sin(t * 0.5) * 0.028;
 
-    tiltX += (tTX - tiltX) * 0.05;
-    tiltY += (tTY - tiltY) * 0.05;
-    group.rotation.x = tiltX;
-    group.rotation.y = tiltY;
+      tiltX += (tTX - tiltX) * blend;
+      tiltY += (tTY - tiltY) * blend;
+      group.rotation.x = tiltX;
+      group.rotation.y = tiltY;
 
-    // 페이드 및 교체 처리
-    faceMat.opacity += (fadeTarget - faceMat.opacity) * 0.1;
-    if (pendingUrl && faceMat.opacity < 0.06) {
-      const url = pendingUrl;
-      pendingUrl = null;
-      applyArtwork(url);
     }
 
     renderer.render(scene, camera);
-    frame = visible && !document.hidden ? requestAnimationFrame(tick) : 0;
   };
 
-  const resume = () => { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(tick); };
-  const ro = new ResizeObserver(resize);
-  ro.observe(host);
-  const io = new IntersectionObserver(([e]) => {
-    visible = e?.isIntersecting ?? true;
-    if (visible) resume();
-    else if (frame) { cancelAnimationFrame(frame); frame = 0; }
-  }, { threshold: 0.01 });
-  io.observe(host);
-  const onVis = () => { if (document.hidden && frame) { cancelAnimationFrame(frame); frame = 0; } else resume(); };
-  document.addEventListener('visibilitychange', onVis);
-
-  resize();
-  frame = requestAnimationFrame(tick);
-
-  return {
-    destroy() {
-      if (frame) cancelAnimationFrame(frame);
-      ro.disconnect(); io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
+  lifecycle = createSceneLifecycle(host, tick, resize);
+  const onContextLost = (event: Event) => { event.preventDefault(); destroy(); host.dataset.scene3d = 'fallback'; };
+  renderer.domElement.addEventListener('webglcontextlost', onContextLost);
+  function destroy() {
+      if (destroyed) return;
+      destroyed = true; requestId++;
+      lifecycle?.destroy();
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerleave', onLeave);
       renderer.domElement.removeEventListener('click', onClick);
+      if (swapHost.__swapTop === swapTo) delete swapHost.__swapTop;
       currentTex?.dispose();
       faceMat.dispose(); edgeMat.dispose();
       artGeo.dispose();
-      glowGeo.dispose(); glowMat.dispose(); shadowTex.dispose();
+      shadowGeo.dispose(); shadowMat.dispose(); shadowTex.dispose();
       renderer.dispose();
+      renderer.forceContextLoss();
       renderer.domElement.remove();
-    },
-  };
+      delete host.dataset.scene3d;
+  }
+  return { destroy, setPaused: paused => lifecycle?.setPaused(paused) };
 }

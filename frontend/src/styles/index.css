@@ -1,0 +1,25 @@
+/* ============================================================
+   스타일 진입점 — 레이어 순서가 곧 우선순위다.
+
+   왜 이렇게 했나: style.css 는 4,000줄이 넘고, 고칠 때마다 끝에 덧붙이면서
+   특정도 싸움이 반복됐다(이 세션에서만 다섯 번). `.a .b` 가 `.b` 를 이겨서
+   새 규칙이 조용히 무시되는 식이다.
+
+   @layer 는 특정도보다 우선한다. 옛 스타일을 가장 낮은 layer 에 두면
+   새 시스템은 단순한 선택자로도 반드시 이긴다. 앞으로 style.css 에는
+   덧붙이지 않는다 — 시스템에 맞는 layer 에 쓴다.
+   ============================================================ */
+@layer legacy, site, tokens, base, components, pages, motion;
+
+@import url('../style.css') layer(legacy);
+@import url('./tokens.css') layer(tokens);
+@import url('./base.css') layer(base);
+@import url('./components.css') layer(components);
+@import url('./shell.css') layer(components);
+@import url('./pages.css') layer(pages);
+@import url('./catalog.css') layer(pages);
+@import url('../discovery/discovery.css') layer(pages);
+@import url('../discovery/home-immersive.css') layer(pages);
+@import url('../awards/awards.css') layer(pages);
+@import url('../store/store.css') layer(pages);
+@import url('./motion.css') layer(motion);

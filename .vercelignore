@@ -1,0 +1,20 @@
+# 프론트엔드 빌드 입력만 올린다. API는 vercel.json에서 Render 백엔드로 넘긴다.
+**
+!frontend
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/index.html
+!frontend/tsconfig.json
+!frontend/vite.config.ts
+!frontend/src
+!frontend/src/**
+!frontend/public
+!frontend/public/**
+!vercel.json
+!.vercelignore
+**/node_modules/**
+**/.env*
+**/.git/**
+frontend/public/__qa/**
+frontend/src/**/*.test.*
+frontend/src/**/verify-*.mjs

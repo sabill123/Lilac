@@ -181,6 +181,23 @@ export async function buildIndex() {
   }
 
   const out = { builtAt: new Date().toISOString(), count: entries.length, entries };
+
+  /* ⚠️ 못 받아온 것을 근거로 기존 색인을 지우면 안 된다.
+     색인의 주력 소스는 애플 디스코그래피인데, 레이트리밋에 걸리면 빈 응답이 온다.
+     그걸 그대로 덮어써서 실제로 6,453건이던 색인이 975건으로 주저앉았다
+     (한글 검색이 대부분 안 되는 상태가 된다).
+     이전 색인보다 크게 줄었으면 쓰지 않고 그대로 둔다. */
+  let prev = null;
+  try { prev = JSON.parse(await fs.readFile(path.join(DB, 'search-index.json'), 'utf-8')); } catch { /* 최초 */ }
+  const prevCount = prev?.entries?.length || 0;
+  if (prevCount > 200 && entries.length < prevCount * 0.6) {
+    console.warn(
+      `[index] 갱신 보류 — 새 색인 ${entries.length}건이 기존 ${prevCount}건보다 크게 적다. ` +
+      '외부 조회가 막힌 것으로 보고 기존 색인을 유지한다.',
+    );
+    return { ...prev, skipped: true, attempted: entries.length };
+  }
+
   await fs.writeFile(path.join(DB, 'search-index.json'), JSON.stringify(out));
   return out;
 }

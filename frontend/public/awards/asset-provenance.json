@@ -1,0 +1,133 @@
+{
+  "checkedAt": "2026-09-06",
+  "status": "LOCAL PROTOTYPE ONLY. No publication clearance obtained.",
+  "assets": [
+    {
+      "localFile": "/awards/golden-disc-2026-keyvisual.jpg",
+      "originalFile": "golden-disc-2026-keyvisual.png",
+      "sourceUrl": "https://www.goldendisc.co.kr/ko",
+      "imageUrl": "https://www.goldendisc.co.kr/_next/static/media/main-bg_open_2025.97a124b0.png",
+      "originalDimensions": [
+        3840,
+        2190
+      ],
+      "transformation": "sips JPEG quality 75, longest edge at most 1920, no crop",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance.",
+      "notes": "Official 40th edition held 2026; source background filename includes 2025."
+    },
+    {
+      "localFile": "/awards/golden-disc-2026-title.svg",
+      "originalFile": "golden-disc-2026-title.svg",
+      "sourceUrl": "https://www.goldendisc.co.kr/ko",
+      "imageUrl": "https://www.goldendisc.co.kr/_next/static/media/finish_title_pc_40th.dd13185e.svg",
+      "originalDimensions": [
+        1118,
+        210
+      ],
+      "transformation": "Unmodified official original",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance.",
+      "notes": "Official 40th edition held 2026; source background filename includes 2025."
+    },
+    {
+      "localFile": "/awards/kma-2026-home-stage.jpg",
+      "originalFile": "kma-2026-home-stage.gif",
+      "sourceUrl": "https://koreanmusicawards.com/",
+      "imageUrl": "https://koreanmusicawards.com/wp-content/uploads/2026/06/kma_9_2.gif",
+      "originalDimensions": [
+        1500,
+        625
+      ],
+      "transformation": "sips JPEG quality 75, longest edge at most 1920, no crop",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/kma-2026-organizer-logo.svg",
+      "originalFile": "kma-2026-organizer-logo.svg",
+      "sourceUrl": "https://koreanmusicawards.com/",
+      "imageUrl": "https://koreanmusicawards.com/wp-content/uploads/2025/01/logo-new.svg",
+      "originalDimensions": [
+        1000,
+        151
+      ],
+      "transformation": "Unmodified official original",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance.",
+      "notes": "Year-neutral organizer logo, not a fabricated 2026 logo."
+    },
+    {
+      "localFile": "/awards/maj-2026-awards-hero.jpg",
+      "originalFile": "maj-2026-awards-hero.jpg",
+      "sourceUrl": "https://www.musicawardsjapan.com/",
+      "imageUrl": "https://www.musicawardsjapan.com/2026assets/images/awards/top_awards_pc.jpg",
+      "originalDimensions": [
+        2240,
+        660
+      ],
+      "transformation": "sips JPEG quality 75, longest edge at most 1920, no crop",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/maj-2026-logo.png",
+      "originalFile": "maj-2026-logo.png",
+      "sourceUrl": "https://www.musicawardsjapan.com/",
+      "imageUrl": "https://www.musicawardsjapan.com/2026assets/images/common/logo.png",
+      "originalDimensions": [
+        505,
+        278
+      ],
+      "transformation": "Unmodified official original",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/mama-2025-tiger-keyvisual.jpg",
+      "originalFile": "mama-2025-tiger-keyvisual.jpg",
+      "sourceUrl": "https://mama.mnetplus.world/",
+      "imageUrl": "https://mama.mnetplus.world/images/mama2025/about/pc_src.jpg",
+      "originalDimensions": [
+        3840,
+        2160
+      ],
+      "transformation": "sips JPEG quality 75, longest edge at most 1920, no crop",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/mma-2025-hero-logo.png",
+      "originalFile": "mma-2025-hero-logo.png",
+      "sourceUrl": "https://www.melon.com/mma/info.htm",
+      "imageUrl": "https://cdnimg.melon.co.kr/mma/year/img/mma2025/pc/common/img_logo_mma.png",
+      "originalDimensions": [
+        1172,
+        362
+      ],
+      "transformation": "Unmodified official original",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/mma-2025-keyvisual.png",
+      "originalFile": "mma-2025-keyvisual.png",
+      "sourceUrl": "https://www.melon.com/mma/info.htm",
+      "imageUrl": "https://cdnimg.melon.co.kr/mma/year/img/mma2025/pc/info/img_kv_info_pc.png",
+      "originalDimensions": [
+        3712,
+        1490
+      ],
+      "transformation": "Unmodified official original",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    },
+    {
+      "localFile": "/awards/record-awards-2025-keyvisual.jpg",
+      "originalFile": "record-awards-2025-keyvisual.jpg",
+      "sourceUrl": "https://www.tbs.co.jp/recordaward/",
+      "imageUrl": "https://www.tbs.co.jp/recordaward/img/main_2025.jpg",
+      "originalDimensions": [
+        1600,
+        900
+      ],
+      "transformation": "sips JPEG quality 75, longest edge at most 1920, no crop",
+      "rights": "Permission unverified. Local prototype only. Publication and redistribution require rights clearance."
+    }
+  ],
+  "excluded": {
+    "nhk": "No NHK assets copied. Explicit republication prohibition. Original CSS typography only; official visual linked at https://www.nhk.or.jp/kouhaku/index.html",
+    "recordWinner": "Watermarked winner photograph not used; no watermark removal."
+  }
+}

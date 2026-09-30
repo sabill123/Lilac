@@ -1,0 +1,29 @@
+/* Lilac design foundation: one accent, predictable spacing, content-first surfaces. */
+:root {
+  --page:#101114; --bg:#101114; --bg-wall:#15161b; --bg-raised:#191a20; --bg-soft:#22232b;
+  --bg-hover:rgb(255 255 255 / .05); --bg-tint:rgb(255 255 255 / .025);
+  --ink:#f4f3f6; --ink-muted:#a1a1ad; --ink-faint:#93939f;
+  --rule:rgb(255 255 255 / .08); --rule-strong:rgb(255 255 255 / .16); --ring:var(--rule);
+  --accent:#b7a1eb; --accent-rgb:183 161 235; --accent-hover:#cab9f1; --accent-deep:#7862a9;
+  --accent-deep-rgb:120 98 169; --accent-ink:#191321; --accent-bright:#c5b2ed; --accent-bright-ink:#191321;
+  --danger:#ff828b; --warn:#e8c760; --warn-bg:rgb(234 179 8 / .12);
+  --paper:#f5f4f0; --paper-ink:#18181c; --paper-muted:#64646d; --paper-rule:#dedde0;
+  --fs-2xs:11px; --fs-xs:12px; --fs-sm:13px; --fs-base:15px; --fs-md:17px;
+  --fs-lg:20px; --fs-xl:24px; --fs-2xl:32px; --fs-3xl:36px; --fs-hero:clamp(32px,3.4vw,48px);
+  --lh-tight:1.18; --lh-snug:1.4; --lh-body:1.65; --ls-tight:-.025em; --ls-display:-.04em;
+  --fw-regular:400; --fw-medium:600; --fw-bold:700;
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
+  --radius-sm:var(--r-sm); --radius-md:var(--r-md); --radius-lg:var(--r-lg);
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:24px; --s-6:32px; --s-7:48px; --s-8:64px;
+  --section-gap:40px; --section-head-gap:20px;
+  --surface-1:#191a20; --surface-2:#22232b; --surface-3:#2b2c36;
+  --hairline-1:inset 0 0 0 1px var(--rule); --hairline-2:inset 0 0 0 1px var(--rule-strong); --hairline:var(--hairline-1);
+  --elev-1:0 2px 8px rgb(0 0 0 / .12); --elev-2:0 8px 24px rgb(0 0 0 / .22); --elev-3:0 16px 48px rgb(0 0 0 / .3);
+  --shadow-sm:var(--elev-1); --shadow-md:var(--elev-2); --shadow-lg:var(--elev-3);
+  --ease-standard:cubic-bezier(.2,0,0,1); --ease-out:cubic-bezier(.16,1,.3,1); --ease-in:cubic-bezier(.4,0,1,1);
+  --dur-fast:120ms; --dur-base:180ms; --dur-slow:280ms; --dur-page:180ms;
+  --dur-micro:var(--dur-fast); --dur-short:var(--dur-base); --dur-long:var(--dur-slow);
+  --layout-max:1240px; --gutter:clamp(20px,3.3vw,48px); --gnb-h:72px; --tb-h:72px; --player-h:84px; --sb-w:248px; --gap:8px;
+  --focus-ring:0 0 0 2px var(--bg),0 0 0 4px var(--accent-bright);
+}
+@media(max-width:700px){:root{--gutter:20px;--fs-3xl:28px;--fs-2xl:26px;--fs-xl:21px;--section-gap:32px;--player-h:64px;--tb-h:116px;--gnb-h:116px;}}

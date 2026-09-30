@@ -1,19 +1,7 @@
-/**
- * 홈 히어로 — 레코드 갤러리 월 (three.js)
- *
- * 레퍼런스: 벽에 선반을 달아 LP 재킷을 세워두는 진열 방식(The Vinyl Wall),
- *          그리고 작품이 벽에 걸린 갤러리.
- *
- * 회전하는 캐러셀은 시선을 흐트러뜨리고 정보가 읽히지 않는다.
- * 여기서는 앨범을 벽에 가지런히 걸고, 카메라가 아주 느리게 옆으로 흐르게 한다.
- * 움직임은 '조용한 드리프트' 수준으로만 두고, 재킷 자체가 주인공이 되게 한다.
- *
- * 성능
- *   · 지오메트리·머티리얼을 공유하고 인스턴스마다 텍스처만 교체
- *   · 화면 밖 / 백그라운드 탭이면 렌더 정지
- *   · 텍스처는 표시 크기에 맞춰 400px로 요청
- */
+/** Three floating records, not a tiled backdrop. DOM owns typography and controls. */
 import * as THREE from 'three';
+import { createSceneLifecycle } from './lifecycle';
+import type { SceneHandle } from './lifecycle';
 
 export interface HeroItem {
   title: string;
@@ -22,276 +10,309 @@ export interface HeroItem {
   href?: string;
 }
 
-interface Handle { destroy(): void; }
+const RECORD_COUNT = 3;
+const RECORD_RADIUS = 1.18;
 
-/* 벽 구성 — 재킷 한 변 1.0 기준 */
-const TILE = 1.0;
-const GAP_X = 0.26;
-const GAP_Y = 0.42;      // 선반 두께만큼 세로 간격을 더 준다
-const ROWS = 3;
-const COL_W = TILE + GAP_X;
-const ROW_H = TILE + GAP_Y;
+export function createHero3D(host: HTMLElement, items: HeroItem[]): SceneHandle | null {
+  const artworkItems = items.filter(item => item.artwork).slice(0, RECORD_COUNT);
+  if (!artworkItems.length) return null;
 
-export function createHero3D(host: HTMLElement, items: HeroItem[]): Handle | null {
-  if (!items.length) return null;
-
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  let renderer: THREE.WebGLRenderer;
+  try { renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power', failIfMajorPerformanceCaveat: true }); }
+  catch { host.dataset.scene3d = 'fallback'; return null; }
+  let destroyed = false;
+  let lifecycle: ReturnType<typeof createSceneLifecycle> | undefined;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.setSize(host.clientWidth, host.clientHeight, false);
-  renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;cursor:grab';
-  host.appendChild(renderer.domElement);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.35;
+  if (renderer.shadowMap) {
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  }
+  const canvas = renderer.domElement;
+  canvas.style.cssText = 'width:100%;height:100%;display:block;cursor:default';
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.visibility = 'hidden';
+  canvas.style.touchAction = 'pan-y';
+  host.dataset.scene3d = 'loading';
+  host.appendChild(canvas);
 
+  // Transparent canvas leaves typography in the accessible DOM, separate from the sculptures.
   const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 80);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x78766e, 2.2));
+  const key = new THREE.DirectionalLight(0xfffaf0, 4.5);
+  key.position.set(-3, 6, 8);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = -8; key.shadow.camera.right = 8;
+  key.shadow.camera.top = 6; key.shadow.camera.bottom = -6;
+  key.shadow.normalBias = 0.035;
+  key.shadow.bias = -0.0002;
+  key.shadow.radius = 4;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xd2dcff, 3.2);
+  rim.position.set(6, 1, 4); scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xffffff, 1.2);
+  fill.position.set(-5, -3, 2); scene.add(fill);
 
-  /* 카메라
-     벽을 정면에서 보되 아주 살짝 각도를 줘 재킷의 두께와 그림자가 읽히게 한다. */
-  const camera = new THREE.PerspectiveCamera(30, host.clientWidth / Math.max(1, host.clientHeight), 0.1, 60);
-  camera.position.set(0, 0, 7.4);
-  camera.lookAt(0, 0, 0);
+  const composition = new THREE.Group();
+  composition.name = 'three-record-composition';
+  scene.add(composition);
+  const geometries: THREE.BufferGeometry[] = [];
+  const materials: THREE.Material[] = [];
+  const geometry = <T extends THREE.BufferGeometry>(value: T): T => { geometries.push(value); return value; };
+  const material = <T extends THREE.Material>(value: T): T => { materials.push(value); return value; };
 
-  /* 조명 — 갤러리 스포트 느낌.
-     위에서 비스듬히 떨어지는 빛 하나 + 전체를 살짝 띄우는 환경광 */
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-  const spot = new THREE.DirectionalLight(0xffffff, 1.15);
-  spot.position.set(-2.2, 4.4, 3.6);
-  scene.add(spot);
-  const fill = new THREE.DirectionalLight(0xa78bfa, 0.32);
-  fill.position.set(3.4, -1.4, 2.2);
-  scene.add(fill);
+  // Bevelled solid vinyl with a real spindle hole, plus fine concentric cut grooves.
+  const shape = new THREE.Shape();
+  shape.absarc(0, 0, RECORD_RADIUS, 0, Math.PI * 2, false);
+  const hole = new THREE.Path(); hole.absarc(0, 0, 0.045, 0, Math.PI * 2, true); shape.holes.push(hole);
+  const vinylGeometry = geometry(new THREE.ExtrudeGeometry(shape, {
+    depth: 0.055, bevelEnabled: true, bevelSegments: 2, steps: 1,
+    bevelSize: 0.008, bevelThickness: 0.008, curveSegments: 96,
+  }));
+  const vinylMaterial = material(new THREE.MeshPhysicalMaterial({
+    color: 0x111419, metalness: 0.62, roughness: 0.24, clearcoat: 0.9, clearcoatRoughness: 0.18,
+  }));
+  const groovePoints: number[] = [];
+  for (let ring = 0; ring < 44; ring++) {
+    const radius = 0.44 + ring * 0.016;
+    for (let segment = 0; segment < 128; segment++) {
+      const a = segment / 128 * Math.PI * 2, b = (segment + 1) / 128 * Math.PI * 2;
+      groovePoints.push(Math.cos(a) * radius, Math.sin(a) * radius, 0.065, Math.cos(b) * radius, Math.sin(b) * radius, 0.065);
+    }
+  }
+  const grooveGeometry = geometry(new THREE.BufferGeometry());
+  grooveGeometry.setAttribute('position', new THREE.Float32BufferAttribute(groovePoints, 3));
+  const grooveMaterial = material(new THREE.LineBasicMaterial({ color: 0xa4a9b2, transparent: true, opacity: 0.045 }));
+  // Actual shallow-cut surface normals catch the key/rim light as the vinyl tilts.
+  // One shared annulus, not 88 individual meshes or a painted radial highlight.
+  const cutGeometry = geometry(new THREE.RingGeometry(0.43, 1.15, 128, 88));
+  const cutPosition = cutGeometry.getAttribute('position');
+  for (let i = 0; i < cutPosition.count; i++) {
+    const band = Math.floor(i / 129);
+    cutPosition.setZ(i, 0.064 + (band % 2 ? 0.0018 : 0));
+  }
+  cutGeometry.computeVertexNormals();
+  const cutMaterial = material(new THREE.MeshPhysicalMaterial({
+    color: 0x15191e, metalness: 0.72, roughness: 0.27,
+    clearcoat: 0.85, clearcoatRoughness: 0.2,
+  }));
+  const sleeveGeometry = geometry(new THREE.BoxGeometry(2.17, 2.17, 0.085));
+  const paperMaterial = material(new THREE.MeshStandardMaterial({ color: 0xe7e3d9, roughness: 0.86 }));
+  const labelGeometry = geometry(new THREE.RingGeometry(0.045, 0.38, 64));
+  // RingGeometry's planar UVs crop the same artwork into the record's paper label.
+  const labelUV = labelGeometry.getAttribute('uv');
+  const labelPosition = labelGeometry.getAttribute('position');
+  for (let i = 0; i < labelUV.count; i++) labelUV.setXY(i, labelPosition.getX(i) / 0.76 + 0.5, labelPosition.getY(i) / 0.76 + 0.5);
 
-  const wall = new THREE.Group();
-  scene.add(wall);
+  // Texture-free soft grounding shadows. The key light also casts real object-on-object shadows.
+  const shadowGeometry = geometry(new THREE.PlaneGeometry(3.7, 1.3));
+  const shadowMaterial = material(new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { opacity: { value: 0.13 } },
+    vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader: 'varying vec2 vUv; uniform float opacity; void main(){float d=length((vUv-.5)*2.0); float a=pow(max(0.0,1.0-d),2.8)*opacity; gl_FragColor=vec4(.16,.15,.13,a);}',
+  }));
 
-  const loader = new THREE.TextureLoader();
-  loader.setCrossOrigin('anonymous');
-
-  /* 재킷은 얇은 판이 아니라 살짝 두께가 있는 상자로 만든다.
-     옆면이 보여야 '벽에 걸린 물건'처럼 읽힌다. */
-  const tileGeo = new THREE.BoxGeometry(TILE, TILE, 0.045);
-  const sideMat = new THREE.MeshStandardMaterial({ color: 0x0d0e12, roughness: 0.9, metalness: 0 });
-
-  /* 벽은 좌우로 이어져야 하므로 화면 폭보다 넉넉히 넓게 만든다.
-     자료가 모자라면 앞에서부터 다시 걸어 반복시킨다(실제 진열장도 그렇게 채운다). */
-  const MIN_COLS = 14;
-  const cols = Math.max(MIN_COLS, Math.ceil(items.length / ROWS));
-  const totalW = cols * COL_W;
-  const filled: HeroItem[] = [];
-  for (let i = 0; i < ROWS * cols; i++) filled.push(items[i % items.length]);
-
-  interface TileData { mesh: THREE.Mesh; item: HeroItem; baseZ: number; }
-  const tiles: TileData[] = [];
-
-  filled.forEach((it, i) => {
-    const col = Math.floor(i / ROWS);
-    const row = i % ROWS;
-
-    const faceMat = new THREE.MeshStandardMaterial({
-      color: 0x16171c, roughness: 0.52, metalness: 0.04,
-      transparent: true, opacity: 0.001,
-    });
-    // BoxGeometry 면 순서: +x, -x, +y, -y, +z(앞), -z
-    const mats = [sideMat, sideMat, sideMat, sideMat, faceMat, sideMat];
-    const mesh = new THREE.Mesh(tileGeo, mats);
-
-    // 행마다 살짝 어긋나게 걸어 기계적인 격자를 피한다
-    const stagger = (row % 2) * (COL_W * 0.34);
-    mesh.position.set(
-      col * COL_W - totalW / 2 + stagger,
-      (ROWS - 1) / 2 * ROW_H - row * ROW_H,
-      0,
-    );
-    mesh.userData = { item: it, faceMat };
-    wall.add(mesh);
-    tiles.push({ mesh, item: it, baseZ: 0 });
-
-    const url = it.artwork?.replace(/\/\d+x\d+bb\./, '/400x400bb.');
-    if (!url) { faceMat.opacity = 0.16; return; }
-    loader.load(
-      url,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-        faceMat.map = tex;
-        faceMat.color.set(0xffffff);
-        faceMat.needsUpdate = true;
-        mesh.userData.ready = true;
-      },
-      undefined,
-      () => { faceMat.opacity = 0.12; },
-    );
-  });
-
-  /* ── 무한 루프 ──
-     벽을 한 바퀴 폭(totalW)만큼 오른쪽에 그대로 복제해 이어 붙인다.
-     랩이 totalW 안에서 돌기 때문에 어느 시점에도 이음새·끝이 보이지 않는다.
-     복제 메시는 지오메트리와 머티리얼을 공유하므로 텍스처 비용이 늘지 않는다. */
-  const clones: THREE.Mesh[] = [];
-  for (const t of tiles) {
-    const clone = new THREE.Mesh(t.mesh.geometry, t.mesh.material);
-    clone.position.copy(t.mesh.position);
-    clone.position.x += totalW;
-    clone.userData = t.mesh.userData;      // 클릭·호버 동작 동일
-    wall.add(clone);
-    clones.push(clone);
+  interface Sculpture { group: THREE.Group; record: THREE.Group; sleeve: THREE.Mesh; shadow: THREE.Mesh; item: HeroItem; base: THREE.Vector3; tilt: THREE.Euler; scale: number; }
+  const sculptures: Sculpture[] = [];
+  const pickable: THREE.Object3D[] = [];
+  const faces = new Map<string, THREE.MeshStandardMaterial>();
+  for (let i = 0; i < RECORD_COUNT; i++) {
+    const item = artworkItems[i % artworkItems.length];
+    const url = item.artwork.replace(/\/\d+x\d+bb\./, '/600x600bb.');
+    let face = faces.get(url);
+    if (!face) {
+      face = material(new THREE.MeshStandardMaterial({ color: 0xf0ece2, roughness: 0.65, metalness: 0.02 }));
+      faces.set(url, face);
+    }
+    const group = new THREE.Group(); group.name = `record-sculpture-${i}`;
+    // A partially withdrawn record stays a coherent pair rather than becoming loose tiles.
+    const sleeve = new THREE.Mesh(sleeveGeometry, [paperMaterial, paperMaterial, paperMaterial, paperMaterial, face, paperMaterial]);
+    sleeve.name = 'artwork-sleeve';
+    sleeve.position.set(-0.4, -0.14, -0.13); sleeve.rotation.z = -0.065;
+    sleeve.castShadow = true; sleeve.receiveShadow = true;
+    group.add(sleeve);
+    const record = new THREE.Group(); record.name = 'vinyl-record'; record.position.set(0.4, 0.13, 0.02);
+    const vinyl = new THREE.Mesh(vinylGeometry, vinylMaterial);
+    vinyl.castShadow = true; vinyl.receiveShadow = true;
+    const grooves = new THREE.LineSegments(grooveGeometry, grooveMaterial);
+    const label = new THREE.Mesh(labelGeometry, face); label.position.z = 0.068;
+    const cuts = new THREE.Mesh(cutGeometry, cutMaterial); cuts.name = 'physical-groove-surface';
+    cuts.receiveShadow = true;
+    record.add(vinyl, cuts, grooves, label); group.add(record);
+    for (const mesh of [sleeve, vinyl, label]) { mesh.userData.item = item; pickable.push(mesh); }
+    const shadow = new THREE.Mesh(shadowGeometry, shadowMaterial); shadow.position.z = -1.2;
+    composition.add(shadow, group);
+    sculptures.push({ group, record, sleeve, shadow, item, base: new THREE.Vector3(), tilt: new THREE.Euler(), scale: 1 });
   }
 
-  /* 선반 — 각 행 아래에 얇은 판을 대 '걸려 있는' 느낌을 만든다 */
-  const shelfGeo = new THREE.BoxGeometry(totalW * 2 + 30, 0.045, 0.2);
-  const shelfMat = new THREE.MeshStandardMaterial({ color: 0x2a2b33, roughness: 0.86, metalness: 0.05 });
-  for (let r = 0; r < ROWS; r++) {
-    const shelf = new THREE.Mesh(shelfGeo, shelfMat);
-    shelf.position.set(totalW / 2, (ROWS - 1) / 2 * ROW_H - r * ROW_H - TILE / 2 - 0.06, 0.08);
-    wall.add(shelf);
-  }
-
-  /* 벽면 — 아주 어두운 판. 재킷 뒤로 공간이 있다는 걸 알려준다 */
-  const backGeo = new THREE.PlaneGeometry(totalW * 2 + 34, ROWS * ROW_H + 10);
-  const backMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0e, roughness: 1, metalness: 0 });
-  const back = new THREE.Mesh(backGeo, backMat);
-  back.position.set(totalW / 2, 0, -0.6);
-  wall.add(back);
-
-  /* ---- 상호작용 ----
-     느린 가로 드리프트 + 마우스에 따른 미세한 시차. 그 이상은 하지 않는다. */
-  let driftX = 0;
-  let targetX = 0;
-  let curX = 0;
-  let parX = 0, parY = 0, parTX = 0, parTY = 0;
-  let dragging = false, lastPX = 0, dragMoved = 0;
-  let hovered: THREE.Mesh | null = null;
-
-  const loopW = cols * COL_W;   // 한 바퀴 폭 — 끝나면 이어 붙인다
-
-  const onPointerDown = (e: PointerEvent) => {
-    dragging = true; dragMoved = 0; lastPX = e.clientX;
-    renderer.domElement.style.cursor = 'grabbing';
-    renderer.domElement.setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: PointerEvent) => {
-    const r = host.getBoundingClientRect();
-    parTX = ((e.clientX - r.left) / Math.max(1, r.width) - 0.5) * 0.5;
-    parTY = ((e.clientY - r.top) / Math.max(1, r.height) - 0.5) * 0.32;
-    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-    if (!dragging) return;
-    const dx = e.clientX - lastPX;
-    lastPX = e.clientX;
-    dragMoved += Math.abs(dx);
-    targetX -= dx * 0.011;
-  };
-  const onPointerUp = (e: PointerEvent) => {
-    dragging = false;
-    renderer.domElement.style.cursor = 'grab';
-    try { renderer.domElement.releasePointerCapture(e.pointerId); } catch { /* 무시 */ }
-  };
-
+  const selectionHost = host as HTMLElement & { __selectHero?: (index: number) => void };
+  let selected = 0, hoveredIndex = -1, entranceTime = 0, entranceDone = false, posePending = true, wasMoving = true;
+  let parX = 0, parY = 0, targetX = 0, targetY = 0;
   const ray = new THREE.Raycaster();
-  const ndc = new THREE.Vector2(999, 999);
-
-  const onClick = () => {
-    if (dragMoved > 6) return;
-    const href = hovered?.userData?.item?.href;
-    if (href) location.hash = href;
+  const ndc = new THREE.Vector2();
+  let hovered: HeroItem | null = null;
+  const setHover = (item: HeroItem | null) => {
+    if (item === hovered) return;
+    hovered = item;
+    hoveredIndex = item ? sculptures.findIndex(sculpture => sculpture.item === item) : -1;
+    canvas.style.cursor = item?.href ? 'pointer' : 'default';
+    host.dispatchEvent(new CustomEvent('wall:hover', { detail: item }));
   };
-
-  renderer.domElement.addEventListener('pointerdown', onPointerDown);
-  window.addEventListener('pointermove', onPointerMove, { passive: true });
-  window.addEventListener('pointerup', onPointerUp);
-  renderer.domElement.addEventListener('click', onClick);
-  renderer.domElement.addEventListener('pointerleave', () => { ndc.set(999, 999); });
-
-  /* ---- 렌더 루프 ---- */
-  let frame = 0, visible = true;
-
-  const resize = () => {
-    const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    // 세로가 짧으면 벽이 잘리므로 카메라를 뒤로 뺀다
-    // 3행이 세로에 여유 있게 들어오도록 거리 계산 (위아래 약간의 여백 포함)
-    const needH = (ROWS * ROW_H + 0.6) / (2 * Math.tan((camera.fov * Math.PI) / 360));
-    camera.position.z = Math.max(6.0, needH);
-    camera.updateProjectionMatrix();
-  };
-
-  const tick = () => {
-    if (!dragging) driftX += 0.0016;          // 아주 느린 흐름
-    curX += ((targetX + driftX) - curX) * 0.06;
-
-    // 벽을 무한히 이어 붙인다 — 끝에 다다르면 반대편에서 이어진다
-    const shift = ((curX % loopW) + loopW) % loopW;
-    wall.position.x = -shift;
-
-    parX += (parTX - parX) * 0.05;
-    parY += (parTY - parY) * 0.05;
-    camera.position.x = parX;
-    camera.position.y = parY;
-    camera.lookAt(parX * 0.35, parY * 0.35, 0);
-
-    // 마우스가 얹힌 재킷만 벽에서 살짝 떠오른다
+  const pick = (event: MouseEvent): HeroItem | null => {
+    if (canvas.style.visibility === 'hidden' || destroyed) return null;
+    const rect = host.getBoundingClientRect();
+    ndc.set((event.clientX - rect.left) / Math.max(1, rect.width) * 2 - 1, -(event.clientY - rect.top) / Math.max(1, rect.height) * 2 + 1);
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld(true);
     ray.setFromCamera(ndc, camera);
-    const hit = ray.intersectObjects([...tiles.map((t) => t.mesh), ...clones], false)[0];
-    const next = (hit?.object as THREE.Mesh) || null;
-    if (next !== hovered) {
-      hovered = next;
-      renderer.domElement.style.cursor = hovered ? 'pointer' : 'grab';
-      host.dispatchEvent(new CustomEvent('wall:hover', { detail: hovered?.userData?.item ?? null }));
-    }
+    return ray.intersectObjects(pickable, false)[0]?.object.userData.item ?? null;
+  };
+  const onPointerMove = (event: PointerEvent) => {
+    if (event.pointerType === 'touch') return;
+    setHover(pick(event));
+    if (!lifecycle?.isMoving()) return;
+    targetX = ndc.x * 0.16; targetY = ndc.y * 0.12;
+  };
+  const onLeave = () => { targetX = 0; targetY = 0; setHover(null); };
+  const onClick = (event: MouseEvent) => {
+    // Re-raycast at the click, never navigate using a stale hover or a moving object's old position.
+    const href = pick(event)?.href;
+    if (typeof href === 'string' && (href.startsWith('#/') || (href.startsWith('/') && !href.startsWith('//')))) location.hash = href;
+  };
+  canvas.addEventListener('pointermove', onPointerMove, { passive: true });
+  canvas.addEventListener('pointerleave', onLeave);
+  canvas.addEventListener('click', onClick);
 
-    for (let k = 0; k < tiles.length; k++) {
-      const orig = tiles[k].mesh;
-      const twin = clones[k];
-      const mat = orig.userData.faceMat as THREE.MeshStandardMaterial;
-      if (orig.userData.ready) mat.opacity += (1 - mat.opacity) * 0.08;
-      // 원본이든 복제본이든 마우스가 얹힌 쪽 짝 전체를 들어올린다
-      const isHover = hovered === orig || hovered === twin;
-      const lift = isHover ? 0.34 : 0;
-      const s = isHover ? 1.045 : 1;
-      for (const m of [orig, twin]) {
-        m.position.z += (lift - m.position.z) * 0.16;
-        m.scale.x += (s - m.scale.x) * 0.16;
-        m.scale.y = m.scale.x;
-      }
+  const frameLayout = () => {
+    const w = Math.max(1, host.clientWidth), h = Math.max(1, host.clientHeight);
+    camera.aspect = w / h;
+    const mobile = w <= 600;
+    const viewHeight = mobile ? Math.max(8.4, 7.4 / camera.aspect) : 7.6;
+    const viewWidth = viewHeight * camera.aspect;
+    camera.position.set(0, 0, viewHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))));
+    camera.lookAt(0, 0, 0); camera.updateProjectionMatrix();
+    const centered = host.dataset.heroLayout === 'center';
+    // Home reserves the left 40% for DOM copy. Center is opt-in for About.
+    const fit = mobile ? 1 : Math.min(1, viewWidth / (centered ? 10 : 16));
+    const origin = mobile || centered ? 0 : viewWidth * 0.22;
+    const layouts = mobile
+      ? [[0.15, -0.65, 0.65, 1.55, -0.18, -0.30, -0.18], [-1.85, 2.15, -1, 0.78, 0.22, 0.42, 0.28], [2.05, 2.55, -1.4, 0.70, -0.3, -0.4, -0.32]]
+      : [[0, -0.35, 0.85, 1.65, -0.16, -0.32, -0.18], [-2.1, 1.75, -1.1, 0.82, 0.3, 0.42, 0.30], [2.65, 1.55, -1.55, 0.80, -0.25, -0.46, -0.28]];
+    sculptures.forEach((sculpture, i) => {
+      const slot = (i - selected + RECORD_COUNT) % RECORD_COUNT;
+      const [x, y, z, scale, rx, ry, rz] = layouts[slot];
+      sculpture.base.set(origin + x * fit, y * fit, z * fit);
+      sculpture.tilt.set(rx, ry, rz); sculpture.scale = scale * fit;
+    });
+  };
+  const applyPose = (elapsed: number, delta: number, moving: boolean, snap = false) => {
+    const blend = snap ? 1 : 1 - Math.exp(-delta * 5.4);
+    sculptures.forEach((sculpture, i) => {
+      const active = i === selected;
+      const slot = (i - selected + RECORD_COUNT) % RECORD_COUNT;
+      const phase = elapsed * 0.36 + i * 2.1;
+      const hover = moving && hoveredIndex === i ? 1 : 0;
+      const reveal = entranceDone ? 1 : THREE.MathUtils.smoothstep(entranceTime - slot * 0.16, 0, 1.35);
+      const lift = (1 - reveal) * (active ? 2.2 : 1.4);
+      const bob = moving ? Math.sin(phase) * 0.075 : 0;
+      const damp = (from: number, to: number) => from + (to - from) * blend;
+      const { group, record, sleeve, shadow, base, tilt } = sculpture;
+      group.position.set(damp(group.position.x, base.x + (1 - reveal) * (slot === 1 ? -0.8 : 0.6)),
+        damp(group.position.y, base.y - lift + bob + hover * 0.15),
+        damp(group.position.z, base.z - (1 - reveal) * 1.5 + hover * 0.25));
+      group.rotation.set(damp(group.rotation.x, tilt.x + (moving ? Math.sin(phase * 0.7) * 0.05 : 0) - hover * 0.06),
+        damp(group.rotation.y, tilt.y + (moving ? Math.sin(phase * 0.85) * 0.08 : 0) + (1 - reveal) * 0.65 - hover * 0.12),
+        damp(group.rotation.z, tilt.z + (1 - reveal) * (slot === 1 ? 0.24 : -0.22)));
+      group.scale.setScalar(damp(group.scale.x, sculpture.scale * (1 + hover * 0.025)));
+      // The selected sleeve opens into the foreground while the other pairs tuck away.
+      record.position.x = damp(record.position.x, (active ? 0.66 : 0.18) + hover * 0.12 - (1 - reveal) * 0.36);
+      record.position.y = damp(record.position.y, active ? 0.20 : 0.08);
+      record.position.z = damp(record.position.z, active ? 0.20 : 0.02);
+      record.rotation.y = damp(record.rotation.y, active ? -0.09 : 0.04);
+      record.rotation.z = damp(record.rotation.z, (active ? 0.16 : -0.10) + elapsed * (i === 1 ? -0.022 : 0.018));
+      sleeve.position.x = damp(sleeve.position.x, active ? -0.48 : -0.28);
+      sleeve.rotation.z = damp(sleeve.rotation.z, active ? -0.12 : 0.015);
+      shadow.position.set(group.position.x, base.y - sculpture.scale * 1.7, -1.8);
+      shadow.scale.setScalar(sculpture.scale * (0.85 + reveal * 0.15));
+    });
+    posePending = false;
+  };
+  const resize = () => {
+    renderer.setSize(Math.max(1, host.clientWidth), Math.max(1, host.clientHeight), false);
+    frameLayout();
+    // Resize must fit even a paused scene; it is not an animation restart.
+    applyPose(0, 0, false, true);
+    posePending = true;
+  };
+  const selectHero = (index: number) => {
+    if (destroyed || !Number.isInteger(index) || index < 0 || index >= artworkItems.length || index === selected) return;
+    selected = index; host.dataset.heroSelected = String(index);
+    setHover(null); frameLayout(); posePending = true;
+    // Selection is content state, not optional animation. Commit immediately when paused/reduced.
+    if (!lifecycle?.isMoving()) {
+      entranceDone = true; applyPose(0, 0, false, true);
     }
-
+    lifecycle?.invalidate();
+  };
+  selectionHost.__selectHero = selectHero;
+  host.dataset.heroSelected = '0';
+  const tick = (elapsed: number, delta: number, moving: boolean) => {
+    if (moving) {
+      if (host.dataset.scene3d === 'ready') entranceTime += delta;
+      if (entranceTime >= 1.8) entranceDone = true;
+      const blend = 1 - Math.exp(-delta * 3);
+      parX += (targetX - parX) * blend; parY += (targetY - parY) * blend;
+      composition.rotation.set(-parY * 0.3, parX * 0.3, 0);
+      applyPose(elapsed, delta, true);
+    } else if (posePending || !entranceDone || wasMoving) {
+      entranceDone = true; applyPose(elapsed, 0, false, true);
+    }
+    wasMoving = moving;
     renderer.render(scene, camera);
-    frame = visible && !document.hidden ? requestAnimationFrame(tick) : 0;
   };
+  lifecycle = createSceneLifecycle(host, tick, resize);
+  const onContextLost = (event: Event) => { event.preventDefault(); destroy(); host.dataset.scene3d = 'fallback'; };
+  canvas.addEventListener('webglcontextlost', onContextLost);
 
-  const resume = () => { if (!frame && visible && !document.hidden) frame = requestAnimationFrame(tick); };
-  const ro = new ResizeObserver(resize);
-  ro.observe(host);
-  const io = new IntersectionObserver(([e]) => {
-    visible = e?.isIntersecting ?? true;
-    if (visible) resume();
-    else if (frame) { cancelAnimationFrame(frame); frame = 0; }
-  }, { threshold: 0.01 });
-  io.observe(host);
-  const onVis = () => { if (document.hidden && frame) { cancelAnimationFrame(frame); frame = 0; } else resume(); };
-  document.addEventListener('visibilitychange', onVis);
+  // Build the complete deduplicated request set before starting loads. Synchronous failures
+  // cannot confuse "all failed" with "first failed"; cancelled late successes release textures.
+  const loader = new THREE.TextureLoader(); loader.setCrossOrigin('anonymous');
+  let failedTextures = 0;
+  faces.forEach((face, url) => loader.load(url, tex => {
+    if (destroyed) { tex.dispose(); return; }
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    face.map = tex; face.color.set(0xffffff); face.needsUpdate = true;
+    canvas.style.visibility = '';
+    host.dataset.scene3d = 'ready';
+    lifecycle?.invalidate();
+  }, undefined, () => {
+    if (destroyed) return;
+    failedTextures++;
+    if (failedTextures === faces.size) { destroy(); host.dataset.scene3d = 'fallback'; }
+    else lifecycle?.invalidate();
+  }));
 
-  resize();
-  frame = requestAnimationFrame(tick);
-
-  return {
-    destroy() {
-      if (frame) cancelAnimationFrame(frame);
-      ro.disconnect(); io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
-      renderer.domElement.removeEventListener('click', onClick);
-      clones.forEach((c) => c.removeFromParent());
-      tiles.forEach((t) => {
-        const mat = t.mesh.userData.faceMat as THREE.MeshStandardMaterial;
-        mat.map?.dispose(); mat.dispose();
-      });
-      tileGeo.dispose(); sideMat.dispose();
-      shelfGeo.dispose(); shelfMat.dispose();
-      backGeo.dispose(); backMat.dispose();
-      renderer.dispose();
-      renderer.domElement.remove();
-    },
-  };
+  function destroy() {
+    if (destroyed) return;
+    destroyed = true;
+    lifecycle?.destroy();
+    if (selectionHost.__selectHero === selectHero) delete selectionHost.__selectHero;
+    delete host.dataset.heroSelected;
+    canvas.removeEventListener('webglcontextlost', onContextLost);
+    canvas.removeEventListener('pointermove', onPointerMove);
+    canvas.removeEventListener('pointerleave', onLeave);
+    canvas.removeEventListener('click', onClick);
+    setHover(null);
+    faces.forEach(face => face.map?.dispose());
+    geometries.forEach(value => value.dispose()); materials.forEach(value => value.dispose());
+    key.shadow.dispose();
+    renderer.dispose(); renderer.forceContextLoss(); canvas.remove();
+    delete host.dataset.scene3d;
+  }
+  return { destroy, setPaused: paused => { targetX = 0; targetY = 0; if (paused) posePending = true; lifecycle?.setPaused(paused); } };
 }

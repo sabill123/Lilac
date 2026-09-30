@@ -1,10 +1,11 @@
-import { api, findCatalog, artUrl, esc, icon, me, refreshMe } from './api';
+import { api, findCatalog, artUrl, esc, icon, me, refreshMe, setToken, needsLogin } from './api';
 import { smartMatch } from './koja';
-import { mountHero3D, mountChart3D, can3D } from './three';
+import { renderMusicHome, renderMusicChart } from './discovery';
 import type { Artist, SeedTrack, Ev, Product, CatalogTrack, PlayableTrack } from './api';
 import { playQueue, openYt, toast, enqueue, openPlaylistPicker, askName, askConfirm } from './player';
 import { applyTone } from './colors';
-import { bindHoverExpand, openContextMenu, bindTilt, bindDragReorder } from './interactions';
+import { openContextMenu, bindTilt, bindDragReorder } from './interactions';
+import { renderStore } from './store';
 import { t } from './i18n';
 
 /* ---- 스켈레톤 ---- */
@@ -17,24 +18,6 @@ const skCards = (n = 6, round = false) => `<div class="shelf d3-stage">${Array.f
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 const root = () => $('#page');
-/** 플레이 모드 = 전 페이지 스포티파이 디자인 */
-const isPlay = () => document.body.classList.contains('play-mode');
-
-/** 스포티파이식 페이지 헤더 (플리/차트/스토어/일정 공용) */
-function spHeader(o: { label: string; title: string; meta: string; cover?: string; coverIcon?: string; mosaic?: string[] }) {
-  const cover = o.mosaic?.length
-    ? `<div class="sp-cover mosaic" data-tilt="9">${o.mosaic.map((a) => `<span style="background-image:url(${esc(a)})"></span>`).join('')}</div>`
-    : o.cover
-      ? `<div class="sp-cover" style="background-image:url(${esc(o.cover)})" data-tilt="9"></div>`
-      : `<div class="sp-cover empty" data-tilt="9">${icon(o.coverIcon || 'i-queue', 'ic ph-ic')}</div>`;
-  return `<div class="sp-head">${cover}
-    <div class="sp-info">
-      <p class="sp-label">${esc(o.label)}</p>
-      <h1 class="sp-title plain">${esc(o.title)}</h1>
-      <p class="sp-meta">${o.meta}</p>
-    </div></div>`;
-}
-
 let artists: Artist[] = [];
 let seeds: SeedTrack[] = [];
 let events: Ev[] = [];
@@ -48,6 +31,17 @@ export async function loadData() {
 const toPlayable = (c: CatalogTrack, yt?: string | null): PlayableTrack =>
   ({ title: c.title, artist: c.artist, album: c.album, artwork: artUrl(c, 200), preview: c.preview, youtubeId: yt, durationMs: c.durationMs });
 const dur = (ms?: number) => (ms ? `${Math.floor(ms / 60000)}:${String(Math.round((ms % 60000) / 1000)).padStart(2, '0')}` : '0:30');
+
+/** 일정 제목 — 대부분 "아티스트 · 제목" 형태로 들어와 아티스트가 두 번 나온다.
+ *  제목이 이미 아티스트로 시작하면 그 부분을 떼고, 아티스트는 따로 한 줄로 둔다. */
+function schTitle(e: { artist: string; title: string }) {
+  const t = e.title.trim();
+  const a = e.artist.trim();
+  if (a && t.toLowerCase().startsWith(a.toLowerCase())) {
+    return t.slice(a.length).replace(/^[\s·・\-–—:]+/, '') || t;
+  }
+  return t;
+}
 
 function dday(date: string) {
   const d = Math.ceil((new Date(date).getTime() - Date.now()) / 864e5);
@@ -98,7 +92,8 @@ function bindTable(
     row.querySelector('[data-like]')?.addEventListener('click', async (e) => {
       e.stopPropagation();
       const tr = rows[Number(row.dataset.i)];
-      await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview, durationMs: tr.durationMs } }) });
+      if (needsLogin('좋아요')) return;
+      await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview, durationMs: tr.durationMs } }) }).catch(() => null);
       (e.currentTarget as HTMLElement).classList.toggle('on');
       toast('좋아요를 업데이트했습니다');
     });
@@ -126,16 +121,16 @@ function bindTable(
 /* ============ 공용: 카드 셸프 ============ */
 function shelf(cards: { title: string; sub: string; art?: string; round?: boolean; href: string; term?: string }[]) {
   return `<div class="shelf d3-stage">${cards.map((c) => `
-    <a class="card ${c.round ? 'round' : ''}" href="${c.href}" data-term="${esc(c.term || '')}" data-tilt="8" data-expand>
+    <a class="card ${c.round ? 'round' : ''}" href="${c.href}" data-term="${esc(c.term || '')}" data-expand>
       <div class="cover">${c.art ? `<img src="${c.art}" alt="" loading="lazy"/>` : `<div class="ph">${esc(c.title[0] || '?')}</div>`}
         <span class="glare"></span>
-        <button class="hover-play">${icon('i-play')}</button></div>
+        <span class="hover-play" aria-hidden="true">${icon(c.round ? 'i-chev-r' : 'i-play')}</span></div>
       <div class="c-title">${esc(c.title)}</div><div class="c-sub">${esc(c.sub)}</div>
     </a>`).join('')}</div>`;
 }
 function fillShelfArts(container: HTMLElement) {
   container.querySelectorAll<HTMLElement>('.card[data-term]').forEach(async (el) => {
-    if (!el.dataset.term) return;
+    if (!el.dataset.term || el.querySelector('.cover img')) return;
     const hit = await findCatalog(el.dataset.term);
     if (hit) el.querySelector('.cover')!.insertAdjacentHTML('afterbegin', `<img src="${artUrl(hit, 300)}" alt="" loading="lazy"/>`);
   });
@@ -144,24 +139,26 @@ function fillShelfArts(container: HTMLElement) {
 /* ============ 공용: 랭킹 리스트 (차트/아티스트 인기곡) ============ */
 function rankList(list: { rank: number; title: string; artist: string; artwork?: string; ytViews?: number; sources?: string[]; tag?: string; youtubeId?: string | null }[], opts: { big?: boolean } = {}) {
   return `<div class="rank-list ${opts.big ? 'big' : ''}">${list.map((e) => `
-    <div class="rk-row" data-i="${e.rank - 1}">
+    <div class="rk-row" data-i="${e.rank - 1}" tabindex="0" role="group" aria-label="${esc(e.title)} 미리듣기">
       <span class="rk-n">${e.rank}</span>
       <div class="rk-art">${e.artwork ? `<img src="${e.artwork}" loading="lazy" alt=""/>` : ''}<span class="rk-ov">${icon('i-play')}</span></div>
       <div class="rk-meta"><div class="rk-t">${esc(e.title)}</div><div class="rk-a">${esc(e.artist)}</div></div>
       <div class="rk-side">
         ${e.tag ? `<span class="rk-tag">${esc(e.tag)}</span>` : ''}
-        ${e.ytViews ? `<span class="rk-views">${(e.ytViews / 1e8).toFixed(2)}억</span>` : ''}
+        ${e.ytViews ? `<span class="rk-views">${e.ytViews >= 1e8 ? (e.ytViews / 1e8).toFixed(1) + '억' : e.ytViews >= 1e4 ? Math.round(e.ytViews / 1e4).toLocaleString() + '만' : e.ytViews.toLocaleString()}회</span>` : ''}
         ${e.sources ? `<span class="rk-src">${e.sources.map((s) => `<i class="src-dot ${s}"></i>`).join('')}</span>` : ''}
         ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="${t('mv')}">${icon('i-ext')}</button>` : ''}
       </div>
     </div>`).join('')}</div>`;
 }
 function bindRank(container: HTMLElement, entries: { title: string; artist: string; artwork?: string; searchTerm?: string; youtubeId?: string | null }[]) {
+  container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) => row.addEventListener('keydown', (event) => { if(event.target === row && (event.key === 'Enter' || event.key === ' ')) {event.preventDefault(); row.click();} }));
   container.querySelectorAll<HTMLButtonElement>('.rk-mv').forEach((b) =>
     b.addEventListener('click', (e) => { e.stopPropagation(); openYt(b.dataset.yt!); }));
   container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) =>
     row.addEventListener('click', async (e) => {
-      if ((e.target as HTMLElement).closest('.rk-mv')) return;
+      // MV 버튼과 소스 요약 칩은 행 재생과 다른 동작이다
+      if ((e.target as HTMLElement).closest('.rk-mv, .rk-srcn')) return;
       const i = Number(row.dataset.i);
 
       /* 클릭한 곡부터 바로 튼다.
@@ -199,561 +196,9 @@ function fillEventArts(container: HTMLElement) {
   });
 }
 
-/* ================= 홈 ================= */
-export async function pageHome() {
-  if (isPlay()) return pageHomePlay();
-  const feat = seeds.find((s) => s.id === 't5') ?? seeds[0];
-  root().innerHTML = `
-    <section class="billboard" id="bb">
-      <div class="bb-blur" id="bbBlur" data-parallax="0.34"></div>
-      <div class="bb-stage" id="bbStage" aria-hidden="true"></div>
-      <div class="bb-scrim"></div>
-      <div class="bb-inner">
-        <div class="bb-content">
-          <p class="bb-eyebrow">${t('todayPick')}</p>
-          <h1 class="bb-title">${esc(feat.title.split(' (')[0])}</h1>
-          <p class="bb-meta">${esc(feat.artist)}</p>
-          <p class="bb-tag">${esc(feat.tag)}</p>
-          <div class="bb-actions">
-            <button class="btn-play-w" id="heroPlay">${icon('i-play')}${t('play')}</button>
-            <button class="btn-sec" id="heroMv">${icon('i-info')}${t('mv')}</button>
-          </div>
-        </div>
-        <div class="bb-card" id="bbCard" data-tilt="14"><div class="bb-card-inner sk"></div></div>
-      </div>
-    </section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists"></div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('chart.title')}</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hChart"></div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>에디터 픽</h2><span class="sec-sub" id="hEdSub">Deezer 공식 에디토리얼 · 실시간</span></div><div id="hEditorial"></div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('upcoming')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hEvents" class="ev-shelf"></div></section>
-    <section class="store-wrap"><div class="store-inner">
-      <p class="store-label">STORE</p>
-      <div class="sec-head store-head"><h2>${t('newArrivals')}</h2><a class="sec-link dark" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div>
-      <div class="store-grid" id="hStore"></div>
-    </div></section>`;
-
-  // 플레이 모드 전용: 스포티파이 홈의 바로 가기 타일
-  if (document.body.classList.contains('play-mode')) {
-    const [lists, likes] = await Promise.all([api('/api/playlists').catch(() => []), api('/api/likes').catch(() => [])]);
-    const quick = [
-      ...(likes.length ? [{ name: t('lib.likes'), href: '#/library/likes', liked: true, art: '' }] : []),
-      ...lists.slice(0, 5).map((p: { id: string; name: string; tracks: PlayableTrack[] }) => ({ name: p.name, href: `#/playlist/${p.id}`, liked: false, art: p.tracks[0]?.artwork || '' })),
-    ].slice(0, 6);
-    if (quick.length) {
-      root().insertAdjacentHTML('afterbegin', `
-        <section class="page-section quick-sec"><div class="sec-head" data-d3="head"><h2>바로 가기</h2></div>
-        <div class="quick-grid">${quick.map((q) => `
-          <a class="quick" href="${q.href}">
-            <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
-            <b>${esc(q.name)}</b>
-            <span class="quick-play">${icon('i-play')}</span>
-          </a>`).join('')}</div></section>`);
-    }
-  }
-
-  findCatalog(feat.searchTerm).then((hit) => {
-    const blur = document.getElementById('bbBlur'), cardEl = document.getElementById('bbCard');
-    if (!hit || !blur || !cardEl) return;
-    const big = artUrl(hit, 1200);
-    blur.style.backgroundImage = `url(${big})`;
-    cardEl.innerHTML = `<img class="bb-card-inner" src="${big}" alt=""/><span class="glare"></span>`;
-    void applyTone(document.getElementById('bb'), artUrl(hit, 200));
-  });
-  $('#heroPlay').addEventListener('click', async () => {
-    const hit = await findCatalog(feat.searchTerm);
-    if (hit) playQueue([toPlayable(hit, feat.youtubeId)], 0);
-  });
-  $('#heroMv').addEventListener('click', () => { if (feat.youtubeId) openYt(feat.youtubeId); });
-
-  $('#hArtists').innerHTML = skCards(7, true);
-  $('#hArtists').innerHTML = shelf(artists.map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm })));
-  fillShelfArts($('#hArtists'));
-
-  /* 수집해 둔 차트를 쓴다.
-     예전에는 /api/chart 가 요청마다 YouTube 조회수를 실시간으로 긁어와 2초 가까이 걸렸다. */
-  $('#hChart').innerHTML = skRows(5);
-  const chart = await loadChart(chCountry, 'combined').catch(() => null);
-  if (chart?.list?.length) {
-    const top = chart.list.slice(0, 5);
-    $('#hChart').innerHTML = rankList(top);
-    bindRank($('#hChart'), top);
-
-    /* 히어로 3D — 차트 상위 앨범을 원통형으로 세워 돌린다.
-       three.js 는 여기서 처음 필요해지므로 이 시점에 동적으로 불러온다. */
-    const stage = document.getElementById('bbStage');
-    if (stage && can3D()) {
-      /* 벽 소스는 상품(아티스트 로스터 기반)을 쓴다.
-         차트 원본 풀에는 한국 Apple 차트의 서구 아티스트가 섞여 있어
-         '한일 팬덤 포털'의 첫 화면에 Justin Bieber가 걸리는 문제가 있었다.
-         상품은 로스터에서 파생되므로 한일 아티스트만 남는다. */
-      /* 아티스트별로 라운드로빈해 같은 팀이 연달아 걸리지 않게 한다 */
-      const byArtist = new Map<string, typeof products>();
-      for (const p of products) {
-        if (!p.artwork) continue;
-        if (!byArtist.has(p.brand)) byArtist.set(p.brand, []);
-        byArtist.get(p.brand)!.push(p);
-      }
-      const buckets = [...byArtist.values()];
-      const pool: typeof products = [];
-      for (let round = 0; pool.length < 45 && round < 12; round++) {
-        for (const b of buckets) {
-          if (b[round]) pool.push(b[round]);
-          if (pool.length >= 45) break;
-        }
-      }
-      const items = pool.map((p) => ({
-        title: p.name.replace(/ - (Single|EP)$/i, ''),
-        artist: p.brand,
-        artwork: p.artwork,
-        href: `#/store/${p.id}`,
-      }));
-      document.body.classList.add('has-3d-hero');
-      stage.insertAdjacentHTML('afterend', '<span class="stage-hint">드래그해서 넘겨보세요 · 재킷을 누르면 이동합니다</span>');
-      // 재킷에 마우스를 얹으면 히어로 제목이 그 곡으로 바뀐다
-      const hTitle = document.querySelector('.bb-title');
-      const hMeta = document.querySelector('.bb-meta');
-      const hTag = document.querySelector('.bb-tag');
-      const orig = { t: hTitle?.textContent || '', m: hMeta?.textContent || '', g: hTag?.textContent || '' };
-      stage.addEventListener('wall:hover', (ev) => {
-        const d = (ev as CustomEvent).detail as { title: string; artist: string } | null;
-        if (!hTitle || !hMeta) return;
-        hTitle.textContent = d ? d.title : orig.t;
-        hMeta.textContent = d ? d.artist : orig.m;
-        if (hTag) hTag.textContent = d ? '차트 상위' : orig.g;
-      });
-      mountHero3D(stage, items).catch(() => document.body.classList.remove('has-3d-hero'));
-    }
-  }
-
-  // 무드 타일
-  const moods = [
-    { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' },
-    { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
-    { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' },
-    { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
-    { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' },
-    { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
-  ];
-  $('#hMoods').innerHTML = moods.map((m) => `
-    <a class="mood d3-tilt" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-d3-tilt="10" data-d3="rise">
-      <span class="mood-k">${m.k}</span><span class="mood-sq" data-term="${esc(m.q)}"></span></a>`).join('');
-  moods.forEach(async (m, i) => {
-    const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
-    const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
-    if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
-  });
-
-  /* 에디터 픽 — Deezer 공식 에디토리얼 (실시간 무료 API, 키 불필요)
-     클릭하면 iTunes 카탈로그에서 원곡을 찾아 바로 재생한다 */
-  api(`/api/editorial?country=${chCountry}`).then((ed: { label: string; editor: string; list: { title: string; artist: string; artwork: string | null }[] }) => {
-    const host = document.getElementById('hEditorial');
-    if (!host || !ed?.list?.length) return;
-    const sub = document.getElementById('hEdSub');
-    if (sub) sub.textContent = `${ed.label} · ${ed.editor} · 실시간`;
-    host.innerHTML = shelf(ed.list.slice(0, 12).map((t) => ({
-      title: t.title, sub: t.artist, art: t.artwork || undefined,
-      href: `#/search?q=${encodeURIComponent(`${t.artist} ${t.title}`)}`,
-      term: `${t.artist} ${t.title}`,
-    })));
-    // 카드 클릭 = 즉시 재생 (검색 이동 대신)
-    host.querySelectorAll<HTMLElement>('.card').forEach((el) => {
-      el.addEventListener('click', async (ev2) => {
-        ev2.preventDefault();
-        const hit = await findCatalog(el.dataset.term || '');
-        if (hit) playQueue([toPlayable(hit)], 0, 'editorial');
-        else location.hash = el.getAttribute('href')?.slice(1) || '/';
-      });
-    });
-    bindTilt(host); bindHoverExpand(host);
-  }).catch(() => { document.getElementById('hEditorial')?.closest('section')?.remove(); });
-
-  /* '다가오는 일정'이므로 오늘 이후만, 가까운 순으로 고른다.
-     예전에는 events 앞 4개를 그대로 써서 1982년 발매가 '종료' 배지와 함께 떴다. */
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const upcomingEvents = events
-    .filter((e) => e.date >= todayStr)
-    .sort((x, y) => x.date.localeCompare(y.date))
-    .slice(0, 4);
-  $('#hEvents').innerHTML = upcomingEvents.map((ev) => {
-    const { d, txt } = dday(ev.date);
-    // 수집 단계에서 확보한 아트워크를 우선 쓴다 (아티스트명 재조회는 중복·오매칭을 부른다)
-    const art = ev.artwork ? `background-image:url(${esc(sized(ev.artwork, 400))})` : '';
-    return `<a class="ev-card d3-tilt" href="#/schedule" data-d3-tilt="6" data-d3="rise">
-      <div class="ev-bg" ${ev.artwork ? `style="${art}"` : `data-artist="${esc(ev.artist)}"`}></div><div class="ev-scrim"></div>
-      <div class="ev-body"><div class="ev-title">${esc(ev.title)}</div><div class="ev-info"><b class="ev-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</b> <span class="ev-type">${esc(ev.type)}</span> · ${ev.date} · ${esc(ev.venue)}</div></div></a>`;
-  }).join('') || `<p class="dim" style="padding:8px 0">예정된 일정이 없습니다</p>`;
-  fillEventArts($('#hEvents'));
-
-  $('#hStore').innerHTML = products.slice(0, 4).map(productCard).join('');
-  bindTilt($('#hStore'));
-}
-
-
-/* ---- 플레이 모드 홈 (스포티파이 홈) ---- */
-async function pageHomePlay() {
-  const hour = new Date().getHours();
-  const greet = hour < 6 ? '깊은 밤이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
-  root().innerHTML = `
-    <section class="page-section home-play">
-      <h1 class="greet">${greet}</h1>
-      <div class="quick-grid" id="hQuick"></div>
-    </section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>최근 재생</h2><a class="sec-link" href="#/library/history">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hRecent">${skCards(6)}</div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>오늘의 추천</h2><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hPicks">${skCards(6)}</div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="hArtists">${skCards(7, true)}</div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>무드로 듣기</h2></div><div class="mood-grid" id="hMoods"></div></section>`;
-
-  const [lists, likes, hist] = await Promise.all([
-    api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/history').catch(() => []),
-  ]);
-  const quick = [
-    ...(likes.length ? [{ name: t('lib.likes'), href: '#/library/likes', liked: true, art: '' }] : []),
-    ...lists.slice(0, 5).map((p: { id: string; name: string; tracks: PlayableTrack[] }) => ({ name: p.name, href: `#/playlist/${p.id}`, liked: false, art: p.tracks[0]?.artwork || '' })),
-  ].slice(0, 6);
-  const qb = document.getElementById('hQuick');
-  if (qb) qb.innerHTML = quick.length ? quick.map((q) => `
-    <a class="quick" href="${q.href}">
-      <span class="quick-art ${q.liked ? 'liked' : ''}" style="background-image:url(${esc(q.art)})">${q.liked ? icon('i-heart-f', 'ic s') : ''}</span>
-      <b>${esc(q.name)}</b><span class="quick-play">${icon('i-play')}</span></a>`).join('')
-    : `<p class="loading">플레이리스트를 만들면 여기에 표시됩니다</p>`;
-
-  const recent: PlayableTrack[] = (hist as PlayableTrack[]).filter((h, i, arr) => arr.findIndex((x) => x.title === h.title) === i).slice(0, 6);
-  const rb = document.getElementById('hRecent');
-  if (rb) {
-    if (recent.length) {
-      rb.innerHTML = `<div class="shelf d3-stage">${recent.map((h, i) => `
-        <a class="card" href="javascript:void 0" data-r="${i}" data-tilt="8" data-expand>
-          <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
-            <button class="hover-play">${icon('i-play')}</button></div>
-          <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
-      rb.querySelectorAll<HTMLElement>('[data-r]').forEach((el) =>
-        el.addEventListener('click', () => playQueue(recent, Number(el.dataset.r))));
-    } else {
-      rb.innerHTML = `<div class="empty-box sm">${icon('i-clock', 'ic eb')}<p>재생 기록이 없습니다</p></div>`;
-    }
-  }
-
-  const hits = await Promise.all(seeds.slice(0, 6).map((s) => findCatalog(s.searchTerm)));
-  const picks = hits.map((h, i) => (h ? toPlayable(h, seeds[i].youtubeId) : null)).filter(Boolean) as PlayableTrack[];
-  const pb = document.getElementById('hPicks');
-  if (pb) {
-    pb.innerHTML = `<div class="shelf d3-stage">${picks.map((h, i) => `
-      <a class="card" href="javascript:void 0" data-p="${i}" data-tilt="8" data-expand>
-        <div class="cover"><img src="${esc(h.artwork || '')}" alt="" loading="lazy"/><span class="glare"></span>
-          <button class="hover-play">${icon('i-play')}</button></div>
-        <div class="c-title">${esc(h.title)}</div><div class="c-sub">${esc(h.artist)}</div></a>`).join('')}</div>`;
-    pb.querySelectorAll<HTMLElement>('[data-p]').forEach((el) =>
-      el.addEventListener('click', () => playQueue(picks, Number(el.dataset.p))));
-  }
-
-  const ab = document.getElementById('hArtists');
-  if (ab) {
-    ab.innerHTML = shelf(artists.map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm })));
-    fillShelfArts(ab);
-  }
-
-  const moods = [
-    { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' },
-    { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
-    { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' },
-    { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
-    { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' },
-    { k: '애니송 명곡', c: '#ec4899,#831843', q: 'anison' },
-  ];
-  const mb = document.getElementById('hMoods');
-  if (mb) {
-    mb.innerHTML = moods.map((m) => `
-      <a class="mood d3-tilt" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-d3-tilt="10" data-d3="rise">
-        <span class="mood-k">${m.k}</span><span class="mood-sq"></span></a>`).join('');
-    moods.forEach(async (m, i) => {
-      const hit = await findCatalog(m.q === 'anime' ? seeds[0].searchTerm : m.q);
-      const sq = document.querySelectorAll<HTMLElement>('#hMoods .mood-sq')[i];
-      if (hit && sq) sq.style.backgroundImage = `url(${artUrl(hit, 200)})`;
-    });
-  }
-}
-
-/* ================= 차트 =================
-   양국 모두 '현지 대표 2종 + 글로벌 스트리밍 + 영상' 구조로 5개 소스를 모은다.
-     일본 : Billboard JAPAN HOT 100 / 오리콘 주간 싱글
-     한국 : 멜론 TOP 100 / 지니 차트
-     공통 : Apple Music 차트, Apple 공식 RSS, YouTube 공식 MV 조회수
-   combined 는 위 순위를 정규화해 가중 합산한 Lilac 자체 집계다(공식 차트 아님). */
-interface ChartRow {
-  rank: number; title: string; artist: string; artwork?: string; appleUrl?: string;
-  youtubeId?: string | null; ytViews?: number | null;
-  appleRank?: number | null; youtubeRank?: number | null; sources?: string[]; score?: number;
-  ranks?: Record<string, number>; move?: string; lastRank?: number | null;
-}
-/* 소스 구성은 서버가 국가별로 내려준다.
-   화면에 쓰는 짧은 라벨만 여기서 관리한다. */
-const SOURCE_LABEL: Record<string, string> = {
-  combined: '통합',
-  billboard: 'Billboard JAPAN',
-  oricon: '오리콘',
-  melon: '멜론',
-  genie: '지니',
-  apple: 'Apple Music',
-  appleRss: 'Apple RSS',
-  youtube: 'YouTube',
-};
-/** 국가별 사용 가능한 소스 — 차트를 불러오면 서버 응답으로 갱신된다 */
-const chSources: Record<string, string[]> = {
-  jp: ['combined', 'billboard', 'oricon', 'apple', 'appleRss', 'youtube'],
-  kr: ['combined', 'melon', 'genie', 'apple', 'appleRss', 'youtube'],
-};
-const sourcesOf = (c: string) =>
-  (chSources[c] || chSources.kr).map((k) => ({ k, label: SOURCE_LABEL[k] || k }));
-const labelOf = (_c: string, k: string) => SOURCE_LABEL[k] || '통합';
-const COUNTRY = [{ k: 'jp', label: '일본' }, { k: 'kr', label: '한국' }];
-let chCountry = localStorage.getItem('lilac.chartCountry') || 'jp';
-
-/* 통합 순위에서 각 곡이 어느 소스에 올랐는지 보여주는 배지 */
-const RANK_BADGES: [string, string, string][] = [
-  ['billboard', 'B', 'Billboard JAPAN'],
-  ['oricon', 'O', '오리콘'],
-  ['melon', 'M', '멜론'],
-  ['genie', 'G', '지니'],
-  ['apple', 'A', 'Apple Music'],
-  ['appleRss', 'R', 'Apple 공식 RSS'],
-  ['youtube', 'Y', 'YouTube 조회수'],
-];
-const viewsTxt = (n?: number | null) =>
-  !n ? '' : n >= 1e8 ? `${(n / 1e8).toFixed(2)}억` : n >= 1e4 ? `${Math.round(n / 1e4).toLocaleString()}만` : n.toLocaleString();
-
-/* 행에 처음 마우스가 닿을 때 배지를 그린다.
-   한 번 그리면 data 속성을 지워 다시 그리지 않는다. */
-function bindChartBadges(container: HTMLElement) {
-  container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) => {
-    row.addEventListener('mouseenter', () => {
-      const holder = row.querySelector<HTMLElement>('.rk-ranks[data-badges]');
-      if (!holder) return;
-      const raw = holder.dataset.badges || '';
-      holder.innerHTML = raw.split(';').filter(Boolean).map((chunk) => {
-        const [k, s, tt, n] = chunk.split('|');
-        return `<span class="mini-rank ${esc(k)}" title="${esc(tt)} 순위">${esc(s)} ${esc(n)}</span>`;
-      }).join('');
-      delete holder.dataset.badges;
-    }, { once: true });
-  });
-}
-
-function chartRowsHtml(list: ChartRow[], source: string) {
-  return `<div class="rank-list big d3-stack">${list.map((e) => {
-    /* 소스별 배지는 처음부터 그리지 않는다.
-       100행 × 배지 5개면 화면에 보이지도 않는 요소 500개를 들고 있게 된다.
-       필요한 값만 data 속성에 담아 두고, 행에 마우스가 닿을 때 그린다. */
-    const badgeData = source === 'combined'
-      ? RANK_BADGES.filter(([k]) => e.ranks?.[k])
-          .map(([k, s, tt]) => `${k}|${s}|${tt}|${e.ranks![k]}`).join(';')
-      : '';
-    const move = e.move
-      ? `<span class="rk-move ${e.move}">${e.move === 'new' ? 'NEW' : e.move === 'up' ? '▲' : '▼'}${e.lastRank && e.move !== 'new' ? ` ${Math.abs(e.lastRank - e.rank)}` : ''}</span>`
-      : '';
-    /* 행은 네 가지만 싣는다: 순위 · 커버 · 곡 · 대표 지표.
-       예전에는 소스 배지 7개와 변동과 조회수와 MV 버튼이 한 줄에 다 들어가
-       100행을 훑는 게 불가능했다. 소스별 순위는 한 곡을 파고들 때 필요한
-       정보지 목록을 훑을 때 필요한 정보가 아니다. 요약해서 접고 호버로 편다.
-       변동은 별도 칸이 아니라 순위에 붙는 성질이므로 순위 칸 안에 넣는다. */
-    const srcN = source === 'combined' ? RANK_BADGES.filter(([k]) => e.ranks?.[k]).length : 0;
-    return `
-    <div class="rk-row" data-i="${e.rank - 1}">
-      <span class="rk-n">${e.rank}${move}</span>
-      <div class="rk-art">${e.artwork ? `<img src="${esc(sized(e.artwork, 120))}" loading="lazy" decoding="async" alt=""/>` : `<span class="rk-ph">${icon('i-chart')}</span>`}<span class="rk-ov">${icon('i-play')}</span></div>
-      <div class="rk-meta">
-        <div class="rk-t">${esc(e.title)}</div>
-        <div class="rk-a">${esc(e.artist)}</div>
-      </div>
-      <div class="rk-side">
-        ${srcN ? `<span class="rk-srcn" title="${srcN}개 차트에 올라 있습니다">${srcN}곳</span>` : ''}
-        ${badgeData ? `<span class="rk-ranks" data-badges="${esc(badgeData)}"></span>` : ''}
-        ${e.ytViews ? `<span class="rk-views">${viewsTxt(e.ytViews)}회</span>` : ''}
-        ${e.youtubeId ? `<button class="rk-mv" data-yt="${e.youtubeId}" title="뮤직비디오">${icon('i-ext')}</button>` : ''}
-      </div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-const loadChart = async (country: string, source: string) => {
-  const d = await api(`/api/charts?country=${country}&source=${source}`).catch(() => null);
-  // 소스 구성은 수집 결과에 따라 달라지므로 서버 응답을 신뢰한다
-  if (d?.sources?.length) {
-    // 현지 대표 차트를 앞에, 글로벌 소스를 뒤에 둔다 (사용자가 먼저 찾는 순서)
-    const PRIORITY = ['billboard', 'oricon', 'melon', 'genie', 'apple', 'appleRss', 'youtube'];
-    const ordered = [...d.sources].sort((x: string, y: string) => PRIORITY.indexOf(x) - PRIORITY.indexOf(y));
-    chSources[country] = ['combined', ...ordered];
-  }
-  return d;
-};
-
-async function chartPlayables(list: ChartRow[], from = 0, count = 20): Promise<PlayableTrack[]> {
-  const out: PlayableTrack[] = [];
-  for (const e of list.slice(from, from + count)) {
-    const hit = await findCatalog(`${e.artist} ${e.title}`);
-    out.push(hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork, youtubeId: e.youtubeId });
-  }
-  return out;
-}
-
-function bindChartRows(container: HTMLElement, list: ChartRow[]) {
-  container.querySelectorAll<HTMLButtonElement>('.rk-mv').forEach((b) =>
-    b.addEventListener('click', (e) => { e.stopPropagation(); openYt(b.dataset.yt!); }));
-  container.querySelectorAll<HTMLElement>('.rk-row').forEach((row) =>
-    row.addEventListener('click', async (e) => {
-      if ((e.target as HTMLElement).closest('.rk-mv')) return;
-      const i = Number(row.dataset.i);
-      toast('재생 목록을 준비하는 중…');
-      const tracks = await chartPlayables(list, Math.max(0, i - 2), 20);
-      playQueue(tracks, Math.min(i, 2), `chart:${chCountry}`);
-      container.querySelectorAll('.rk-row').forEach((r) => r.classList.remove('playing'));
-      row.classList.add('playing');
-    }));
-}
-
-function bindCountryToggle(rerender: () => void) {
-  document.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) =>
-    b.addEventListener('click', () => {
-      chCountry = b.dataset.c!;
-      localStorage.setItem('lilac.chartCountry', chCountry);
-      // 국가에 없는 소스면 통합으로 되돌린다
-      const seg = location.hash.split('/')[2] || 'combined';
-      if (!sourcesOf(chCountry).some((s) => s.k === seg)) { location.hash = '#/chart/combined'; return; }
-      rerender();
-    }));
-}
-
-export async function pageChart(sub?: string) {
-  if (isPlay()) return pageChartPlay(sub);
-  const source = sub || 'combined';
-  root().innerHTML = `
-    <section class="chart-hero" id="chHero">
-      <div class="ch-stage" id="chStage" aria-hidden="true"></div>
-      <div class="ch-inner">
-        <p class="sp-label">차트</p>
-        <h1 class="ch-title">실시간 차트</h1>
-        <p class="ch-desc" id="chDesc">불러오는 중…</p>
-        <div class="ch-now" id="chNow" hidden>
-          <span class="ch-now-rank"></span>
-          <span class="ch-now-text"></span>
-        </div>
-        <div class="ch-controls">
-          <div class="seg wrap">${sourcesOf(chCountry).map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
-          <div class="seg country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
-        </div>
-      </div>
-    </section>
-    <section class="page-section chart-body">
-      <div class="ch-bar">
-        <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
-        <button class="tbtn big-ghost" id="chShuffle">${icon('i-shuffle')}</button>
-        <span class="ch-updated" id="chUpdated"></span>
-      </div>
-      <div id="chartBody">${skRows(10)}</div>
-      <p class="ch-method" id="chMethod"></p>
-    </section>`;
-  bindCountryToggle(() => pageChart(source));
-
-  const data = await loadChart(chCountry, source);
-  const body = document.getElementById('chartBody');
-  if (!data || !body) {
-    if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p><span>node backend/collect-charts.mjs 로 수집해 주세요</span></div>`;
-    return;
-  }
-  const list = data.list as ChartRow[];
-  $('#chDesc').textContent = `${data.countryLabel} · ${labelOf(chCountry, source)} · ${list.length}곡`;
-
-  /* 차트 3D — 상위 곡을 앞뒤로 늘어세워 순위를 깊이로 표현한다.
-     휠·드래그로 열을 따라 이동하고, 카드를 누르면 재생한다. */
-  const stage = document.getElementById('chStage');
-  if (stage && can3D()) {
-    document.body.classList.add('has-3d-chart');
-    const items = list.filter((e) => e.artwork).slice(0, 1).map((e) => ({
-      rank: e.rank, title: e.title, artist: e.artist, artwork: e.artwork,
-      onPick: async () => {
-        // 3D 카드에서 바로 재생 — 카탈로그에서 원곡을 찾아 큐에 올린다
-        const hit = await findCatalog(`${e.artist} ${e.title}`);
-        playQueue([hit ? toPlayable(hit, e.youtubeId) : { title: e.title, artist: e.artist, artwork: e.artwork || undefined }], 0);
-      },
-    }));
-    // 전시 중인 작품(1위) 정보를 배지에 고정 표시
-    const first = list[0];
-    const nowEl = document.getElementById('chNow');
-    if (nowEl && first) {
-      nowEl.hidden = false;
-      nowEl.querySelector('.ch-now-rank')!.textContent = String(first.rank ?? 1);
-      nowEl.querySelector('.ch-now-text')!.textContent = `${first.title} · ${first.artist}`;
-    }
-    stage.insertAdjacentHTML('afterend', '<span class="stage-hint">이번 주 1위 · 누르면 재생됩니다</span>');
-    mountChart3D(stage, items).catch(() => document.body.classList.remove('has-3d-chart'));
-  }
-  // 실시간 소스(공식 피드 직접 조회)와 일일 수집 소스를 구분해 보여준다
-  $('#chUpdated').innerHTML = data.live
-    ? `<span class="live-badge on rt">실시간</span>조회 시점 데이터 · Apple 공식 피드`
-    : `<span class="live-badge on">수집</span>${new Date(data.updated).toLocaleString()} 기준`;
-  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
-  body.innerHTML = chartRowsHtml(list, source);
-  bindChartBadges(body);
-  bindChartRows(body, list);
-  if (list[0]?.artwork) void applyTone(document.querySelector('.chart-hero'), list[0].artwork);
-
-  const playFrom = async (shuffle: boolean) => {
-    toast('재생 목록을 준비하는 중…');
-    const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(shuffle ? tr.sort(() => Math.random() - 0.5) : tr, 0, `chart:${chCountry}`);
-  };
-  $('#chPlayAll').addEventListener('click', () => playFrom(false));
-  $('#chShuffle').addEventListener('click', () => playFrom(true));
-}
-
-/* ---- 플레이 모드 차트 (스포티파이 플리 구조) ---- */
-async function pageChartPlay(sub?: string) {
-  const source = sub || 'combined';
-  root().innerHTML = `
-    <section class="sp-page">
-      <div id="chHead"></div>
-      <div class="sp-actions">
-        <button class="play-big" id="chPlayAll">${icon('i-play')}</button>
-        <button class="tbtn big-ghost" id="chShuffle" title="셔플">${icon('i-shuffle')}</button>
-        <div class="seg small wrap">${sourcesOf(chCountry).map((s) => `<a class="seg-btn ${s.k === source ? 'on' : ''}" href="#/chart/${s.k}">${s.label}</a>`).join('')}</div>
-        <div class="seg small country">${COUNTRY.map((c) => `<button class="seg-btn ${c.k === chCountry ? 'on' : ''}" data-c="${c.k}">${c.label}</button>`).join('')}</div>
-      </div>
-      <div class="sp-body"><div id="chBody">${skRows(10)}</div><p class="ch-method" id="chMethod"></p></div>
-    </section>`;
-  bindCountryToggle(() => pageChartPlay(source));
-
-  const data = await loadChart(chCountry, source);
-  const head = document.getElementById('chHead');
-  const body = document.getElementById('chBody');
-  if (!data || !head || !body) {
-    if (body) body.innerHTML = `<div class="empty-box">${icon('i-chart', 'ic eb')}<p>차트를 불러오지 못했습니다</p></div>`;
-    return;
-  }
-  const list = data.list as ChartRow[];
-  const covers = list.slice(0, 8).map((e) => e.artwork).filter(Boolean) as string[];
-  head.innerHTML = spHeader({
-    label: `${data.countryLabel} 차트`,
-    title: `${labelOf(chCountry, source)} 차트`,
-    meta: `<span class="live-badge on">수집</span>${list.length}곡<span class="sep">·</span>${new Date(data.updated).toLocaleDateString()} 기준`,
-    mosaic: covers.length >= 4 ? covers.slice(0, 4) : undefined,
-    cover: covers[0],
-  });
-  if (covers[0]) void applyTone(document.querySelector('.sp-head'), covers[0]);
-  bindTilt(root());
-
-  body.innerHTML = chartRowsHtml(list, source);
-  bindChartBadges(body);
-  bindChartRows(body, list);
-  $('#chMethod').innerHTML = data.method + (data.weights ? `<br/>가중치: ${Object.entries(data.weights).map(([k, v]) => `${labelOf(chCountry, k)} ${Math.round(Number(v) * 100)}%`).join(' · ')}` : '');
-
-  const playFrom = async (shuffle: boolean) => {
-    toast('재생 목록을 준비하는 중…');
-    const tr = await chartPlayables(list, 0, 20);
-    if (tr.length) playQueue(shuffle ? tr.sort(() => Math.random() - 0.5) : tr, 0, `chart:${chCountry}`);
-  };
-  $('#chPlayAll').addEventListener('click', () => playFrom(false));
-  $('#chShuffle').addEventListener('click', () => playFrom(true));
-}
+// The listening-first surface is shared by browse and play shells.
+export async function pageHome() { await renderMusicHome(root(), { artists, products }); }
+export async function pageChart(sub?: string) { await renderMusicChart(root(), { artists, products }, sub); }
 
 /* ================= 스토어 (BM: 일본 내수반 정식 공동구매) ================= */
 /** 구매자 통화에 맞춰 표기 — 한국 구매자는 원, 일본 구매자는 엔 */
@@ -771,211 +216,29 @@ const orderCur = (o: { buyerCurrency?: string; breakdown?: { buyerCurrency?: str
     ?? (o.breakdown?.localCurrency === 'KRW' ? 'JPY' : 'KRW')) as 'KRW' | 'JPY';
 
 const money = (n: number, cur?: string) => (cur === 'JPY' ? `¥${n.toLocaleString()}` : `₩${n.toLocaleString()}`);
-const SIZE_FILTERS = [
-  { k: 'all', label: '전체' }, { k: 'limited', label: '한정반' },
-  { k: 'album', label: '정규 앨범' }, { k: 'mini', label: '미니 앨범' }, { k: 'single', label: '싱글' },
-];
-let stFilterSize = 'all';
-let stFilterArtist = 'all';
-let stFilterOrigin = 'all';     // 전체 / jp(일본반) / kr(한국반)
-let stSort: 'new' | 'low' | 'high' | 'name' = 'new';
-let stPage = 1;
-const PAGE_SIZE = 24;
-
-function storeFiltered() {
-  let list = products.slice();
-  if (stFilterOrigin !== 'all') list = list.filter((p) => (p.origin || 'jp') === stFilterOrigin);
-  if (stFilterSize === 'limited') list = list.filter((p) => p.editions.some((e) => e.id === 'limited'));
-  else if (stFilterSize !== 'all') list = list.filter((p) => p.size === stFilterSize);
-  if (stFilterArtist !== 'all') list = list.filter((p) => p.brand === stFilterArtist);
-  if (stSort === 'low') list.sort((a, b) => a.price - b.price);
-  else if (stSort === 'high') list.sort((a, b) => b.price - a.price);
-  else if (stSort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
-  else list.sort((a, b) => (b.releaseDate || '').localeCompare(a.releaseDate || ''));
-  return list;
-}
 function productCard(p: Product) {
-  const hasLtd = p.editions.some((e) => e.id === 'limited');
   /* 반(한정반/통상반)과 잔여 수량은 아트워크 위에 칩으로 얹지 않는다.
      글자는 글자 영역에 둔다. 원산지와 같은 줄에 놓으면 '어느 나라 판을
      어떤 조건으로 사는가'가 한 눈에 읽힌다. 잔여는 살지 말지를 가르는
      정보라 가격 바로 아래 둔다. */
-  const low = p.stock <= 10;
+
   return `<a class="p-card d3-tilt" href="#/store/${p.id}" data-d3-tilt="7" data-d3="rise">
     <div class="p-img">
       <img src="${esc(sized(p.artwork, 300))}" alt="" loading="lazy" decoding="async"/>
     </div>
     <div class="p-brand">
       <span class="p-flag ${p.origin === 'kr' ? 'kr' : 'jp'}">${p.origin === 'kr' ? '한국반' : '일본반'}</span>
-      <span class="p-ed ${hasLtd ? 'ltd' : ''}">${esc(p.badge)}</span>
+      <span class="p-ed">${esc(p.badge)}</span>
       <span class="p-bn">${esc(p.brand)}</span>
     </div>
     <div class="p-name">${esc(p.name)}</div>
     <div class="p-price">${money(p.price, p.priceCurrency)}</div>
-    <div class="p-sub">${esc(p.releaseDate?.slice(0, 4) || '')} · ${p.trackCount}곡${low ? ` · <b class="p-low">잔여 ${p.stock}</b>` : ''}</div>
+    <div class="p-sub">${esc(p.releaseDate?.slice(0, 4) || '')} · ${p.trackCount}곡</div>
   </a>`;
 }
 
-const ORIGIN_FILTERS = [
-  { k: 'all', label: '전체' },
-  { k: 'jp', label: '일본반 → 한국' },
-  { k: 'kr', label: '한국반 → 일본' },
-];
-
-function storeToolbar(dark: boolean) {
-  // 선택된 원산지에 해당하는 아티스트만 칩으로 노출한다.
-  // 44팀을 한 줄에 늘어놓으면 고를 수 없으므로 국가별로 묶는다.
-  const scope = stFilterOrigin === 'all' ? products : products.filter((p) => (p.origin || 'jp') === stFilterOrigin);
-  const byOrigin = new Map<string, Set<string>>();
-  for (const p of scope) {
-    const o = p.origin || 'jp';
-    if (!byOrigin.has(o)) byOrigin.set(o, new Set());
-    byOrigin.get(o)!.add(p.brand);
-  }
-  const group = (o: string, label: string) => {
-    const names = [...(byOrigin.get(o) || [])].sort();
-    if (!names.length) return '';
-    return `<div class="chip-group"><span class="chip-group-label">${label}</span>${names
-      .map((b) => `<button class="chip ${stFilterArtist === b ? 'on' : ''}" data-artist="${esc(b)}">${esc(b)}</button>`).join('')}</div>`;
-  };
-  return `
-    <div class="st-filters">
-      <div class="chips origin-chips">${ORIGIN_FILTERS.map((f) => `<button class="chip strong ${f.k === stFilterOrigin ? 'on' : ''}" data-origin="${f.k}">${f.label}</button>`).join('')}</div>
-      <div class="chips">${SIZE_FILTERS.map((f) => `<button class="chip ${f.k === stFilterSize ? 'on' : ''}" data-size="${f.k}">${f.label}</button>`).join('')}</div>
-      <div class="chips artist-chips">
-        <button class="chip ${stFilterArtist === 'all' ? 'on' : ''}" data-artist="all">모든 아티스트</button>
-        ${group('jp', 'J-POP')}${group('kr', 'K-POP')}
-      </div>
-    </div>
-    <div class="st-bar">
-      <span class="st-count" id="stCount"></span>
-      <select id="stSort" class="${dark ? 'dark-select' : ''}">
-        <option value="new">최신 발매순</option>
-        <option value="low">낮은 가격순</option>
-        <option value="high">높은 가격순</option>
-        <option value="name">이름순</option>
-      </select>
-    </div>`;
-}
-
-function bindStoreToolbar(render: () => void) {
-  document.querySelectorAll<HTMLButtonElement>('[data-origin]').forEach((b) =>
-    b.addEventListener('click', () => {
-      stFilterOrigin = b.dataset.origin!;
-      stFilterArtist = 'all';        // 원산지가 바뀌면 아티스트 선택은 무효가 된다
-      stPage = 1;
-      // 아티스트 칩 목록이 원산지에 종속되므로 툴바를 통째로 다시 그린다
-      const host = b.closest('.st-filters')?.parentElement;
-      const dark = !!document.querySelector('.sp-wrap');
-      if (host) {
-        const bar = host.querySelector('.st-bar');
-        const html = storeToolbar(dark);
-        host.querySelector('.st-filters')?.remove();
-        bar?.remove();
-        const grid = host.querySelector('.store-grid, .sp-grid');
-        grid?.insertAdjacentHTML('beforebegin', html);
-        bindStoreToolbar(render);
-      }
-      render();
-    }));
-  document.querySelectorAll<HTMLButtonElement>('[data-size]').forEach((b) =>
-    b.addEventListener('click', () => {
-      stFilterSize = b.dataset.size!; stPage = 1;
-      document.querySelectorAll('[data-size]').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on'); render();
-    }));
-  document.querySelectorAll<HTMLButtonElement>('[data-artist]').forEach((b) =>
-    b.addEventListener('click', () => {
-      stFilterArtist = b.dataset.artist!; stPage = 1;
-      document.querySelectorAll('[data-artist]').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on'); render();
-    }));
-  const sel = document.getElementById('stSort') as HTMLSelectElement | null;
-  if (sel) {
-    sel.value = stSort;
-    sel.addEventListener('change', () => { stSort = sel.value as never; stPage = 1; render(); });
-  }
-}
-
 export async function pageStore() {
-  if (isPlay()) return pageStorePlay();
-  const fx = await api('/api/db/fx').catch(() => null);
-  root().innerHTML = `
-    <div class="store-wrap page-top full"><div class="store-inner">
-      <div class="store-hero2">
-        <div>
-          <p class="sh-eyebrow">LILAC STORE</p>
-          <h2>양국 한정반,<br/>정식 루트로 받아보세요</h2>
-          <p class="sh-sub">현지에서만 유통되는 반을 매입해 합배송으로 전달합니다.
-            <b>일본반은 한국으로</b>, <b>한국반은 일본으로</b> 보냅니다.
-            판매가는 <b>현지 정가 × 실시간 환율 + 대행 수수료 + 배송 분담</b>으로 자동 산출됩니다.</p>
-          ${fx ? `<p class="fx-line">적용 환율 <b>1엔 = ${fx.jpyKrw ?? fx.rate}원</b> · <b>1원 = ${fx.krwJpy ?? '·'}엔</b> <span class="src-badge ${fx.live ? 'real' : 'demo'}">${fx.date} ${fx.live ? '실시간' : '폴백'}</span></p>` : ''}
-        </div>
-        <div class="sh-stats">
-          <div><b>${products.filter((p) => (p.origin || 'jp') === 'jp').length}</b><span>일본반</span></div>
-          <div><b>${products.filter((p) => p.origin === 'kr').length}</b><span>한국반</span></div>
-          <div><b>${products.filter((p) => p.editions.some((e) => e.id === 'limited')).length}</b><span>한정반</span></div>
-          <div><b>${[...new Set(products.map((p) => p.brand))].length}</b><span>아티스트</span></div>
-        </div>
-      </div>
-      ${storeToolbar(false)}
-      <div class="store-grid" id="storeGrid"></div>
-      <div class="st-more-wrap"><button class="btn-out st-more" id="stMore">더보기</button></div>
-    </div></div>`;
-  const render = () => {
-    const list = storeFiltered();
-    const shown = list.slice(0, stPage * PAGE_SIZE);
-    $('#stCount').textContent = `${list.length}개 상품${list.length > shown.length ? ` (${shown.length}개 표시)` : ''}`;
-    $('#storeGrid').innerHTML = shown.map(productCard).join('') || `<div class="empty-box">${icon('i-bag', 'ic eb')}<p>조건에 맞는 상품이 없습니다</p></div>`;
-    const more = document.getElementById('stMore') as HTMLButtonElement;
-    if (more) more.style.display = list.length > shown.length ? '' : 'none';
-    bindTilt($('#storeGrid'));
-  };
-  render();
-  bindStoreToolbar(render);
-  $('#stMore').addEventListener('click', () => { stPage++; render(); });
-}
-
-/* ---- 플레이 모드 스토어 (다크 스포티파이) ---- */
-async function pageStorePlay() {
-  const fx = await api('/api/db/fx').catch(() => null);
-  root().innerHTML = `
-    <section class="sp-page">
-      <div id="stHead"></div>
-      <div class="sp-body">
-        ${storeToolbar(true)}
-        <div class="lib-grid2" id="stGrid"></div>
-        <div class="st-more-wrap"><button class="tbtn big-ghost st-more" id="stMore">더보기</button></div>
-      </div>
-    </section>`;
-  const head = document.getElementById('stHead');
-  if (head) {
-    head.innerHTML = spHeader({
-      label: '스토어', title: t('store.title'),
-      meta: `${products.length}개 상품<span class="sep">·</span>${fx ? `1엔 = ${fx.jpyKrw ?? fx.rate}원 <span class="src-badge real">실시간</span>` : ''}`,
-      mosaic: products.slice(0, 4).map((p) => p.artwork),
-    });
-    if (products[0]) void applyTone(document.querySelector('.sp-head'), products[0].artwork);
-  }
-  bindTilt(root());
-  const render = () => {
-    const list = storeFiltered();
-    const shown = list.slice(0, stPage * PAGE_SIZE);
-    $('#stCount').textContent = `${list.length}개 상품`;
-    $('#stGrid').innerHTML = shown.map((p) => `
-      <a class="lib-card" href="#/store/${p.id}" data-tilt="7">
-        <div class="lib-cover"><img src="${esc(p.artwork)}" alt="" loading="lazy"/>
-          </div>
-        <div class="c-title">${esc(p.name)}</div>
-        <div class="c-sub">${esc(p.brand)} · ${money(p.price, p.priceCurrency)}</div>
-      </a>`).join('') || `<div class="empty-box">${icon('i-bag', 'ic eb')}<p>조건에 맞는 상품이 없습니다</p></div>`;
-    const more = document.getElementById('stMore') as HTMLButtonElement;
-    if (more) more.style.display = list.length > shown.length ? '' : 'none';
-    bindTilt($('#stGrid'));
-  };
-  render();
-  bindStoreToolbar(render);
-  $('#stMore').addEventListener('click', () => { stPage++; render(); });
+  renderStore(root(), products, artists);
 }
 
 export async function pageProduct(id: string) {
@@ -990,19 +253,23 @@ export async function pageProduct(id: string) {
       <div class="pd-grid">
         <div class="pd-img"><img src="${esc(sized(p.artwork, 560))}" alt="" decoding="async"/></div>
         <div class="pd-info">
-          <p class="p-brand"><span class="p-ed ${p.editions.some((e) => e.id === 'limited') ? 'ltd' : ''}">${esc(p.badge)}</span><span class="p-bn">${esc(p.brand)} · ${esc(p.sizeLabel)}</span></p>
-          <h2 class="pd-name">${esc(p.name)}</h2>
-          <p class="pd-meta-line">${esc(p.releaseDate)} 발매 · ${p.trackCount}곡 · 재고 ${p.stock}개</p>
+          <p class="p-brand"><span class="p-ed">${esc(p.badge)}</span><span class="p-bn">${esc(p.brand)} · ${esc(p.sizeLabel)}</span></p>
+          <h1 class="pd-name">${esc(p.name)}</h1>
+          <p class="pd-meta-line">${esc(p.releaseDate)} 발매 · ${p.trackCount}곡</p>
           <p class="pd-price" id="pdPrice">${money(p.editions[0].pricing.total, p.priceCurrency)}</p>
           <div class="pd-ed" id="pdEd">
             ${p.editions.map((e, i) => `
               <button class="ed ${i === 0 ? 'on' : ''}" data-e="${i}">
-                <span class="ed-label">${esc(e.label)}${e.real ? ' <span class="src-badge real">Apple 실정가</span>' : ''}</span>
+                <span class="ed-label">${esc(e.label)}${e.real
+                  ? ' <span class="src-badge real">Apple 실정가</span>'
+                  /* 확인 못 한 값을 확인한 값처럼 보이게 두면 안 된다.
+                     상세 표 안쪽에만 적어두면 한눈에는 진짜 가격처럼 읽힌다. */
+                  : ' <span class="src-badge demo">추정가</span>'}</span>
                 <span class="ed-price">${money(e.pricing.total, e.pricing.buyerCurrency ?? p.priceCurrency)}</span>
                 <span class="ed-jpy">현지 정가 ${e.localCurrency === 'KRW' || p.origin === 'kr' ? '₩' : '¥'}${(e.amount ?? e.jpy ?? 0).toLocaleString()}</span>
               </button>`).join('')}
           </div>
-          <div class="pd-row"><span>${t('store.qty')}</span><input id="pdQty" type="number" min="1" max="${p.stock}" value="1" /></div>
+          <div class="pd-row"><span>${t('store.qty')}</span><input id="pdQty" type="number" min="1" max="5" value="1" /></div>
           <div class="pd-actions">
             <button class="btn-buy" id="pdOrder">${t('store.reserve')}</button>
             <a class="btn-out" href="${p.appleUrl}" target="_blank" rel="noopener">Apple Music ${icon('i-ext', 'ic s')}</a>
@@ -1063,8 +330,8 @@ export async function pageProduct(id: string) {
         <tr><th>발매일</th><td>${esc(p.releaseDate)} <span class="src-badge real">Apple 실데이터</span></td></tr>
         <tr><th>수록곡 수</th><td>${p.trackCount}곡</td></tr>
         <tr><th>구성</th><td>${p.editions.map((e) => esc(e.label)).join(' / ')}</td></tr>
-        <tr><th>공식 운영사</th><td>${esc(p.operator)}</td></tr>
-        <tr><th>재고</th><td>${p.stock}개</td></tr>
+        ${p.operator ? `<tr><th>공식 운영사</th><td>${esc(p.operator)}</td></tr>` : ''}
+        <tr><th>재고</th><td class="calc-src">판매처에서 확인해야 합니다 — 라일락은 재고를 알지 못합니다</td></tr>
       </tbody></table>`,
     ship: `<ul class="pd-ul">
         <li>현지 매입 후 합배송으로 발송하며, 예약 상품은 일본 발매일 이후 순차 발송됩니다(통상 2~3주).</li>
@@ -1073,7 +340,7 @@ export async function pageProduct(id: string) {
         <li>단순 변심 교환·반품은 미개봉 상태에서 수령 후 7일 이내 가능합니다.</li>
         <li class="dim">데모 페이지입니다. 실제 결제·배송은 이루어지지 않습니다.</li>
       </ul>`,
-    op: `<p>이 상품의 공식 운영사는 <b>${esc(p.operator)}</b>입니다.</p>
+    op: `<p>${p.operator ? `이 상품의 공식 운영사는 <b>${esc(p.operator)}</b>입니다.` : '이 상품의 공식 운영사는 확인되지 않았습니다.'}</p>
       <p class="dim">Lilac은 티켓 재판매를 취급하지 않으며, 공식 유통채널에서 매입한 상품만 중개합니다.</p>
       <div class="pd-actions">
         <a class="btn-out" href="${p.officialUrl}" target="_blank" rel="noopener">아티스트 공식 사이트 ${icon('i-ext', 'ic s')}</a>
@@ -1100,7 +367,6 @@ export async function pageSchedule() {
   /* events.json 하나로 통합했다.
      수집기가 실발매일(isDemo=false)과 예시 공연(isDemo=true)을 함께 넣어준다. */
   const merged: Ev[] = events.map((e) => ({ ...e }));
-  const realItems = merged.filter((e) => !e.isDemo);
   const isDemo = (e: Ev) => e.isDemo === true;
   const artOf = new Map(merged.map((e) => [e.id, e.artwork]));
   const urlOf = new Map(merged.map((e) => [e.id, e.appleUrl]));
@@ -1117,10 +383,9 @@ export async function pageSchedule() {
   root().innerHTML = `
     <section class="page-section page-top">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">${t('nav.schedule')}</p>
         <h1 class="page-title">${t('schedule.title')}</h1>
-        <p class="page-desc">다가오는 일정을 먼저 보여줍니다. 발매 일정은 <b>Apple Music 카탈로그 자동 수집 실데이터</b>(${realItems.length}건),
-          공연·응모는 데모 데이터(${merged.length - realItems.length}건)입니다.</p>
+        <p class="page-desc">발매 일정은 <b>Apple Music 카탈로그</b>에서, 응모 마감은 <b>레이블 공식 특설 사이트</b>에서 자동으로 모읍니다.
+          현재 ${merged.length}건 모두 출처가 있는 실데이터입니다. 내한·원정 공연은 공개 API가 없어 아직 넣지 않았습니다.</p>
         <div class="sch-toolbar">
           <div class="chips" id="schFilters">
             <button class="chip on" data-f="all">전체</button>
@@ -1136,7 +401,7 @@ export async function pageSchedule() {
         </div>
       </div>
       <div id="schBody"></div>
-      <p class="pd-note" style="margin-top:24px">발매 일정은 Apple Music 카탈로그에서 자동 수집한 실제 발매일입니다. 공연·응모 일정은 공식 티켓 데이터 계약 전이라 예시로 표시됩니다.</p>
+      <p class="pd-note" style="margin-top:24px">발매 일정은 Apple Music 카탈로그에서 자동 수집한 실제 발매일입니다. 응모 일정은 각 공식 출처에서 조건과 마감일을 다시 확인해 주세요. 공연 정보는 공식 확인 후 제공됩니다.</p>
     </section>`;
   const matchF = (e: Ev, f: string) =>
     f === 'all' ? true
@@ -1164,11 +429,11 @@ export async function pageSchedule() {
             <div class="sch-meta">
               <div class="sch-top">
                 <span class="sch-type">${esc(e.type)}</span>
-                <span class="src-badge ${isDemo(e) ? 'demo' : 'real'}">${isDemo(e) ? '데모' : 'Apple 실데이터'}</span>
+                ${isDemo(e) ? '' : '<span class="src-badge real">실데이터</span>'}
                 <span class="sch-dday ${d >= 0 && d <= 14 ? 'urgent' : ''}">${txt}</span>
               </div>
-              <div class="sch-title">${esc(e.artist)} · ${esc(e.title)}</div>
-              <div class="sch-sub">${esc(e.venue)} · ${esc(e.note)}</div>
+              <div class="sch-title">${esc(schTitle(e))}</div>
+              <div class="sch-sub"><b>${esc(e.artist)}</b> · ${esc(e.venue)} · ${esc(e.note)}</div>
             </div>
             ${link ? `<a class="sch-go ext" href="${link}" target="_blank" rel="noopener" title="Apple Music">${icon('i-ext')}</a>` : `<span class="sch-go">${icon('i-chev-r')}</span>`}
           </div>`;
@@ -1265,12 +530,12 @@ export async function pageArtist(id: string) {
         <div class="ar-portrait" id="arPortrait" aria-hidden="true"></div>
         <div class="ar-info">
           <h1 class="ar-name">${esc(a.name)}</h1>
-          <p class="ar-stats" id="arStats"><span class="ar-vf">${icon('i-check', 'ic s')} 인증됨</span> · <span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
+          <p class="ar-stats" id="arStats"><span class="ar-vf">${icon('i-mic', 'ic s')} 카탈로그 아티스트</span> · <span class="stat-sk"></span>${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}</p>
         </div>
       </div>
     </section>
     <div class="ar-actionbar">
-      <button class="play-big" id="arPlay">${icon('i-play')}</button>
+      <button class="play-big" id="arPlay" aria-label="인기곡 전체 재생">${icon('i-play')}</button>
       <button class="tbtn big-ghost ${following ? 'on' : ''}" id="arFollow">${following ? '팔로잉' : '팔로우'}</button>
       ${a.official ? `<a class="tbtn big-ghost" href="${esc(a.official)}" target="_blank" rel="noopener" title="공식 사이트">${icon('i-ext')}</a>` : ''}
       <span class="ar-op">${a.operator ? `${t('store.operator')} · ${esc(a.operator)}` : `${countryLabel(a.country)} · ${esc(a.genre)}`}</span>
@@ -1279,13 +544,18 @@ export async function pageArtist(id: string) {
     <section class="page-section" id="arDiscSec"><div class="sec-head" data-d3="head"><h2>디스코그래피</h2><span class="sec-sub">Apple Music 카탈로그</span></div><div id="arDisc">${skCards(6)}</div></section>
     <section class="page-section" id="arEvSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('schedule.title')}</h2><a class="sec-link" href="#/schedule">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="ev-shelf" id="arEvents"></div></section>
     <section class="page-section" id="arGoodsSec" style="display:none"><div class="sec-head" data-d3="head"><h2>${t('store.title')}</h2><a class="sec-link" href="#/store">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div class="store-dark-grid" id="arGoods"></div></section>
-    <section class="page-section"><div class="sec-head" data-d3="head"><h2>비슷한 아티스트</h2></div><div id="arSimilar"></div></section>
+    <section class="page-section" id="arFandomSec" style="display:none">
+      <div class="sec-head" data-d3="head"><h2>공식 채널 · 사는 법</h2><span class="sec-sub" id="arFandomSub"></span></div>
+      <div class="fd-links" id="arLinks"></div>
+      <div class="fd-mechs" id="arMechs"></div>
+    </section>
+    <section class="page-section"><div class="sec-head" data-d3="head"><h2>다른 아티스트도 만나보세요</h2></div><div id="arSimilar"></div></section>
     <section class="page-section"><div class="sec-head" data-d3="head"><h2>정보</h2></div>
       <div class="ar-about">
         <div class="ar-about-img" id="arAboutImg"></div>
         <div class="ar-about-txt">
           <p class="ar-listeners" id="arListeners"><span class="stat-sk"></span></p>
-          <p>${esc(a.name)}${artistSub(a) ? `(${esc(artistSub(a))})` : ''}는 ${countryLabel(a.country)}의 ${esc(a.genre)} 아티스트입니다.${a.operator ? ` 공식 운영사는 ${esc(a.operator)}이며,` : ''}
+          <p>${esc(a.name)}${artistSub(a) ? `(${esc(artistSub(a))})` : ''}는 ${countryLabel(a.country)}의 ${esc(a.genre)} 아티스트입니다.${a.operator ? ` 공식 운영사는 ${esc(a.operator)}${a.operatorSource === 'musicbrainz' ? '<span class="src-note" title="MusicBrainz 공개 데이터베이스에서 자동 수집했습니다">(자동 수집)</span>' : ''}이며,` : ''}
             Lilac은 공식 유통망과 연결된 정보만 표시합니다.</p>
           <p class="dim">이 소개문은 데모용으로 생성된 텍스트입니다. 실서비스에서는 레이블 제공 프로필이 들어갑니다.</p>
           ${a.official ? `<a class="btn-out" href="${esc(a.official)}" target="_blank" rel="noopener">공식 사이트 ${icon('i-ext', 'ic s')}</a>` : ''}
@@ -1311,15 +581,31 @@ export async function pageArtist(id: string) {
     if (pt0) pt0.innerHTML = `<img src="${sized(a.artwork, 440)}" alt="" decoding="async"/>`;
   }
   $('#arFollow').addEventListener('click', async () => {
-    const list = await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: a.id, name: a.name }) });
+    if (needsLogin('팔로우')) return;
+    const list = await api('/api/oshi', { method: 'POST', body: JSON.stringify({ artistId: a.id, name: a.name }) }).catch(() => null);
+    if (!list) return;
     const on = list.some((o: { artistId: string }) => o.artistId === a.id);
     $('#arFollow').classList.toggle('on', on);
     $('#arFollow').textContent = on ? '팔로잉' : '팔로우';
     toast(on ? `${a.name} 팔로우` : '팔로우 해제');
   });
 
-  const { tracks } = await api(`/api/catalog/search?term=${encodeURIComponent(a.searchTerm)}&limit=10`).catch(() => ({ tracks: [] }));
-  const top = (tracks as CatalogTrack[]).filter((x) => x.preview).slice(0, 5);
+  /* 저장된 카탈로그(아티스트 ID 기준, 스토어별 최대 200곡)를 먼저 쓴다.
+     예전엔 매 조회마다 애플을 이름으로 검색해 10곡만 받았다 — 레이트리밋에
+     노출되고 동명 아티스트가 섞였다. 카탈로그가 아직 없을 때만 실시간으로 물러난다. */
+  type CatTrack = { id: number; title: string; album: string; artwork: string; preview: string | null; appleUrl: string | null; durationMs: number | null; releaseDate: string; charted?: boolean };
+  type CatEntry = { count: number; capped: boolean; tracks: CatTrack[]; popular: CatTrack[] };
+  const cat = await api(`/api/artist/${a.id}/tracks?limit=500`).catch(() => null) as CatEntry | null;
+  let tracks: CatalogTrack[];
+  if (cat && cat.tracks.length) {
+    /* '인기'는 서버가 차트 등장 순 + 제목 중복 제거로 만든 popular 를 쓴다.
+       카탈로그를 그대로 자르면 같은 곡이 스토어별로 두 번 나온다. */
+    const src = (cat.popular && cat.popular.length ? cat.popular : cat.tracks);
+    tracks = src.map((t) => ({ id: t.id, title: t.title, artist: a.name, album: t.album, artwork: t.artwork, preview: t.preview || '', appleUrl: t.appleUrl || '', durationMs: t.durationMs || 0 } as unknown as CatalogTrack));
+  } else {
+    tracks = ((await api(`/api/catalog/search?term=${encodeURIComponent(a.searchTerm)}&limit=10`).catch(() => ({ tracks: [] }))).tracks || []) as CatalogTrack[];
+  }
+  const top = tracks.filter((x) => x.preview).slice(0, 5);
   const entries = top.map((c, i) => {
     const s = seeds.find((sd) => sd.artistId === a.id && c.title.includes(sd.title.split(' (')[0]));
     return { rank: i + 1, title: c.title, artist: c.artist, artwork: artUrl(c, 100), searchTerm: `${c.artist} ${c.title}`, youtubeId: s?.youtubeId ?? null };
@@ -1361,7 +647,7 @@ export async function pageArtist(id: string) {
       return;
     }
     const txt = `YouTube 공식 MV 누적 <b>${fmtViews(s.totalViews)}회</b>`;
-    if (st) st.innerHTML = `${txt.replace(/<\/?b>/g, '')}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
+    if (st) st.innerHTML = `${txt.replace(/<\/?b>/g, '')}${artistSub(a) && artistSub(a) !== a.name ? ` · ${esc(artistSub(a))}` : ''}`;
     if (ls) ls.innerHTML = `${txt} <span class="live-badge ${s.live ? 'on' : ''}">${s.live ? '실시간' : '캐시'}</span>
       <span class="dim" style="display:block;font-size:12px;margin-top:4px">${esc(s.source)} · 등록곡 ${s.trackCount}개 기준</span>`;
   }).catch(() => {
@@ -1369,17 +655,34 @@ export async function pageArtist(id: string) {
     if (st) st.innerHTML = `${vf}${esc(a.genre)}${artistSub(a) ? ` · ${esc(artistSub(a))}` : ''}`;
   });
 
-  // 디스코그래피
-  api(`/api/catalog/albums?term=${encodeURIComponent(a.searchTerm)}`).then((r) => {
-    const albums = (r.albums || []) as { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string }[];
+  // 디스코그래피 — 카탈로그(ID 기준)가 있으면 그걸, 없으면 실시간 검색
+  (async () => {
+    type Al = { id: number; title: string; artist: string; artwork: string; year: string; trackCount: number; appleUrl: string };
+    let albums: Al[] = [];
+    if (cat && cat.tracks.length) {
+      const byAlbum = new Map<number, Al & { n: number }>();
+      for (const t of cat.tracks) {
+        const cur = byAlbum.get((t as { albumId?: number }).albumId ?? 0) || { id: (t as { albumId?: number }).albumId ?? 0, title: t.album, artist: a.name, artwork: t.artwork, year: (t.releaseDate || '').slice(0, 4), trackCount: 0, appleUrl: t.appleUrl ? t.appleUrl.replace(/\?i=\d+$/, '') : '', n: 0 };
+        cur.n++; cur.trackCount = cur.n; byAlbum.set(cur.id, cur);
+      }
+      albums = [...byAlbum.values()].sort((x, y) => y.year.localeCompare(x.year));
+      const cnt = document.querySelector('#arDiscSec .sec-sub');
+      if (cnt) cnt.textContent = `Apple Music 카탈로그 · ${albums.length}개 앨범 · ${cat.count}곡${cat.capped ? ' (스토어별 200곡 상한)' : ''}`;
+    } else {
+      const r = await api(`/api/catalog/albums?term=${encodeURIComponent(a.searchTerm)}`).catch(() => ({ albums: [] }));
+      albums = (r.albums || []) as Al[];
+    }
+    return { albums };
+  })().then((r) => {
+    const albums = r.albums;
     const mine = albums.filter((x) => x.artist === a.searchTerm || x.artist === a.name || x.artist === a.nameJa);
-    const use = (mine.length ? mine : albums).slice(0, 8);
+    const use = (mine.length ? mine : albums).slice(0, 12);
     const el = document.getElementById('arDisc');
     const sec = document.getElementById('arDiscSec');
     if (!el || !sec) return;
     if (!use.length) { sec.style.display = 'none'; return; }
     el.innerHTML = `<div class="shelf d3-stage">${use.map((al) => `
-      <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
+      <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener">
         <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy"/><span class="glare"></span>
           </div>
         <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · ${al.trackCount}곡</div>
@@ -1388,6 +691,40 @@ export async function pageArtist(id: string) {
     const about = document.getElementById('arAboutImg');
     if (use[0] && about) about.style.backgroundImage = `url(${esc(use[0].artwork)})`;
   }).catch(() => { const s = document.getElementById('arDiscSec'); if (s) s.style.display = 'none'; });
+
+  /* 공식 채널 + 이 팀에 해당하는 팬덤 방식.
+     라일락은 팔지 않는다 — 공식 판매처·응모·팬클럽으로 보낸다. */
+  api(`/api/artist/${a.id}/fandom`).then((f: {
+    links: Record<string, { url: string; source?: string }>; linksSource: string | null; basis: string[];
+    platform: { membership: { name: string; url: string } | null; shop: { name: string; url: string } | null; source: string } | null;
+    mechanics: { id: string; country: string; name: string; what: string; how: string[]; note?: string; lilac?: string; resolvedLinks: { key: string; url: string }[] }[];
+  }) => {
+    const sec = document.getElementById('arFandomSec'); const lk = document.getElementById('arLinks'); const mk = document.getElementById('arMechs'); const sub = document.getElementById('arFandomSub');
+    if (!sec || !lk || !mk) return;
+    const LABEL: Record<string, string> = { official: '공식 사이트', youtube: 'YouTube', x: 'X', instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', weverse: 'Weverse', tower: '타워레코드', hmv: 'HMV', amazonJp: 'Amazon JP', shop: '음반 구매', appleMusic: 'Apple Music', spotify: 'Spotify', fanpage: '팬 사이트' };
+    const ORDER = ['official', 'weverse', 'youtube', 'x', 'instagram', 'tiktok', 'facebook', 'tower', 'hmv', 'amazonJp', 'shop', 'appleMusic', 'spotify', 'fanpage'];
+    const entries = ORDER.filter((k) => f.links?.[k]?.url).map((k) => ({ k, url: f.links[k].url }));
+    const plat: { k: string; url: string; name: string }[] = [];
+    if (f.platform?.membership) plat.push({ k: 'membership', url: f.platform.membership.url, name: `${f.platform.membership.name} 멤버십` });
+    if (f.platform?.shop) plat.push({ k: 'shop', url: f.platform.shop.url, name: `${f.platform.shop.name} 공식몰` });
+    if (!entries.length && !plat.length && !f.mechanics.length) return;
+    sec.style.display = '';
+    if (sub) sub.textContent = [f.linksSource === 'musicbrainz' ? '채널: MusicBrainz 공개 데이터' : '', f.platform ? f.platform.source : ''].filter(Boolean).join(' · ');
+    lk.innerHTML = [
+      ...entries.map((e) => `<a class="fd-link${/tower|hmv|amazonJp|shop/.test(e.k) ? ' buy' : ''}" href="${esc(e.url)}" target="_blank" rel="noopener">${esc(LABEL[e.k] || e.k)}</a>`),
+      ...plat.map((p) => `<a class="fd-link plat" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a>`),
+    ].join('');
+    mk.innerHTML = f.mechanics.map((m) => `
+      <details class="fd-mech">
+        <summary><span class="fd-cc ${m.country}">${m.country === 'jp' ? '일본' : '한국'}</span>${esc(m.name)}</summary>
+        <p>${esc(m.what)}</p>
+        <ol>${m.how.map((h) => `<li>${esc(h)}</li>`).join('')}</ol>
+        ${m.note ? `<p class="fd-note">${esc(m.note)}</p>` : ''}
+        ${m.lilac === 'releases' ? `<a class="fd-go" href="#/releases">라일락 판매처 비교로 →</a>` : ''}
+        ${m.resolvedLinks.length ? `<div class="fd-mech-links">${m.resolvedLinks.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(LABEL[l.key] || l.key)}</a>`).join('')}</div>` : ''}
+      </details>`).join('');
+    if (f.basis.length) mk.insertAdjacentHTML('afterbegin', `<p class="fd-basis">${esc(f.basis.join(' · '))}</p>`);
+  }).catch(() => { /* 없으면 섹션을 숨긴 채 둔다 */ });
 
   const sim = artists.filter((x) => x.id !== a.id).slice(0, 6);
   $('#arSimilar').innerHTML = shelf(sim.map((x) => ({ title: x.name, sub: x.genre, round: true, href: `#/artist/${x.id}`, term: x.searchTerm })));
@@ -1400,6 +737,40 @@ export async function pageArtist(id: string) {
 type LibFilter = 'all' | 'playlists' | 'artists' | 'likes' | 'history';
 
 export async function pageLibrary(sub?: string) {
+  /* 보관함은 전부 로그인 필요 데이터다.
+     비로그인이면 API 가 401 을 주는데, 예전엔 그걸 빈 배열로 삼켜서
+     "플레이리스트 0 / 팔로우 0"만 뜨는 빈 껍데기가 됐다.
+     사용자는 저장한 게 없다고 오해한다 — 주문·계정처럼 로그인부터 안내한다. */
+  if (!me) {
+    root().innerHTML = `
+      <div class="page-section lib-guest">
+        <h1>내 보관함</h1>
+        <p>좋아요·플레이리스트·팔로우는 계정에 저장됩니다. 로그인하면 여기에서 한곳에 모아 볼 수 있습니다.</p>
+        <div class="lib-guest-actions">
+          <a class="btn-pill" href="#/login">로그인</a>
+          <a class="lib-guest-alt" href="#/signup">가입하기</a>
+        </div>
+        <p class="lib-guest-hint">계정 없이도 차트·스토어·일정은 전부 이용할 수 있습니다.</p>
+      </div>
+      <section class="page-section"><div class="sec-head" data-d3="head"><h2>지금 인기</h2><span class="sec-sub">차트에서 좋아요를 누르면 여기에 모입니다</span><a class="sec-link" href="#/chart">${t('chart.viewAll')} ${icon('i-chev-r', 'ic s')}</a></div><div id="libGuestPicks">${skCards(6)}</div></section>
+      <section class="page-section"><div class="sec-head" data-d3="head"><h2>${t('artists')}</h2><a class="sec-link" href="#/artists">${t('more')} ${icon('i-chev-r', 'ic s')}</a></div><div id="libGuestArtists">${skCards(7, true)}</div></section>`;
+
+    /* 비로그인 보관함은 안내 박스 하나만 있고 아래가 통째로 비어 있었다.
+       로그인 전에도 할 수 있는 것(차트 듣기·아티스트 보기)을 보여준다 — Spotify 도 그렇게 한다. */
+    (async () => {
+      const country = (localStorage.getItem('lilac.chartCountry') as 'jp' | 'kr') || 'jp';
+      const j = await api(`/api/charts?country=${country}&source=combined`).catch(() => null);
+      const picks = ((j?.list || []) as { title: string; artist: string; artwork?: string }[]).slice(0, 6);
+      const pb = document.getElementById('libGuestPicks');
+      if (pb) pb.innerHTML = picks.length
+        ? shelf(picks.map((p) => ({ title: p.title, sub: p.artist, href: '#/chart', term: `${p.artist} ${p.title}`, art: p.artwork })))
+        : '';
+      const ab = document.getElementById('libGuestArtists');
+      if (ab) { ab.innerHTML = shelf(artists.slice(0, 7).map((a) => ({ title: a.name, sub: t('artists'), round: true, href: `#/artist/${a.id}`, term: a.searchTerm }))); fillShelfArts(ab); }
+    })();
+    return;
+  }
+
   const filter = (sub || 'all') as LibFilter;
   const [likes, lists, hist, oshi] = await Promise.all([
     api('/api/likes').catch(() => []), api('/api/playlists').catch(() => []),
@@ -1437,7 +808,6 @@ export async function pageLibrary(sub?: string) {
     <section class="lib2">
       <header class="lib2-hero" data-d3="head">
         <div class="lib2-hero-main">
-          <p class="sp-label">${t('nav.library')}</p>
           <h1 class="lib2-title">내 보관함</h1>
           <p class="lib2-sub">저장한 플레이리스트와 팔로우한 아티스트를 한곳에서 봅니다.</p>
         </div>
@@ -1641,7 +1011,6 @@ export async function pagePlaylist(id: string) {
       <div class="sp-head">
         ${coverHtml}
         <div class="sp-info">
-          <p class="sp-label">공개 플레이리스트</p>
           <h1 class="sp-title" id="plTitle" title="클릭해서 이름 변경">${esc(pl.name)}</h1>
           ${pl.desc ? `<p class="sp-desc">${esc(pl.desc)}</p>` : ''}
           <p class="sp-meta"><span class="sp-owner">${esc((me?.name || 'L')[0])}</span><b>${esc(me?.name || 'Lilac 유저')}</b><span class="sep">·</span>${rows.length}곡${totalTxt ? `<span class="sep">·</span>약 ${totalTxt}` : ''}</p>
@@ -1762,7 +1131,6 @@ export async function pageArtists() {
   root().innerHTML = `
     <section class="page-section page-top">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">아티스트</p>
         <h1 class="page-title">전체 아티스트</h1>
         <p class="page-desc">한국과 일본 양국 차트에서 자동으로 추린 ${artists.length}팀입니다.
           팔로우하면 보관함과 사이드바에 추가됩니다.</p>
@@ -1831,7 +1199,6 @@ export async function pageOrders() {
   root().innerHTML = `
     <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">주문</p>
         <h1 class="page-title">주문 내역</h1>
         <p class="page-desc">예약 공구 주문 ${orders.length}건. 데모 환경이라 실제 결제·배송은 이루어지지 않습니다.</p>
       </div>
@@ -1871,7 +1238,6 @@ export async function pageOrderDetail(id: string) {
     <section class="page-section page-top narrow">
       <a class="crumb" href="#/orders">${icon('i-chev-r', 'ic s flip')} 주문 내역</a>
       <div class="page-head" data-d3="head">
-        <p class="sp-label">주문 상세</p>
         <h1 class="page-title">${esc(o.name)}</h1>
         <p class="page-desc">${esc(o.id)} · ${new Date(o.orderedAt).toLocaleString()}</p>
       </div>
@@ -2217,7 +1583,6 @@ export function pageHelp() {
   root().innerHTML = `
     <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">안내</p>
         <h1 class="page-title">Lilac 소개 · 데이터 출처</h1>
         <p class="page-desc">이 데모가 어떤 데이터를 쓰고 무엇이 실제이며 무엇이 데모인지 정리했습니다.</p>
       </div>
@@ -2253,11 +1618,12 @@ export function pageHelp() {
       </div>
 
       <div class="help-sec">
-        <h3>데모 데이터 (실제가 아닙니다)</h3>
+        <h3>아직 실제가 아닌 것</h3>
         <ul class="pd-ul">
-          <li>피지컬 CD 정가: 일본 CD 시장 통상가 기준 <b>추정치</b>입니다.</li>
-          <li>재고 수량 · 결제(크레딧) · 배송 상태: 데모 값이며 실제 거래가 일어나지 않습니다.</li>
-          <li>공연 · 응모 일정 4건: 공개 API가 없어 예시로 넣은 데모입니다.</li>
+          <li>피지컬 CD 정가: 판매처 확인분은 실제 가격이고, 나머지는 일본 CD 통상가 기준 <b>추정치</b>로 화면에 구분해 표시합니다.</li>
+          <li>결제(크레딧) · 배송 상태: 데모 값이며 실제 거래가 일어나지 않습니다. PG 미연동입니다.</li>
+          <li>재고: 표시하지 않습니다. 판매처 재고를 조회할 방법이 없어 지어내지 않습니다.</li>
+          <li>내한 · 원정 공연 일정: 공개 API가 없어 넣지 않았습니다. 예시로 채우지 않습니다.</li>
           <li>가사: 라이선스 문제로 자체 제작 문구를 표시합니다.</li>
         </ul>
       </div>
@@ -2287,7 +1653,7 @@ export function pageLogin() {
     <div class="auth-wrap page-top">
       <form class="auth-card" id="loginForm">
         <p class="auth-logo">Lilac</p>
-        <h2>${t('auth.login.title')}</h2>
+        <h1 class="auth-title">${t('auth.login.title')}</h1>
         <label>${t('auth.email')}<input name="email" type="email" required placeholder="you@example.com" /></label>
         <label>${t('auth.password')}<input name="password" type="password" required placeholder="••••••••" /></label>
         <button class="btn-pill" type="submit">${t('login')}</button>
@@ -2298,7 +1664,8 @@ export function pageLogin() {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
     try {
-      await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }) });
+      const { token } = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }) });
+      setToken(token);   // 이걸 빠뜨리면 이후 요청이 전부 비로그인으로 나간다
       await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me'));
       toast('로그인 완료'); location.hash = '#/';
     } catch (err) { toast((err as Error).message); }
@@ -2309,10 +1676,10 @@ export function pageSignup() {
     <div class="auth-wrap page-top">
       <form class="auth-card" id="signupForm">
         <p class="auth-logo">Lilac</p>
-        <h2>${t('auth.signup.title')}</h2>
+        <h1 class="auth-title">${t('auth.signup.title')}</h1>
         <label>${t('auth.name')}<input name="name" required placeholder="라일락" /></label>
         <label>${t('auth.email')}<input name="email" type="email" required placeholder="you@example.com" /></label>
-        <label>${t('auth.password')}<input name="password" type="password" required minlength="4" placeholder="4자 이상" /></label>
+        <label>${t('auth.password')}<input name="password" type="password" required minlength="8" placeholder="8자 이상" /></label>
         <button class="btn-pill" type="submit">${t('signup')}</button>
         <p class="pd-note">가입 시 데모 웰컴 크레딧 5,000이 지급됩니다. 데이터는 로컬 폴더(db/users.json)에만 저장됩니다.</p>
         <a class="auth-alt" href="#/login">${t('auth.toLogin')}</a>
@@ -2322,7 +1689,8 @@ export function pageSignup() {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
     try {
-      await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), password: fd.get('password') }) });
+      const { token } = await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), password: fd.get('password') }) });
+      setToken(token);
       await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me'));
       toast('가입 완료. 웰컴 크레딧 5,000 지급'); location.hash = '#/';
     } catch (err) { toast((err as Error).message); }
@@ -2342,7 +1710,6 @@ export async function pageAccount() {
     <section class="mp-hero">
       <div class="mp-avatar">${esc(me.name[0])}</div>
       <div class="mp-info">
-        <p class="sp-label">프로필</p>
         <h1 class="mp-name">${esc(me.name)}</h1>
         <p class="sp-meta">${esc(me.email)}<span class="sep">·</span>플레이리스트 ${lists.length}개<span class="sep">·</span>팔로우 ${oshi.length}명<span class="sep">·</span>가입 ${joined}</p>
       </div>
@@ -2445,6 +1812,7 @@ export async function pageAccount() {
   });
   $('#acLogout').addEventListener('click', async () => {
     await api('/api/auth/logout', { method: 'POST' });
+    setToken(null);   // 서버 세션과 함께 로컬 토큰도 파기
     await refreshMe(); document.dispatchEvent(new CustomEvent('lilac:me'));
     location.hash = '#/';
   });
@@ -2479,7 +1847,7 @@ export async function pageSearch(q: string, tab = 'all') {
     const moods = [
       { k: '애니 타이업', c: '#8b5cf6,#4c1d95', q: 'anime' }, { k: '심야 시티팝', c: '#0ea5e9,#0c4a6e', q: 'city pop' },
       { k: 'J-ROCK', c: '#ef4444,#7f1d1d', q: 'j-rock' }, { k: '보컬로이드', c: '#22d3ee,#155e75', q: 'vocaloid' },
-      { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' }, { k: '한정반', c: '#ec4899,#831843', q: '限定' },
+      { k: '발라드', c: '#f59e0b,#7c2d12', q: 'ballad' }, { k: '초회반', c: '#ec4899,#831843', q: '初回' },
     ];
     $('#srBrowse').innerHTML = moods.map((m) => `
       <a class="mood d3-tilt" href="#/search?q=${encodeURIComponent(m.q)}" style="--m:linear-gradient(135deg,${m.c})" data-d3-tilt="10" data-d3="rise">
@@ -2491,7 +1859,6 @@ export async function pageSearch(q: string, tab = 'all') {
   root().innerHTML = `
     <section class="page-section page-top">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">검색 결과</p>
         <h1 class="page-title">${esc(q)}</h1>
         <div class="chips" id="srTabs">
           ${SR_TABS.map((s) => `<button class="chip ${s.k === tab ? 'on' : ''}" data-t="${s.k}">${s.label}</button>`).join('')}
@@ -2535,12 +1902,12 @@ export async function pageSearch(q: string, tab = 'all') {
 
   /* 섹션 빌더 */
   const artistShelf = (list: Artist[]) => `<div class="shelf d3-stage">${list.map((a) => `
-    <a class="card round" href="#/artist/${a.id}" data-term="${esc(a.searchTerm)}" data-tilt="8">
+    <a class="card round" href="#/artist/${a.id}" data-term="${esc(a.searchTerm)}">
       <div class="cover"><div class="ph">${esc(a.name[0])}</div><span class="glare"></span></div>
       <div class="c-title">${esc(a.name)}</div><div class="c-sub">${esc(a.genre)}</div></a>`).join('')}</div>`;
 
   const albumShelf = (list: typeof albums) => `<div class="shelf d3-stage">${list.map((al) => `
-    <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener" data-tilt="8">
+    <a class="card" href="${al.appleUrl}" target="_blank" rel="noopener">
       <div class="cover"><img src="${esc(al.artwork)}" alt="" loading="lazy" decoding="async"/><span class="glare"></span>
         </div>
       <div class="c-title">${esc(al.title)}</div><div class="c-sub">${esc(al.year)} · ${esc(al.artist)}</div></a>`).join('')}</div>`;
@@ -2557,8 +1924,8 @@ export async function pageSearch(q: string, tab = 'all') {
       <div class="sch-date"><b>${new Date(e.date).getDate()}</b><span>${e.date.slice(5, 7)}월</span></div>
       <div class="sch-meta">
         <div class="sch-top"><span class="sch-type">${esc(e.type)}</span><span class="sch-dday ${dd >= 0 && dd <= 14 ? 'urgent' : ''}">${dd > 0 ? `D-${dd}` : dd === 0 ? 'D-DAY' : '종료'}</span></div>
-        <div class="sch-title">${esc(e.artist)} · ${esc(e.title)}</div>
-        <div class="sch-sub">${esc(e.venue)}</div>
+        <div class="sch-title">${esc(schTitle(e))}</div>
+        <div class="sch-sub"><b>${esc(e.artist)}</b> · ${esc(e.venue)}</div>
       </div>
       <span class="sch-go">${icon('i-chev-r')}</span></a>`;
   }).join('')}</div>`;
@@ -2623,6 +1990,31 @@ export function page404() {
   root().innerHTML = `<section class="page-section page-top"><div class="page-head" data-d3="head"><h1 class="page-title">페이지를 찾을 수 없습니다</h1></div><a class="btn-pill" href="#/">${t('nav.home')}</a></section>`;
 }
 
+/* 렌더 중 예외가 났을 때 보여줄 화면.
+   지금까지는 이런 경우에도 404를 띄웠는데, 그러면 사용자는 주소를 잘못
+   입력한 줄 안다. 백엔드가 죽었거나 네트워크가 끊긴 것과 '없는 주소'는
+   원인도 대응도 다르다. 무엇을 확인해야 하는지 적고 다시 시도할 길을 준다. */
+export function pageRenderError(detail?: string) {
+  root().innerHTML = `
+    <section class="page-section page-top">
+      <div class="page-head" data-d3="head">
+        <h1 class="page-title">화면을 불러오지 못했습니다</h1>
+      </div>
+      <p class="err-lead">데이터를 가져오는 중에 문제가 생겼습니다. 아래를 확인해 주세요.</p>
+      <ul class="err-list">
+        <li>백엔드가 실행 중인지 (<code>npm run dev</code>)</li>
+        <li>네트워크 연결 상태</li>
+        <li>계속 같은 화면이면 <a href="#/status">서비스 상태</a>에서 어느 소스가 끊겼는지 확인</li>
+      </ul>
+      ${detail ? `<p class="err-detail">${esc(detail)}</p>` : ''}
+      <div class="err-actions">
+        <button class="btn-pill" id="errRetry">다시 시도</button>
+        <a class="btn-pill ghost" href="#/">홈으로</a>
+      </div>
+    </section>`;
+  document.getElementById('errRetry')?.addEventListener('click', () => location.reload());
+}
+
 
 /* ================= 서비스 상태 =================
    외부 소스에 의존하는 서비스라 "지금 살아 있는가, 언제 수집한 데이터인가"가
@@ -2650,7 +2042,6 @@ export async function pageStatus() {
   root().innerHTML = `
     <section class="page-section page-top narrow">
       <div class="page-head" data-d3="head">
-        <p class="sp-label">시스템</p>
         <h1 class="page-title">서비스 상태</h1>
         <p class="page-desc">Lilac은 외부 차트·카탈로그·환율에 의존합니다.
           각 소스가 마지막으로 언제 수집됐는지 그대로 보여줍니다.</p>

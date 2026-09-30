@@ -1,0 +1,12 @@
+# Lilac — 크롤러 정책
+# 원본 레퍼런스의 app/robots.ts 를 정적 파일로 옮긴 것.
+# 도메인이 확정되면 Sitemap 줄의 호스트를 실제 값으로 교체할 것.
+
+User-agent: *
+Allow: /
+
+# 개인화·계정 화면은 색인 대상이 아니다.
+# 해시 라우팅이라 robots 의 Disallow 로는 막을 수 없다(크롤러는 #  뒤를 경로로 보지 않는다).
+# 실제 차단은 각 페이지의 robots 메타로 처리한다 — src/site/seo.ts 참고.
+
+Sitemap: https://lilac.example/sitemap.xml

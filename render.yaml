@@ -1,0 +1,25 @@
+# Render Blueprint — Lilac 백엔드(상시 실행 Node, SSE, 수집기)
+# 무료 플랜은 디스크가 재시작마다 비워지므로 사용자 데이터는 DATABASE_URL(Postgres)에 영속화한다.
+services:
+  - type: web
+    name: lilac-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm ci --prefix backend
+    startCommand: node backend/server.mjs
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: LILAC_TRUST_PROXY
+        value: "2"
+      - key: LILAC_ALLOWED_ORIGINS
+        sync: false
+      - key: LILAC_ADMIN_TOKEN
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

@@ -332,7 +332,11 @@ async function buildCountry(c) {
 
   /* MV 해석 풀 = Apple ∪ RSS ∪ 현지차트 상위 (중복 제거)
      해석은 곡당 2초 안팎이 걸리므로 상한을 둔다 */
-  const MV_POOL_MAX = Number(process.env.MV_POOL_MAX || 70);
+  /* 70곡이면 상위권만 커버돼서, 그 아래로 차트인한 아티스트는
+     조회수가 안 잡힌다(실측: 69팀 중 26팀이 MV 미해석).
+     해석 결과는 mv-cache 에 남아 다음 실행에서 재사용되므로
+     한 번 올려두면 이후 비용은 크지 않다. */
+  const MV_POOL_MAX = Number(process.env.MV_POOL_MAX || 130);
   const poolMap = new Map();
   const addPool = (list, n) => list.slice(0, n).forEach((e) => {
     const k = keyOf(e.title, e.artist);
@@ -399,17 +403,27 @@ async function rebuildIndex() {
 
 async function main() {
   await loadCache();
-  const out = { updated: new Date().toISOString(), limit: LIMIT, countries: {} };
+
+  /* ⚠️ 이전 데이터를 깔고 시작한다.
+     예전엔 빈 countries 로 시작해 나라별로 부분 저장했다. 그래서
+     일본 수집이 끝나 저장되는 순간 한국 데이터가 파일에서 사라졌고,
+     한국 차트 수집이 끝날 때까지(수 분) /api/charts?country=kr 이 죽었다.
+     실패했을 때만 이전 값을 되살리던 아래 catch 로는 이 구간을 못 막는다. */
+  let prev = { countries: {} };
+  try { prev = JSON.parse(await readFile(path.join(DB, 'charts.json'), 'utf-8')); } catch { /* 최초 실행 */ }
+
+  const out = {
+    updated: new Date().toISOString(),
+    limit: LIMIT,
+    countries: { ...(prev.countries || {}) },
+  };
   for (const c of COUNTRIES) {
     try {
       out.countries[c.code] = { label: c.label, ...(await buildCountry(c)) };
       await writeFile(path.join(DB, 'charts.json'), JSON.stringify(out, null, 2));   // 국가별 부분 저장
     } catch (e) {
+      // 이전 값은 이미 out 에 깔려 있으므로 그대로 남는다
       console.log(`  [${c.label}] 수집 실패 — 이전 데이터 유지: ${String(e).slice(0, 90)}`);
-      try {
-        const prev = JSON.parse(await readFile(path.join(DB, 'charts.json'), 'utf-8'));
-        if (prev.countries?.[c.code]) out.countries[c.code] = prev.countries[c.code];
-      } catch { /* 이전 데이터 없음 */ }
     }
   }
   await writeFile(path.join(DB, 'charts.json'), JSON.stringify(out, null, 2));
@@ -426,6 +440,16 @@ async function main() {
   await rebuildIndex();
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+/* 서버가 주기적으로 부를 수 있게 내보낸다.
+   예전엔 이 파일을 임포트하는 순간 수집이 시작돼서 서버에서 쓸 수 없었고,
+   그래서 차트가 사람이 손으로 돌릴 때만 갱신됐다 — 실측 218시간(9일) 정체. */
+export { main as collectCharts };
+
+/* CLI 로 직접 실행할 때만 돈다 */
+const runDirectly =
+  process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+if (runDirectly) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}
 
 

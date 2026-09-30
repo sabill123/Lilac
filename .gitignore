@@ -3,3 +3,44 @@ dist/
 .DS_Store
 *.log
 macos/.build/
+
+# 문의 접수함 — 제출자 개인정보(이름·이메일·소속)가 들어간다. 절대 커밋하지 않는다.
+db/contacts.json
+
+# 세션 토큰 — 사실상 자격증명이다. 커밋 금지.
+db/sessions.json
+# 사용자별 데이터 이관 시 남긴 원본 백업
+db/user/*.json.bak
+
+# 프로세스 간 수집 락 (런타임 산물)
+db/.*.lock
+
+# 인스턴스 등록 (런타임 산물)
+db/.instances.json
+
+db/.catalog-sync.lock
+
+# Sanitized deploy snapshots are supplied as immutable artifacts.
+/server/public/data/
+.vercel/
+.env*
+.vercel
+
+# 실시간 수집 캐시·팬클럽 유입 집계 (런타임 산출물)
+db/live-cache/
+
+# 커뮤니티 글·댓글·이미지, 소셜 좋아요·댓글 (사용자 생성 콘텐츠, 런타임 산출물)
+db/community/
+db/social/
+
+# 계정·사용자 데이터(런타임). 운영에서는 Postgres에 영속화한다. 절대 커밋하지 않는다.
+db/users.json
+db/user/
+db/groupbuys.json
+db/sync-log.json
+db/.fe-port
+# 로컬 QA 도구·산출물
+frontend/public/__qa/
+/undefined*.png
+*.bak
+.agents/

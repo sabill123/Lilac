@@ -1,15 +1,25 @@
-import './style.css';
+import { publicPreview, configurePublicPreview, probeDeploymentHealth, previewAccountPage, previewNoticeHtml, PREVIEW_NOTICE } from './public-preview';
+import { disposeDiscovery } from './discovery';
+import './styles/index.css';
 import { smartMatch, loadAliases } from './koja';
 import { api, me, refreshMe, esc, icon, findCatalog } from './api';
 import { initPlayer, loadLikes, toast, playerActions, getQueueContext, askName } from './player';
-import { t, setLocale, getLocale, LOCALES } from './i18n';
+import { t, setLocale, getLocale, LOCALES, withParticle } from './i18n';
 import type { Locale } from './i18n';
-import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageFocus, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404 , pageStatus } from './pages';
+import { loadData, pageHome, pageChart, pageStore, pageProduct, pageSchedule, pageFocus, pageArtist, pageArtists, pageLibrary, pagePlaylist, pageLogin, pageSignup, pageAccount, pageOrders, pageOrderDetail, pageHelp, pageSearch, page404, pageRenderError , pageStatus } from './pages';
 import { initMusicKitIfConfigured } from './musickit';
-import { initRipple, initKeyboard, initContextMenu, bindParallax, bindReveal, bindTilt, bindHoverExpand } from './interactions';
-import { mountBackdrop } from './backdrop';
-import { mountMotion3D, playEnter } from './motion3d';
+import { initKeyboard, initContextMenu } from './interactions';
 import { disposeScene } from './three';
+import { pageRelease, pageReleases } from './release';
+import { isSiteRoute, setSiteMode, SITE_TITLES } from './site/routes';
+
+/* 마케팅 레이어는 지연 로드한다 — 랜딩 섹션·법무 마크다운·전용 CSS가
+   앱 번들에 섞이면 약관을 볼 일 없는 사용자까지 그 비용을 물게 된다.
+   한 번 받으면 모듈이 캐시되므로 프로미스를 재사용한다. */
+type SiteModule = typeof import('./site');
+let sitePromise: Promise<SiteModule> | null = null;
+let resolvedSiteModule: SiteModule | null = null;
+const loadSite = () => (sitePromise ??= import('./site'));
 
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
 
@@ -40,6 +50,9 @@ async function renderSidebar() {
   $('#sbChips').querySelectorAll<HTMLButtonElement>('.sb-chip').forEach((b) =>
     b.addEventListener('click', () => { sbFilter = b.dataset.f!; renderSidebar(); }));
 
+  if (publicPreview) {
+    sbItems = []; $('#sbList').innerHTML = '<div class="sb-empty"><p>계정 저장이 없는 미리보기입니다.</p><a href="#/library">미리보기 안내</a></div>'; return;
+  }
   const [lists, likes, oshi] = await Promise.all([
     api('/api/playlists').catch(() => []), api('/api/likes').catch(() => []), api('/api/oshi').catch(() => []),
   ]);
@@ -98,7 +111,9 @@ const ARTIST_TERMS = new Map<string, string>();
 type Mode = 'browse' | 'play';
 const PLAY_ROUTES = new Set(['library', 'playlist']);
 const BROWSE_ONLY = new Set(['login', 'signup', 'account', 'orders', 'help', 'work', 'focus']); // 계정·워크 화면은 항상 브라우즈
-const LIGHT_ROUTES = new Set(['store']);                      // 화이트 배경 페이지
+/* 전역 라이트 테마는 사용하지 않는다. 스토어의 밝은 상품 진열면은
+   store/store.css의 .commerce-store 안에서만 소유한다. */
+const LIGHT_ROUTES = new Set<string>([]);
 let userMode: Mode = (localStorage.getItem('lilac.mode') as Mode) || 'browse';
 function currentSeg() { return (location.hash.split('/')[1] || 'home').split('?')[0] || 'home'; }
 function applyMode() {
@@ -108,6 +123,7 @@ function applyMode() {
   document.body.classList.toggle('play-mode', mode === 'play');
   document.body.classList.toggle('light-page', LIGHT_ROUTES.has(seg));
   document.body.classList.toggle('work-page', onWork);
+  document.body.classList.toggle('immersive-home', seg === 'home');
   const workLinks = [$('#tbWorkMode') as HTMLAnchorElement, $('#mWorkMode') as HTMLAnchorElement];
   workLinks.forEach((link) => {
     link.href = onWork ? '#/' : '#/work';
@@ -116,6 +132,7 @@ function applyMode() {
   });
   $('#btnMode').classList.toggle('on', mode === 'play');
   $('#btnMode').title = mode === 'play' ? '브라우즈 모드로' : '플레이 모드로';
+  $('#btnMode').setAttribute('aria-label', $('#btnMode').title);
 }
 export function toggleMode() {
   const onPlayRoute = PLAY_ROUTES.has(currentSeg());
@@ -137,19 +154,23 @@ function renderTopbar() {
   $('#mWorkMode').querySelector('span')!.textContent = t('nav.focus');
   ($('#searchInput') as HTMLInputElement).placeholder = t('search.ph');
   $('#connectApple').textContent = $('#connectApple').classList.contains('connected') ? t('connected') : t('connect');
+  $('#connectApple').hidden = publicPreview;
   const acct = $('#gnbAcct');
-  acct.innerHTML = me
+  acct.innerHTML = publicPreview ? '<a class="tb-link" href="#/login">미리보기 안내</a>' : me
     ? `<a class="tb-user" href="#/account" title="${t('account')}"><span class="tb-avatar">${esc(me.name[0])}</span><span class="tb-credits">${me.credits.toLocaleString()}C</span></a>`
     : `<a class="tb-link" href="#/login">${t('login')}</a><a class="tb-signup" href="#/signup">${t('signup')}</a>`;
-  const mobileNav = [NAV[0], NAV[1], NAV[2], NAV[3], { r: 'library', href: '#/library', k: 'nav.library', ic: 'i-lib' }];
+  const mobileNav = [...NAV, { r: 'library', href: '#/library', k: 'nav.library', ic: 'i-lib' }];
   $('#mnav').innerHTML = mobileNav
     .map((n) => `<a data-r="${n.r}" href="${n.href}"><svg class="ic"><use href="#${n.ic}"/></svg><span>${t(n.k)}</span></a>`).join('');
   markActive();
 }
 function markActive() {
   const r = (location.hash.split('/')[1] || 'home').split('?')[0] || 'home';
-  document.querySelectorAll('[data-r]').forEach((el) =>
-    el.classList.toggle('on', (el as HTMLElement).dataset.r === r));
+  document.querySelectorAll('[data-r]').forEach((el) => {
+    const active = (el as HTMLElement).dataset.r === r;
+    el.classList.toggle('on', active);
+    if (el.matches('a')) { if(active) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current'); }
+  });
   document.querySelectorAll<HTMLElement>('.sb-row[data-key]').forEach((el) => {
     const [kind, id] = (el.dataset.key || '').split(':');
     const target = kind === 'playlist' ? `#/playlist/${id}` : kind === 'artist' ? `#/artist/${id}` : '#/library/likes';
@@ -181,6 +202,9 @@ const TITLES: Record<string, string> = {
   work: '워크 모드', focus: '워크 모드', status: '서비스 상태',
   artists: '아티스트', library: '보관함', playlist: '플레이리스트', account: '계정',
   orders: '주문 내역', help: '서비스 안내', search: '검색', login: '로그인', signup: '가입',
+  release: '판매처 비교',
+  releases: '판매처 비교',
+  ...SITE_TITLES,
 };
 function setTitle(seg: string) {
   const base = TITLES[seg] || '';
@@ -206,6 +230,11 @@ function restoreScroll(hash: string) {
 /* ---------- 첫 방문 온보딩 ---------- */
 function maybeOnboard() {
   if (localStorage.getItem('lilac.onboarded')) return;
+  /* 마케팅·법무 페이지에서는 띄우지 않는다.
+     "Lilac은 두 가지 모드로 씁니다"는 앱 사용법 안내라, 요금제나 약관을 보러 온
+     사람에게는 맥락이 어긋나고 본문을 가리기만 한다.
+     (딥링크로 #/pricing 에 바로 들어온 첫 방문자가 이 화면부터 만났다) */
+  if (document.body.classList.contains('site-mode')) return;
   const el = document.getElementById('onboard');
   if (!el) return;
   el.classList.add('show');
@@ -247,15 +276,56 @@ function initFocusTrap() {
 
 /* ---------- 라우터 ---------- */
 let navDepth = 0;
+let routeGeneration = 0;
+
+/* View Transitions —
+   라우트 전환을 브라우저가 이전/다음 화면 스냅숙으로 부드럽게 이어준다.
+   사이트 라우트와 앱 라우트가 같은 동작을 공유하도록 헬퍼로 뽑았다.
+   미지원 브라우저·모션 최소화·첫 로드에서는 즉시 렌더로 떨어진다. */
+type ViewTransition = {
+  finished: Promise<void>;
+  ready?: Promise<void>;
+  updateCallbackDone?: Promise<void>;
+  skipTransition?: () => void;
+};
+type VTDoc = Document & {
+  startViewTransition?: (cb: () => void | Promise<void>) => ViewTransition;
+};
+function canTransition() {
+  return (
+    Boolean((document as VTDoc).startViewTransition) &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+    Boolean(lastHash)
+  );
+}
+async function runTransition(cb: () => void | Promise<void>) {
+  const vt = (document as VTDoc).startViewTransition?.bind(document);
+  if (!canTransition() || !vt) { await cb(); return; }
+
+  const t = vt(cb);
+  /* 전환 객체는 finished 말고도 ready·updateCallbackDone 을 준다.
+     빠르게 라우트를 갈아치우면 앞 전환이 취소되면서 이 세 개가 전부 reject 되는데,
+     finished 만 await 하면 나머지 둘이 미처리 거부로 남아
+     "AbortError: Transition was skipped" 가 콘솔에 쌓인다.
+     (실제로 라우트 연속 이동 QA 에서 잡혔다) 전부 삼켜준다. */
+  t.ready?.catch(() => {});
+  t.updateCallbackDone?.catch(() => {});
+  try {
+    await t.finished;
+  } catch { /* 전환 실패는 무시 — 렌더 자체는 이미 끝났다 */ }
+}
 
 /** 실제 페이지 렌더 — route()와 분리해 View Transition 콜백으로 쓸 수 있게 한다 */
 async function renderRoute(seg: string, sub: string | undefined, qs: URLSearchParams) {
-  const panel = $('#mainPanel');
+  $('#page').dataset.page = seg || 'home';
+  if (previewAccountPage(seg)) { $('#page').innerHTML=previewNoticeHtml(); return; }
   try {
     switch (seg || 'home') {
       case 'home': await pageHome(); break;
       case 'chart': await pageChart(sub); break;
       case 'store': sub ? await pageProduct(sub) : await pageStore(); break;
+      case 'release': await pageRelease(sub); break;
+      case 'releases': await pageReleases(); break;
       case 'schedule': await pageSchedule(); break;
       case 'work': await pageFocus(); break;
       case 'artist': await pageArtist(sub); break;
@@ -271,20 +341,69 @@ async function renderRoute(seg: string, sub: string | undefined, qs: URLSearchPa
       case 'search': await pageSearch(qs.get('q') || ''); break;
       default: page404();
     }
-  } catch (e) { console.error(e); page404(); }
-  // 페이지 렌더 후 인터랙션 바인딩
-  bindTilt(panel); bindHoverExpand(panel); bindReveal(panel, panel);
-  // 3D 모션 — 스크롤 연동은 CSS가 처리하므로 클래스만 붙인다
-  mountMotion3D(panel);
+  } catch (e) {
+    // 404(없는 주소)와 렌더 실패(백엔드·네트워크)는 원인이 다르다.
+    // 같은 화면으로 뭉뚱그리면 사용자가 엉뚱한 곳을 고치게 된다.
+    console.error(e);
+    pageRenderError(e instanceof Error ? e.message : undefined);
+  }
+  // Music surfaces own bounded WebGL motion; content never depends on a reveal observer.
+  $('#page').querySelectorAll<HTMLElement>('.rk-row[data-i]').forEach((row) => {
+    row.tabIndex = 0; row.setAttribute('role', 'group'); row.setAttribute('aria-label', (row.querySelector('.rk-t')?.textContent || '곡') + ' 미리듣기');
+    if (!row.hasAttribute('data-keyboard-bound')) { row.setAttribute('data-keyboard-bound','1'); row.addEventListener('keydown', (e) => { if (!e.defaultPrevented && e.target === row && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); row.click(); } }); }
+  });
 }
 
 async function route() {
-  const hash = location.hash.replace(/^#\/?/, '');
+  const generation = ++routeGeneration;
+  const routeHash = location.hash;
+  // Imports and queued transitions may finish after another navigation, even to the same hash.
+  const isCurrent = () => generation === routeGeneration && location.hash === routeHash;
+  const hash = routeHash.replace(/^#\/?/, '');
   const [seg, sub] = hash.split('?')[0].split('/');
   const qs = new URLSearchParams(hash.split('?')[1] || '');
   if (seg === 'focus') { location.replace('#/work'); return; }
+
+  /* 마케팅·법무 라우트 —
+     원본(사내 레퍼런스 프로젝트)에서 (marketing) 라우트 그룹이
+     (app) 레이아웃을 쓰지 않듯, 이 구간은 앱 크롬(사이드바·톱바·플레이어)을
+     끄고 자체 셸로 렌더한다. 소개 랜딩은 독립적으로 3D 씬을 관리한다. */
+  if (isSiteRoute(seg)) {
+    rememberScroll();
+    disposeDiscovery();
+    disposeScene();
+    document.body.classList.remove('has-3d-hero', 'has-3d-chart', 'play-mode', 'light-page', 'work-page', 'immersive-home');
+
+    /* 모듈을 먼저 기다린 뒤에 모드를 바꿈다.
+       site.css 가 같은 청크로 딴려오므로 먼저 클래스를 걸면
+       CSS 도착 전 한 프레임 동안 앱 크롬이 번처럼 보인다. */
+    const site = await loadSite();
+    resolvedSiteModule = site;
+    if (!isCurrent()) return;
+
+    /* 하위 경로가 붙은 주소(#/terms/foo)는 존재하지 않는다.
+       조용히 약관을 보여주면 사용자가 오타를 모른다. 404 로 밝힌다. */
+    const unknownSub = Boolean(sub);
+    await runTransition(() => {
+      if (!isCurrent()) return;
+      setSiteMode(true);
+      if (unknownSub) site.renderSiteNotFound(`#/${seg}/${sub}`);
+      else site.renderSitePage(seg);
+    });
+
+    if (!isCurrent()) return;
+    lastHash = routeHash;
+    return;
+  }
+  if (document.body.classList.contains('site-mode')) {
+    setSiteMode(false);
+    // Clean up synchronously: a deferred leave could dispose the next site's scene and metadata.
+    resolvedSiteModule?.leaveSite();
+  }
+
   rememberScroll();
   // 이전 페이지의 3D 씬을 정리한다 (GPU 리소스·렌더 루프 누수 방지)
+  disposeDiscovery();
   disposeScene();
   document.body.classList.remove('has-3d-hero', 'has-3d-chart');
   applyMode();
@@ -296,21 +415,18 @@ async function route() {
      톱바·사이드바·플레이어는 view-transition-name 으로 고정해
      '내용만 넘어가는' 앱다운 전환이 된다.
      미지원 브라우저·모션 최소화에서는 기존 즉시 렌더로 동작한다. */
-  const vt = (document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> } }).startViewTransition?.bind(document);
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const firstLoad = !lastHash;
-
-  if (vt && !reduced && !firstLoad) {
-    try {
-      await vt(() => renderRoute(seg, sub, qs)).finished;
-    } catch { /* 전환 실패는 무시 — 렌더 자체는 이미 끝났다 */ }
+  if (canTransition()) {
+    await runTransition(() => {
+      if (!isCurrent()) return;
+      return renderRoute(seg, sub, qs);
+    });
   } else {
     await renderRoute(seg, sub, qs);
-    playEnter(document.getElementById('page'));
   }
 
-  restoreScroll(location.hash);
-  lastHash = location.hash;
+  if (!isCurrent()) return;
+  restoreScroll(routeHash);
+  lastHash = routeHash;
   onScroll();
 }
 function onScroll() {
@@ -320,14 +436,11 @@ function onScroll() {
 
 /* ---------- 부트 ---------- */
 async function boot() {
-  mountBackdrop();
   initPlayer();
   initGlobe();
-  initRipple();
   initContextMenu();
   const panel = $('#mainPanel');
   panel.addEventListener('scroll', onScroll, { passive: true });
-  bindParallax(panel);
 
   // 히스토리 네비게이션
   $('#navBack').addEventListener('click', () => history.back());
@@ -335,6 +448,7 @@ async function boot() {
   $('#btnMode').addEventListener('click', toggleMode);
 
   $('#sbAdd').addEventListener('click', async () => {
+    if (publicPreview) { toast(PREVIEW_NOTICE); return; }
     const name = await askName(t('lib.newPlaylist'), 'My Mix');
     if (!name) return;
     const pl = await api('/api/playlists', { method: 'POST', body: JSON.stringify({ name }) });
@@ -400,24 +514,40 @@ async function boot() {
       el.classList.toggle('playing', !!ctx && el.dataset.key === ctx));
   });
   document.addEventListener('lilac:me', () => { renderTopbar(); void renderSidebar(); });
+
+  /* 인증 필요 안내 — 한 곳에서 처리한다.
+     호출부마다 try/catch 를 넣게 두면 반드시 빠뜨리는 데가 생긴다(실제로 그랬다). */
+  let authToastAt = 0;
+  document.addEventListener('lilac:auth-required', (e) => {
+    const now = Date.now();
+    if (now - authToastAt < 1500) return;   // 연쇄 401 로 토스트가 도배되지 않게
+    authToastAt = now;
+    if (publicPreview) { toast(PREVIEW_NOTICE); return; }
+    const action = (e as CustomEvent<{ action?: string }>).detail?.action || '이 기능';
+    toast(`${withParticle(action, '은는')} 로그인 후 이용할 수 있습니다`);
+    // 이미 로그인 화면이면 굳이 옮기지 않는다
+    if (!/^#\/(login|signup)/.test(location.hash)) {
+      setTimeout(() => { if (!me) location.hash = '#/login'; }, 900);
+    }
+  });
   document.addEventListener('lilac:playlists', () => { void renderSidebar(); });
   window.addEventListener('hashchange', () => { navDepth++; route(); });
 
   applyMode();
   // 백엔드 연결 확인 (실패 시 재시도 안내 화면)
   try {
-    await api('/api/health');
+    configurePublicPreview(await probeDeploymentHealth());
   } catch {
     showBackendError();
     return;
   }
-  await Promise.all([loadData(), refreshMe(), loadLikes()]);
+  await Promise.all([loadData(), refreshMe(), publicPreview ? Promise.resolve() : loadLikes()]);
   (await api('/api/db/artists').catch(() => [])).forEach((a: { name: string; searchTerm: string }) => ARTIST_TERMS.set(a.name, a.searchTerm));
   renderTopbar();
   await renderSidebar();
   await route();
   initFocusTrap();
-  maybeOnboard();
+  if (!publicPreview) maybeOnboard();
 }
 
 /* ---------- 백엔드 장애 화면 ---------- */
@@ -437,7 +567,7 @@ function showBackendError() {
   $('#fatalRetry').addEventListener('click', async () => {
     const btn = $('#fatalRetry') as HTMLButtonElement;
     btn.textContent = '확인 중…'; btn.disabled = true;
-    try { await api('/api/health'); location.reload(); }
+    try { await probeDeploymentHealth(); location.reload(); }
     catch { btn.textContent = '다시 시도'; btn.disabled = false; toast('아직 응답이 없습니다'); }
   });
 }

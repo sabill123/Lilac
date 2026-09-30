@@ -1,3 +1,4 @@
+import { publicPreview, previewBlocksRequest, PREVIEW_NOTICE } from './public-preview';
 export interface CatalogTrack { id: number; title: string; artist: string; album: string; artwork: string; preview: string; appleUrl: string; durationMs?: number; releaseDate?: string; }
 export interface Artist {
   id: string; name: string;
@@ -8,6 +9,9 @@ export interface Artist {
   genre: string; appleGenre?: string;
   searchTerm: string;
   operator: string | null; official: string | null;
+  /* 운영사를 어디서 받았는지. 사람이 확인한 값은 이 필드가 없고,
+     MusicBrainz 자동 수집분은 'musicbrainz' 다. 화면에서 구분해 표시한다. */
+  operatorSource?: string | null; operatorMbid?: string | null;
   appleArtistId?: number; artwork?: string | null;
   chartHits?: number; bestRank?: number | null;
   aliases?: string[];
@@ -52,12 +56,86 @@ export interface Product {
 export interface PlayableTrack { title: string; artist: string; album?: string; artwork?: string; preview?: string; youtubeId?: string | null; addedAt?: string; durationMs?: number; }
 export interface User { id: string; email: string; name: string; language: string; plan: { tier: string; name: string; renewsAt: string | null }; credits: number; createdAt: string; paymentMethods: { id: string; brand: string; last4: string }[]; }
 
-export const api = (path: string, init?: RequestInit) =>
-  fetch(path, init ? { headers: { 'content-type': 'application/json' }, ...init } : undefined).then(async (r) => {
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
-    return j;
-  });
+/* ---------- 세션 토큰 ----------
+   예전엔 서버가 세션 파일 하나로 "현재 사용자"를 전역 관리했고, 프론트는
+   토큰을 받아놓고 쓰지 않았다. 그래서 나중에 로그인한 사람이 앞사람의 세션을
+   덮어쓰고, 모든 계정이 같은 보관함·주문을 봤다.
+   이제 토큰을 저장해 요청마다 실어 보낸다. */
+const TOKEN_KEY = 'lilac.token';
+
+export const getToken = () => {
+  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+};
+export const setToken = (t: string | null) => {
+  try {
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch { /* 프라이빗 모드 등 — 토큰 없이도 공개 기능은 돌아간다 */ }
+  // 쿠키에도 심는다. 헤더를 못 붙이는 경로(문서 이동 등)를 위한 폴백이다.
+  try {
+    document.cookie = t
+      ? `lilac_token=${encodeURIComponent(t)}; path=/; max-age=${30 * 864e2}; samesite=lax`
+      : 'lilac_token=; path=/; max-age=0';
+  } catch { /* noop */ }
+};
+
+/** 서버가 주는 오류 코드까지 붙여 던진다 — 화면이 상황별로 다르게 반응할 수 있게 */
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export const api = async (path: string, init?: RequestInit) => {
+  if (previewBlocksRequest(path, init?.method)) throw new ApiError(PREVIEW_NOTICE,403,'READ_ONLY_PREVIEW');
+  const token = publicPreview ? null : getToken();
+  const headers: Record<string, string> = init ? { 'content-type': 'application/json' } : {};
+  const provided = init?.headers;
+  if (provided && !Array.isArray(provided) && typeof (provided as Headers).forEach === 'function') {
+    (provided as Headers).forEach((value, name) => { headers[name.toLowerCase()] = value; });
+  } else {
+    for (const [name, value] of (Array.isArray(provided) ? provided : Object.entries(provided || {}))) headers[name.toLowerCase()] = value;
+  }
+  if (publicPreview) { delete headers.authorization; delete headers.cookie; }
+  if (token) headers.authorization = `Bearer ${token}`;
+
+  // Vercel's same-origin gateway cookie is required; Lilac application credentials are not.
+  const r = await fetch(path, { ...init, headers, ...(publicPreview ? { credentials: 'same-origin' as RequestCredentials } : {}) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    if (r.status === 401 && !publicPreview) {
+      // 토큰이 죽었으면 들고 있어봐야 계속 401 이 난다. 지운다.
+      setToken(null);
+      /* 인증 필요를 한 곳에서 알린다.
+         이걸 안 하면 각 호출부가 개별로 처리해야 하는데, 실제로 아무도 안 해서
+         좋아요·팔로우·플리추가가 비로그인에서 "눌러도 아무 일 없음"이 됐다.
+
+         ⚠️ 단, 조회(GET)에는 알리지 않는다.
+         화면을 그리려고 배경에서 부르는 GET 이 많고(보관함 요약, 오시 목록 등)
+         그것까지 로그인 유도로 처리하면 아티스트 목록 같은 공개 화면이
+         로그인으로 튕긴다 — 실제로 그 회귀를 냈다.
+         쓰기(POST/PATCH/PUT/DELETE)는 언제나 사용자가 누른 결과다. */
+      const method = (init?.method || 'GET').toUpperCase();
+      if (method !== 'GET') {
+        document.dispatchEvent(new CustomEvent('lilac:auth-required', { detail: { path } }));
+      }
+    }
+    throw new ApiError(j.error || `HTTP ${r.status}`, r.status, j.code);
+  }
+  return j;
+};
+
+/** 로그인이 필요한 동작 앞에 세우는 가드.
+ *  서버까지 갔다 와서 실패하는 것보다 즉시 알려주는 편이 낫다. */
+export function needsLogin(action = '이 기능'): boolean {
+  if (me) return false;
+  document.dispatchEvent(new CustomEvent('lilac:auth-required', { detail: { action } }));
+  return true;
+}
 
 const catalogCache = new Map<string, CatalogTrack | null>();
 /* 아트워크 조회 배칭
@@ -75,6 +153,7 @@ async function flushBatch() {
   const terms = [...new Set(queue.map((q) => q.term))];
   try {
     const r = await fetch('/api/catalog/batch', {
+      ...(publicPreview ? { credentials: 'same-origin' as RequestCredentials } : {}),
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ terms }),

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Lilac 사이트맵 — 원본 레퍼런스의 app/sitemap.ts 대응.
+
+  ⚠️ 알려진 한계: 라일락은 해시 라우팅 SPA다. 검색엔진은 URL 프래그먼트(#)를
+  별개 페이지로 취급하지 않으므로, 아래 URL들은 사실상 전부 루트 하나로 수렴한다.
+  라우트별 색인이 필요해지면 history 라우팅 + 프리렌더(또는 SSR)로 옮긴 뒤
+  이 파일의 loc 값을 실제 경로(/terms, /privacy …)로 바꿔야 한다.
+  그때 src/site/seo.ts 의 라우트별 메타를 그대로 서버 메타로 옮기면 된다.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://lilac.example/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://lilac.example/#/about</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://lilac.example/#/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://lilac.example/#/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://lilac.example/#/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://lilac.example/#/subprocessors</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

@@ -68,7 +68,11 @@ function sizeOf(trackCount, name) {
 const SIZE_LABEL = { single: '싱글', mini: '미니 앨범', album: '정규 앨범' };
 
 /** 한정반이 존재하는 상품인지 (양국 모두 싱글·정규는 대부분 한정반이 나온다) */
-const hasLimited = (id, size) => size !== 'mini' && id % 3 !== 0;
+/* 예전엔 초회한정반의 '존재 여부'를 collectionId % 3 으로 정했다.
+   가짜 재고(3 + id % 48)와 같은 부류다. 450개 상품 중 266개에
+   실제로 있는지 모르는 「초회한정반 (CD+DVD)」이 붙고 가격까지 붙었고,
+   카드의 '한정반' 배지와 스토어 통계 '한정반 266'도 여기서 나왔다.
+   애플 카탈로그는 한정반 여부를 알려주지 않는다. 그러면 만들지 않는다. */
 
 /** 실시간 환율 — JPY↔KRW 양방향 */
 async function fxRates() {
@@ -153,12 +157,13 @@ async function main() {
       seen.add(key);
 
       const size = sizeOf(x.trackCount || 0, x.collectionName || '');
-      const limited = hasLimited(x.collectionId || 0, size);
       const base = cfg.physical[size];
 
+      /* 통상반은 어떤 음반에도 있으므로 만든다(가격은 시장 통상가 추정, real:false).
+         한정반은 있는지 알 수 없으므로 만들지 않는다.
+         디지털은 애플이 실제 가격을 주므로 real:true. */
       const editions = [
         { id: 'normal', label: `통상반 CD (${SIZE_LABEL[size]})`, amount: base.normal, feeKind: size === 'single' ? 'single' : 'album', real: false },
-        ...(limited ? [{ id: 'limited', label: origin === 'jp' ? '초회한정반 (CD+DVD)' : '한정반 (포토북+포토카드)', amount: base.limited, feeKind: 'limited', real: false }] : []),
         ...(x.collectionPrice > 0 ? [{ id: 'digital', label: '디지털 다운로드 (Apple)', amount: x.collectionPrice, feeKind: 'single', real: true, digital: true }] : []),
       ].map((e) => ({ ...e, pricing: priceOf(e.amount, e.feeKind, origin, fx) }));
 
@@ -173,7 +178,7 @@ async function main() {
         routeLabel: cfg.routeLabel,
         genre: a.genre || (origin === 'jp' ? 'J-POP' : 'K-POP'),
         size, sizeLabel: SIZE_LABEL[size],
-        badge: limited ? '한정반' : SIZE_LABEL[size],
+        badge: SIZE_LABEL[size],
         price: primary.pricing.total,
         priceCurrency: primary.pricing.buyerCurrency,
         editions,
@@ -190,7 +195,10 @@ async function main() {
           : `https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=${encodeURIComponent(x.collectionName || '')}`,
         shopLabel: origin === 'jp' ? 'TOWER RECORDS' : '알라딘',
         searchTerm: `${a.searchTerm || a.name} ${x.collectionName}`,
-        stock: 3 + ((x.collectionId || 0) % 48),
+        /* 재고를 3 + (collectionId % 48) 로 만들어 넣고 있었다.
+           컬렉션 ID 로 만든 값이라 재고와 아무 상관이 없는데 "잔여 5" 처럼
+           구매를 압박했다. 판매처 재고를 조회할 방법이 없으므로 넣지 않는다.
+           (화면에서 지웠어도 수집기가 계속 써 넣으면 데이터엔 남는다) */
         desc: `${a.name}의 ${SIZE_LABEL[size]}. ${cfg.note}`,
       });
     }

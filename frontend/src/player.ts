@@ -1,4 +1,4 @@
-import { api, esc, icon } from './api';
+import { api, esc, icon, me, needsLogin } from './api';
 import type { PlayableTrack } from './api';
 import { t } from './i18n';
 import { applyMarquee, bindDragReorder, openContextMenu } from './interactions';
@@ -26,7 +26,13 @@ let queueIdx = -1;
 let shuffle = false;
 let repeat: 'off' | 'all' | 'one' = 'off';
 let likeKeys = new Set<string>();
-const keyOf = (tr: PlayableTrack) => (tr.title + '|' + (tr.artist || '')).toLowerCase().replace(/\s/g, '');
+/* 좋아요 키 — 서버(backend/server.mjs 의 norm)와 반드시 같은 규칙이어야 한다.
+   예전엔 클라이언트가 공백만 지우고 서버는 구두점까지 지워서 키가 어긋났다.
+   그 결과 「好きすぎて滅!」 같은 곡은 하트가 절대 채워지지 않고
+   토스트도 항상 "해제됨"으로 떴으며, 다시 누르면 해제가 아니라 재등록됐다. */
+const normKey = (v: string) =>
+  String(v).toLowerCase().replace(/[\s()[\]『』「」【】・,.'’!?~-]/g, '');
+const keyOf = (tr: PlayableTrack) => normKey(tr.title) + '|' + normKey(tr.artist || '');
 
 export const nowPlaying = () => (queueIdx >= 0 ? queue[queueIdx] : null);
 export async function loadLikes() {
@@ -38,6 +44,7 @@ export const isLiked = (tr: PlayableTrack) => likeKeys.has(keyOf(tr));
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function setPlayIcon(playing: boolean) {
   $('#playIcon').innerHTML = `<use href="#${playing ? 'i-pause' : 'i-play'}"/>`;
+  $('#btnPlay').setAttribute('aria-label', playing ? '일시정지' : '재생');
   document.body.classList.toggle('playing', playing);
   const tr = nowPlaying();
   if (tr) postNative({ type: 'nowPlaying', title: tr.title, artist: tr.artist, playing });
@@ -67,13 +74,14 @@ function playCurrent() {
   if (!tr) return;
   if (!tr.preview) { toast('미리듣기가 없는 곡입니다'); next(); return; }
   audio.src = tr.preview;
-  audio.play().catch(() => {});
+  audio.play().catch(() => setPlayIcon(!audio.paused));
   $('#player').classList.add('show');
   $('#player').classList.remove('idle');
   document.body.classList.add('has-player');
-  setPlayIcon(true);
+  setPlayIcon(!audio.paused);
   renderNow();
-  void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
+  // Preview playback is public; background history writes must not prompt login.
+  if (me) void api('/api/history', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => {});
   startLyricsDemo();
 }
 let queueContext = '';   // 재생을 시작한 출처 (playlist:<id> / likes / chart 등)
@@ -256,6 +264,8 @@ export function askConfirm(message: string, okLabel = '삭제'): Promise<boolean
 }
 
 export async function openPlaylistPicker(tr: PlayableTrack) {
+  // 목록을 불러오는 단계에서 401 이 나면 빈 모달만 뜬다. 먼저 막는다.
+  if (needsLogin('플레이리스트 추가')) return;
   const lists = await api('/api/playlists').catch(() => []);
   const box = $('#plPickerBody');
   box.innerHTML = `
@@ -293,6 +303,7 @@ export function openYt(videoId: string) {
 export function initPlayer() {
   audio = $('#audio') as unknown as HTMLAudioElement;
   audio.volume = 0.7;
+  setPlayIcon(!audio.paused);
   // 플레이어 바는 항상 표시 (스포티파이 동일) — 빈 상태로 시작
   $('#player').classList.add('show', 'idle');
   document.body.classList.add('has-player');
@@ -309,13 +320,70 @@ export function initPlayer() {
     $('#btnRepeat').classList.toggle('on', repeat !== 'off');
     $('#repeatOne').style.display = repeat === 'one' ? 'block' : 'none';
   });
+  const progressBar = $('#progressBar');
+  const volBar = $('#volBar');
+  const duration = () => Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 30;
+  const syncProgress = () => {
+    const d = duration();
+    const current = Math.max(0, Math.min(d, audio.currentTime || 0));
+    $('#progressFill').style.width = `${(current / d) * 100}%`;
+    $('#tCur').textContent = fmt(current);
+    $('#tDur').textContent = fmt(d);
+    progressBar.setAttribute('aria-valuemax', String(d));
+    progressBar.setAttribute('aria-valuenow', String(current));
+    progressBar.setAttribute('aria-valuetext', `${fmt(current)} / ${fmt(d)}`);
+  };
+  const syncVolume = () => {
+    const percent = Math.round(audio.volume * 100);
+    $('#volFill').style.width = `${audio.volume * 100}%`;
+    volBar.setAttribute('aria-valuenow', String(percent));
+    volBar.setAttribute('aria-valuetext', `${percent}%`);
+  };
+  // Keep keyboard handling on the sliders, not document: handled arrows must
+  // never also seek via global shortcuts (or skip tracks with Shift+Arrow).
+  const bindSlider = (bar: HTMLElement, label: string, max: () => number, value: () => number, step: number, set: (value: number) => void) => {
+    bar.setAttribute('role', 'slider');
+    bar.setAttribute('tabindex', '0');
+    bar.setAttribute('aria-label', label);
+    bar.setAttribute('aria-orientation', 'horizontal');
+    bar.setAttribute('aria-valuemin', '0');
+    bar.setAttribute('aria-valuemax', String(max()));
+    bar.addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      let nextValue: number;
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowUp': nextValue = value() + step; break;
+        case 'ArrowLeft': case 'ArrowDown': nextValue = value() - step; break;
+        case 'Home': nextValue = 0; break;
+        case 'End': nextValue = max(); break;
+        default: return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      set(Math.max(0, Math.min(max(), nextValue)));
+    });
+  };
+  const seekTo = (value: number) => {
+    if (audio.src) audio.currentTime = value;
+    syncProgress();
+  };
+  bindSlider(progressBar, '재생 위치', duration, () => audio.currentTime, 5, seekTo);
+  bindSlider(volBar, '볼륨', () => 100, () => audio.volume * 100, 5, (value) => {
+    audio.volume = value / 100;
+    syncVolume();
+  });
+  syncProgress();
+  syncVolume();
+  for (const type of ['timeupdate', 'loadedmetadata', 'durationchange', 'emptied', 'seeked']) audio.addEventListener(type, syncProgress);
+  audio.addEventListener('volumechange', syncVolume);
+
   /* 진행바는 rAF로 그린다.
      timeupdate는 초당 4회 남짓이라 막대가 눈에 띄게 계단처럼 움직인다.
      CSS 트랜지션으로 메우면 실제 재생 위치보다 뒤처지고, 매 프레임
      레이아웃을 다시 계산하게 된다. 프레임마다 직접 그리는 편이 정확하다. */
   let rafId = 0;
   const paintProgress = () => {
-    const dur = audio.duration || 30;
+    const dur = duration();
     const fill = $('#progressFill') as HTMLElement | null;
     if (fill) fill.style.width = `${Math.min(100, (audio.currentTime / dur) * 100)}%`;
     rafId = requestAnimationFrame(paintProgress);
@@ -325,31 +393,29 @@ export function initPlayer() {
   audio.addEventListener('pause', stopPaint);
   audio.addEventListener('ended', stopPaint);
 
-  audio.addEventListener('timeupdate', () => {
-    const d = audio.duration || 30;
-    $('#tCur').textContent = fmt(audio.currentTime);
-    $('#tDur').textContent = fmt(d);
-  });
   audio.addEventListener('ended', next);
   audio.addEventListener('play', () => setPlayIcon(true));
   audio.addEventListener('pause', () => setPlayIcon(false));
 
   const scrub = (e: MouseEvent) => {
-    const r = $('#progressBar').getBoundingClientRect();
-    audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (audio.duration || 30);
+    const r = progressBar.getBoundingClientRect();
+    if (r.width > 0) seekTo(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration());
   };
-  $('#progressBar').addEventListener('pointerdown', (e) => {
+  progressBar.addEventListener('pointerdown', (e) => {
+    progressBar.focus();
     scrub(e as MouseEvent);
     const move = (ev: PointerEvent) => scrub(ev as unknown as MouseEvent);
     const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
   });
   const setVol = (e: MouseEvent) => {
-    const r = $('#volBar').getBoundingClientRect();
-    const v = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    audio.volume = v; $('#volFill').style.width = `${v * 100}%`;
+    const r = volBar.getBoundingClientRect();
+    if (r.width <= 0) return;
+    audio.volume = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    syncVolume();
   };
-  $('#volBar').addEventListener('pointerdown', (e) => {
+  volBar.addEventListener('pointerdown', (e) => {
+    volBar.focus();
     setVol(e as MouseEvent);
     const move = (ev: PointerEvent) => setVol(ev as unknown as MouseEvent);
     const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
@@ -359,7 +425,9 @@ export function initPlayer() {
   $('#btnLike').addEventListener('click', async () => {
     const tr = nowPlaying();
     if (!tr) return;
-    const list = await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) });
+    if (needsLogin('좋아요')) return;
+    const list = await api('/api/likes', { method: 'POST', body: JSON.stringify({ track: { title: tr.title, artist: tr.artist, album: tr.album, artwork: tr.artwork, preview: tr.preview } }) }).catch(() => null);
+    if (!list) return;
     likeKeys = new Set(list.map((x: { key: string }) => x.key));
     renderNow();
     $('#btnLike').classList.add('pulse');

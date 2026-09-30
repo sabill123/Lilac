@@ -1,0 +1,149 @@
+/* Parent imports this stylesheet into layer(pages). Everything stays under home-awards. */
+.home-awards{margin:0;color:#f6f5f3;min-width:0;width:100%;--ha-gutter:clamp(20px,4vw,72px)}
+
+.home-awards *{box-sizing:border-box}
+.home-awards [hidden]{display:none!important}
+.home-awards h2,.home-awards h3,.home-awards p,.home-awards figure{margin:0}
+.home-awards a{color:inherit;text-decoration:none}
+.home-awards a:hover{text-decoration:underline}
+.home-awards button,.home-awards a,.home-awards summary{touch-action:manipulation}
+.music-discovery .home-awards :focus-visible{outline:2px solid currentColor;outline-offset:5px}
+.home-awards .ha-tabs button:focus-visible{outline-offset:-4px;}
+.home-awards .ha-heading{display:flex;justify-content:space-between;align-items:center;padding:50px var(--ha-gutter) 20px;gap:16px;background:#efeee8;color:#171817}
+.home-awards .ha-heading h2{font-size:24px;letter-spacing:-.035em;font-weight:500}
+.home-awards .ha-heading>span{color:#62635e;font-size:12px;font-variant-numeric:tabular-nums}
+.home-awards .ha-tabs{display:flex;gap:clamp(22px,3.5vw,58px);overflow-x:auto;overscroll-behavior-x:contain;padding:0 var(--ha-gutter);scrollbar-width:thin;scrollbar-color:#666 transparent;border-bottom:1px solid var(--ha-record-line,#ffffff24)}
+.home-awards .ha-tabs button{flex:none;border:0;border-radius:0;border-bottom:3px solid transparent;background:none;box-shadow:none;color:#62635e;padding:20px 0 19px;font-family:inherit;font-size:13px;font-weight:600;line-height:1.3;white-space:nowrap;cursor:pointer;min-height:64px}
+.home-awards .ha-tabs button[aria-selected=true]{color:#171817;border-bottom-color:#171817}
+.home-awards .ha-tabs small{font-size:10px;font-weight:400;margin-left:7px;color:inherit}
+.home-awards .ha-panel{width:100%;min-width:0;color:var(--ha-record-ink,#f6f5f3)}
+.home-awards .ha-image{position:relative;display:block;min-width:0}
+.home-awards .ha-image img{display:block;width:100%;height:auto}
+.home-awards .ha-image-fallback{display:flex;min-height:100px;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:14px;line-height:1.6}
+.home-awards .ha-date{font-size:12px;line-height:1.6;letter-spacing:.09em}
+.home-awards .ha-lead{display:flex;flex-direction:column;gap:12px;min-width:0}
+.home-awards .ha-lead>p{font-size:12px}
+.home-awards .ha-lead strong{font-size:clamp(26px,3.5vw,54px);font-weight:500;line-height:1.08;overflow-wrap:anywhere}
+.home-awards .ha-lead>span{font-size:18px}
+.home-awards .ha-search{font-size:12px!important;margin-top:12px;text-decoration:underline;text-underline-offset:5px}
+.home-awards .ha-mama{background:#070709}
+.home-awards .ha-tiger{height:min(56.25vw,calc(100svh - 330px));min-height:180px;}
+.home-awards .ha-tiger img{width:100%;height:100%;object-fit:contain}
+.home-awards .ha-mama-caption{padding:22px var(--ha-gutter) 36px;border-top:1px solid #ffffff22}
+.home-awards .ha-mama-caption h3{font-size:clamp(25px,4vw,52px);letter-spacing:-.04em;margin:12px 0 28px}
+.home-awards .ha-mama-winners{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
+.home-awards .ha-mama-winners>div,.home-awards .ha-golden-winners>div{display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.5}
+.home-awards .ha-mama-winners span,.home-awards .ha-golden-winners span{font-size:11px;opacity:.7}
+.home-awards .ha-kma{color:#13140b;background:#fff505}
+.home-awards .ha-kma-masthead{padding:30px var(--ha-gutter);display:flex;align-items:center;gap:35px;justify-content:space-between;background:#fff}
+.home-awards .ha-kma-masthead .ha-image{width:min(80%,800px)}
+.home-awards .ha-kma-masthead>span{font-size:14px;white-space:nowrap}
+.home-awards .ha-kma-split{display:grid;grid-template-columns:1.45fr 1fr}
+.home-awards .ha-kma-scene{background:#fff505;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.home-awards .ha-kma-scene>span:first-child{font:400 clamp(110px,15vw,235px)/1 Arial,sans-serif;letter-spacing:-.075em;padding:32px var(--ha-gutter) 0}
+.home-awards .ha-kma-scene .ha-image{margin-top:25px;padding:0 var(--ha-gutter) 24px;mix-blend-mode:multiply}
+.home-awards .ha-kma-scene img{object-fit:contain}
+.home-awards .ha-kma-editorial{padding:42px clamp(24px,4vw,64px);border-left:1px solid #1a1b0b}
+.home-awards .ha-kma-editorial h3{font-size:clamp(45px,5.8vw,86px);line-height:1.03;letter-spacing:-.07em;font-weight:500;margin:24px 0 40px}
+.home-awards .ha-kma-index{font-size:11px;line-height:1.6;margin-top:40px;letter-spacing:.08em}
+.home-awards .ha-maj{background:#f3f0ea;color:#b32618}
+.home-awards .ha-maj-masthead{padding:34px var(--ha-gutter);display:flex;align-items:center;justify-content:space-between;gap:30px}
+.home-awards .ha-maj-masthead .ha-image{width:190px}
+.home-awards .ha-maj-masthead h3{font-size:clamp(16px,2.3vw,32px);font-weight:400;margin-top:12px}
+.home-awards .ha-wide-wordmark{background:#b52b1b}
+.home-awards .ha-wide-wordmark img{aspect-ratio:2240/660;object-fit:contain}
+.home-awards .ha-maj-bottom{display:flex;gap:14%;padding:44px var(--ha-gutter);border-bottom:8px solid #b32618}
+.home-awards .ha-maj-bottom>span{font-size:13px;line-height:1.8}
+.home-awards .ha-golden{position:relative;isolation:isolate;background:#10104b;min-height:560px;display:grid}
+.home-awards .ha-golden-bg{position:absolute;inset:0;z-index:-1}
+.home-awards .ha-golden-bg img{width:100%;height:100%;object-fit:cover}
+.home-awards .ha-golden-front{padding:45px var(--ha-gutter);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:60px}
+.home-awards .ha-golden-title{width:min(95%,1000px);margin:30px 0}
+.home-awards .ha-golden-title img{object-fit:contain}
+.home-awards .ha-golden-winners{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;width:100%;text-align:center}
+.home-awards .ha-mma{background:#fae348;color:#101010}
+.home-awards .ha-mma-art{position:relative}
+.home-awards .ha-mma-gift img{aspect-ratio:3712/1490;object-fit:contain}
+.home-awards .ha-mma-logo{position:absolute;left:6%;top:12%;width:45%}
+.home-awards .ha-mma-footer{display:flex;justify-content:space-between;gap:40px;padding:32px var(--ha-gutter);border-top:2px solid #101010}
+.home-awards .ha-mma-footer h3{font-size:clamp(24px,3vw,42px);line-height:1.1;max-width:380px;margin-top:16px;font-weight:900}
+.home-awards .ha-record{background:#faf7f0;color:#442719;padding:0 var(--ha-gutter)}
+.home-awards .ha-record-heading{padding:30px 0;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.home-awards .ha-record-heading h3{font-family:serif;font-size:clamp(20px,3vw,36px)}
+.home-awards .ha-record-visual img{width:100%;aspect-ratio:16/9;object-fit:contain}
+.home-awards .ha-record-result{display:flex;justify-content:space-between;padding:40px 0;gap:24px}
+.home-awards .ha-record-result>p{font-family:serif;font-size:clamp(30px,6vw,80px);line-height:1.1;text-align:right;color:#8b6d31;white-space:nowrap;flex-shrink:0}
+.home-awards .ha-kohaku{background:#f8f3e8;color:#a02224;padding:32px var(--ha-gutter) 44px;border-top:8px solid #a78241}
+.home-awards .ha-kohaku-top{display:flex;justify-content:space-between;gap:20px;font-size:16px;letter-spacing:.15em}
+.home-awards .ha-kohaku h3{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,50px);font-family:'Yu Mincho','Hiragino Mincho ProN',serif;font-weight:500;padding:50px 0;line-height:1}
+.home-awards .ha-kohaku h3>span{font-size:clamp(100px,20vw,280px)}
+.home-awards .ha-kohaku h3>span:nth-child(2){color:#f8f3e8;background:#a02224;padding:12px}
+.home-awards .ha-kohaku h3 small{writing-mode:vertical-rl;font-size:clamp(30px,5vw,72px);letter-spacing:.2em}
+.home-awards .ha-kohaku-bottom{border-top:1px solid #a78241;padding-top:28px;display:flex;justify-content:space-between;gap:30px}
+.home-awards .ha-kohaku-bottom p{font-size:12px;line-height:1.9}
+.home-awards .ha-kohaku-bottom strong{font-size:36px;font-weight:400}
+.home-awards .ha-kohaku-bottom a{display:block;margin-top:20px;font-size:12px}
+.home-awards .ha-records{padding:0 var(--ha-gutter);background:var(--ha-record-bg,#131316);color:var(--ha-record-ink,#e9e7ec)}
+.home-awards details{border-bottom:1px solid var(--ha-record-line,#ffffff24)}
+.home-awards summary{cursor:pointer;padding:23px 0;font-size:13px;line-height:1.5;min-height:60px}
+.home-awards summary>span{font-size:11px;margin-left:10px;color:var(--ha-record-muted,#aaa7b0)}
+.home-awards details>p{font-size:12px;line-height:1.8;color:var(--ha-record-muted,#b8b5bf);max-width:900px;margin:0 0 20px}
+.home-awards details ol{list-style:none;margin:0;padding:0 0 24px}
+.home-awards details ol>li{display:grid;grid-template-columns:minmax(100px,1fr) minmax(0,3fr) auto;gap:24px;padding:17px 0;border-top:1px solid var(--ha-record-line,#ffffff14);font-size:14px;line-height:1.7;overflow-wrap:anywhere}
+.home-awards details ol>li>span,.home-awards details ol>li>a{font-size:11px;color:var(--ha-record-muted,#b8b5bf)}
+.home-awards .ha-alternative-search{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--ha-record-muted,#b8b5bf);margin-top:5px}
+.home-awards details ul{list-style:none;padding:0;margin:0 0 24px}
+.home-awards details ul li{padding:8px 0;font-size:12px;line-height:1.7}
+.home-awards details small{font-size:10px;color:var(--ha-record-muted,#a6a3ad);margin-left:12px}
+.home-awards .ha-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+@media(max-width:700px){.home-awards{margin-bottom:0}
+.home-awards .ha-heading{padding-top:28px}
+.home-awards .ha-tabs{gap:28px}
+.home-awards .ha-tabs button{font-size:12px}
+.home-awards .ha-mama-winners{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.home-awards .ha-kma-masthead{padding-top:22px;padding-bottom:22px;gap:14px}
+.home-awards .ha-kma-masthead>span{font-size:10px}
+.home-awards .ha-kma-split{grid-template-columns:1fr}
+.home-awards .ha-kma-editorial{border-left:0;border-top:1px solid #15160b;display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:28px 20px}
+.home-awards .ha-kma-editorial h3{grid-column:1;margin:0;font-size:clamp(29px,9vw,42px)}
+.home-awards .ha-kma-editorial .ha-lead{grid-column:2;grid-row:1/4;justify-content:center}
+.home-awards .ha-kma-index{margin:0;font-size:9px}
+.home-awards .ha-maj-masthead .ha-image{width:120px;flex-shrink:0}
+.home-awards .ha-maj-masthead{padding-top:25px;padding-bottom:25px}
+.home-awards .ha-maj-masthead h3{font-size:13px}
+.home-awards .ha-maj-bottom{gap:28px;padding-top:28px;padding-bottom:28px}
+.home-awards .ha-maj-bottom>span{font-size:10px;min-width:75px}
+.home-awards .ha-golden{min-height:470px}
+.home-awards .ha-golden-front{padding:32px 20px;gap:30px}
+.home-awards .ha-golden-winners{grid-template-columns:1fr;gap:22px}
+.home-awards .ha-golden-winners>div{gap:3px}
+.home-awards .ha-golden-title{margin:20px 0}
+.home-awards .ha-mma-footer{flex-direction:column;padding:25px 20px;gap:28px}
+.home-awards .ha-mma-footer h3{max-width:none;font-size:25px}
+.home-awards .ha-mma-footer .ha-lead{border-top:1px solid #111;padding-top:22px}
+.home-awards .ha-record-heading{align-items:start;flex-direction:column;gap:10px;padding:25px 0}
+.home-awards .ha-record-result>p{font-size:32px}
+.home-awards .ha-kohaku-top{font-size:12px;letter-spacing:0}
+.home-awards .ha-kohaku-top .ha-date{font-size:10px}
+.home-awards .ha-kohaku h3{padding:45px 0;gap:14px}
+.home-awards .ha-kohaku h3>span{font-size:24vw}
+.home-awards .ha-kohaku h3 small{font-size:8vw}
+.home-awards .ha-kohaku-bottom{gap:18px}
+.home-awards .ha-kohaku-bottom strong{font-size:28px}
+.home-awards .ha-kohaku-bottom p{font-size:10px}
+.home-awards details ol>li{grid-template-columns:1fr auto;gap:5px 14px}
+.home-awards details ol>li>span{grid-column:1/-1}
+.home-awards details small{display:block;margin-left:0}
+}
+
+
+.home-awards .ha-tabs{background:#efeee8;border-bottom-color:#17181724;scrollbar-width:none;}
+.home-awards .ha-kma-panel{--ha-record-bg:#fff;--ha-record-ink:#13140b;--ha-record-muted:#57594c;--ha-record-line:#17181724;}
+.home-awards .ha-maj-panel{--ha-record-bg:#f3f0ea;--ha-record-ink:#b32618;--ha-record-muted:#87342a;--ha-record-line:#b3261830;}
+.home-awards .ha-golden-disc-panel{--ha-record-bg:#10104b;--ha-record-ink:#f6f3e8;--ha-record-muted:#d0cbdc;--ha-record-line:#ffffff30;}
+.home-awards .ha-mma-panel{--ha-record-bg:#fae348;--ha-record-ink:#101010;--ha-record-muted:#4d4219;--ha-record-line:#17181730;}
+.home-awards .ha-record-awards-panel{--ha-record-bg:#faf7f0;--ha-record-ink:#442719;--ha-record-muted:#795b3b;--ha-record-line:#44271930;}
+.home-awards .ha-kohaku-panel{--ha-record-bg:#f8f3e8;--ha-record-ink:#a02224;--ha-record-muted:#765831;--ha-record-line:#a7824155;}
+@media(max-width:700px){.home-awards .ha-heading h2{font-size:21px;}
+.home-awards .ha-kma-scene>span:first-child{font-size:30vw;padding-top:22px;}}

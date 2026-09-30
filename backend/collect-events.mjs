@@ -57,42 +57,19 @@ async function releasesOf(artist) {
   }));
 }
 
-/** 공연·응모 일정 — 공식 티켓 데이터 계약 전이라 예시로만 둔다 */
-function demoEvents(artists) {
-  const jp = artists.filter((a) => a.country === 'jp').slice(0, 4);
-  const kr = artists.filter((a) => a.country === 'kr').slice(0, 4);
-  const base = Date.now();
-  const plus = (d) => ymd(base + d * 864e5);
+/* 공연·응모 일정을 지어내던 자리.
 
-  const rows = [];
-  jp.forEach((a, i) => {
-    rows.push({
-      id: `dm-jp-tour-${a.id}`, type: '내한', title: `${a.name} 단독 내한 공연`,
-      artist: a.name, artistId: a.id, country: 'jp', date: plus(18 + i * 15),
-      venue: ['올림픽공원 올림픽홀', '고려대 화정체육관', '무신사 개러지', 'YES24 라이브홀'][i % 4],
-      note: '티켓 오픈 일정 미정', isDemo: true, source: '데모 데이터',
-    });
-    if (i < 2) rows.push({
-      id: `dm-jp-fc-${a.id}`, type: '응모', title: `${a.name} FC 선행 추첨 마감`,
-      artist: a.name, artistId: a.id, country: 'jp', date: plus(7 + i * 9),
-      venue: 'FC 회원 한정', note: '응모 가이드 제공', isDemo: true, source: '데모 데이터',
-    });
-  });
-  kr.forEach((a, i) => {
-    rows.push({
-      id: `dm-kr-tour-${a.id}`, type: '원정', title: `${a.name} 일본 투어`,
-      artist: a.name, artistId: a.id, country: 'kr', date: plus(24 + i * 13),
-      venue: ['도쿄돔', '오사카성홀', '사이타마 슈퍼아레나', '요코하마 아레나'][i % 4],
-      note: '원정 패키지 알림 신청', isDemo: true, source: '데모 데이터',
-    });
-    if (i < 2) rows.push({
-      id: `dm-kr-fs-${a.id}`, type: '응모', title: `${a.name} 팬사인회 응모 마감`,
-      artist: a.name, artistId: a.id, country: 'kr', date: plus(5 + i * 11),
-      venue: '음반 구매자 대상', note: '응모 가이드 제공', isDemo: true, source: '데모 데이터',
-    });
-  });
-  return rows;
-}
+   예전엔 아티스트 목록에서 4팀을 골라
+     날짜  = 오늘 + (18 + i*15)일
+     장소  = ['올림픽공원 올림픽홀', ...][i % 4]
+   식으로 12건을 만들어 넣었다(isDemo: true).
+
+   "Mrs. GREEN APPLE 단독 내한 공연 2026-09-11" 같은 것들인데 실재하지 않는다.
+   팬이 이걸 보고 일정을 잡을 수 있어 비어 있는 것보다 나쁘다.
+   공개 티켓 API 계약 전에는 만들지 않는다.
+
+   대신 서버가 릴리스의 campaign 에서 '출처가 있는 마감일'만 파생시킨다
+   (backend/server.mjs 의 rebuildCampaignEvents). */
 
 async function main() {
   const artists = JSON.parse(await readFile(path.join(DB, 'artists.json'), 'utf-8'));
@@ -117,7 +94,7 @@ async function main() {
     return true;
   });
 
-  const rows = [...uniq, ...demoEvents(artists)]
+  const rows = [...uniq]
     .sort((a, b) => a.date.localeCompare(b.date));
 
   await writeFile(path.join(DB, 'events.json'), JSON.stringify(rows, null, 2));

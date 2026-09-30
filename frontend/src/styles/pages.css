@@ -1,0 +1,114 @@
+/* 페이지 레이아웃 — 컴포넌트 위에 페이지 고유 구조만 둔다. */
+
+/* ── 차트 ───────────────────────────────────────────── */
+.ch-title { font-size: var(--fs-3xl); }
+.ch-sub { font-size: var(--fs-base); color: var(--ink-muted); }
+.ch-now { min-height: 40px; padding: 0 var(--s-4) 0 var(--s-1); border-radius: var(--r-pill); background: var(--surface-2); box-shadow: var(--hairline-1); }
+.ch-now-rank { width: 30px; height: 30px; font-size: var(--fs-sm); }
+.ch-controls { margin-top: var(--s-5); }
+.chart-body .ch-bar { gap: var(--s-3); }
+.ch-updated { font-size: var(--fs-sm); color: var(--ink-muted); }
+
+/* ── 스토어 ─────────────────────────────────────────── */
+.store-inner { padding-top: var(--s-6); }
+.store-head h2 { font-size: var(--fs-xl); }
+.rel-strip { margin-bottom: var(--s-7); }
+.rel-strip-h h2 { font-size: var(--fs-xl); }
+.rel-strip-h p { font-size: var(--fs-base); margin: var(--s-2) 0 var(--s-4); }
+.store-hero2 { border-radius: var(--r-lg); padding: var(--s-6); margin: var(--s-7) 0; }
+.store-hero2 h2, .sh-title { font-size: var(--fs-2xl); font-weight: var(--fw-bold); letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+.store-hero2 .sh-sub { font-size: var(--fs-base); }
+.sh-stats b { font-size: var(--fs-2xl); }
+.sh-stats span { font-size: var(--fs-sm); }
+.st-filters { gap: var(--s-3); margin-bottom: var(--s-5); }
+.st-bar { font-size: var(--fs-sm); color: var(--ink-muted); }
+
+/* ── 릴리스 상세 ──────────────────────────────────────── */
+.rel-hero h1 { font-size: var(--fs-2xl); }
+.rel-edtab { min-height: 40px; border-radius: var(--r-pill); font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+.rel-edtab.on { background: var(--ink); color: var(--bg); }
+.rel-offer, .rel-table { border-radius: var(--r-md); }
+
+/* ── 일정 ───────────────────────────────────────────── */
+.sch-rows { gap: var(--s-2); }
+.sch-row { padding: var(--s-3) var(--s-4); }
+.sch-sub { font-size: var(--fs-sm); }
+.sch-day b { font-size: var(--fs-lg); }
+
+/* ── 아티스트 ───────────────────────────────────────── */
+.ar-hero h1, .ar-name { font-size: clamp(36px, 5vw, 64px); letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+.ar-op, .ar-stats { font-size: var(--fs-sm); color: var(--ink-muted); }
+.ar-listeners { font-size: var(--fs-base); }
+.fd-links { gap: var(--s-2); margin-bottom: var(--s-5); }
+.fd-link { min-height: 36px; font-size: var(--fs-sm); font-weight: var(--fw-medium); }
+.fd-link.buy { background: rgb(var(--accent-rgb) / 0.16); }
+.fd-mechs { gap: var(--s-2); }
+.fd-mech summary { min-height: 48px; }
+
+/* ── 보관함 ─────────────────────────────────────────── */
+.lib-head h1 { font-size: var(--fs-3xl); }
+.lib-stat { border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1); }
+.lib-stat b { font-size: var(--fs-xl); }
+.lib-stat span { font-size: var(--fs-sm); color: var(--ink-muted); }
+.lib-guest { border-radius: var(--r-lg); background: var(--surface-1); box-shadow: var(--hairline-1); padding: var(--s-6); max-width: 560px; }
+.lib-guest p { font-size: var(--fs-base); color: var(--ink-muted); }
+.lib-guest-actions { display: flex; gap: var(--s-3); align-items: center; margin: var(--s-5) 0 var(--s-3); }
+
+/* ── 인증 ───────────────────────────────────────────── */
+.auth-wrap { min-height: 60vh; display: grid; place-items: center; padding: var(--s-7) var(--gutter); }
+.auth-card { width: min(440px, 100%); }
+.auth-card .btn-pill { width: 100%; margin-top: var(--s-4); }
+.auth-alt { font-size: var(--fs-sm); color: var(--ink-muted); }
+.auth-note { font-size: var(--fs-xs); color: var(--ink-faint); }
+
+/* ── 도움말 · 상태 ───────────────────────────────────── */
+.help-sec { border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1); padding: var(--s-5); margin-bottom: var(--s-4); }
+.help-sec h3 { margin: 0 0 var(--s-3); }
+.help-sec p, .help-sec li { font-size: var(--fs-base); color: var(--ink-muted); line-height: var(--lh-body); }
+.svc-card, .status-card { border-radius: var(--r-md); background: var(--surface-1); box-shadow: var(--hairline-1); }
+.svc-name { font-size: var(--fs-base); font-weight: var(--fw-medium); }
+.svc-detail, .svc-kind { font-size: var(--fs-sm); color: var(--ink-muted); }
+
+/* ── 워크 모드 ───────────────────────────────────────── */
+.focus-title, .work-page h1 { font-size: var(--fs-3xl); }
+.work-page h2 { font-size: var(--fs-xl); }
+.focus-kicker, .focus-section-label { font-size: var(--fs-xs); letter-spacing: 0.08em; }
+.focus-card, .focus-native-sec, .focus-curator { border-radius: var(--r-lg); }
+
+/* ── 검색 ───────────────────────────────────────────── */
+.sr-top { border-radius: var(--r-lg); background: var(--surface-1); box-shadow: var(--hairline-1); }
+.sr-top h3 { font-size: var(--fs-2xl); }
+.t-head { font-size: var(--fs-xs); color: var(--ink-faint); letter-spacing: 0.04em; }
+
+/* ── 폭 ─────────────────────────────────────────────
+   max-width + auto margin 을 쓰면 1440px 화면에서 콘텐츠가 톱바(46px 거터)보다
+   안쪽으로 밀려 좌측 정렬이 어긋난다(실측 60px). 거터를 키우는 방식으로
+   초광폭에서만 가운데로 모은다. */
+.page-section, .store-inner, .chart-body, .bb-inner {
+  max-width: none; margin-inline: 0;
+  padding-inline: max(var(--gutter), calc((100% - var(--layout-max)) / 2));
+}
+/* .chart-hero 는 자기 패딩으로 이미 거터를 잡는다 — .ch-inner 에 또 주면 두 배(실측 88px)가 된다 */
+.chart-hero { padding-inline: max(var(--gutter), calc((100% - var(--layout-max)) / 2)); }
+.ch-inner { padding-inline: 0; }
+
+/* 차트 3D 무대 — 1위 아트워크가 130px 외딴 조각이었다. 홈 대표 아트워크와 같은 존재감으로 */
+body.has-3d-chart .ch-stage { inset: 64px 4% 56px 54%; }
+/* 비로그인 보관함 안내 — 페이지 폭 전체를 차지하지 않게 */
+.page-section.lib-guest { max-width: none; padding-bottom: 0; }
+.page-section.lib-guest > h1 { margin-bottom: var(--s-3); }
+.page-section.lib-guest > p { max-width: 60ch; }
+.lib-guest-hint { color: var(--ink-faint); font-size: var(--fs-sm); }
+
+/* 워크 모드 — 라운드 11종(2·6·10·11·12·14·16·18·20·50%·pill)이 스케일 밖이었다.
+   4단(6/12/20/pill)과 원형으로 좁힌다. */
+.focus-mix-art, .focus-energy, .fmd-art { border-radius: var(--r-sm); }
+.work-protection, .focus-video, .focus-mix, .focus-menubar-demo,
+.focus-volume, .focus-curator textarea, .focus-ai-btn { border-radius: var(--r-md); }
+.focus-player-card, .focus-curator, .focus-native-sec, .focus-card { border-radius: var(--r-lg); }
+.fmd-controls button, .focus-duck-pill { border-radius: var(--r-pill); }
+.work-page .focus-kicker, .work-page .focus-section-label { font-size: var(--fs-2xs); }
+
+/* 검색 — 라운드 14px·3px 이 스케일 밖이었다 */
+.sr-topcard, .sr-sec, .t-list { border-radius: var(--r-md); }
+.sr-topcard .sp-cover, .t-art { border-radius: var(--r-sm); }

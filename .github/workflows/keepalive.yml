@@ -1,0 +1,19 @@
+# Render 무료 인스턴스는 15분 동안 요청이 없으면 잠든다. 잠들면 실시간 수집이 멈추고 첫 방문이 30초 이상 걸린다.
+# 10분마다 상태 확인 요청을 보내 깨워 둔다(무료 750시간/월 안에서 한 서비스 상시 실행).
+name: keepalive
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: ping backend
+        run: |
+          for i in 1 2 3; do
+            curl -fsS --max-time 60 "${{ vars.LILAC_API_URL || 'https://lilac-api.onrender.com' }}/api/health" && exit 0
+            sleep 10
+          done
+          exit 1

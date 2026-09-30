@@ -30,7 +30,7 @@ const dict: Record<string, Record<Locale, string>> = {
   'schedule.title': { ko: '일정', ja: 'スケジュール', en: 'Schedule', zh: '日程' },
   'schedule.hint': { ko: '내한 · 발매 · 응모 일정', ja: '来韓・リリース・応募日程', en: 'Concerts · Releases · Lotteries', zh: '演出·发行·抽选日程' },
   'store.title': { ko: '스토어', ja: 'ストア', en: 'Store', zh: '商店' },
-  'store.sub': { ko: '일본 내수 한정반을 정식으로 받아보세요', ja: '日本国内限定盤を正規ルートで', en: 'Japan-only editions, officially sourced', zh: '官方渠道购买日本限定版' },
+  'store.sub': { ko: '일본·한국 음반을 정식 루트로 받아보세요', ja: '日本・韓国の音盤を正規ルートで', en: 'JP/KR releases, officially sourced', zh: '官方渠道购买日韩唱片' },
   'store.reserve': { ko: '예약 주문 (크레딧)', ja: '予約注文（クレジット）', en: 'Reserve (Credits)', zh: '预约下单（积分）' },
   'store.official': { ko: '공식 스토어', ja: '公式ストア', en: 'Official Store', zh: '官方商店' },
   'store.tower': { ko: '타워레코드에서 보기', ja: 'タワレコで見る', en: 'View on Tower Records', zh: '在Tower Records查看' },
@@ -78,3 +78,27 @@ export const t = (key: string): string => dict[key]?.[locale] ?? dict[key]?.ko ?
 export const LOCALES: { id: Locale; label: string }[] = [
   { id: 'ko', label: '한국어' }, { id: 'ja', label: '日本語' }, { id: 'en', label: 'English' }, { id: 'zh', label: '中文' },
 ];
+
+/* ---------- 한국어 조사 ----------
+   "좋아요은 로그인 후..." 처럼 받침을 무시하면 바로 어색해진다.
+   한글 음절은 0xAC00~0xD7A3 이고 (code-0xAC00)%28 이 종성 인덱스다.
+   0이면 받침 없음 → 는/가/를, 아니면 받침 있음 → 은/이/을.
+   한글이 아니면(영문·숫자) 판단할 근거가 없어 받침 없음으로 둔다. */
+const PARTICLES = {
+  '은는': ['는', '은'],
+  '이가': ['가', '이'],
+  '을를': ['를', '을'],
+  '와과': ['와', '과'],
+} as const;
+
+export function particle(word: string, kind: keyof typeof PARTICLES): string {
+  const last = String(word || '').trim().slice(-1);
+  const code = last.charCodeAt(0);
+  const isHangul = code >= 0xac00 && code <= 0xd7a3;
+  const hasFinal = isHangul && (code - 0xac00) % 28 !== 0;
+  return PARTICLES[kind][hasFinal ? 1 : 0];
+}
+
+/** `조사('좋아요','은는')` → "좋아요는" */
+export const withParticle = (word: string, kind: keyof typeof PARTICLES) =>
+  `${word}${particle(word, kind)}`;

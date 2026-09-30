@@ -2,7 +2,7 @@
   "name": "lilac",
   "version": "0.1.0",
   "private": true,
-  "description": "Lilac — 한국의 J-POP 팬과 일본의 K-POP 팬을 위한 크로스보더 팬덤 플랫폼 (데모)",
+  "description": "Lilac — 한국의 J-POP 팬과 일본의 K-POP 팬을 위한 공연·티켓·굿즈·소식 허브",
   "scripts": {
     "dev:be": "node backend/server.mjs",
     "dev:fe": "npm --prefix frontend run dev",
@@ -12,9 +12,43 @@
     "run:mac": "npm run build:mac && open macos/.build/Lilac.app",
     "dev:clean": "zsh scripts/dev.sh",
     "test:smoke": "node scripts/smoke.mjs",
-    "verify:macos": "bash scripts/verify-macos.sh"
+    "verify:macos": "bash scripts/verify-macos.sh",
+    "test:contract": "node tests/verify-site-contract.mjs",
+    "test": "node tests/verify-v6-app.mjs && node tests/verify-realtime.mjs && node tests/verify-fanclub.mjs && node tests/verify-fc-evidence.mjs && node tests/verify-persist.mjs && node tests/verify-detail.mjs && node tests/verify-community.mjs && node tests/verify-site-contract.mjs && node scripts/smoke.mjs && npm run test:production",
+    "collect:artists": "node backend/collect-artists.mjs --per=70",
+    "collect:charts": "node backend/collect-charts.mjs",
+    "collect:products": "node backend/collect-products.mjs",
+    "stop": "node scripts/stop-backends.mjs",
+    "test:player": "node tests/verify-player-ux.mjs",
+    "test:ui": "npm run test:v6 && npm run test:contract && npm run test:route && npm run test:player && npm run test:store && npm run test:discovery && npm run test:three && npm run test:home-awards && npm run test:landing && npm run test:public && npm run test:preview",
+    "test:visual": "node scripts/audit-redesign.mjs",
+    "test:store": "node tests/verify-store-ux.mjs",
+    "test:discovery": "node tests/verify-discovery-model.mjs && node tests/verify-discovery-ui.mjs",
+    "test:three": "node frontend/src/three/verify-three.mjs",
+    "test:home-awards": "node tests/verify-home-awards.mjs",
+    "test:route": "node tests/verify-route-lifecycle.mjs",
+    "test:landing": "node tests/verify-landing-intro.mjs",
+    "export:public": "node scripts/export-public-demo.mjs",
+    "test:public": "node tests/verify-public-api.mjs",
+    "smoke:public": "node scripts/verify-public-deploy.mjs",
+    "test:preview": "node tests/verify-public-preview-ui.mjs",
+    "prepare:vercel": "node scripts/prepare-vercel-upload.mjs",
+    "test:v6": "node tests/verify-v6-app.mjs",
+    "live:kr": "node backend/lib/live/tickets-kr.mjs",
+    "live:jp": "node backend/lib/live/tickets-jp.mjs",
+    "live:goods": "node backend/lib/live/goods.mjs",
+    "test:fanclub": "node tests/verify-fanclub.mjs",
+    "test:detail": "node tests/verify-detail.mjs",
+    "test:community": "node tests/verify-community.mjs",
+    "test:realtime": "node tests/verify-realtime.mjs",
+    "test:production": "node tests/verify-production-shell.mjs && node tests/verify-production-flows.mjs && node tests/verify-production-security.mjs && node tests/verify-production-live.mjs && node scripts/verify-production-build.mjs --target=node --release",
+    "start:production": "node scripts/start-production.mjs",
+    "check:production": "node scripts/start-production.mjs --check"
   },
   "dependencies": {
     "kuromoji": "^0.1.2"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

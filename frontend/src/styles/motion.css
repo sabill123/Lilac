@@ -1,0 +1,54 @@
+/* Shared motion. Home/chart artwork enhancement is bounded to discovery/ and three/. */
+
+/* 상호작용 요소의 기본 전환 */
+.btn-play-w, .btn-pill, .btn-sec, .btn-out, .st-more, .chip, .seg-btn, .rel-filter, .faq-cat, .fd-link, .tbtn, .rk-mv, .card .cover, .p-card .p-img, .rel-card, .sch-row, .rk-row, .t-row, .sec-link, .tb-item, .fd-mech {
+  transition: background-color var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard),
+              box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-fast) var(--ease-standard), opacity var(--dur-base) var(--ease-standard);
+}
+/* 호버: 면이 한 단계 밝아진다 */
+.btn-play-w:hover, .btn-pill:hover { background: var(--accent-hover); filter: brightness(0.92); transform: none; }
+.btn-sec:hover, .btn-out:hover, .st-more:hover { background: var(--surface-3); }
+.chip:hover:not(.on), .seg-btn:hover:not(.on), .rel-filter:hover:not(.on), .faq-cat:hover:not(.on), .fd-link:hover { background: var(--surface-3); }
+/* 프레스: 살짝 줄어든다 — 눌렸다는 신호 */
+.btn-play-w:active, .btn-pill:active, .btn-sec:active, .btn-out:active, .chip:active, .seg-btn:active, .fd-link:active, .tbtn:active, .play-big:active { transform: scale(0.97); }
+/* 카드: 커버가 뜬다 (확대 대신 — 가로 스크롤러에서 잘리지 않는다) */
+.card:hover .cover, .p-card:hover .p-img { transform: translateY(-3px); box-shadow: var(--elev-2); }
+.card .cover, .p-card .p-img { transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
+/* 호버 재생 버튼: 아래에서 올라온다 */
+.card .hover-play { transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out); transform: translateY(6px); }
+.card:hover .hover-play, .card.playing .hover-play { transform: translateY(0); }
+
+/* 페이지 진입: 내용이 아래에서 8px 올라오며 나타난다 */
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+#page > * { animation: page-in var(--dur-page) var(--ease-out) both; }
+#page > *:nth-child(2) { animation-delay: 40ms; }
+#page > *:nth-child(3) { animation-delay: 80ms; }
+#page > *:nth-child(n+4) { animation-delay: 110ms; }
+
+/* View Transitions (지원 브라우저): 라우트 전환을 크로스페이드로 */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: var(--dur-page); animation-timing-function: var(--ease-standard); }
+
+/* 토스트 */
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.toast { animation: toast-in var(--dur-base) var(--ease-out); }
+
+/* 재생 중 표시 — 살아있음을 알리는 최소한의 움직임 */
+@keyframes eq { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+.eq-bar { animation: eq 0.9s var(--ease-standard) infinite; }
+
+/* 움직임을 줄이도록 설정한 사용자 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  #page > * { animation: none; }
+  .card:hover .cover, .p-card:hover .p-img { transform: none; }
+}
+
+/* Legacy reveals/tilts must never hide information or move card hit targets. */
+#page [data-d3],#page .reveal,#page .d3-rise,#page .d3-head{opacity:1;transform:none;animation:none;}
+#page .d3-tilt,#page [data-tilt],#page .card.expanded{transform:none!important;rotate:none;scale:none;}
+#page .glare,#page .d3-glare,#page .bb-stage,#page .ch-stage,.stage-hint{display:none;}
+#page .mood{background:var(--surface-1);border:1px solid var(--rule);}
+#page .mood-sq{transform:none;}
+#page .plain,.sp-title,.ar-name,.ch-title{background-image:none;-webkit-text-fill-color:currentColor;text-shadow:none;}
+#page .card:focus-visible .hover-play{opacity:1;transform:none;}
+@media(hover:none){.rk-like,.t-a,.hover-play{opacity:1;}.card:hover .cover,.p-card:hover .p-img{transform:none;}}

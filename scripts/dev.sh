@@ -50,7 +50,7 @@ echo "── 4. 프론트 기동 (포트 ${FRONT_PORT})"
 # 포트가 이미 점유돼 있으면(종료 권한이 없는 환경) 캐시를 지우면 안 된다 —
 # 돌고 있는 vite의 의존성 번들이 깨져 동적 import가 실패한다.
 if lsof -ti :$FRONT_PORT > /dev/null 2>&1; then
-  EXISTING_MARKER=$(curl -s --max-time 3 "http://localhost:${FRONT_PORT}/src/main.ts" | grep -c "startViewTransition" || true)
+  EXISTING_MARKER=$(curl -s --max-time 3 "http://localhost:${FRONT_PORT}/src/app/main.ts" | grep -c "renderShell" || true)
   if [ "$EXISTING_MARKER" -ge 1 ]; then
     echo "   기존 vite가 최신 코드를 서빙 중 — 재기동 생략"
     echo ""
@@ -66,7 +66,7 @@ sleep 4
 
 # 응답이 있어도 '낡은 좀비 vite'가 포트를 쥐고 있는 경우가 있다.
 # 최신 코드 마커가 서빙되는지까지 확인해야 진짜 성공이다.
-MARKER=$(curl -s --max-time 3 "http://localhost:${FRONT_PORT}/src/main.ts" | grep -c "startViewTransition" || true)
+MARKER=$(curl -s --max-time 3 "http://localhost:${FRONT_PORT}/src/app/main.ts" | grep -c "renderShell" || true)
 if [ "$MARKER" -ge 1 ]; then
   echo "   프론트 정상 (최신 코드 확인)"
 elif curl -s --max-time 3 "http://localhost:${FRONT_PORT}/" > /dev/null; then
