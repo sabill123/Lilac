@@ -124,7 +124,7 @@ export function tlCard(c: Concert, { rank = 0, open = false, dday = true }: { ra
     <a class="tl-card-link" href="${concertHref(c)}" data-concert="${esc(c.id)}">
       <div class="tl-imgbox${photo ? ' is-photo' : ''}">${posterFace(c)}${rank ? `<span class="tl-ranking"><span class="tl-rank">${rank}<span class="blind">${getLocale() === 'ja' ? '位' : '위'}</span></span></span>` : ''}</div>
       <div class="tl-info">
-        ${regionOf(c) && !open ? `<span class="tl-region">${esc(regionOf(c))}</span>` : label ? `<span class="tl-region">${esc(label)}</span>` : ''}
+        ${rank ? '' : `<span class="tl-region">${esc(open ? label : regionOf(c)) || '&nbsp;'}</span>`}
         <span class="tl-title">${esc(c.title)}</span>
         <div class="tl-side">${place && !rank ? `<span class="tl-place">${esc(place)}</span>` : ''}<span class="tl-period">${esc(period)}</span></div>
         ${rank ? '' : flagsOf(c, { withProvider: !open, dday: dd })}
@@ -207,17 +207,23 @@ export function bindHero(scope: HTMLElement, alive: () => boolean) {
   hero.addEventListener('focusout', () => { paused = false; });
   if (slides.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) tick();
   /* 배너 바탕색: 포스터의 평균색(이미지 프록시를 거쳐 같은 출처로 읽는다). 못 읽으면 기본 진회색 */
-  slides.forEach((s) => {
-    const a = s.querySelector<HTMLElement>('.tl-hero-link');
-    const src = a?.dataset.poster;
-    if (a && src) void posterTone(src).then((tone) => { if (tone) { a.style.setProperty('--c', tone.bg); a.classList.toggle('is-light', tone.light); } });
-  });
+  /* 이미지 프록시는 동시 4건까지 — 배너 순서대로 하나씩(지금 장 → 다음 장 …) */
+  void (async () => {
+    for (let k = 0; k < slides.length; k++) {
+      if (!alive() || !hero.isConnected) return;
+      const a = slides[k].querySelector<HTMLElement>('.tl-hero-link');
+      const src = a?.dataset.poster;
+      if (!a || !src) continue;
+      const tone = await posterTone(src);
+      if (tone) { a.style.setProperty('--c', tone.bg); a.classList.toggle('is-light', tone.light); }
+    }
+  })();
 }
 
 /* 포스터 평균색 → 배너 바탕. 흰 글자가 읽히게 너무 밝으면 어둡게 누른다(명도 상한) */
 const toneCache = new Map<string, Promise<{ bg: string; light: boolean } | null>>();
-export function posterTone(src: string) {
-  if (!toneCache.has(src)) toneCache.set(src, new Promise((resolve) => {
+export function posterTone(src: string, tries = 2): Promise<{ bg: string; light: boolean } | null> {
+  if (!toneCache.has(src)) toneCache.set(src, new Promise<{ bg: string; light: boolean } | null>((resolve) => {
     const im = new Image();
     im.crossOrigin = 'anonymous';
     im.decoding = 'async';
@@ -239,6 +245,13 @@ export function posterTone(src: string) {
     };
     im.onerror = () => resolve(null);
     im.src = `/api/live/img?u=${encodeURIComponent(src)}`;
+  }).then(async (tone) => {
+    /* 실패(프록시 혼잡 503 등)는 기억하지 않는다 — 잠시 뒤 한 번 더 */
+    if (tone) return tone;
+    toneCache.delete(src);
+    if (tries <= 1) return null;
+    await new Promise((r) => setTimeout(r, 1200));
+    return posterTone(src, tries - 1);
   }));
   return toneCache.get(src)!;
 }
