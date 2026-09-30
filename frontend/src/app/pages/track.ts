@@ -5,7 +5,7 @@ import { api } from '../../api';
 import { t } from '../i18n';
 import { esc, icon, img, skeletonRows } from '../ui';
 import { ct } from '../cm-i18n';
-import { concertRegistry, openConcert, posterCard } from '../cards';
+import { concertRegistry, openConcert } from '../cards';
 import type { Concert } from '../cards';
 import { playList, markPlaying } from '../player';
 import type { Track } from '../player';
@@ -53,6 +53,5 @@ export async function renderSharedConcert(root: HTMLElement, alive: () => boolea
   if (!r || r.kind !== 'concert') { root.innerHTML = `<div class="page"><p class="cm-empty big">${ct('ev.missing')}</p><a class="btn btn-line" href="#/concerts">${esc(t('nav.concerts'))}</a></div>`; return; }
   const c = { ...r.snap, id: r.snap.id || `shared-${r.key}`, url: r.ref } as Concert;
   concertRegistry.set(c.id, c);
-  root.innerHTML = `<div class="page"><section class="page-head"><h1>${ct('ev.title')}</h1></section><div class="grid-posters">${posterCard(c)}</div><p class="sec"><a class="more" href="#/concerts">${esc(t('nav.concerts'))}${icon('i-chev-r', 'ic xs')}</a></p></div>`;
-  openConcert(c.id);
+  openConcert(c.id, { replace: true });
 }

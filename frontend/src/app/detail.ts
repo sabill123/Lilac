@@ -30,12 +30,12 @@ const TIME_KO = (s: string) => s
   .replace(/(\d{1,2})시/g, (_, h: string) => `${h.padStart(2, '0')}:00`);
 
 /* 공연 시각: 날짜만 되풀이하는 줄("2026년 12월 19일(토) ~ 12월 20일(일)")은 위 일정과 같아서 뺀다 — 시각이 있는 줄만 */
-function timesNote(times?: string[] | null) {
+export function timesNote(times?: string[] | null) {
   const withClock = (times || []).filter((x) => /\d{1,2}\s*[:：]\s*\d{2}|\d{1,2}\s*시|오전|오후|開演|開場|\bPM\b|\bAM\b/i.test(x));
   return withClock.length ? `<small>${esc(withClock.map(TIME_KO).join(' · '))}</small>` : '';
 }
 
-function priceCell(v: number, cur: string, fx: { jpyKrw?: number } | null) {
+export function priceCell(v: number, cur: string, fx: { jpyKrw?: number } | null) {
   const ja = getLocale() === 'ja';
   const other = cur === 'JPY' ? 'KRW' : 'JPY';
   const want = (state.edition === 'jp' || (state.edition === 'all' && ja)) ? 'JPY' : 'KRW';
@@ -43,7 +43,7 @@ function priceCell(v: number, cur: string, fx: { jpyKrw?: number } | null) {
   return `<b>${money(v, cur)}</b>${approx ? `<small>${esc(approx)}</small>` : ''}`;
 }
 
-function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Record<string, string> | null) {
+export function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Record<string, string> | null) {
   const ja = getLocale() === 'ja';
   const kr = c.provider === 'nol' || c.provider === 'melon' || c.provider === 'yes24' || c.provider === 'ticketlink';
   const steps: [string, string][] = [];
@@ -94,7 +94,7 @@ function howTo(c: Concert, d: Detail | null, fc: DetailFanclub | null, guide: Re
     <p class="src-note"><a href="#/guide/${kr ? 'kr' : 'jp'}" data-close-nav>${t('nav.guide')}</a></p></section>`;
 }
 
-function fanclubBlock(fc: DetailFanclub | null, fx: { jpyKrw?: number } | null) {
+export function fanclubBlock(fc: DetailFanclub | null, fx: { jpyKrw?: number } | null) {
   if (!fc) return '';
   const f = fc.fees;
   const rows: string[] = [];
@@ -148,8 +148,8 @@ export function detailHtml(c: Concert, r: DetailResponse | null, fx: { jpyKrw?: 
 }
 
 const STATUS_KO: Record<string, string> = { 受付前: '접수 전', 受付中: '접수 중', 予定枚数終了: '매진', 受付終了: '접수 끝' };
-function statusJa(s: string) { return getLocale() === 'ja' ? s : STATUS_KO[s] || s; }
-function providerLabel(p: string) {
+export function statusJa(s: string) { return getLocale() === 'ja' ? s : STATUS_KO[s] || s; }
+export function providerLabel(p: string) {
   const ja = getLocale() === 'ja';
   return ({ nol: ja ? 'NOLチケット' : 'NOL 티켓', melon: ja ? 'メロンチケット' : '멜론티켓', eplus: ja ? 'イープラス' : 'e+', pia: ja ? 'チケットぴあ' : '티켓피아', yes24: ja ? 'YES24チケット' : 'YES24 티켓', ticketlink: ja ? 'チケットリンク' : '티켓링크', ltike: ja ? 'ローチケ' : '로치케' } as Record<string, string>)[p] || p;
 }

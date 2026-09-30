@@ -1,14 +1,10 @@
 /* 목록 카드 — 공연·티켓 오픈·뉴스·상품·발매·아티스트·차트 */
 import { esc, safeHref, safeImage, icon, img, fmtRange, fmtDateTime, fmtTime, fmtDay, until, ddayOf, ago, money, saleLabel, genreLabel, approxMoney } from './ui';
 import { withUtm } from './fanclub';
-import { detailHtml } from './detail';
-import type { DetailResponse } from './detail';
-import { api } from '../api';
 import { t, getLocale } from './i18n';
 import { state, isFollowing, toggleFollow } from './state';
 import { keyOf } from './player';
-import { likeBtn, shareBtn, talkBtn, trackTarget, bindSocial, commentsHtml, bindComments, targetAdapter, concertTarget } from './social';
-import { ct } from './cm-i18n';
+import { likeBtn, talkBtn, trackTarget } from './social';
 import type { Track } from './player';
 
 export interface Concert {
@@ -41,8 +37,6 @@ class ConcertRegistry extends Map<string, Concert> {
   override set(id: string, c: Concert) { this.delete(id); super.set(id, c); if (this.size > 5000) this.delete(this.keys().next().value!); return this; }
 }
 export const concertRegistry = new ConcertRegistry();
-let closeActiveSheet: (() => void) | null = null;
-let sheetVersion = 0;
 
 /* 예매처마다 "서울특별시" "인천시" "인천"처럼 달라서 한 가지로 */
 export function cityName(city: string | null | undefined) {
@@ -327,92 +321,12 @@ export function openCard(c: Concert) {
   </li>`;
 }
 
-/* 공연 상세 시트 */
-export function openConcert(id: string) {
+/* 공연 상세 — 티켓링크 상품 페이지처럼 전체 페이지(#/concert/<id>)로 연다.
+   새로고침·공유해도 열리게 공연 정보를 세션에 남긴다 */
+export function openConcert(id: string, { replace = false } = {}) {
   const c = concertRegistry.get(id);
   if (!c) return;
-  closeActiveSheet?.();
-  const version = ++sheetVersion;
-  const sheet = document.getElementById('sheet');
-  if (!sheet) return;
-  const returnFocus = document.activeElement as HTMLElement | null;
-  const sched = (c.openSchedule || []).filter((s) => s.at || s.endAt);
-  const artistHref = c.artistId ? `#/artist/${encodeURIComponent(c.artistId)}` : c.performer ? `#/artist/name/${encodeURIComponent(c.performer)}` : '';
-  const poster = safeImage(c.poster);
-  const bg = poster ? ` style="background-image:url(${esc(JSON.stringify(poster))})"` : '';
-  const dd = ddayOf(c.startDate);
-  const st = c.statusText ? saleLabel(c.statusText) : t(`st.${c.status}`);
-  const tg = concertTarget(c);
-  sheet.innerHTML = `<div class="sheet-back" data-close></div>
-    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-      <button class="icon-btn sheet-x" data-close aria-label="${t('close')}">${icon('i-close')}</button>
-      <div class="sheet-scroll">
-      <div class="sheet-hero"><span class="sheet-hero-bg"${bg}></span>
-        ${img(c.poster, '', 'poster', { ratio: '3/4', initial: c.performer || c.title, text: true })}
-        <div class="sheet-head">
-          <p class="sheet-kicker">${[c.direction ? t(`dir.${c.direction}`) : '', c.genre || t(`kind.${c.kind || 'concert'}`)].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('')}</p>
-          <h2 id="sheetTitle">${titleOf(c)}</h2>
-          <p class="sheet-when">${dd ? `<b>${esc(dd)}</b>` : ''}${esc(whenOf(c) || '')}</p>
-          ${c.provider !== 'fanclub' ? `<div class="sheet-follow">${c.artistId ? followButton(c.artistId, c.performer || c.title, 'sm') : c.performer ? followButton(`name:${c.performer}`, c.performer, 'sm') : ''}</div>` : ''}
-        </div>
-      </div>
-      <div class="sheet-body" id="sheetBody">
-        ${c.provider === 'fanclub' ? `<div class="callout fc-callout"><b>${esc(t('fc.sheet', { name: c.fanclub?.name ? `「${c.fanclub.name}」` : '' }))}</b><p>${esc([t('fc.sheet.join'), c.fanclub?.overseas === 'yes' ? t('fc.step2.ovs') : ''].filter(Boolean).join(' · '))}</p>${c.condition ? `<p class="muted small" lang="ja">${esc(c.condition)}</p>` : ''}</div>` : ''}
-        <h3 class="sheet-h">${t('c.info')}</h3>
-        <dl class="kv">
-          <dt>${t('c.date')}</dt><dd>${esc(whenOf(c) || '-')}</dd>
-          <dt>${t('c.venue')}</dt><dd>${esc(placeOf(c) || '-')}</dd>
-          <dt>${t('c.provider')}</dt><dd>${esc(providerName(c))}${st ? ` <span class="st st-${esc(c.status)}">${esc(st)}</span>` : ''}</dd>
-          ${c.performer ? `<dt>${t('c.artist')}</dt><dd>${artistHref ? `<a href="${artistHref}" data-close-nav>${esc(c.performer)}</a>` : esc(c.performer)}</dd>` : ''}
-        </dl>
-          ${sched.length ? `<h3 class="sheet-h">${t('c.schedule')}</h3><ul class="sched">${sched.map((s) => `<li class="${(s.endAt ? Date.parse(s.endAt) : Date.parse(s.at || '')) < Date.now() ? 'is-past' : ''}"><b>${esc(c.provider === 'fanclub' ? s.label || '' : saleLabel(s.label))}</b><span>${s.at ? esc(fmtDateTime(s.at)) : ''}${s.endAt ? ` ~ ${esc(fmtDateTime(s.endAt))}` : ''}</span></li>`).join('')}</ul>` : c.ticketOpenAt ? `<h3 class="sheet-h">${t('c.schedule')}</h3><ul class="sched"><li><b>${esc(saleLabel(c.ticketOpenLabel) || t('c.open'))}</b><span>${esc(fmtDateTime(c.ticketOpenAt))}</span></li></ul>` : ''}
-          ${(c.windowCount || 0) > 1 ? `<h3 class="sheet-h">${t('c.windowList', { n: c.windowCount! })}</h3><ul class="sched shows">${(c.windows || []).map((w) => `<li><b>${esc(saleLabel(w.label) || t('c.open'))} · ${esc(fmtDay(w.date))}</b><span><a href="${esc(safeHref(w.url, false))}" target="_blank" rel="noopener">${w.opensAt ? esc(fmtDateTime(w.opensAt)) : ''}${w.closesAt ? ` ~ ${esc(fmtDateTime(w.closesAt))}` : ''}</a></span></li>`).join('')}</ul>` : ''}
-          ${(c.showCount || 0) > 1 ? (() => { const li = (sh: { date: string; endDate?: string | null; venue?: string | null; city?: string | null; url: string }) => `<li><b>${esc(fmtRange(sh.date, sh.endDate))}</b><span><a href="${esc(safeHref(sh.url, false))}" target="_blank" rel="noopener">${esc([sh.venue, sh.city].filter(Boolean).join(' · '))}</a></span></li>`; const all = c.shows || []; return `<h3 class="sheet-h">${t('c.showList', { n: c.showCount! })}</h3><ul class="sched shows">${all.slice(0, 6).map(li).join('')}</ul>${all.length > 6 ? `<details class="sd-more"><summary>${t('d.moreShows', { n: all.length - 6 })}</summary><ul class="sched shows">${all.slice(6).map(li).join('')}</ul></details>` : ''}`; })() : ''}
-          <p class="sd-wait">${t('d.loading')}</p>
-      </div>
-      </div>
-      <div class="sheet-cta">
-        ${likeBtn(tg, 'is-box')}${shareBtn(tg, '#/e/{key}', `${c.title}`, 'is-box icon-only')}
-        ${c.provider === 'fanclub' ? `<a class="btn btn-line lg" href="${esc(fcHowHref(c))}" data-close-nav>${t('fc.howLink')}</a><a class="btn btn-solid lg" href="${esc(safeHref(withUtm(c.url, 'fanclub_sale'), false))}" target="_blank" rel="noopener" data-fc-track="sale" data-artist="${esc(c.artistId || '')}">${t('fc.apply')} ${icon('i-ext', 'ic xs')}</a>` : `<a class="btn btn-solid lg" href="${esc(safeHref(c.url, false))}" target="_blank" rel="noopener">${esc(t('d.bookAt', { p: providerName(c) }))} ${icon('i-ext', 'ic xs')}</a>`}
-      </div>
-    </div>`;
-  sheet.hidden = false;
-  document.body.classList.add('sheet-open');
-  /* 페스티벌: 라인업(한국·일본 아티스트 표시)과 권종별 예매 링크 */
-  const fx2 = c as Concert & { lineup?: { name: string; artistId: string | null; origin: string | null }[]; links?: { provider: string; url: string; title: string }[]; officialSite?: string | null };
-  const festPart = c.kind === 'festival' ? (() => {
-    const ja = getLocale() === 'ja';
-    const lu = fx2.lineup || [];
-    const tag = (o: string | null) => (o === 'jp' ? '<i class="lu-o jp">JP</i>' : o === 'kr' ? '<i class="lu-o kr">KR</i>' : '');
-    const lineHtml = lu.length ? `<h3 class="sheet-h">${ja ? '出演' : '라인업'} <small>${lu.length}</small></h3><ul class="lineup">${lu.map((x) => `<li>${x.artistId ? `<a href="#/artist/${encodeURIComponent(x.artistId)}" data-close-nav>${esc(x.name)}</a>` : `<a href="#/artist/name/${encodeURIComponent(x.name)}" data-close-nav>${esc(x.name)}</a>`}${tag(x.origin)}</li>`).join('')}</ul>` : `<p class="muted small">${ja ? '出演者はプレイガイドのページに画像で掲載されています。' : '라인업은 예매처 상품 페이지에 이미지로 공개되어 있습니다.'}</p>`;
-    const vname = (p: string) => providerName({ ...c, provider: p } as Concert);
-    const links = (fx2.links || []).length ? `<h3 class="sheet-h">${ja ? 'チケット' : '예매'}</h3><ul class="fest-links">${fx2.links!.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(vname(l.provider))}</b> ${esc(l.title)} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}${fx2.officialSite ? `<li><a href="${esc(safeHref(fx2.officialSite, false))}" target="_blank" rel="noopener"><b>${ja ? '公式サイト' : '공식 사이트'}</b> ${esc(fx2.officialSite.replace(/^https?:\/\//, '').replace(/\/$/, ''))} ${icon('i-ext', 'ic xs')}</a></li>` : ''}</ul>` : '';
-    return `<section class="sd-sec fest-sec">${lineHtml}${links}</section>`;
-  })() : '';
-  /* 같은 공연을 파는 다른 예매처 */
-  const alsoPart = c.kind !== 'festival' && c.alsoAt?.length ? `<section class="sd-sec fest-sec"><h3 class="sheet-h">${getLocale() === 'ja' ? 'ほかのプレイガイド' : '다른 예매처'}</h3><ul class="fest-links">${c.alsoAt.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(providerName({ ...c, provider: l.provider, providerLabel: l.providerLabel || l.provider } as Concert))}</b>${esc(t('d.vendorPage'))} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}</ul></section>` : '';
-  if (festPart || alsoPart) sheet.querySelector('#sheetBody')?.insertAdjacentHTML('afterbegin', festPart + alsoPart);
-  // 예매처 상품 페이지에서 가격·관람 시간·수령 방법·외국인 예매·팬클럽 회비를 더 불러온다
-  const fcPart = c.provider === 'fanclub' ? (sheet.querySelector('.fc-callout')?.outerHTML || '') : '';
-  const schedEls = Array.from(sheet.querySelectorAll('#sheetBody > .sheet-h, #sheetBody > .sched, #sheetBody > .sd-more')).slice(1).map((el) => el.outerHTML).join('');
-  const q = new URLSearchParams({ provider: c.provider, url: c.url, ...(c.artistId ? { artistId: c.artistId } : {}), ...(c.performer ? { performer: c.performer } : {}) });
-  void Promise.all([api(`/api/live/detail?${q}`).catch(() => null), api('/api/live/fx').catch(() => null)]).then(([r, fx]: [DetailResponse | null, { jpyKrw?: number } | null]) => {
-    const body = sheet.querySelector<HTMLElement>('#sheetBody');
-    if (!body || sheet.hidden || version !== sheetVersion) return;
-    body.innerHTML = fcPart + festPart + alsoPart + detailHtml(c, r, fx, schedEls) + `<section class="sd-sec" id="sdTalk"><h3 class="sheet-h">${ct('soc.cmt')}</h3>${commentsHtml()}</section>`;
-    const tabs = body.querySelector('.sd-tabs');
-    tabs?.insertAdjacentHTML('beforeend', `<a href="#sdTalk">${ct('soc.cmt')} <em class="sd-cn"></em></a>`);
-    void bindComments(body.querySelector<HTMLElement>('#sdTalk .cmts')!, targetAdapter(tg, (n) => { const el = body.querySelector('.sd-cn'); if (el) el.textContent = n ? String(n) : ''; }));
-    body.querySelectorAll('[data-close-nav]').forEach((el) => el.addEventListener('click', close));
-    body.querySelectorAll<HTMLAnchorElement>('.sd-tabs a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); body.querySelector(a.getAttribute('href')!)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
-  });
-  const close = () => { sheet.hidden = true; sheet.innerHTML = ''; document.body.classList.remove('sheet-open'); document.removeEventListener('keydown', onKey); ++sheetVersion; closeActiveSheet = null; if (returnFocus?.isConnected) returnFocus.focus(); };
-  const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
-  closeActiveSheet = close;
-  document.addEventListener('keydown', onKey);
-  sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
-  sheet.querySelectorAll('[data-close-nav]').forEach((el) => el.addEventListener('click', close));
-  bindFollow(sheet);
-  void bindSocial(sheet);
-  (sheet.querySelector('.sheet-x') as HTMLElement)?.focus();
+  try { sessionStorage.setItem('lilac.concert.' + id, JSON.stringify(c)); } catch { /* 저장 공간 부족 — 상세에서 목록을 다시 찾는다 */ }
+  const href = '#/concert/' + encodeURIComponent(id);
+  if (replace) location.replace(href); else location.hash = href;
 }

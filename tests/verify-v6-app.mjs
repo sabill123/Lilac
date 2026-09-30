@@ -74,7 +74,11 @@ check('외부 링크는 새 창 + noopener', all.every(({ s }) => !/target="_bla
 
 // 접근성
 check('모바일 하단 탭·에디션 라디오 키보드 이동', /ArrowRight/.test(main) && /ArrowLeft/.test(main));
-check('상세 시트: role=dialog, aria-modal, Esc 닫기', /role="dialog" aria-modal="true"/.test(read(path.join(APP, 'cards.ts'))) && /Escape/.test(read(path.join(APP, 'cards.ts'))));
+/* v26: 공연 상세는 시트가 아니라 티켓링크 상품 페이지처럼 전체 페이지(#/concert/<id>) — 새로고침·공유 복원, 붙어 다니는 탭, 요약 바 */
+const concertPage = read(path.join(APP, 'pages', 'concert.ts'));
+const tlCss = read(path.join(APP, 'tl.css'));
+check('공연 상세는 전체 페이지(#/concert/<id>): 세션 복원 · 탭(tablist/aria-selected) · 스크롤 요약 바', /case 'concert': await renderConcertPage/.test(main) && /location\.(hash|replace)/.test(read(path.join(APP, 'cards.ts'))) && /findConcert/.test(concertPage) && /role="tablist"/.test(concertPage) && /aria-selected/.test(concertPage) && /is-fixed/.test(concertPage) && /\.tl-sum\.is-fixed/.test(tlCss));
+check('공연 페이지 CSS에도 그라디언트 글자·글로우 없음(순위 숫자 받침·스켈레톤 반짝임만 선형 그라디언트)', !/background-clip:\s*text|radial-gradient|text-shadow/.test(tlCss) && (tlCss.match(/linear-gradient/g) || []).length === 2 && /\.tl-ranking \{[^}]*linear-gradient/.test(tlCss) && /\.tl-skel \{[^}]*linear-gradient/.test(tlCss));
 check('reduced-motion 존중', /prefers-reduced-motion: reduce/.test(css));
 
 // 홈 합치기: 이전 홈의 레코드 무대·음악상 무대 + 새 정보 순서
@@ -93,7 +97,7 @@ const altDup = (cardsSrc.match(/img\((?:c\.poster|g\.image|r\.artwork|a\.photo \
 check('카드 이미지는 alt="" (제목 중복 복사 방지)', altDup.length === 0, altDup.join(' '));
 // 팬클럽: 가입·신청 링크는 utm_source=lilac + 클릭 기록, 모르는 값은 원문 확인 안내
 const fc = read(path.join(APP, 'fanclub.ts'));
-check('팬클럽 링크는 utm_source=lilac', /utm_source', 'lilac'/.test(fc) && (cardsSrc.match(/withUtm\(c\.url, 'fanclub_sale'\)/g) || []).length >= 2);
+check('팬클럽 링크는 utm_source=lilac', /utm_source', 'lilac'/.test(fc) && /withUtm\(c\.url, 'fanclub_sale'\)/.test(read(path.join(APP, 'pages', 'concert.ts'))) && /withUtm\(w\.url, 'fanclub_sale'\)/.test(fc));
 check('팬클럽 가입·신청 클릭을 문서 단위로 기록', /installFcTracking/.test(main) && /data-fc-track/.test(fc) && /fc-click/.test(fc));
 const pdp = read(path.join(APP, 'pages', 'fcproduct.ts'));
 check('팬클럽 요금·해외 가입 여부를 모르면 추정하지 않고 원문 확인 안내', /seePage/.test(pdp) && /fc\.overseas\.unknown2/.test(pdp) && /fcp\.seePage/.test(fc));
@@ -115,7 +119,7 @@ check('헤더: 카테고리 메뉴에 팬클럽, 작은 글자 줄에 예매 가
 // 공연 상세: 예매처 상품 페이지 값(가격·관람 시간·수령·외국인 예매) + 팬클럽 회비를 불러온다
 const cardsSrc2 = read(path.join(APP, 'cards.ts'));
 const detailSrc = read(path.join(APP, 'detail.ts'));
-check('공연 상세가 예매처 상품 정보와 팬클럽을 불러온다', /\/api\/live\/detail/.test(cardsSrc2) && /sdPrice/.test(detailSrc) && /sdHow/.test(detailSrc) && /sdFc/.test(detailSrc));
+check('공연 상세가 예매처 상품 정보와 팬클럽을 불러온다', /\/api\/live\/detail/.test(read(path.join(APP, 'pages', 'concert.ts'))) && /fanclubBlock\(fc, fx\)/.test(read(path.join(APP, 'pages', 'concert.ts'))) && /howTo\(c, d, fc/.test(read(path.join(APP, 'pages', 'concert.ts'))) && /sdHow/.test(detailSrc) && /sdFc/.test(detailSrc));
 check('예매 방법은 보는 사람(에디션·언어)과 예매처에 따라 다르다', /state\.edition === 'jp'/.test(detailSrc) && /provider === 'eplus'/.test(detailSrc) && /provider === 'pia'/.test(detailSrc));
 const guideSrc = read(path.join(APP, 'pages', 'guide.ts'));
 const guideLinks = (guideSrc.match(/https:\/\/[^'\s]+/g) || []);
@@ -126,7 +130,7 @@ check('팬클럽 회비표: 모르는 칸은 비우지 않고 "가입 페이지 
 const cards = read(path.join(APP, 'cards.ts'));
 const guide = read(path.join(APP, 'fcguide.ts'));
 check('커뮤니티·곡·공유 공연 라우트', /case 'community'/.test(main) && /case 'track'/.test(main) && /case 'e'/.test(main));
-check('공연 상세: 좋아요·공유·댓글', /likeBtn\(tg/.test(cards) && /shareBtn\(tg/.test(cards) && /sdTalk/.test(cards));
+check('공연 상세: 좋아요·공유·댓글', ((src) => /likeBtn\(tg/.test(src) && /shareBtn\(tg/.test(src) && /commentsHtml\(\)/.test(src) && /bindComments\(/.test(src))(read(path.join(APP, 'pages', 'concert.ts'))));
 check('차트 행: 좋아요·댓글', /crow-soc/.test(cards));
 const shots = [...guide.matchAll(/src: '(\/guides\/[^']+)'/g)].map((m) => m[1]);
 check(`가입 안내 캡처 ${shots.length}장이 실제 파일로 있다`, shots.length >= 6 && shots.every((p) => existsSync(path.join(FE, 'public', p))));

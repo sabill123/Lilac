@@ -12,7 +12,7 @@ import http from 'node:http';
 import https from 'node:https';
 
 export const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
-const HOSTS = /(^|\.)(pia\.jp|eplus\.jp|eplus\.co\.jp|interpark\.com|melon\.co\.kr|mzstatic\.com|dzcdn\.net|aladin\.co\.kr|hmv\.co\.jp|ktown4u\.com|wikimedia\.org|yanolja\.com|nol-universe\.com)$/i;
+const HOSTS = /(^|\.)(pia\.jp|eplus\.jp|eplus\.co\.jp|interpark\.com|melon\.co\.kr|mzstatic\.com|dzcdn\.net|aladin\.co\.kr|hmv\.co\.jp|ktown4u\.com|wikimedia\.org|yanolja\.com|nol-universe\.com|yes24\.com|toast\.com|l-tike\.com)$/i;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/apng', 'image/gif', 'image/webp', 'image/avif', 'image/bmp', 'image/x-icon', 'image/vnd.microsoft.icon']);
 const fail = (status, message) => Object.assign(new Error(message), { status });
 export function validateArtworkUrl(value) {

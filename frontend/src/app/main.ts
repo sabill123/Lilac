@@ -1,6 +1,7 @@
 /* Lilac 앱 진입점 — 셸(헤더·에디션 전환·내비게이션·푸터) + 해시 라우터 */
 import './app.css';
 import './editorial.css';
+import './tl.css';
 import { state, setEdition, setLang, onChange, loadSession } from './state';
 import type { Edition } from './state';
 import { t, getLocale } from './i18n';
@@ -22,6 +23,7 @@ import { renderArtists, renderArtist } from './pages/artists';
 import { renderSearch, renderMy, renderAuth } from './pages/misc';
 import { renderCommunity } from './pages/community';
 import { renderTrack, renderSharedConcert } from './pages/track';
+import { renderConcertPage } from './pages/concert';
 import { ct } from './cm-i18n';
 import { renderAbout } from './pages/about';
 import { isSiteRoute, setSiteMode, SITE_TITLES } from '../site/routes';
@@ -138,7 +140,7 @@ function seg() {
 
 function markNav() {
   const s = seg()[0] || 'home';
-  const map: Record<string, string> = { release: 'goods', artist: 'artists', search: '', login: 'my', signup: 'my', guide: '', track: 'chart', e: 'concerts' };
+  const map: Record<string, string> = { release: 'goods', artist: 'artists', search: '', login: 'my', signup: 'my', guide: '', track: 'chart', e: 'concerts', concert: 'concerts' };
   const cur = map[s] ?? s;
   document.querySelectorAll<HTMLAnchorElement>('.gnb a, .gnb-m a, #mnav a').forEach((a) => {
     const on = a.dataset.r === cur;
@@ -206,6 +208,7 @@ async function renderInto(root: HTMLElement, alive: () => boolean, s: string, a:
       case 'community': await renderCommunity(root, alive, a, b); break;
       case 'track': await renderTrack(root, alive, a); break;
       case 'e': await renderSharedConcert(root, alive, a); break;
+      case 'concert': await renderConcertPage(root, alive, a); break;
       case 'fanclub': if (a) await renderFanclubProduct(root, alive, a); else await renderFanclubPage(root, alive); break;
       case 'guide': await renderGuide(root, a, b, alive); break;
       case 'goods': await renderGoods(root, alive); break;
