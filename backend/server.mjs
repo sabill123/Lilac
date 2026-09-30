@@ -1122,6 +1122,7 @@ async function loadCharts() {
    (멜론·지니·오리콘·빌보드는 공개 API가 없어 여전히 일일 수집에 의존한다) */
 const rssLiveCache = { jp: { at: 0, list: [] }, kr: { at: 0, list: [] } };
 const RSS_TTL = 10 * 60 * 1000;
+const rssInflight = { jp: null, kr: null };
 
 async function liveAppleRss(country, budgetMs = 3500) {
   const c = rssLiveCache[country];
@@ -1130,17 +1131,22 @@ async function liveAppleRss(country, budgetMs = 3500) {
   /* 외부 피드가 느려도 우리 응답을 막으면 안 된다.
      제한 시간 안에 못 받으면 수집본으로 넘기고, 갱신은 백그라운드에서 계속한다.
      (Apple이 도메인을 옮기며 리다이렉트가 끼자 콜드 캐시에서 20초가 걸렸다) */
-  const j = await Promise.race([
-    fetchJsonRetry(`https://rss.marketingtools.apple.com/api/v2/${country}/music/most-played/50/songs.json`, 2),
-    new Promise((r) => setTimeout(() => r(null), budgetMs)),
-  ]);
-  const list = (j?.feed?.results || []).map((x, i) => ({
+  const toList = (j) => (j?.feed?.results || []).map((x, i) => ({
     rank: i + 1, title: x.name, artist: x.artistName,
     artwork: (x.artworkUrl100 || '').replace('100x100', '400x400'),
     appleUrl: x.url, youtubeId: null, ytViews: null,
   }));
-  if (list.length) { rssLiveCache[country] = { at: Date.now(), list }; return { list, fetchedAt: Date.now(), live: true }; }
-  return null;   // 실패 시 호출부가 수집본으로 폴백
+  /* 같은 나라 요청이 이미 날아가 있으면 그걸 기다린다. 제한 시간을 넘겨 도착해도 캐시에 넣어 다음 요청부터 실시간으로 준다
+     (예전엔 늦게 온 응답을 버려서, 피드가 늘 3.5초를 넘기는 환경에서는 영영 실시간이 되지 않았다) */
+  if (!rssInflight[country]) {
+    rssInflight[country] = fetchJsonRetry(`https://rss.marketingtools.apple.com/api/v2/${country}/music/most-played/50/songs.json`, 2)
+      .then((j) => { const list = toList(j); if (list.length) rssLiveCache[country] = { at: Date.now(), list }; return list; })
+      .catch(() => [])
+      .finally(() => { rssInflight[country] = null; });
+  }
+  const list = await Promise.race([rssInflight[country], new Promise((r) => setTimeout(() => r(null), budgetMs))]);
+  if (list?.length) return { list, fetchedAt: rssLiveCache[country].at, live: true };
+  return null;   // 실패·지연 시 호출부가 수집본으로 폴백
 }
 
 app.get('/api/charts', async (req, res) => {

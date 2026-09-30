@@ -23,6 +23,7 @@ export interface Concert {
   unconfirmed?: boolean; openTba?: boolean; posterKind?: string | null; saleSortAt?: string | null; closesAt?: string | null;
   shows?: { date: string | null; endDate?: string | null; venue: string | null; city: string | null; url: string }[]; showCount?: number; venueCount?: number; performerKo?: string | null;
   windows?: { label: string | null; opensAt: string | null; closesAt: string | null; date: string | null; venue: string | null; url: string }[]; windowCount?: number;
+  alsoAt?: { provider: string; providerLabel?: string; url: string; status?: string | null }[];
   fanclub?: { name: string | null; entry: string | null; home: string | null; platform: string | null; overseas: string; fees: { annual: number | null; monthly: number | null } | null } | null;
   fcOnly?: boolean; fcFirst?: boolean; overseasOk?: boolean; noJpPhone?: boolean; condition?: string | null; lottery?: boolean; trade?: boolean;
 }
@@ -61,6 +62,7 @@ const PROVIDER: Record<string, [string, string]> = {
   fanclub: ['공식 팬클럽', '公式ファンクラブ'],
   nol: ['NOL 티켓(인터파크)', 'NOLチケット(インターパーク)'], melon: ['멜론티켓', 'メロンチケット'],
   eplus: ['이플러스(e+)', 'イープラス'], pia: ['티켓피아', 'チケットぴあ'],
+  ticketlink: ['티켓링크', 'チケットリンク'], yes24: ['YES24 티켓', 'YES24チケット'], ltike: ['로치케(로손티켓)', 'ローチケ'],
 };
 export function providerName(c: Concert) {
   if (c.provider === 'fanclub') return c.fanclub?.name ? `${getLocale() === 'ja' ? '公式FC' : '공식 팬클럽'} 「${c.fanclub.name}」` : PROVIDER.fanclub[getLocale() === 'ja' ? 1 : 0];
@@ -109,7 +111,7 @@ export function posterCard(c: Concert) {
       <p class="pcard-date">${whenOf(c)}${dd ? ` <span class="dday">${dd}</span>` : ''}</p>
       <h3 class="pcard-title"><button data-open-concert="${esc(c.id)}">${titleOf(c)}</button></h3>
       ${place ? `<p class="pcard-venue">${esc(place)}</p>` : ''}
-      <p class="pcard-meta">${fcTag(c) || (state.edition === 'all' ? dirTag(c) : '')}<span>${esc(providerName(c))}</span>${statusText(c)}</p>
+      <p class="pcard-meta">${fcTag(c) || (state.edition === 'all' ? dirTag(c) : '')}<span>${esc(providerName(c))}${c.alsoAt?.length ? ` +${c.alsoAt.length}` : ''}</span>${statusText(c)}</p>
     </div>
   </article>`;
 }
@@ -126,7 +128,7 @@ export function festCard(f: Concert & { country?: string; lineup?: { name: strin
   const names = (f.lineup || []).filter((x) => x.origin === want).slice(0, 3).map((x) => x.name);
   const hi = n ? `<p class="fest-hi"><b>${want === 'jp' ? 'J-POP' : 'K-POP'} ${n}${ja ? '組' : '팀'}</b> ${esc(names.join(', '))}${n > names.length ? ' …' : ''}</p>` : (f.lineup?.length ? `<p class="fest-hi muted">${ja ? '出演' : '라인업'} ${f.lineup.length}${ja ? '組' : '팀'}</p>` : '');
   return `<article class="pcard fcard">
-    <button class="pcard-art" data-open-concert="${esc(f.id)}" aria-label="${esc(f.title)}">${f.poster ? img(f.poster, '', 'poster', { ratio: '3/4', initial: f.title, text: true }) : dateBox(f)}<span class="fest-cn">${esc(cn)}</span></button>
+    <button class="pcard-art" data-open-concert="${esc(f.id)}" aria-label="${esc(f.title)}">${f.poster ? img(f.poster, '', f.posterKind === 'artist' ? 'poster is-artist-photo' : 'poster', { ratio: '3/4', initial: f.title, text: true }) : dateBox(f)}<span class="fest-cn">${esc(cn)}</span></button>
     <div class="pcard-body">
       <p class="pcard-date">${whenOf(f)}${dd ? ` <span class="dday">${dd}</span>` : ''}</p>
       <h3 class="pcard-title"><button data-open-concert="${esc(f.id)}">${esc(f.title)}</button></h3>
@@ -337,16 +339,19 @@ export function openConcert(id: string) {
   sheet.hidden = false;
   document.body.classList.add('sheet-open');
   /* 페스티벌: 라인업(한국·일본 아티스트 표시)과 권종별 예매 링크 */
-  const fx2 = c as Concert & { lineup?: { name: string; artistId: string | null; origin: string | null }[]; links?: { provider: string; url: string; title: string }[] };
+  const fx2 = c as Concert & { lineup?: { name: string; artistId: string | null; origin: string | null }[]; links?: { provider: string; url: string; title: string }[]; officialSite?: string | null };
   const festPart = c.kind === 'festival' ? (() => {
     const ja = getLocale() === 'ja';
     const lu = fx2.lineup || [];
     const tag = (o: string | null) => (o === 'jp' ? '<i class="lu-o jp">JP</i>' : o === 'kr' ? '<i class="lu-o kr">KR</i>' : '');
     const lineHtml = lu.length ? `<h3 class="sheet-h">${ja ? '出演' : '라인업'} <small>${lu.length}</small></h3><ul class="lineup">${lu.map((x) => `<li>${x.artistId ? `<a href="#/artist/${encodeURIComponent(x.artistId)}" data-close-nav>${esc(x.name)}</a>` : `<a href="#/artist/name/${encodeURIComponent(x.name)}" data-close-nav>${esc(x.name)}</a>`}${tag(x.origin)}</li>`).join('')}</ul>` : `<p class="muted small">${ja ? '出演者はプレイガイドのページに画像で掲載されています。' : '라인업은 예매처 상품 페이지에 이미지로 공개되어 있습니다.'}</p>`;
-    const links = (fx2.links || []).length > 1 ? `<h3 class="sheet-h">${ja ? '券種' : '권종'}</h3><ul class="fest-links">${fx2.links!.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener">${esc(l.title)} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}</ul>` : '';
+    const vname = (p: string) => providerName({ ...c, provider: p } as Concert);
+    const links = (fx2.links || []).length ? `<h3 class="sheet-h">${ja ? 'チケット' : '예매'}</h3><ul class="fest-links">${fx2.links!.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(vname(l.provider))}</b> ${esc(l.title)} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}${fx2.officialSite ? `<li><a href="${esc(safeHref(fx2.officialSite, false))}" target="_blank" rel="noopener"><b>${ja ? '公式サイト' : '공식 사이트'}</b> ${esc(fx2.officialSite.replace(/^https?:\/\//, '').replace(/\/$/, ''))} ${icon('i-ext', 'ic xs')}</a></li>` : ''}</ul>` : '';
     return `<section class="sd-sec fest-sec">${lineHtml}${links}</section>`;
   })() : '';
-  if (festPart) sheet.querySelector('#sheetBody')?.insertAdjacentHTML('afterbegin', festPart);
+  /* 같은 공연을 파는 다른 예매처 */
+  const alsoPart = c.kind !== 'festival' && c.alsoAt?.length ? `<section class="sd-sec fest-sec"><h3 class="sheet-h">${getLocale() === 'ja' ? 'ほかのプレイガイド' : '다른 예매처'}</h3><ul class="fest-links">${c.alsoAt.map((l) => `<li><a href="${esc(safeHref(l.url, false))}" target="_blank" rel="noopener"><b>${esc(providerName({ ...c, provider: l.provider, providerLabel: l.providerLabel || l.provider } as Concert))}</b>${esc(c.title)} ${icon('i-ext', 'ic xs')}</a></li>`).join('')}</ul></section>` : '';
+  if (festPart || alsoPart) sheet.querySelector('#sheetBody')?.insertAdjacentHTML('afterbegin', festPart + alsoPart);
   // 예매처 상품 페이지에서 가격·관람 시간·수령 방법·외국인 예매·팬클럽 회비를 더 불러온다
   const fcPart = c.provider === 'fanclub' ? (sheet.querySelector('.fc-callout')?.outerHTML || '') : '';
   const schedEls = Array.from(sheet.querySelectorAll('#sheetBody > .sheet-h, #sheetBody > .sched, #sheetBody > .sd-more')).slice(1).map((el) => el.outerHTML).join('');
@@ -354,7 +359,7 @@ export function openConcert(id: string) {
   void Promise.all([api(`/api/live/detail?${q}`).catch(() => null), api('/api/live/fx').catch(() => null)]).then(([r, fx]: [DetailResponse | null, { jpyKrw?: number } | null]) => {
     const body = sheet.querySelector<HTMLElement>('#sheetBody');
     if (!body || sheet.hidden || version !== sheetVersion) return;
-    body.innerHTML = fcPart + festPart + detailHtml(c, r, fx, schedEls) + `<section class="sd-sec" id="sdTalk"><h3 class="sheet-h">${ct('soc.cmt')}</h3>${commentsHtml()}</section>`;
+    body.innerHTML = fcPart + festPart + alsoPart + detailHtml(c, r, fx, schedEls) + `<section class="sd-sec" id="sdTalk"><h3 class="sheet-h">${ct('soc.cmt')}</h3>${commentsHtml()}</section>`;
     const tabs = body.querySelector('.sd-tabs');
     tabs?.insertAdjacentHTML('beforeend', `<a href="#sdTalk">${ct('soc.cmt')} <em class="sd-cn"></em></a>`);
     void bindComments(body.querySelector<HTMLElement>('#sdTalk .cmts')!, targetAdapter(tg, (n) => { const el = body.querySelector('.sd-cn'); if (el) el.textContent = n ? String(n) : ''; }));

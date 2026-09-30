@@ -11,6 +11,7 @@
 import { fetchText, clean, halfwidth } from './http.mjs';
 import { nolList, melonList, venueCountry } from './tickets-kr.mjs';
 import { eventGeography } from './geography.mjs';
+import { yes24List, ticketlinkList, ltikeFestivals } from './vendors-extra.mjs';
 
 const EPLUS = 'https://eplus.jp';
 /* 음악 페스티벌이 아닌 행사(국악·클래식·연극·전시·스포츠) */
@@ -110,14 +111,14 @@ export function eplusLineup(html) {
 
 /* ---------- 한국 ---------- */
 export async function krFestivals() {
-  const [nol, melon] = await Promise.allSettled([nolList('03024', { maxPages: 8 }), melonList('GENRE_CON_FESTIVAL')]);
+  const [nol, melon, y24, tl] = await Promise.allSettled([nolList('03024', { maxPages: 8 }), melonList('GENRE_CON_FESTIVAL'), yes24List(15464, 2), ticketlinkList(14).then((l) => l.filter((x) => x.kind === 'festival'))]);
   const items = [];
   const push = (r) => { if (r.status === 'fulfilled') items.push(...(r.value.items || r.value)); };
-  push(nol); push(melon);
+  push(nol); push(melon); push(y24); push(tl);
   return {
     /* NOL 글로벌([Global]) 판매분은 해외 공연 — 공연장 단서로만 나라를 정하고, 모르면 뺀다 */
     items: items.map((x) => ({ provider: x.provider, title: x.title, url: x.url, startDate: x.startDate, endDate: x.endDate || x.startDate, venue: x.venue, city: x.city || null, country: /^\s*\[(?:Global|글로벌)\]/i.test(x.title) ? eventGeography({ venue: x.venue, city: x.city }).country : venueCountry(x.title, x.venue), poster: x.poster || null, status: x.status || null })).filter((x) => x.country === 'KR' || x.country === 'JP'),
-    sources: [{ provider: 'nol:festival', ok: nol.status === 'fulfilled' }, { provider: 'melon:festival', ok: melon.status === 'fulfilled' }],
+    sources: [{ provider: 'nol:festival', ok: nol.status === 'fulfilled' }, { provider: 'melon:festival', ok: melon.status === 'fulfilled' }, { provider: 'yes24:festival', ok: y24.status === 'fulfilled' }, { provider: 'ticketlink:festival', ok: tl.status === 'fulfilled' }],
   };
 }
 
@@ -188,4 +189,47 @@ export function eplusOfficialSite(html) {
   const m = t.match(/(?:オフィシャルサイト|公式サイト|公式HP|オフィシャルHP)\s*[:：]?\s*(?:<[^>]+>\s*)*(https?:\/\/[^\s"'<>]+)/);
   if (!m) return null;
   try { const u = new URL(m[1].replace(/&amp;/g, '&')); return /eplus\.jp$/.test(u.host) ? null : u.href; } catch { return null; }
+}
+
+/* ---------- 공식 사이트 찾기 (예매처에 이미지가 없는 페스티벌) ---------- */
+const NOT_OFFICIAL = /(^|\.)(eplus\.jp|pia\.jp|l-tike\.com|lawson|ticketjam|ticket|twitter\.com|x\.com|instagram\.com|facebook\.com|youtube\.com|tiktok\.com|wikipedia\.org|natalie\.mu|barks\.jp|oricon\.co\.jp|musicvoice|okmusic|billboard-japan|mdpr\.jp|walkerplus|jorudan|note\.com|ameblo\.jp|yahoo|google|bing|line\.me|jalan|rurubu|enjoytokyo|iko-yo|festival-life|fesdb|livefans|setlist|spice|rockinon\.com\/news|creatorsbox|fnmnl|jrocknews|tokyo-np|asahi|yomiuri|nikkei|mainichi|nhk)(\.|$|\/)/i;
+/** 제목의 식별 토큰: 연도·흔한 말을 뺀 가장 긴 조각 */
+export function festivalTokens(title) {
+  const t = festivalTitle(title).normalize('NFKC').toLowerCase()
+    .replace(/presents?|supported by|powered by|sponsored by/g, ' ')
+    .replace(/(?:19|20)\d{2}|'\d{2}|’\d{2}|vol\.?\s*\d+/g, ' ');
+  return t.split(/[^a-z0-9ぁ-んァ-ヶ一-龯ー가-힣]+/).filter((x) => x.length >= 3 && !/^(?:festival|fes|fest|music|live|rock|the|and|tour|in|of|stage|special|presents|フェス|フェスティバル|ライブ|音楽祭)$/.test(x)).sort((a, b) => b.length - a.length);
+}
+/** 검색 결과에서 공식 사이트: 페이지 제목에 페스티벌의 식별 토큰이 들어 있어야 한다 */
+export async function findFestivalSite(title, { queryEngine, readPage, ogImageOf }) {
+  const tokens = festivalTokens(title);
+  if (!tokens.length) return null;
+  const q = `${festivalTitle(title)} 公式サイト`;
+  let urls = [];
+  for (const eng of ['yahoo', 'brave', 'ddg']) {
+    const r = await queryEngine(eng, q);
+    if (r.urls.length) { urls = r.urls; break; }
+  }
+  const seen = new Set();
+  for (const u of urls) {
+    let host;
+    try { host = new URL(u).host; } catch { continue; }
+    if (NOT_OFFICIAL.test(host + new URL(u).pathname) || seen.has(host)) continue;
+    seen.add(host);
+    if (seen.size > 4) break;
+    let html;
+    try { html = await readPage(u); } catch { continue; }
+    const head = `${(html.match(/<title>([^<]*)/i) || [])[1] || ''} ${(html.match(/property=["']og:title["'][^>]+content=["']([^"']+)/i) || [])[1] || ''}`.normalize('NFKC').toLowerCase().replace(/[\s\-_・·]/g, '');
+    if (!head.includes(tokens[0].replace(/[\s\-_・·]/g, ''))) continue;
+    const image = ogImageOf(html, u);
+    return { url: u, image: image && !/logo|favicon|noimage|webclip/i.test(image) ? image : null };
+  }
+  return null;
+}
+
+/** 일본: e+ 목록 + 로치케 페스 특집 */
+export async function jpFestivals({ eplus = () => eplusFestivals() } = {}) {
+  const [ep, lt] = await Promise.allSettled([eplus(), ltikeFestivals()]);
+  const items = [...(ep.status === 'fulfilled' ? ep.value : []), ...(lt.status === 'fulfilled' ? lt.value.filter((x) => x.country === 'JP').map((x) => ({ provider: 'ltike', title: x.title, url: x.url, startDate: x.startDate, endDate: x.endDate, venue: x.venue, city: x.city, country: 'JP', poster: x.poster, status: x.status })) : [])];
+  return { items, sources: [{ provider: 'eplus:festival', ok: ep.status === 'fulfilled', count: ep.status === 'fulfilled' ? ep.value.length : 0 }, { provider: 'ltike:festival', ok: lt.status === 'fulfilled', count: lt.status === 'fulfilled' ? lt.value.length : 0 }] };
 }

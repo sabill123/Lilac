@@ -671,7 +671,7 @@ const SEARCH_BAD_HOST = /blog|note\.com|ameblo|hatena|fc2\.com|livedoor|wikipedi
 const FC_PLATFORM = /plusmember\.jp|emtg\.jp|tobe-community\.jp|\/fc\/|fanclub|fc\.|club|member|m-up|bitfan|famm|starto\.jp|tobe-official|b-me|campaigns\.weverse\.io|japan/i;
 /* 검색 엔진 하나씩: yahoo → brave → ddg. 결과 화면이 아니면(확인 화면·차단) 결과 없음이 아니라 막힘으로 센다 */
 const ENGINES = ['yahoo', 'brave', 'ddg'];
-async function searchEngine(engine, q) {
+export async function searchEngine(engine, q) {
   try {
     if (engine === 'yahoo') {
       const html = await fetchJa(`https://search.yahoo.co.jp/search?p=${encodeURIComponent(q)}`, { timeout: 10000, retries: 1, headers: { 'Accept-Language': 'ja' } });

@@ -27,6 +27,7 @@
  * 원칙: 값은 모두 예매처 응답에서 온다. 모르는 값은 null. 예매처 하나가 실패해도 나머지는 반환한다.
  */
 import { fetchText, fetchJson, clean, halfwidth, normDate, pool } from './http.mjs';
+import { ticketlinkList, yes24List, mergeVendors } from './vendors-extra.mjs';
 
 const NOL_LIST = 'https://nol.yanolja.com/ticket/genre/api/cx-display/widget/v1/multiple-filtered-entertainment-list/items';
 const NOL_UPCOMING = 'https://nol.yanolja.com/ticket/display/upcoming?genre=concert';
@@ -344,14 +345,18 @@ export async function fetchKrConcerts({ category = 'visiting' } = {}) {
   if (category === 'visiting' || category === 'all') {
     jobs.push(timed('nol:visiting', () => nolList(NOL_CATEGORY.visiting)));
     jobs.push(timed('melon:visiting', () => melonList('GENRE_CON_VISIT_KOR')));
+    jobs.push(timed('yes24:overseas', () => yes24List(15463, 2)));
   }
   if (category === 'kpop' || category === 'all') {
     jobs.push(timed('nol:concert', () => nolList(NOL_CATEGORY.all, { maxPages: 40 })));
     jobs.push(timed('nol:fanmeeting', () => nolList(NOL_CATEGORY.fanmeeting)));
     jobs.push(timed('melon:concert', () => melonList('GENRE_CON_ALL')));
     jobs.push(timed('melon:fanmeeting', () => melonList('GENRE_FAN')));
+    jobs.push(timed('ticketlink:concert', () => ticketlinkList(14)));
+    jobs.push(timed('yes24:concert', () => yes24List(15456, 1)));
   }
   const res = merge(await Promise.all(jobs));
+  res.items = mergeVendors(res.items);
   res.items.sort(sortByDate);
   return res;
 }

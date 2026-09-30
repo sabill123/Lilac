@@ -233,8 +233,66 @@ async function piaDetail(url) {
   };
 }
 
-const PARSERS = { nol: nolDetail, melon: melonDetail, eplus: eplusDetail, pia: piaDetail };
-const HOSTS = { nol: /(^|\.)nol\.yanolja\.com$|(^|\.)interpark\.com$/, melon: /(^|\.)ticket\.melon\.com$/, eplus: /(^|\.)eplus\.jp$/, pia: /(^|\.)pia\.jp$/ };
+/* ---------- YES24 티켓: 상품 페이지 HTML(등급·관람시간·가격·공연시간 안내) ---------- */
+export function parseYes24Detail(html, url) {
+  const t = lines(html);
+  const after = (label) => { const i = t.findIndex((x) => x === label); return i >= 0 ? t[i + 1] || null : null; };
+  const prices = [];
+  const pi = t.findIndex((x) => x === '가격');
+  if (pi >= 0) for (let i = pi + 1; i < Math.min(t.length, pi + 40); i += 1) {
+    if (/^(혜택|공연시간 안내|배송정보|할인)/.test(t[i])) break;
+    const one = t[i].match(/^(.+?)\s+([\d,]{3,})\s*원$/);
+    if (one) { prices.push({ grade: one[1].trim(), kind: null, price: Number(one[2].replace(/,/g, '')), currency: 'KRW' }); continue; }
+    const n = t[i + 1] && /^[\d,]+$/.test(t[i + 1]) && t[i + 2] === '원' ? Number(t[i + 1].replace(/,/g, '')) : null;
+    if (n && !/^[\d,]+$/.test(t[i])) { prices.push({ grade: t[i].trim(), kind: null, price: n, currency: 'KRW' }); i += 2; }
+  }
+  const ti = t.findIndex((x) => x === '공연시간 안내');
+  const times = ti >= 0 ? t.slice(ti + 1, ti + 6).filter((x) => /\d{4}년|\d{1,2}월|오후|오전|\d{1,2}:\d{2}/.test(x) && !/배송|수령|발송/.test(x)) : [];
+  const run = (after('관람시간') || '').match(/(\d+)\s*분/);
+  const text = t.join('\n');
+  return {
+    provider: 'yes24', url,
+    facts: { period: null, venue: null, times, runningMin: run ? Number(run[1]) : null, intermissionMin: null, age: after('등급'), genre: null, organizer: null, contact: null },
+    prices: prices.slice(0, 20),
+    booking: { openAt: null, endAt: null, endRule: null, cancelUntil: null, delivery: /배송/.test(text) ? ['배송'] : [], deliveryFee: null, global: null, openInfo: [], ...commonFlags(text) },
+    refund: [], fetchedAt: new Date().toISOString(),
+  };
+}
+async function yes24Detail(url) { return parseYes24Detail(await fetchText(url, { timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/128 Safari/537.36' } }), url); }
+
+/* ---------- 로치케: 이벤트 페이지 JSON-LD(공연별 날짜·장소·가격 offers) ---------- */
+export function parseLtikeDetail(html, url) {
+  const shows = [];
+  const prices = [];
+  for (const m of String(html).matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    let j; try { j = JSON.parse(m[1]); } catch { continue; }
+    for (const e of [j].flat()) {
+      if (e?.['@type'] !== 'Event') continue;
+      const date = /^\d{4}-\d{2}-\d{2}/.test(e.startDate || '') ? e.startDate.slice(0, 10) : null;
+      const start = (String(e.startDate || '').match(/T(\d{2}:\d{2})/) || [])[1] || null;
+      const door = (String(e.doorTime || '').match(/(\d{2}:\d{2})/) || [])[1] || null;
+      const end = /^\d{4}-\d{2}-\d{2}/.test(e.endDate || '') ? e.endDate.slice(0, 10) : null;
+      if (date) shows.push({ date, endDate: end, open: door, start, venue: e.location?.name ? halfwidth(e.location.name) : null });
+      for (const o of [e.offers].flat().filter(Boolean)) {
+        const p = Number(o.price ?? o.lowPrice);
+        if (Number.isFinite(p) && p > 0 && !prices.some((x) => x.price === p && x.grade === (o.name || null))) prices.push({ grade: o.name ? halfwidth(o.name) : null, kind: null, price: p, currency: o.priceCurrency || 'JPY' });
+      }
+    }
+  }
+  shows.sort((a, b) => a.date.localeCompare(b.date));
+  const text = lines(html).join('\n');
+  return {
+    provider: 'ltike', url,
+    facts: { period: shows.length ? [shows[0].date, shows.map((x) => x.endDate || x.date).sort().pop()] : null, venue: shows[0]?.venue || null, times: [], runningMin: null, intermissionMin: null, age: null, genre: null, organizer: null, contact: null },
+    shows: shows.slice(0, 30), prices: prices.slice(0, 20), sales: [],
+    booking: { openAt: null, endAt: null, endRule: null, cancelUntil: null, delivery: [], deliveryFee: null, global: null, openInfo: [], ...commonFlags(text) },
+    refund: [], fetchedAt: new Date().toISOString(),
+  };
+}
+async function ltikeDetail(url) { const { fetchViaCurl } = await import('./http.mjs'); return parseLtikeDetail(await fetchViaCurl(url, { timeout: 20000 }), url); }
+
+const PARSERS = { nol: nolDetail, melon: melonDetail, eplus: eplusDetail, pia: piaDetail, yes24: yes24Detail, ltike: ltikeDetail };
+const HOSTS = { nol: /(^|\.)nol\.yanolja\.com$|(^|\.)interpark\.com$/, melon: /(^|\.)ticket\.melon\.com$/, eplus: /(^|\.)eplus\.jp$/, pia: /(^|\.)pia\.jp$/, yes24: /(^|\.)ticket\.yes24\.com$/, ltike: /(^|\.)l-tike\.com$/ };
 
 export async function concertDetail(provider, url) {
   const fn = PARSERS[provider];
@@ -267,4 +325,7 @@ export const PROVIDER_GUIDE = {
     help: 'https://t.pia.jp/guide/entry.jsp',
     telAuth: 'https://t.pia.jp/guide/tel-auth.jsp',
   },
+  yes24: { help: 'https://ticket.yes24.com/New/Customer/Guide.aspx' },
+  ticketlink: { help: 'https://www.ticketlink.co.kr/help/main' },
+  ltike: { help: 'https://l-tike.com/guide/' },
 };

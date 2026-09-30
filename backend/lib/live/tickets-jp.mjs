@@ -17,6 +17,7 @@ import { withEventGeography } from './geography.mjs';
  * 포스터: e+ 목록에는 이미지가 없다(상세 og:image도 공통 로고). 호출자가 아티스트 이미지로 대체 표시한다.
  */
 import { fetchText, clean, halfwidth } from './http.mjs';
+import { ltikeGenre, mergeVendors } from './vendors-extra.mjs';
 
 const EPLUS = 'https://eplus.jp';
 
@@ -290,8 +291,11 @@ export async function fetchJpConcerts({ category = 'kpop' } = {}) {
   if (category === 'kpop' || category === 'all') {
     jobs.push(timed('eplus:k-pop', () => eplusGenre('k-pop-asian', { maxPages: 3 })));
     jobs.push(timed('pia:k-pop', () => piaTag('0000078')));
+    jobs.push(timed('ltike:k-pop', () => ltikeGenre(37)));
   }
-  return merge(await Promise.all(jobs));
+  const res = merge(await Promise.all(jobs));
+  res.items = mergeVendors(res.items);
+  return res;
 }
 
 /* 여러 이름으로 e+ 검색 (아티스트별 판매 일정) */

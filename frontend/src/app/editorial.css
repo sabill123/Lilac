@@ -148,6 +148,7 @@
 .lu-o { font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 4px; border-radius: 2px; }
 .lu-o.jp { background: #fdecea; color: #b42318; } .lu-o.kr { background: #e8eefc; color: #1d4ed8; }
 .fest-links { display: grid; gap: 6px; margin: 8px 0 18px; font-size: 13.5px; }
+.fest-links b { color: var(--ink); font-weight: 700; margin-right: 4px; }
 .fest-links a { display: inline-flex; gap: 4px; align-items: center; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
 .acct { max-width: 560px; }
 .acct-form { display: grid; gap: 10px; padding: 18px 0; border-top: 1px solid var(--line); }
