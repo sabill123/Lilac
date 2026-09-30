@@ -44,3 +44,4 @@ frontend/public/__qa/
 /undefined*.png
 *.bak
 .agents/
+*.tmp.mjs
