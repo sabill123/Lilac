@@ -3,7 +3,7 @@
 import express from 'express';
 import { gzipSync } from 'node:zlib';
 import cors from 'cors';
-import { readFile, writeFile, mkdir, stat, rename } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, rename, rm } from 'node:fs/promises';
 import { randomUUID, createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1399,6 +1399,43 @@ app.patch('/api/me', requireUser(async (req, res) => withLock('file:users', asyn
   if (req.body?.action === 'addCard') { users[idx].paymentMethods.push({ id: randomUUID().slice(0, 8), brand: req.body.brand || 'CARD', last4: String(req.body.last4 || '0000').slice(-4), addedAt: new Date().toISOString() }); }
   await writeJson('users', users);
   res.json({ user: publicUser(users[idx]) });
+})));
+
+/* 비밀번호 변경: 현재 비밀번호 확인 → 새 해시 저장 → 이 기기 말고 다른 로그인은 모두 끊는다 */
+app.post('/api/me/password', requireUser(async (req, res) => withLock('file:users', async () => {
+  const { current, next } = req.body || {};
+  if (typeof current !== 'string' || typeof next !== 'string' || current.length > 256 || next.length > 256) return res.status(400).json({ error: '입력 형식을 확인해 주세요', code: 'INVALID_INPUT' });
+  if (next.length < 8) return res.status(400).json({ error: '새 비밀번호는 8자 이상이어야 합니다', code: 'WEAK_PASSWORD' });
+  const key = authKey(req, req.user.email);
+  const waitSec = authBlocked(key);
+  if (waitSec) return res.status(429).json({ error: `시도가 너무 많습니다. ${Math.ceil(waitSec / 60)}분 후 다시 시도해 주세요`, code: 'RATE_LIMITED' });
+  const users = await readJson('users', []);
+  const u = users.find((x) => x.id === req.user.id);
+  if (!u || !(await verifyPassword(current, u.pw))) { noteAuthFail(key); return res.status(403).json({ error: '현재 비밀번호가 올바르지 않습니다', code: 'WRONG_PASSWORD' }); /* 401이면 화면이 로그인을 풀어 버린다 */ }
+  clearAuthFail(key);
+  u.pw = await hashPassword(next);
+  await writeJson('users', users);
+  const keep = bearerToken(req);
+  await updateJson('sessions', (sessions) => { for (const [k, v] of Object.entries(sessions)) if (v?.userId === u.id && k !== keep) delete sessions[k]; }, {});
+  res.json({ ok: true });
+})));
+
+/* 회원 탈퇴: 비밀번호 확인 → 계정·모든 로그인·개인 데이터(팔로우·재생 기록·보관함) 삭제.
+   커뮤니티 글·댓글은 게시판 기록으로 남는다(탈퇴 화면에서 미리 알린다). */
+app.delete('/api/me', requireUser(async (req, res) => withLock('file:users', async () => {
+  const { password } = req.body || {};
+  if (typeof password !== 'string' || password.length > 256) return res.status(400).json({ error: '입력 형식을 확인해 주세요', code: 'INVALID_INPUT' });
+  const key = authKey(req, req.user.email);
+  const waitSec = authBlocked(key);
+  if (waitSec) return res.status(429).json({ error: `시도가 너무 많습니다. ${Math.ceil(waitSec / 60)}분 후 다시 시도해 주세요`, code: 'RATE_LIMITED' });
+  const users = await readJson('users', []);
+  const u = users.find((x) => x.id === req.user.id);
+  if (!u || !(await verifyPassword(password, u.pw))) { noteAuthFail(key); return res.status(403).json({ error: '비밀번호가 올바르지 않습니다', code: 'WRONG_PASSWORD' }); }
+  clearAuthFail(key);
+  await writeJson('users', users.filter((x) => x.id !== u.id));
+  await updateJson('sessions', (sessions) => { for (const [k, v] of Object.entries(sessions)) if (v?.userId === u.id) delete sessions[k]; }, {});
+  if (/^[0-9a-f-]{36}$/i.test(u.id)) await rm(path.join(DB_DIR, 'user', u.id), { recursive: true, force: true });
+  res.json({ ok: true });
 })));
 
 /* ================= 사용자 데이터 (전부 로그인 필수 · 사용자별 격리) =================

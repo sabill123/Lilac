@@ -18,7 +18,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/hatena/6805447309?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -368,7 +368,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/pops/6808172946?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -405,25 +405,25 @@
     ]
   },
   {
-    "id": "ap-6813318028",
+    "id": "ap-6812152473",
     "tier": "discovered",
-    "artistId": "candy-tune",
-    "artist": "CANDY TUNE",
-    "artistKo": "CANDY TUNE",
-    "title": "総意♡So Free / スペシャル感謝祭 - EP",
-    "titleKo": "総意♡So Free / スペシャル感謝祭 - EP",
+    "artistId": "vaundy",
+    "artist": "Vaundy",
+    "artistKo": "Vaundy",
+    "title": "Destiny Journeys - Single",
+    "titleKo": "Destiny Journeys - Single",
     "country": "jp",
-    "type": "mini",
+    "type": "single",
     "releaseDate": "2026-09-30",
     "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/63/31/29/633129be-9306-bcda-f331-17d0d9757c36/885288504187.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/%E7%B7%8F%E6%84%8F-so-free-%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E6%84%9F%E8%AC%9D%E7%A5%AD-ep/6813318028?uo=4",
-    "trackCount": 6,
-    "albumArtist": "CANDY TUNE",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/70/d7/fc/70d7fc4a-9c7e-df52-2d5a-7bb319c6ddc2/4547366829327.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/destiny-journeys-single/6812152473?uo=4",
+    "trackCount": 1,
+    "albumArtist": "Vaundy",
     "source": {
       "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/%E7%B7%8F%E6%84%8F-so-free-%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E6%84%9F%E8%AC%9D%E7%A5%AD-ep/6813318028?uo=4",
-      "collectedAt": "2026-09-29",
+      "url": "https://music.apple.com/jp/album/destiny-journeys-single/6812152473?uo=4",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -431,9 +431,9 @@
       {
         "id": "digital",
         "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 1528,
+        "listPrice": 255,
         "listCurrency": "JPY",
-        "feeKind": "album",
+        "feeKind": "single",
         "includes": [
           "디지털 음원"
         ],
@@ -445,17 +445,17 @@
       {
         "store": "TOWER RECORDS",
         "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=CANDY%20TUNE"
+        "searchUrl": "https://tower.jp/artist/search?kwd=Vaundy"
       },
       {
         "store": "HMV&BOOKS online",
         "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_CANDY%20TUNE/"
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_Vaundy/"
       },
       {
         "store": "Amazon.co.jp",
         "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=CANDY%20TUNE&i=popular"
+        "searchUrl": "https://www.amazon.co.jp/s?k=Vaundy&i=popular"
       }
     ]
   },
@@ -478,7 +478,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/mind-games-single/6814761026?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -510,61 +510,6 @@
     ]
   },
   {
-    "id": "ap-6817310490",
-    "tier": "discovered",
-    "artistId": "大森元貴",
-    "artist": "大森元貴",
-    "artistKo": "大森元貴",
-    "title": "Let's Start - Single",
-    "titleKo": "Let's Start - Single",
-    "country": "jp",
-    "type": "single",
-    "releaseDate": "2026-09-29",
-    "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ed/1c/de/ed1cde4c-9cf0-57a8-fa87-b841f2404bec/4550795047125_cover.png/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/lets-start-single/6817310490?uo=4",
-    "trackCount": 1,
-    "albumArtist": "大森元貴",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/lets-start-single/6817310490?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 153,
-        "listCurrency": "JPY",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": false
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "TOWER RECORDS",
-        "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4"
-      },
-      {
-        "store": "HMV&BOOKS online",
-        "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4/"
-      },
-      {
-        "store": "Amazon.co.jp",
-        "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4&i=popular"
-      }
-    ]
-  },
-  {
     "id": "ap-6815890816",
     "tier": "discovered",
     "artistId": "enhypen",
@@ -583,7 +528,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/bloody-paradise-x-velocidade-peterblue-remix-single/6815890816?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -615,6 +560,56 @@
     ]
   },
   {
+    "id": "ap-6815046752",
+    "tier": "discovered",
+    "artistId": "박재정",
+    "artist": "박재정",
+    "artistKo": "박재정",
+    "title": "Records (A-Side)",
+    "titleKo": "Records (A-Side)",
+    "country": "kr",
+    "type": "mini",
+    "releaseDate": "2026-09-29",
+    "currency": "KRW",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bb/a3/7c/bba37ccc-a371-f8ff-dbf0-1ab67d6d8b13/FrontCoverImage_1.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/kr/album/records-a-side/6815046752?uo=4",
+    "trackCount": 7,
+    "albumArtist": "박재정",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/kr/album/records-a-side/6815046752?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 0,
+        "listCurrency": "KRW",
+        "feeKind": "album",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": true
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "Weverse Shop",
+        "storeKo": "위버스샵",
+        "searchUrl": "https://shop.weverse.io/ko/home"
+      },
+      {
+        "store": "알라딘",
+        "storeKo": "알라딘",
+        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=%EB%B0%95%EC%9E%AC%EC%A0%95"
+      }
+    ]
+  },
+  {
     "id": "ap-6806965442",
     "tier": "discovered",
     "artistId": "boynextdoor",
@@ -633,7 +628,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/home-deluxe/6806965442?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -683,7 +678,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/audition-single/6812259423?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -738,7 +733,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/kakumei-single/6812710294?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -793,7 +788,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/dnd-feat-kuromi-single/6812997394?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -848,7 +843,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/roar-single/6812579993?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -903,7 +898,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/private-glitter-single/6812579632?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -958,7 +953,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%81%8B-%E3%81%AF%E3%81%98%E3%82%81%E3%81%BE%E3%81%97%E3%81%9F-korean-ver-single/6810549855?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1013,7 +1008,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/scream-rookies-2-whiplash-remixes/6812657379?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1063,7 +1058,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/rebon-bugs-life-digital-girl-ep/6807250730?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1118,7 +1113,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E5%83%95%E3%82%92%E6%8E%A2%E3%81%97%E3%81%A6%E3%81%9F-piano-version-single/6804554228?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1173,7 +1168,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%94%E8%A4%92%E7%BE%8E%E3%81%97%E3%82%88%E3%81%A3-single/6812187830?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1228,7 +1223,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/ocean-lullaby-single/6812579822?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1283,7 +1278,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/swingin-magic-single/6813289708?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1333,7 +1328,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/jewel-catch-teenieping-pt-1-original-soundtrack-single/6812659229?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1383,7 +1378,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/hey-hey-chinese-ver-single/6813713274?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1433,7 +1428,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/watch-me-ep/6794262922?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1488,7 +1483,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/new-trick-single/6812241735?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1538,7 +1533,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/smile-gems-single/6812300618?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1593,7 +1588,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/epikism-feat-crush-single/6811786525?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1643,7 +1638,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/love-eng-ne/6803798492?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1698,7 +1693,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E9%81%8B%E5%91%BD%E3%81%95%E3%81%8C%E3%81%97-ep/6799944399?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1753,7 +1748,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/clap-for-colors-single/6811550127?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1790,106 +1785,6 @@
     ]
   },
   {
-    "id": "ap-6806902537",
-    "tier": "discovered",
-    "artistId": "onew",
-    "artist": "ONEW",
-    "artistKo": "ONEW",
-    "title": "KAKERA -Unmei no Piece- - EP",
-    "titleKo": "KAKERA -Unmei no Piece- - EP",
-    "country": "kr",
-    "type": "mini",
-    "releaseDate": "2026-09-16",
-    "currency": "KRW",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/d0/fb/86/d0fb86a5-ba60-4bea-41fb-7f54c125f518/VEATP-45908.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/kr/album/kakera-unmei-no-piece-ep/6806902537?uo=4",
-    "trackCount": 5,
-    "albumArtist": "온유",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/kr/album/kakera-unmei-no-piece-ep/6806902537?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 0,
-        "listCurrency": "KRW",
-        "feeKind": "album",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": true
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "Weverse Shop",
-        "storeKo": "위버스샵",
-        "searchUrl": "https://shop.weverse.io/ko/home"
-      },
-      {
-        "store": "알라딘",
-        "storeKo": "알라딘",
-        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=ONEW"
-      }
-    ]
-  },
-  {
-    "id": "ap-6811814416",
-    "tier": "discovered",
-    "artistId": "le-sserafim",
-    "artist": "LE SSERAFIM",
-    "artistKo": "LE SSERAFIM",
-    "title": "Made My Night (Party Remixes) - EP",
-    "titleKo": "Made My Night (Party Remixes) - EP",
-    "country": "kr",
-    "type": "mini",
-    "releaseDate": "2026-09-16",
-    "currency": "KRW",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b6/9a/df/b69adfec-e84c-e24a-ea8c-0ef3c1ea0803/823375412014_Cover.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/kr/album/made-my-night-party-remixes-ep/6811814416?uo=4",
-    "trackCount": 5,
-    "albumArtist": "르세라핌",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/kr/album/made-my-night-party-remixes-ep/6811814416?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 0,
-        "listCurrency": "KRW",
-        "feeKind": "album",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": true
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "Weverse Shop",
-        "storeKo": "위버스샵",
-        "searchUrl": "https://shop.weverse.io/ko/home"
-      },
-      {
-        "store": "알라딘",
-        "storeKo": "알라딘",
-        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=LE%20SSERAFIM"
-      }
-    ]
-  },
-  {
     "id": "ap-6807740478",
     "tier": "discovered",
     "artistId": "luce-twinkle-wink",
@@ -1908,7 +1803,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/heartful-memories-standard-b-ep/6807740478?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -1963,7 +1858,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/heartful-memories-standard-a-ep/6807740477?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2000,6 +1895,106 @@
     ]
   },
   {
+    "id": "ap-6806902537",
+    "tier": "discovered",
+    "artistId": "onew",
+    "artist": "ONEW",
+    "artistKo": "ONEW",
+    "title": "KAKERA -Unmei no Piece- - EP",
+    "titleKo": "KAKERA -Unmei no Piece- - EP",
+    "country": "kr",
+    "type": "mini",
+    "releaseDate": "2026-09-16",
+    "currency": "KRW",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/d0/fb/86/d0fb86a5-ba60-4bea-41fb-7f54c125f518/VEATP-45908.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/kr/album/kakera-unmei-no-piece-ep/6806902537?uo=4",
+    "trackCount": 5,
+    "albumArtist": "온유",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/kr/album/kakera-unmei-no-piece-ep/6806902537?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 0,
+        "listCurrency": "KRW",
+        "feeKind": "album",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": true
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "Weverse Shop",
+        "storeKo": "위버스샵",
+        "searchUrl": "https://shop.weverse.io/ko/home"
+      },
+      {
+        "store": "알라딘",
+        "storeKo": "알라딘",
+        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=ONEW"
+      }
+    ]
+  },
+  {
+    "id": "ap-6811814416",
+    "tier": "discovered",
+    "artistId": "le-sserafim",
+    "artist": "LE SSERAFIM",
+    "artistKo": "LE SSERAFIM",
+    "title": "Made My Night (Party Remixes) - EP",
+    "titleKo": "Made My Night (Party Remixes) - EP",
+    "country": "kr",
+    "type": "mini",
+    "releaseDate": "2026-09-16",
+    "currency": "KRW",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b6/9a/df/b69adfec-e84c-e24a-ea8c-0ef3c1ea0803/823375412014_Cover.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/kr/album/made-my-night-party-remixes-ep/6811814416?uo=4",
+    "trackCount": 5,
+    "albumArtist": "르세라핌",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/kr/album/made-my-night-party-remixes-ep/6811814416?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 0,
+        "listCurrency": "KRW",
+        "feeKind": "album",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": true
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "Weverse Shop",
+        "storeKo": "위버스샵",
+        "searchUrl": "https://shop.weverse.io/ko/home"
+      },
+      {
+        "store": "알라딘",
+        "storeKo": "알라딘",
+        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=LE%20SSERAFIM"
+      }
+    ]
+  },
+  {
     "id": "ap-6806149403",
     "tier": "discovered",
     "artistId": "玉置浩二",
@@ -2018,7 +2013,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E9%9F%B3%E9%8A%80%E6%B2%B3-single/6806149403?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2073,7 +2068,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/loca-acoustic-version-single/6803297444?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2128,7 +2123,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/memory-ep/6811812370?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2178,7 +2173,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/pink-tape-ep/6811794654?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2228,7 +2223,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/anthem-ep/6796662137?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2283,7 +2278,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/made-my-night-single/6808518785?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2333,7 +2328,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/synk-complaexity-2026-special-digital-single-ep/6808550171?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2383,7 +2378,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%AA%E3%83%AA%E3%82%AA%E3%83%B3-psyqui-remix-single/6809445134?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2438,7 +2433,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/made-my-night-remixes-ep/6810393870?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2488,7 +2483,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%82%AC%EB%9E%91%EC%9D%B4-%EC%98%A8%EB%8B%A4-original-television-soundtrack-pt-14-single/6809658698?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2538,7 +2533,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/baibai-fight-steve-aoki-remix-single/6809114079?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2593,7 +2588,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/j-pop-remake-vol-4-single/6810484851?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2643,7 +2638,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/aimyon-best-album-chase-the-lips/6798303682?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2698,7 +2693,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/aimyon-b-side-collection-album/6797516678?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2753,7 +2748,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/kakera-unmei-no-piece-single/6804535074?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2803,7 +2798,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/moonride-single/6807315056?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2853,7 +2848,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%9F%E3%82%81%E6%81%AF%E6%9C%AA%E6%9D%A5-special-edition-ep/6802940861?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2908,7 +2903,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/im-hero-10/6806907313?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -2958,7 +2953,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/dopamine-the-4th-mini-album-ep/6807359386?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3008,7 +3003,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/suki-de-ite-single/6806106475?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3063,7 +3058,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/when-the-world-becomes-a-dream-single/6806203048?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3113,7 +3108,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/vaundy-dome-tour-2026-silence-live-selection-from-tokyo/6806511332?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3168,7 +3163,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/click-single/6805983708?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3218,7 +3213,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/for-okinawa-feat-awich-chico-carlito-one-ok-rock-paledusk/6803148720?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3273,7 +3268,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/epikase-song-battle-single/6807254179?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3323,7 +3318,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/just-like-the-wind-single/6805427062?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3378,7 +3373,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/flame-feat-milet-single/6804593248?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3428,7 +3423,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/iranai-single/6799802756?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3483,7 +3478,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/kaiju-single/6799802603?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3538,7 +3533,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%AB%E3%82%83%E3%82%93%E3%81%A6%E3%81%9A%E3%82%8B%E3%81%84%E3%81%AE-ep/6803774671?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3593,7 +3588,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%8F%E3%81%A3%E3%81%9F%E3%82%89%E3%81%84%E3%81%B5-ep/6797703029?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3648,7 +3643,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lemonade-single/6802379602?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3698,7 +3693,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E7%9C%9F%E5%A4%8F%E3%83%8E%E8%8A%B1%E7%81%AB-piano-version-single/6803431437?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3753,7 +3748,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/ai-kudasai-mase-from-the-first-take-single/6803354902?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3808,7 +3803,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/kimi-wo-melody-ni-shite-mita-yo-single/6803406415?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3858,7 +3853,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/so-honey-ep/6797407951?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3913,7 +3908,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%86%A7%E3%82%8C%E3%81%A0%E3%81%91%E3%81%98%E3%82%83%E3%81%AA%E3%81%84%E3%82%88-single/6802905347?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -3968,7 +3963,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/nostalgia-single/6805367597?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4018,7 +4013,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/seaglliam-single/6806980895?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4073,7 +4068,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E7%B7%8F%E6%84%8F-so-free-single/6803780404?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4128,7 +4123,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/la-valse-des-lilas-single/6798897214?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4178,7 +4173,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/iscream-vol-40-surfin-boy-remixes-single/6803741979?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4210,56 +4205,6 @@
     ]
   },
   {
-    "id": "ap-6804547227",
-    "tier": "discovered",
-    "artistId": "머무르",
-    "artist": "머무르",
-    "artistKo": "머무르",
-    "title": "Stray - Single",
-    "titleKo": "Stray - Single",
-    "country": "kr",
-    "type": "single",
-    "releaseDate": "2026-08-27",
-    "currency": "KRW",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/8e/c5/a2/8ec5a24c-0392-65fe-23d0-c336f7bc57f1/8800362307630.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/kr/album/stray-single/6804547227?uo=4",
-    "trackCount": 1,
-    "albumArtist": "머무르",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/kr/album/stray-single/6804547227?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 0,
-        "listCurrency": "KRW",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": true
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "Weverse Shop",
-        "storeKo": "위버스샵",
-        "searchUrl": "https://shop.weverse.io/ko/home"
-      },
-      {
-        "store": "알라딘",
-        "storeKo": "알라딘",
-        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=%EB%A8%B8%EB%AC%B4%EB%A5%B4"
-      }
-    ]
-  },
-  {
     "id": "ap-6802296986",
     "tier": "discovered",
     "artistId": "luce-twinkle-wink",
@@ -4278,7 +4223,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/heartful-memories-single/6802296986?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4315,6 +4260,56 @@
     ]
   },
   {
+    "id": "ap-6804547227",
+    "tier": "discovered",
+    "artistId": "머무르",
+    "artist": "머무르",
+    "artistKo": "머무르",
+    "title": "Stray - Single",
+    "titleKo": "Stray - Single",
+    "country": "kr",
+    "type": "single",
+    "releaseDate": "2026-08-27",
+    "currency": "KRW",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/8e/c5/a2/8ec5a24c-0392-65fe-23d0-c336f7bc57f1/8800362307630.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/kr/album/stray-single/6804547227?uo=4",
+    "trackCount": 1,
+    "albumArtist": "머무르",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/kr/album/stray-single/6804547227?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 0,
+        "listCurrency": "KRW",
+        "feeKind": "single",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": true
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "Weverse Shop",
+        "storeKo": "위버스샵",
+        "searchUrl": "https://shop.weverse.io/ko/home"
+      },
+      {
+        "store": "알라딘",
+        "storeKo": "알라딘",
+        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=%EB%A8%B8%EB%AC%B4%EB%A5%B4"
+      }
+    ]
+  },
+  {
     "id": "ap-6801361848",
     "tier": "discovered",
     "artistId": "大森元貴",
@@ -4333,7 +4328,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/gray-single/6801361848?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4388,7 +4383,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%B4%E3%83%BC-with-kawaii%E8%AB%96-ep/6800675099?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4443,7 +4438,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%B7%E3%81%A3%E3%81%A1%E3%82%87%E3%82%93%E3%83%98%E3%83%B3%E3%82%B6%E3%83%83-single/6797367160?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4498,7 +4493,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E5%8B%87%E8%80%85%E3%81%AE%E8%BD%8D-%E3%82%8F%E3%81%A0%E3%81%A1/6795474783?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4553,7 +4548,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/lv-1-%E8%81%B7%E6%A5%AD-%E4%BA%BA%E9%96%93-special-edition-ep/6802137051?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4608,7 +4603,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/not-a-hero-nakuru-aitsuki-version-ep/6797707551?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4663,7 +4658,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/sunburst-single/6793023225?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4713,7 +4708,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/top-of-the-top-single/6801081299?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4768,7 +4763,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/tune-play-ep/6795782851?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4818,7 +4813,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/amenity/6802879262?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4873,7 +4868,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/unbreakable-%E5%B0%91%E5%B9%B4beast/6796246453?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4923,7 +4918,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/takara-ep/6799799709?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -4978,7 +4973,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/greengreen-playextended/6801189433?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5028,7 +5023,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B9%E3%83%88%E5%A4%8F%E3%81%AE%E6%80%9D%E3%81%84%E5%87%BA2026-ep/6795933274?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5083,7 +5078,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lemonade-single/6797861709?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5133,7 +5128,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/biiig-single/6801365249?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5183,7 +5178,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sukish-special-edition-ep/6795034897?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5238,7 +5233,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E9%AC%BC%E4%BA%8B-fiction-love-special-edition-ep/6795931634?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5293,7 +5288,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/i-got-your-back-korean-ver-single/6798516738?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5348,7 +5343,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/setsuna-hanabi-ep/6801040838?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5398,7 +5393,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/thunderbird-from-the-first-take-single/6799905525?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5453,7 +5448,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/white-breath-from-the-first-take-single/6799904444?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5508,7 +5503,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/boom-boom-boom-single/6798156093?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5540,6 +5535,61 @@
     ]
   },
   {
+    "id": "ap-6798969667",
+    "tier": "discovered",
+    "artistId": "candy-tune",
+    "artist": "CANDY TUNE",
+    "artistKo": "CANDY TUNE",
+    "title": "CANDY TUNE UNIT BOX - Single",
+    "titleKo": "CANDY TUNE UNIT BOX - Single",
+    "country": "jp",
+    "type": "single",
+    "releaseDate": "2026-08-14",
+    "currency": "JPY",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a1/c2/7d/a1c27d20-a243-0502-8b8b-d29875fa84cc/885288199840.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/candy-tune-unit-box-single/6798969667?uo=4",
+    "trackCount": 3,
+    "albumArtist": "CANDY TUNE",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/jp/album/candy-tune-unit-box-single/6798969667?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 765,
+        "listCurrency": "JPY",
+        "feeKind": "single",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": false
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "TOWER RECORDS",
+        "storeKo": "타워레코드",
+        "searchUrl": "https://tower.jp/artist/search?kwd=CANDY%20TUNE"
+      },
+      {
+        "store": "HMV&BOOKS online",
+        "storeKo": "HMV",
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_CANDY%20TUNE/"
+      },
+      {
+        "store": "Amazon.co.jp",
+        "storeKo": "아마존 재팬",
+        "searchUrl": "https://www.amazon.co.jp/s?k=CANDY%20TUNE&i=popular"
+      }
+    ]
+  },
+  {
     "id": "ap-6796150914",
     "tier": "discovered",
     "artistId": "me",
@@ -5558,7 +5608,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yankee-gekisen-ku-no-shitennou-ga-idol-group-ni-tensei/6796150914?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5613,7 +5663,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/crossroad-aino-menkyo-hennnou-single/6800756978?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5668,7 +5718,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yes-%E6%9D%B1%E4%BA%AC-feat-super-dragon-sakurashimeji-one-n-only-buddiis/6793871666?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5723,7 +5773,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yes-%E6%9D%B1%E4%BA%AC-%E4%BD%93%E9%A8%93%E5%85%A5%E5%AD%A6%E7%89%88/6793870933?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5778,7 +5828,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E5%90%9B%E3%81%A8%E7%A7%81%E3%81%AE%E5%A4%8F-single/6799360696?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5833,7 +5883,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/whykiiikiii-ep/6797773845?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5883,7 +5933,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%9F%E3%82%81%E6%81%AF%E6%9C%AA%E6%9D%A5-single/6797401686?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5938,7 +5988,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/iconic-heart-single/6795358332?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -5988,7 +6038,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/synk-aexis-line-2026-special-digital-single-single/6797481676?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6038,7 +6088,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/toyfriend-single/6797550797?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6093,7 +6143,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/time-is-money-single/6795162976?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6148,7 +6198,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/unknown-thread-single/6793888333?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6203,7 +6253,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/flower-in-the-desert-single/6793779120?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6253,7 +6303,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%8B%E3%83%83%E3%83%9D%E3%83%B3-%E3%83%AF%E3%83%83%E3%82%B7%E3%83%A7%E3%82%A4-%E3%82%B3%E3%83%A9%E3%83%9C%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%B3-single/6794177343?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6308,7 +6358,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/youth-on-pause-single/6795811154?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6358,7 +6408,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/soda-soda-single/6796564765?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6408,7 +6458,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/nice-to-meet-ya-single/6796213222?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6458,7 +6508,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/soda-soda-single/6796553906?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6508,7 +6558,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/velvet-summer-summer-mini-album-ep/6794291724?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6558,7 +6608,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%82%AC%EB%9E%91%EC%9D%B4-%EC%98%A8%EB%8B%A4-original-television-soundtrack-pt-3-single/6795846197?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6608,7 +6658,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/bruce-wayne-feat-flo-milli-atl-jacob-single/6791804697?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6663,7 +6713,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/motion-feat-juicy-j-single/6793946474?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6713,7 +6763,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/feathers-single/6795748141?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6763,7 +6813,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/ado-world-tour-hibana-live-at-saitama-super-arena-2025/6793852884?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6818,7 +6868,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/j-pop-remake-vol-2-single/6794238042?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6850,61 +6900,6 @@
     ]
   },
   {
-    "id": "ap-6794271990",
-    "tier": "discovered",
-    "artistId": "king-gnu",
-    "artist": "King Gnu",
-    "artistKo": "King Gnu",
-    "title": "GO GHOST - Single",
-    "titleKo": "GO GHOST - Single",
-    "country": "jp",
-    "type": "single",
-    "releaseDate": "2026-07-29",
-    "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/47/f3/49/47f3490b-4395-28ba-e6a9-88c9dd7be8fa/4547366841732.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/go-ghost-single/6794271990?uo=4",
-    "trackCount": 1,
-    "albumArtist": "King Gnu",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/go-ghost-single/6794271990?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 255,
-        "listCurrency": "JPY",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": false
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "TOWER RECORDS",
-        "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=King%20Gnu"
-      },
-      {
-        "store": "HMV&BOOKS online",
-        "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_King%20Gnu/"
-      },
-      {
-        "store": "Amazon.co.jp",
-        "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=King%20Gnu&i=popular"
-      }
-    ]
-  },
-  {
     "id": "ap-6788966715",
     "tier": "discovered",
     "artistId": "ateez",
@@ -6923,7 +6918,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/bad-japanese-ver-ep/6788966715?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -6973,7 +6968,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/hopeful-romantic/6794237667?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7005,6 +7000,61 @@
     ]
   },
   {
+    "id": "ap-6794271990",
+    "tier": "discovered",
+    "artistId": "king-gnu",
+    "artist": "King Gnu",
+    "artistKo": "King Gnu",
+    "title": "GO GHOST - Single",
+    "titleKo": "GO GHOST - Single",
+    "country": "jp",
+    "type": "single",
+    "releaseDate": "2026-07-29",
+    "currency": "JPY",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/47/f3/49/47f3490b-4395-28ba-e6a9-88c9dd7be8fa/4547366841732.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/go-ghost-single/6794271990?uo=4",
+    "trackCount": 1,
+    "albumArtist": "King Gnu",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/jp/album/go-ghost-single/6794271990?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 255,
+        "listCurrency": "JPY",
+        "feeKind": "single",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": false
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "TOWER RECORDS",
+        "storeKo": "타워레코드",
+        "searchUrl": "https://tower.jp/artist/search?kwd=King%20Gnu"
+      },
+      {
+        "store": "HMV&BOOKS online",
+        "storeKo": "HMV",
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_King%20Gnu/"
+      },
+      {
+        "store": "Amazon.co.jp",
+        "storeKo": "아마존 재팬",
+        "searchUrl": "https://www.amazon.co.jp/s?k=King%20Gnu&i=popular"
+      }
+    ]
+  },
+  {
     "id": "ap-6794274432",
     "tier": "discovered",
     "artistId": "星野源",
@@ -7023,7 +7073,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/suki-single/6794274432?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7078,7 +7128,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/timeless-fireworks-single/6791038141?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7133,7 +7183,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/next-ep/6794978963?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7183,7 +7233,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%8D%E3%82%85%E3%83%BC%E3%81%99%E3%81%A8%E3%81%AE%E3%81%86%E3%81%9F-korean-ver-single/6793908462?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7238,7 +7288,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/polaris-single/6793787496?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7288,7 +7338,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/viral-alan-walker-remix-single/6792787223?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7338,7 +7388,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/amore-special-edition-ep/6788717424?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7393,7 +7443,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%98%AF%E9%9D%9E%E3%81%AB%E5%8F%8A%E3%81%B0%E3%81%9A-special-edition/6788656464?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7448,7 +7498,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/hot-limit-from-the-first-take-single/6791192398?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7503,7 +7553,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/please-summer-single/6792700625?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7553,7 +7603,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/glow-me/6791520495?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7603,7 +7653,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yes-call-in-love-single/6790285729?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7658,7 +7708,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E9%AC%BC%E4%BA%8B-single/6789482613?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7713,7 +7763,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/normal-single/6787913988?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7866,7 +7916,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/check-in-single/6790355193?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7916,7 +7966,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/official-hige-dandism-live-at-stadium-2025/6785845529?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -7971,7 +8021,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%8B%E3%81%92%E3%82%8D%E3%81%86-single/6787836340?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8026,7 +8076,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/amazing-incredible-single/6789533371?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8076,7 +8126,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/denen-suntory-no-monozukuri-tv-cm-orchestra-version/6785713577?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8131,7 +8181,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%97%E3%83%AB%E3%83%A1%E3%83%AA%E3%82%A2-%E3%83%A9%E3%83%97%E3%82%BD%E3%83%87%E3%82%A3-%E9%99%BD%E3%81%8C%E6%B2%88%E3%82%80%E5%89%8D%E3%81%AB-%E3%83%88%E3%83%AD%E3%83%94%E3%82%AB%E3%83%AB%E7%9B%A4-ep/6779050960?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8186,7 +8236,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/brand-new-single/6788211807?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8241,7 +8291,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E5%A4%9C%E9%B7%B9-yodaka-single/6785367850?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8296,7 +8346,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/bugs-life-single/6782756027?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8351,7 +8401,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/yo-i-don-boy-meets-girl-single/6788259788?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8401,7 +8451,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sukish-single/6789484797?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8456,7 +8506,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%9E%E3%82%A4%E3%82%AA%E3%83%B3%E3%83%AA%E3%83%BC-single/6785734869?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8511,7 +8561,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%84%9B%E3%81%AEfire-single/6783620460?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8566,7 +8616,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/orion-english-version-single/6787882666?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8621,7 +8671,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/you-and-i-single/6786677969?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8671,7 +8721,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/friend-single/6788215840?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8721,7 +8771,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/fiction-single/6785802766?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8776,7 +8826,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/how-many-girls-feat-hentai-shinshi-club-single/6784598720?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8831,7 +8881,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/pretty-girl-single/6786111944?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8881,7 +8931,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lucid-dream-shin-sakiura-remix-single/6784485061?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8931,7 +8981,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/777-feat-awich-chico-carlito-one-ok-rock-paledusk-single/6776482572?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -8986,7 +9036,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B5%E3%83%9E%E3%83%BC%E3%82%B4%E3%83%BC-single/6785767736?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9041,7 +9091,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/super-love-symphony-single/6786748865?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9096,7 +9146,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/bad-ofenbach-ver-single/6782774604?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9146,7 +9196,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B0%E3%83%83%E3%82%BF%E3%82%A4%E3%83%A0-single/6785411719?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9201,7 +9251,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E7%B5%82%E5%AE%B5-single/6776969581?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9256,7 +9306,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/lv-1-%E8%81%B7%E6%A5%AD-%E4%BA%BA%E9%96%93-single/6782786763?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9311,7 +9361,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%A2%E3%82%A4%E3%82%B3%E3%83%88%E3%83%90-single/6784082469?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9366,7 +9416,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yes-%E6%9D%B1%E4%BA%AC-feat-super-dragon-sakurashimeji-one-n-only-buddiis/6782750369?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9421,7 +9471,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/rule-feat-heize-single/6785786085?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9471,7 +9521,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/yes-%E6%9D%B1%E4%BA%AC-feat-super-dragon-sakurashimeji-one-n-only-buddiis/6782749976?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9526,7 +9576,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/rendezvous-single/6784113159?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9581,7 +9631,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lucid-dream-taku-takahashi-remix-single/6781661557?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9631,7 +9681,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/bad-steve-aoki-ver-single/6781509616?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9681,7 +9731,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/j-pop-remake-vol-1-single/6783734895?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9731,7 +9781,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/agent-kim-reactivated-pt-1-original-soundtrack-single/6782812015?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9781,7 +9831,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/the-book-for/6775750598?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9836,7 +9886,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/switch-zip-single/6780775780?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9886,7 +9936,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/dance-forever-single/6780773016?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9941,7 +9991,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lemon-tang-the-2nd-mini-album-ep/6779521284?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -9991,7 +10041,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/boy-meets-girl-single/6779544730?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10041,7 +10091,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/heaven-knows-single/6780832651?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10091,7 +10141,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E7%83%8F-raven-single/6774039193?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10146,7 +10196,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/ii-the-2nd-mini-album-ep/6774516634?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10196,7 +10246,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/love-call-center-lim-young-woong-compilation-pt-10-ep/6779560298?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10246,7 +10296,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/color-me-in-single/6778236709?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10296,7 +10346,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/fiction-love-single/6774029343?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10351,7 +10401,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/come-over-single/6777857411?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10401,7 +10451,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sand-castle-single/6776900809?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10456,7 +10506,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/zombie-loves-matcha-single/6769276842?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10506,7 +10556,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/ai-kudasai-mase-single/6795746803?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10561,7 +10611,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%B4%9B%EB%B6%88%EC%9E%94%EC%B9%98-single/6775784797?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10611,7 +10661,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/day-dream-single/6773267523?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10643,61 +10693,6 @@
     ]
   },
   {
-    "id": "ap-6771238813",
-    "tier": "discovered",
-    "artistId": "vaundy",
-    "artist": "Vaundy",
-    "artistKo": "Vaundy",
-    "title": "kimagure - Single",
-    "titleKo": "kimagure - Single",
-    "country": "jp",
-    "type": "single",
-    "releaseDate": "2026-05-27",
-    "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/73/b0/9f/73b09fb4-38ab-1475-71e5-1fef95ef90c2/820233527316.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/kimagure-single/6771238813?uo=4",
-    "trackCount": 1,
-    "albumArtist": "Vaundy",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/kimagure-single/6771238813?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 255,
-        "listCurrency": "JPY",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": false
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "TOWER RECORDS",
-        "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=Vaundy"
-      },
-      {
-        "store": "HMV&BOOKS online",
-        "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_Vaundy/"
-      },
-      {
-        "store": "Amazon.co.jp",
-        "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=Vaundy&i=popular"
-      }
-    ]
-  },
-  {
     "id": "ap-6771258349",
     "tier": "discovered",
     "artistId": "riize",
@@ -10716,7 +10711,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/k-pop-scream-3-single/6771258349?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10766,7 +10761,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/k-pop-scream-3-single/6771280871?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10816,7 +10811,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/hajimete-no-all-special-edition-ep/6771284051?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10871,7 +10866,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lucid-dream-ep/6768866474?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10921,7 +10916,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/no-school-tomorrow-single/6770821623?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -10971,7 +10966,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/this-love-single/6770928272?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11021,7 +11016,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/love-is-enough-from-sold-out-on-you-original-soundtrack/6770406519?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11071,7 +11066,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%81%A9%E3%82%93%E3%81%AA%E5%90%9B%E3%81%A7%E3%82%82%E5%A4%A7%E5%A5%BD%E3%81%8D-%E3%81%A3%E3%81%A6%E3%81%8A%E8%A9%B1-single/1894763473?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11126,7 +11121,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/bloom-again-ep/6769657413?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11176,7 +11171,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/i-o-i-3rd-mini-album-i-o-i-loop-ep/6769328211?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11226,7 +11221,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/black-christmas-vol-6-kanashiki-tonakai-single/6769707998?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11276,7 +11271,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/hajimete-no-all-single/1896401357?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11331,7 +11326,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/i-see-you-from-sold-out-on-you-original-soundtrack/6767460401?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11381,7 +11376,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/heavy-serenade-ep/1892954835?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11431,7 +11426,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EB%B6%88%EA%BD%83%EC%95%BC%EA%B5%AC2-pt-1-original-soundtrack-single/6766726964?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11481,7 +11476,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/someday-from-sold-out-on-you-original-soundtrack-part/1895707772?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11531,7 +11526,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/goodbye-with-a-smile-prod-jinyoung-recorded-in-2016-single/6764748883?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11581,7 +11576,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/greengreen-ep/1887671065?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11631,7 +11626,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/live-from-detox-japan-tour-2025-ep/1890273159?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11686,7 +11681,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/i-love-you-i-love-you-too-from-sold-out-on-you-original/1895583812?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11736,7 +11731,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/momentum/6799692939?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11791,7 +11786,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/moyooshi-single/1895012798?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11846,7 +11841,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/we-are-all-trying-here-original-soundtrack-part-3-single/1893585857?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11896,7 +11891,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/perfect-crown-original-soundtrack-pt-5-single/1894993094?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -11946,7 +11941,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/bpm-feat-kreva-single/1892738151?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12001,7 +11996,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/find-you-single/1894743168?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12051,7 +12046,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/bubble-single/1889425900?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12106,7 +12101,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/swim-spring-waves-remix-single/1893586398?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12156,7 +12151,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/wind-and-town-single/1891943324?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12211,7 +12206,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%80%E3%82%B9%E3%83%88-single/1887793929?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12266,7 +12261,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/perfect-crown-original-soundtrack-pt-2-single/1891611606?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12316,7 +12311,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/runaway-single/1889474645?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12366,7 +12361,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%9C%80%E5%BE%8C%E3%81%AB%E9%9A%8E%E6%AE%B5%E3%82%92%E9%A7%86%E3%81%91%E4%B8%8A%E3%81%8C%E3%81%A3%E3%81%9F%E3%81%AE%E3%81%AF%E3%81%84%E3%81%A4%E3%81%A0-ep/6788656599?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12421,7 +12416,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E9%99%BD%E3%81%8C%E6%B2%88%E3%82%80%E5%89%8D%E3%81%AB-%E3%83%97%E3%83%AB%E3%83%A1%E3%83%AA%E3%82%A2-%E3%83%A9%E3%83%97%E3%82%BD%E3%83%87%E3%82%A3/1884670162?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12476,7 +12471,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/flowering/1887773334?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12526,7 +12521,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/love-%E3%81%97%E3%81%AA%E3%81%84-single/1885481301?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12581,7 +12576,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/arange/1878339775?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12636,7 +12631,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/like-you-better-japanese-ver-ep/1889051077?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12686,7 +12681,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%A8%E3%83%AB%E3%83%80%E3%83%BC%E3%83%95%E3%83%A9%E3%83%AF%E3%83%BC-single/1883590249?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12741,7 +12736,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/our-endgame-single/1887785362?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12791,7 +12786,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/bad-girl-single/1884257488?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12846,7 +12841,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/cycle-hit-playlist-2025-1991-spitz-debut-35th-limited/1886812544?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12901,7 +12896,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EA%B7%B8%EC%A7%91%EC%95%9E-single/1887283451?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -12951,7 +12946,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EB%B6%88%ED%9B%84%EC%9D%98-%EB%AA%85%EA%B3%A1-%E6%95%85-%EA%B9%80%EA%B4%91%EC%84%9D-30%EC%A3%BC%EA%B8%B0-%EC%B6%94%EB%AA%A8-%ED%8A%B9%EC%A7%91-ep/1886672366?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13001,7 +12996,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%82%B5%E3%83%B3%E3%83%80%E3%83%AB%E3%81%A0%E3%81%9C-special-edition-ep/1877591366?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13056,7 +13051,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/busy-boy-galantis-remix-single/1882991102?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13106,7 +13101,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/second-person/1876728371?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13161,7 +13156,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/tic-tic-feat-pabllo-vittar-single/1875215309?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13211,7 +13206,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/nagorizakura-special-edition/1874609424?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13266,7 +13261,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/always-single/1876794797?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13298,6 +13293,61 @@
     ]
   },
   {
+    "id": "ap-1877847736",
+    "tier": "discovered",
+    "artistId": "大森元貴",
+    "artist": "大森元貴",
+    "artistKo": "大森元貴",
+    "title": "OITOMA - EP",
+    "titleKo": "OITOMA - EP",
+    "country": "jp",
+    "type": "mini",
+    "releaseDate": "2026-02-24",
+    "currency": "JPY",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/be/f0/7abef0c4-11f1-4a5c-01e6-05bea707ab13/26UMGIM14302.rgb.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/oitoma-ep/1877847736?uo=4",
+    "trackCount": 6,
+    "albumArtist": "大森元貴",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/jp/album/oitoma-ep/1877847736?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 1120,
+        "listCurrency": "JPY",
+        "feeKind": "album",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": false
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "TOWER RECORDS",
+        "storeKo": "타워레코드",
+        "searchUrl": "https://tower.jp/artist/search?kwd=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4"
+      },
+      {
+        "store": "HMV&BOOKS online",
+        "storeKo": "HMV",
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4/"
+      },
+      {
+        "store": "Amazon.co.jp",
+        "storeKo": "아마존 재팬",
+        "searchUrl": "https://www.amazon.co.jp/s?k=%E5%A4%A7%E6%A3%AE%E5%85%83%E8%B2%B4&i=popular"
+      }
+    ]
+  },
+  {
     "id": "ap-1874511603",
     "tier": "discovered",
     "artistId": "hana",
@@ -13316,7 +13366,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/hana/1874511603?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13371,7 +13421,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%9E%E3%82%AB%E3%83%AD%E3%83%8B%E3%81%88%E3%82%93%E3%81%B4%E3%81%A4-billboard-live-tokyo/1874855055?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13426,7 +13476,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/iranai-single/1874114091?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13481,7 +13531,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E8%A8%80%E3%81%84%E8%A8%B3%E3%83%8A%E3%82%A4%E3%83%8A%E3%83%BC-single/1871980630?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13536,7 +13586,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/sarang-single/1874187415?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13586,7 +13636,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%98%A4%EB%8A%98-%EB%B0%A4%EC%9D%80-%EC%B7%A8%ED%95%B4-%EB%B3%BC%EA%B2%8C%EC%9A%94-%EC%98%81%ED%99%94-%EB%B3%B4%EC%9D%B4-original-motion-picture-soundtrack-single/1872330258?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13636,7 +13686,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/delulu-pack-ep/1868617345?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13812,7 +13862,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/one-more-time-one-more-chance-single/1863475417?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13867,7 +13917,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/aizo-single/1860538546?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13922,7 +13972,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/stay-with-me-single/1863887263?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -13977,7 +14027,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/want-want-want-single/1860453443?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14032,7 +14082,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/kimiga-ikiru-imi/1859934158?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14087,7 +14137,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lovin-the-christmas-single/1857877937?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14137,7 +14187,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/a-kid-from-woodbridge/1854849783?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14187,7 +14237,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/eyes-closed-bare-unveiled-single/1852154384?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14237,7 +14287,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/dead-end-single/1851939756?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14292,7 +14342,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/seisyun-no-deadline-special-edition-ep/1850620602?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14347,7 +14397,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/manta-bipolar-pt-3/1849847859?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14397,7 +14447,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/yaw-feat-iu-sut-ing-single/1852407493?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14447,7 +14497,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/if-it-were-me-single/1850613155?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14497,7 +14547,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%95%E3%82%A1%E3%83%B3%E3%83%95%E3%82%A1%E3%83%BC%E3%83%AC-ep/1849106375?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14552,7 +14602,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EA%B7%B8-%EC%A7%91%EC%95%9E-edm-pt-1-single/1849335748?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14602,7 +14652,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/eyes-closed-2x-single/1848464717?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14652,7 +14702,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/kick-back-tomggg-remix-single/1847431437?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14707,7 +14757,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/belt-of-venus-ep/1838374869?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14762,7 +14812,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/mexe-remix-single/1846647785?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14812,7 +14862,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/anew/1842798505?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14867,7 +14917,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/protect-the-light-single/1841799444?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14922,7 +14972,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/fruit-fly-single/1844534391?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -14972,7 +15022,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/tamamono-orchestra-version-single/1840337773?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15027,7 +15077,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sweet-fancy-chu-n-%E3%82%A2%E3%83%AC%E3%82%B0%E3%83%AD%E3%82%81%E3%81%84%E3%81%A6%E3%82%8B%E3%83%A9%E3%83%B3%E3%83%8A%E3%83%83%E3%83%97-ep/1835841166?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15082,7 +15132,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/dumb-feat-penomeco-single/1838664511?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15132,7 +15182,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/so-bad-single/1834422066?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15187,7 +15237,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/the-decade/1834059879?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15237,7 +15287,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/im-hero-2/1836064679?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15287,7 +15337,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/the-winning-try-pt-2-original-soundtrack-single/6785343652?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15337,7 +15387,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/the-unveiling-single/1827223175?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15392,7 +15442,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/heart-of-rainbow-single/1829690812?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15447,7 +15497,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/meidai-single/1824599889?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15502,7 +15552,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/halo-halo-single/1827209350?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15557,7 +15607,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/on-my-mind-single/1823024644?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15607,7 +15657,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/confessions-run-club-remix-single/6813620899?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15657,7 +15707,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/superfast-feat-vinxen-single/1821570263?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15707,7 +15757,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sincerely-from-a-future-single/1820851476?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15762,7 +15812,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/fam/1854091127?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15817,7 +15867,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/hospital-ep/1819463874?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15867,7 +15917,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/see-u-tonight-remix-single/6813617007?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15917,7 +15967,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/instant-single/1814296910?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -15972,7 +16022,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/gen/1809314701?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16027,7 +16077,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/messy-from-f1-the-movie-single/1812102239?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16077,7 +16127,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/maybe-tomorrow-single/1810222959?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16127,7 +16177,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/see-u-tonight-single/6813616742?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16177,7 +16227,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/romance-express-ep/1810136448?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16227,7 +16277,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/rock-wit-me-single/1857771993?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16277,7 +16327,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/thank-you-so-much/1796943213?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16332,7 +16382,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/confessions-spring-break-edit-single/6813620540?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16382,7 +16432,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E4%BF%BA%E3%82%89%E3%81%97%E3%81%8F/1885582730?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16437,7 +16487,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/sakura-hirari-single/1786315602?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16492,7 +16542,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/please-no-cambies-single/1789079583?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16542,7 +16592,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/brewing-love-pt-4-original-soundtrack-single/1777975730?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16592,7 +16642,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/no/6780732519?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16647,7 +16697,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/2024-decibel-original-soundtrack/1895350185?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16697,7 +16747,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/supernatural-single/1750576829?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16747,7 +16797,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%82%AC%EB%9E%91%EA%B3%BC-%EC%9A%B0%EC%A0%95%EC%82%AC%EC%9D%B4-single/1746274779?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16797,7 +16847,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/love-%E5%85%A8%E5%9B%BD%E3%83%84%E3%82%A2%E3%83%BC2023-today-is-your-trigger-video-album/6810594016?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16852,7 +16902,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/portrait/1729546776?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16907,7 +16957,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/marry-my-husband-original-television-soundtrack-pt/6765603004?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -16957,7 +17007,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/my-demon-pt-2-original-soundtrack-single/6785337992?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17007,7 +17057,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/my-demon-pt-1-original-soundtrack-single/6785338023?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17057,7 +17107,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/music-in-the-trip-original-soundtrack-pt-2-single/6804604169?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17107,7 +17157,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/music-in-the-trip-original-soundtrack-pt-1-single/6804604039?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17157,7 +17207,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%97%E3%83%A9%E3%83%8D%E3%82%BF%E3%83%AA%E3%82%A2-ep/1711731417?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17212,7 +17262,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E3%83%97%E3%83%A9%E3%83%8D%E3%82%BF%E3%83%AA%E3%82%A2-single/1708398368?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17267,7 +17317,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/gods-single/1833057824?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17317,7 +17367,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/i-do-me/6769371796?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17372,7 +17422,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%A2%8B%EC%95%84%EB%B3%B4%EC%97%AC-2023-feat-%EA%B2%80%EC%A0%95%EC%B9%98%EB%A7%88-single/1687269432?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17422,7 +17472,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/love-5th-anniversary-premium-concert-video-album/6810187002?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17477,7 +17527,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/magic-lantern/6781645642?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17532,7 +17582,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/life-goes-on-we-are-young-special-edition/1896042003?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17587,7 +17637,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/reborn-rich-original-soundtrack-pt-6-single/6774421604?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17637,7 +17687,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/made-in/1896042359?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17692,7 +17742,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/still-life-single/1616762362?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17742,7 +17792,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/now-we-are-breaking-up-original-soundtrack-pt-9-single/6795801027?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17792,7 +17842,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/now-we-are-breaking-up-original-soundtrack-pt-6-single/6795798826?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17842,7 +17892,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/closely-far-away-single/6804912246?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17892,7 +17942,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/beautiful-night-single/1574643682?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17942,7 +17992,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/%E6%9C%AC%E6%B0%97-%E3%83%9E%E3%82%B8-%E3%81%A7%E6%83%9A%E3%82%8C%E3%81%9F-%E3%83%9E%E3%82%B8%E7%9B%A4-ep/1865148499?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -17997,7 +18047,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/flower-single/1542572266?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18047,7 +18097,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/im-alive-because-of-you-single/1804675445?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18097,7 +18147,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/we-are-family/1804710744?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18147,7 +18197,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/you-and-me-single/1811515857?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18197,7 +18247,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/affection-feat-jennie-single/1490167273?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18247,7 +18297,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/hotel-del-luna-original-television-soundtrack-pt-8-single/1804680525?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18297,7 +18347,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/angel-feat-taeyeon-single/6784503369?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18347,7 +18397,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/hide-and-seek-feat-heize-single/6784511691?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18397,7 +18447,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/%EC%86%90%EC%97%90-%EC%86%90%EC%9E%A1%EA%B3%A0-single/1811707259?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18429,56 +18479,6 @@
     ]
   },
   {
-    "id": "ap-1811682682",
-    "tier": "discovered",
-    "artistId": "박재정",
-    "artist": "박재정",
-    "artistKo": "박재정",
-    "title": "XOXO - Single",
-    "titleKo": "XOXO - Single",
-    "country": "kr",
-    "type": "single",
-    "releaseDate": "2018-01-02",
-    "currency": "KRW",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0b/cf/2e/0bcf2e09-f061-5774-6b8d-8e42837b2094/cover_KM0021639_1.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/kr/album/xoxo-single/1811682682?uo=4",
-    "trackCount": 2,
-    "albumArtist": "소연 & 박재정",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/kr/album/xoxo-single/1811682682?uo=4",
-      "collectedAt": "2026-09-29",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 0,
-        "listCurrency": "KRW",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": true
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "Weverse Shop",
-        "storeKo": "위버스샵",
-        "searchUrl": "https://shop.weverse.io/ko/home"
-      },
-      {
-        "store": "알라딘",
-        "storeKo": "알라딘",
-        "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=%EB%B0%95%EC%9E%AC%EC%A0%95"
-      }
-    ]
-  },
-  {
     "id": "ap-1727654016",
     "tier": "discovered",
     "artistId": "검정치마",
@@ -18497,7 +18497,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/another-miss-oh-original-television-soundtrack-pt-7-single/1727654016?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18547,7 +18547,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/white-snow-%EB%82%98%EB%A5%BC-%EC%9E%8A%EC%A7%80-%EB%A7%90%EC%95%84%EC%9A%94-single/1811690268?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18597,7 +18597,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/with-you-single/6795505518?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18647,7 +18647,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/look-at-me-now-ep/1813344252?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18697,7 +18697,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/zombie-party-single/1816205060?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18747,7 +18747,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/kpopstar-season2-top-2-special-single/1860804724?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18797,7 +18797,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/kpopstar-season2-top-4-original-soundtrack-single/1860421445?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18847,7 +18847,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/kr/album/lollipop-single/1643628200?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
@@ -18897,7 +18897,7 @@
     "source": {
       "name": "Apple iTunes API",
       "url": "https://music.apple.com/jp/album/killer-street-2024-remaster/1783275415?uo=4",
-      "collectedAt": "2026-09-29",
+      "collectedAt": "2026-09-30",
       "auto": true
     },
     "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",

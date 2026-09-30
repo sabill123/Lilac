@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { state } from '../state';
 import { t, getLocale } from '../i18n';
 import { esc, skeletonCards, skeletonRows, errorState, emptyState, freshness, fmtDay } from '../ui';
-import { posterCard, ticketRow } from '../cards';
+import { posterCard, ticketRow, festCard } from '../cards';
 import type { Concert } from '../cards';
 
 function agendaDay(day: string, rows: string) {
@@ -17,7 +17,7 @@ function agendaDay(day: string, rows: string) {
   return `<section class="agenda${rel ? ' is-near' : ''}"><h3 class="ag-day" aria-label="${esc(fmtDay(day))}"><b>${Number(day.slice(8))}</b><span>${ja ? `${Number(day.slice(5, 7))}月` : `${Number(day.slice(5, 7))}월`} · ${esc(wd)}</span>${rel ? `<em>${rel}</em>` : ''}</h3><ul class="tlist">${rows}</ul></section>`;
 }
 
-type Tab = 'tickets' | 'visiting' | 'abroad';
+type Tab = 'tickets' | 'visiting' | 'abroad' | 'festivals';
 interface Group { key: string; label: string; total: number; shown: number; cache?: { state: string; updatedAt: string | null } }
 
 const norm = (s: string) => s.normalize('NFKC').toLowerCase().replace(/\s+/g, '');
@@ -29,12 +29,13 @@ export async function renderConcerts(root: HTMLElement, alive: () => boolean, su
   requests.set(root, version);
   const routeAlive = alive;
   alive = () => routeAlive() && requests.get(root) === version;
-  const tab: Tab = sub === 'tickets' || sub === 'abroad' ? sub : sub === 'visiting' ? 'visiting' : 'tickets';
+  const tab: Tab = sub === 'tickets' || sub === 'abroad' || sub === 'festivals' ? sub : sub === 'visiting' ? 'visiting' : 'tickets';
   const ed = state.edition;
   const tabs: [Tab, string][] = [
     ['tickets', t('c.tab.tickets')],
     ['visiting', t(`c.tab.visiting.${ed}`)],
     ['abroad', t(`c.tab.abroad.${ed}`)],
+    ['festivals', getLocale() === 'ja' ? 'フェス' : '페스티벌'],
   ];
   root.innerHTML = `
     <section class="page-head"><h1>${t('c.title')}</h1></section>
@@ -47,6 +48,7 @@ export async function renderConcerts(root: HTMLElement, alive: () => boolean, su
   const tools = root.querySelector<HTMLElement>('#cTools')!;
   const method = root.querySelector<HTMLElement>('#cMethod')!;
 
+  if (tab === 'festivals') { await renderFestivals(root, alive, body, tools, method); return; }
   let items: Concert[] = [];
   let groups: Group[] = [];
   let classifying = 0;
@@ -155,4 +157,37 @@ export async function renderConcerts(root: HTMLElement, alive: () => boolean, su
   }));
 
   method.textContent = tab === 'tickets' ? t('c.method.tickets') : (ed === 'jp' && tab === 'visiting') || (ed === 'all' && tab === 'abroad') ? t('c.method.jp') : t('c.method.visiting');
+}
+
+/* 페스티벌 탭: 한국·일본 페스티벌, 나라·월로 거르고, 반대편 나라 아티스트가 나오는 곳만 보기 */
+async function renderFestivals(root: HTMLElement, alive: () => boolean, body: HTMLElement, tools: HTMLElement, method: HTMLElement) {
+  const ja = getLocale() === 'ja';
+  const ed = state.edition;
+  let r: { items: (Concert & { lineupJp?: number; lineupKr?: number; lineup?: { name: string; origin: string | null }[] })[]; cache?: { state: string; updatedAt: string | null } | null; pending?: boolean };
+  try { r = await api(`/api/live/festivals?edition=${ed}`); }
+  catch {
+    if (!alive()) return;
+    body.innerHTML = errorState(t('err.generic'));
+    body.querySelector('[data-retry]')?.addEventListener('click', () => renderConcerts(root, alive, 'festivals'));
+    return;
+  }
+  if (!alive()) return;
+  const cross = (f: (typeof r.items)[number]) => (f.country === 'JP' ? f.lineupKr || 0 : f.lineupJp || 0) > 0;
+  let country = ed === 'jp' ? 'JP' : ed === 'kr' ? '' : '';
+  let month = '';
+  let onlyCross = false;
+  const months = [...new Set(r.items.map((x) => (x.startDate || '').slice(0, 7)).filter(Boolean))].sort();
+  const crossN = r.items.filter(cross).length;
+  tools.innerHTML = `<div class="chips" id="fCountry">${[['', ja ? 'すべて' : '전체'], ['KR', ja ? '韓国' : '한국'], ['JP', ja ? '日本' : '일본']].map(([k, l]) => `<button type="button" class="chip${k === country ? ' on' : ''}" data-c="${k}">${esc(l)} ${r.items.filter((x) => !k || x.country === k).length}</button>`).join('')}</div>
+    <div class="chips" id="fMonth"><button type="button" class="chip on" data-m="">${ja ? '全期間' : '전체 기간'}</button>${months.map((m) => `<button type="button" class="chip" data-m="${m}">${Number(m.slice(5))}${ja ? '月' : '월'}</button>`).join('')}</div>
+    ${crossN ? `<div class="chips"><button type="button" class="chip" id="fCross" aria-pressed="false">${ja ? '日韓クロス出演' : '한일 교차 출연'} ${crossN}</button></div>` : ''}`;
+  const paint = () => {
+    const rows = r.items.filter((x) => (!country || x.country === country) && (!month || (x.startDate || '').startsWith(month)) && (!onlyCross || cross(x)));
+    body.innerHTML = rows.length ? `<div class="grid-posters">${rows.map((f) => festCard(f)).join('')}</div>` : emptyState(r.pending ? (ja ? 'フェス情報を集めています。少し後にもう一度ご覧ください。' : '페스티벌 정보를 모으는 중입니다. 잠시 뒤 다시 확인해 주세요.') : t('empty.generic'));
+  };
+  tools.querySelectorAll<HTMLButtonElement>('[data-c]').forEach((b) => b.addEventListener('click', () => { country = b.dataset.c || ''; tools.querySelectorAll('[data-c]').forEach((x) => x.classList.toggle('on', x === b)); paint(); }));
+  tools.querySelectorAll<HTMLButtonElement>('[data-m]').forEach((b) => b.addEventListener('click', () => { month = b.dataset.m || ''; tools.querySelectorAll('[data-m]').forEach((x) => x.classList.toggle('on', x === b)); paint(); }));
+  tools.querySelector<HTMLButtonElement>('#fCross')?.addEventListener('click', (e) => { onlyCross = !onlyCross; const b = e.currentTarget as HTMLButtonElement; b.classList.toggle('on', onlyCross); b.setAttribute('aria-pressed', String(onlyCross)); paint(); });
+  paint();
+  method.textContent = ja ? '情報提供 NOLチケット・メロンチケット・イープラス(フェス一覧)・出演は各プレイガイドの公演ページから' : '정보 제공 NOL 티켓·멜론티켓 페스티벌 장르, 이플러스 페스티벌 목록 · 라인업은 각 예매처 상품 페이지에서';
 }

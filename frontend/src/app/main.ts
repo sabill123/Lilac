@@ -63,7 +63,6 @@ function renderShell() {
       </nav>
       <form class="header-search" role="search"><label class="sr-only" for="headerQuery">${t('search.go')}</label>${icon('i-search')}<input id="headerQuery" name="q" type="search" maxlength="160" placeholder="${getLocale() === 'ja' ? 'アーティスト・公演を検索' : '아티스트·공연 검색'}" autocomplete="off"><button type="submit" aria-label="${t('search.go')}">${icon('i-chev-r', 'ic sm')}</button></form>
       <div class="hdr-tools">
-        <span class="live-pill" id="livePill" role="status" title="${esc(t('live.title'))}"></span>
         <a class="hdr-ic m-search" href="#/search" aria-label="${t('search.go')}">${icon('i-search')}</a>
         <div class="edp">
           <button type="button" class="ed-btn" id="edBtn" aria-haspopup="true" aria-expanded="false" aria-controls="edMenu" title="${esc(t('ed.label'))}">${icon('i-globe', 'ic sm')}<span>${esc(t(`ed.short.${ed}`))}</span></button>

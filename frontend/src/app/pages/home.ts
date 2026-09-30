@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { state } from '../state';
 import { t, getLocale } from '../i18n';
 import { esc, icon, img, errorState, emptyState, ddayOf } from '../ui';
-import { posterCard, openCard, newsRow, releaseCard, artistCard, chartRow, concertRegistry, openConcert, placeOf, whenOf, providerName, artistName } from '../cards';
+import { festCard, posterCard, openCard, newsRow, releaseCard, artistCard, chartRow, concertRegistry, openConcert, placeOf, whenOf, providerName, artistName } from '../cards';
 import { ct } from '../cm-i18n';
 import { when } from '../social';
 import type { Concert, News, Release, ArtistLite, ChartEntry } from '../cards';
@@ -23,6 +23,7 @@ interface HomeData {
   fanclub: Concert[]; fanclubTotal: number;
   visiting: Concert[]; visitingTotal: number;
   abroad: Concert[]; abroadTotal: number;
+  festivals?: Concert[]; festivalsTotal?: number;
   news: News[]; newsTotal: number; newsCache: { state: string; updatedAt: string | null } | null;
   chart: { country: 'jp' | 'kr'; items: ChartEntry[] }[];
   releases: Release[]; artists: ArtistLite[];
@@ -252,6 +253,7 @@ function sectionsHtml(d: HomeData) {
       <section class="sec" id="secGals"><div class="sec-head"><h2>${esc(ct('home.gals'))}</h2><a class="more" href="#/community/list">${t('more')}</a></div><ol class="gal-rank">${'<li class="sk sk-line"></li>'.repeat(5)}</ol></section>
     </div>
     ${d.releases.length ? shelf('secReleases', t('home.releases'), '#/goods', d.releases.slice(0, 16).map((r) => li(releaseCard(r))).join(''), 'rail-squares') : ''}
+    ${d.festivals?.length ? shelf('secFest', getLocale() === 'ja' ? '韓国・日本の音楽フェス' : '한국·일본 음악 페스티벌', '#/concerts/festivals', d.festivals.slice(0, 16).map((c) => li(festCard(c))).join(''), 'rail-posters') : ''}
     ${d.abroad.length ? shelf('secAbroad', t(`home.abroad.${ed}`), '#/concerts/abroad', d.abroad.slice(0, 12).map((c) => li(posterCard(c))).join(''), 'rail-posters') : ''}
     <div class="awards-wrap">${homeAwardsHtml()}</div>
     ${shelf('secArtists', t('home.artists'), '#/artists', d.artists.slice(0, 18).map((a) => li(artistCard(a))).join(''), 'rail-artists')}`;

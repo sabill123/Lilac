@@ -14,7 +14,7 @@
     "test:smoke": "node scripts/smoke.mjs",
     "verify:macos": "bash scripts/verify-macos.sh",
     "test:contract": "node tests/verify-site-contract.mjs",
-    "test": "node tests/verify-v6-app.mjs && node tests/verify-realtime.mjs && node tests/verify-fanclub.mjs && node tests/verify-fc-evidence.mjs && node tests/verify-persist.mjs && node tests/verify-detail.mjs && node tests/verify-community.mjs && node tests/verify-site-contract.mjs && node scripts/smoke.mjs && npm run test:production",
+    "test": "node tests/verify-v6-app.mjs && node tests/verify-realtime.mjs && node tests/verify-fanclub.mjs && node tests/verify-fc-evidence.mjs && node tests/verify-persist.mjs && node tests/verify-festivals.mjs && node tests/verify-account.mjs && node tests/verify-detail.mjs && node tests/verify-community.mjs && node tests/verify-site-contract.mjs && node scripts/smoke.mjs && npm run test:production",
     "collect:artists": "node backend/collect-artists.mjs --per=70",
     "collect:charts": "node backend/collect-charts.mjs",
     "collect:products": "node backend/collect-products.mjs",

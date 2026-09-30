@@ -137,6 +137,28 @@
 .pdp-tabs a { display: flex; align-items: center; justify-content: center; }
 .pdp-sec { scroll-margin-top: calc(var(--hdr-total, 112px) + 64px); }
 .pdp-tabs a em { margin-left: 4px; }
+.media.is-artist-photo img { object-position: 50% 22%; }
+.fcard .pcard-art { position: relative; }
+.fest-cn { position: absolute; right: 8px; top: 8px; padding: 2px 7px; border-radius: 3px; background: rgb(17 17 20 / .78); color: #fff; font-size: 11px; font-weight: 700; }
+.fest-hi { order: 4; margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.fest-hi b { color: var(--brand-2); font-weight: 700; margin-right: 4px; }
+.lineup { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 18px; }
+.lineup li { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 4px; background: var(--bg-2); font-size: 13px; }
+.lineup a { color: var(--ink); }
+.lu-o { font-style: normal; font-size: 10px; font-weight: 700; padding: 1px 4px; border-radius: 2px; }
+.lu-o.jp { background: #fdecea; color: #b42318; } .lu-o.kr { background: #e8eefc; color: #1d4ed8; }
+.fest-links { display: grid; gap: 6px; margin: 8px 0 18px; font-size: 13.5px; }
+.fest-links a { display: inline-flex; gap: 4px; align-items: center; color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+.acct { max-width: 560px; }
+.acct-form { display: grid; gap: 10px; padding: 18px 0; border-top: 1px solid var(--line); }
+.acct-form h3 { font-size: 15px; font-weight: 700; }
+.acct-form label { display: grid; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.acct-form input { height: 42px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 4px; font-size: 14px; }
+.acct-row { display: flex; gap: 8px; } .acct-row input { flex: 1; }
+.acct-form .btn { justify-self: start; }
+.acct-danger { border-top: 1px solid var(--line); padding-top: 14px; }
+.acct-danger summary { cursor: pointer; font-size: 13px; color: var(--ink-3); }
+.btn-danger { background: #b42318; color: #fff; border-radius: 5px; height: 40px; padding: 0 16px; font-weight: 600; }
 .pdp-change { margin-top: 28px; font-size: 12.5px; color: var(--ink-3); }
 .home-loading { max-width: var(--max); margin: 36px auto; padding: 0 var(--pad); }
 /* Loading, empty and error states are neutral, not promotional cards. */

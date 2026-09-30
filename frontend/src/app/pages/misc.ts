@@ -1,6 +1,7 @@
 /* 검색 · MY · 로그인/가입 */
 import { api } from '../../api';
-import { state, login, signup, logout, onChange } from '../state';
+import { state, login, signup, logout, onChange, forgetSession, refreshMe2 } from '../state';
+import { getLocale } from '../i18n';
 import { t } from '../i18n';
 import { esc, img, icon, skeletonRows, emptyState, errorState, params, toast } from '../ui';
 import { ct } from '../cm-i18n';
@@ -58,7 +59,9 @@ export async function renderMy(root: HTMLElement, alive: () => boolean) {
     <section class="sec" id="myLikes"><div class="sec-head"><h2>${ct('mine.likes')}</h2></div><ul class="like-list">${skeletonRows(2, 'sk-line')}</ul></section>
     <section class="sec" id="myTickets"><div class="sec-head"><h2>${t('my.tickets')}</h2></div><ul class="tlist">${skeletonRows(3)}</ul></section>
     <section class="sec" id="myShows"><div class="sec-head"><h2>${t('my.shows')}</h2></div></section>
-    <section class="sec" id="myNews"><div class="sec-head"><h2>${t('my.news')}</h2></div></section>`;
+    <section class="sec" id="myNews"><div class="sec-head"><h2>${t('my.news')}</h2></div></section>
+    ${accountHtml()}`;
+  bindAccount(root);
   root.querySelector('#myOut')!.addEventListener('click', async () => { try { await logout(); location.hash = '#/'; } catch { toast(t('err.generic')); } });
   api('/api/social/mine').then((r: { items: { key: string; kind: 'concert' | 'release' | 'track' | 'fanclub'; ref: string; snap: { title: string; artist?: string; performer?: string; poster?: string; artwork?: string; image?: string; id?: string } }[] }) => {
     if (!alive()) return;
@@ -85,6 +88,60 @@ export async function renderMy(root: HTMLElement, alive: () => boolean) {
   root.querySelector('#myTickets')!.innerHTML = `<div class="sec-head"><h2>${t('my.tickets')}</h2></div>` + (tItems.length ? `<ul class="tlist">${tItems.map((c) => ticketRow(c)).join('')}</ul>` : emptyState(t('empty.generic')));
   root.querySelector('#myShows')!.innerHTML = `<div class="sec-head"><h2>${t('my.shows')}</h2></div>` + (cItems.length ? `<div class="grid-posters">${cItems.map(posterCard).join('')}</div>` : emptyState(t('a.noShows')));
   root.querySelector('#myNews')!.innerHTML = `<div class="sec-head"><h2>${t('my.news')}</h2></div>` + (nItems.length ? `<ul class="nlist">${nItems.map(newsRow).join('')}</ul>` : emptyState(t('empty.generic')));
+}
+
+/* 계정 설정: 이름 · 비밀번호 변경 · 탈퇴 */
+function accountHtml() {
+  const ja = getLocale() === 'ja';
+  return `<section class="sec acct" id="myAccount"><div class="sec-head"><h2>${ja ? 'アカウント設定' : '계정 설정'}</h2></div>
+    <form class="acct-form" id="acName"><h3>${ja ? '表示名' : '표시 이름'}</h3><div class="acct-row"><input name="name" maxlength="60" required value="${esc(state.me?.name || '')}" aria-label="${ja ? '表示名' : '표시 이름'}"><button class="btn btn-line">${ja ? '保存' : '저장'}</button></div><p class="form-err" role="alert"></p></form>
+    <form class="acct-form" id="acPw"><h3>${ja ? 'パスワード変更' : '비밀번호 변경'}</h3>
+      <label>${ja ? '現在のパスワード' : '현재 비밀번호'}<input name="current" type="password" autocomplete="current-password" required></label>
+      <label>${ja ? '新しいパスワード(8文字以上)' : '새 비밀번호(8자 이상)'}<input name="next" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>${ja ? '新しいパスワード(確認)' : '새 비밀번호 확인'}<input name="next2" type="password" autocomplete="new-password" minlength="8" required></label>
+      <p class="form-err" role="alert"></p><button class="btn btn-line">${ja ? '変更' : '변경'}</button>
+      <p class="muted small">${ja ? '変更すると、この端末以外のログインはすべて解除されます。' : '바꾸면 이 기기 말고 다른 기기의 로그인은 모두 풀립니다.'}</p></form>
+    <details class="acct-danger"><summary>${ja ? '退会' : '회원 탈퇴'}</summary>
+      <form class="acct-form" id="acDel"><p>${ja ? 'アカウント・ログイン・フォロー・いいね・再生履歴が削除され、元に戻せません。掲示板に書いた投稿とコメントは残ります。' : '계정·로그인·팔로우·좋아요·재생 기록이 지워지고 되돌릴 수 없습니다. 커뮤니티에 쓴 글과 댓글은 남습니다.'}</p>
+        <label>${ja ? 'パスワード' : '비밀번호'}<input name="password" type="password" autocomplete="current-password" required></label>
+        <p class="form-err" role="alert"></p><button class="btn btn-danger">${ja ? '退会する' : '탈퇴하기'}</button></form>
+    </details>
+  </section>`;
+}
+function bindAccount(root: HTMLElement) {
+  const ja = getLocale() === 'ja';
+  const run = (id: string, fn: (f: FormData, form: HTMLFormElement) => Promise<void>) => {
+    const form = root.querySelector<HTMLFormElement>(id);
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button')!;
+      const err = form.querySelector('.form-err')!;
+      if (btn.disabled || !form.reportValidity()) return;
+      err.textContent = '';
+      btn.disabled = true;
+      try { await fn(new FormData(form), form); } catch (ex) { err.textContent = (ex as Error).message || t('err.generic'); } finally { btn.disabled = false; }
+    });
+  };
+  run('#acName', async (f) => {
+    await api('/api/me', { method: 'PATCH', body: JSON.stringify({ name: String(f.get('name')).trim() }) });
+    await refreshMe2();
+    const h = root.querySelector('.my-head h1'); if (h) h.textContent = state.me?.name || '';
+    toast(ja ? '保存しました' : '저장했습니다');
+  });
+  run('#acPw', async (f, form) => {
+    if (f.get('next') !== f.get('next2')) throw new Error(ja ? '新しいパスワードが一致しません' : '새 비밀번호가 서로 다릅니다');
+    await api('/api/me/password', { method: 'POST', body: JSON.stringify({ current: f.get('current'), next: f.get('next') }) });
+    form.reset();
+    toast(ja ? 'パスワードを変更しました' : '비밀번호를 바꿨습니다');
+  });
+  run('#acDel', async (f) => {
+    if (!confirm(ja ? '本当に退会しますか?元に戻せません。' : '정말 탈퇴할까요? 되돌릴 수 없습니다.')) return;
+    await api('/api/me', { method: 'DELETE', body: JSON.stringify({ password: f.get('password') }) });
+    forgetSession();
+    toast(ja ? '退会しました' : '탈퇴했습니다');
+    location.hash = '#/';
+  });
 }
 
 export function renderAuth(root: HTMLElement, mode: 'login' | 'signup') {

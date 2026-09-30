@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-29T21:51:45.567Z",
+  "updated": "2026-09-30T00:58:13.172Z",
   "limit": 50,
   "countries": {
     "jp": {
@@ -137,16 +137,6 @@
         },
         {
           "rank": 14,
-          "title": "It's Me",
-          "artist": "ILLIT",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
-          "releaseDate": "2026-04-30",
-          "youtubeId": "bMhDJ0S0OBA",
-          "ytViews": 136374337
-        },
-        {
-          "rank": 15,
           "title": "シンデレラ",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -154,6 +144,16 @@
           "releaseDate": null,
           "youtubeId": "FYhxYcXfhYA",
           "ytViews": 52589151
+        },
+        {
+          "rank": 15,
+          "title": "It's Me",
+          "artist": "ILLIT",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
+          "releaseDate": "2026-04-30",
+          "youtubeId": "bMhDJ0S0OBA",
+          "ytViews": 136374337
         },
         {
           "rank": 16,
@@ -227,13 +227,13 @@
         },
         {
           "rank": 23,
-          "title": "見知らぬ糸",
-          "artist": "スピッツ",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
-          "releaseDate": "2026-08-07",
-          "youtubeId": "LuRf7LUAtUI",
-          "ytViews": 313259
+          "title": "本と彗星",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
+          "releaseDate": null,
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22321130
         },
         {
           "rank": 24,
@@ -247,26 +247,16 @@
         },
         {
           "rank": 25,
-          "title": "Blue Jeans",
-          "artist": "HANA",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d0/c4/4d/d0c44ddb-0fd9-ef8c-7839-33a103cb08dc/4547366759990.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/blue-jeans/1821849174?i=1821849522",
-          "releaseDate": "2025-07-14",
-          "youtubeId": "r_AOa3yVz8A",
-          "ytViews": 52258218
+          "title": "見知らぬ糸",
+          "artist": "スピッツ",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
+          "releaseDate": "2026-08-07",
+          "youtubeId": "LuRf7LUAtUI",
+          "ytViews": 313259
         },
         {
           "rank": 26,
-          "title": "本と彗星",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
-          "releaseDate": null,
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22321130
-        },
-        {
-          "rank": 27,
           "title": "ア・ポステリオリ",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -274,6 +264,16 @@
           "releaseDate": null,
           "youtubeId": "atJbRXERvH8",
           "ytViews": 22844234
+        },
+        {
+          "rank": 27,
+          "title": "Blue Jeans",
+          "artist": "HANA",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d0/c4/4d/d0c44ddb-0fd9-ef8c-7839-33a103cb08dc/4547366759990.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/blue-jeans/1821849174?i=1821849522",
+          "releaseDate": "2025-07-14",
+          "youtubeId": "r_AOa3yVz8A",
+          "ytViews": 52258218
         },
         {
           "rank": 28,
@@ -337,16 +337,6 @@
         },
         {
           "rank": 34,
-          "title": "風と町",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
-          "releaseDate": "2026-04-13",
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22306249
-        },
-        {
-          "rank": 35,
           "title": "エピソード",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -354,6 +344,16 @@
           "releaseDate": null,
           "youtubeId": "44cICMd3jW4",
           "ytViews": 145071804
+        },
+        {
+          "rank": 35,
+          "title": "風と町",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
+          "releaseDate": "2026-04-13",
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22306249
         },
         {
           "rank": 36,
@@ -407,36 +407,6 @@
         },
         {
           "rank": 41,
-          "title": "ROSE",
-          "artist": "HANA",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
-          "releaseDate": "2025-04-02",
-          "youtubeId": "rGPd0FyjQ9w",
-          "ytViews": 88763720
-        },
-        {
-          "rank": 42,
-          "title": "Wherever you are",
-          "artist": "ONE OK ROCK",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
-          "releaseDate": "2010-06-09",
-          "youtubeId": "qs4Q4cQxyU4",
-          "ytViews": 15871593
-        },
-        {
-          "rank": 43,
-          "title": "ケセラセラ",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
-          "releaseDate": "2023-04-25",
-          "youtubeId": "Jy-QS27q7lA",
-          "ytViews": 131138861
-        },
-        {
-          "rank": 44,
           "title": "Really Really",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -446,7 +416,7 @@
           "ytViews": 249359565
         },
         {
-          "rank": 45,
+          "rank": 42,
           "title": "瞞し",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -454,6 +424,36 @@
           "releaseDate": null,
           "youtubeId": "6Ul-wFnquno",
           "ytViews": 19176131
+        },
+        {
+          "rank": 43,
+          "title": "Wherever you are",
+          "artist": "ONE OK ROCK",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
+          "releaseDate": "2010-06-09",
+          "youtubeId": "qs4Q4cQxyU4",
+          "ytViews": 15871593
+        },
+        {
+          "rank": 44,
+          "title": "ROSE",
+          "artist": "HANA",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
+          "releaseDate": "2025-04-02",
+          "youtubeId": "rGPd0FyjQ9w",
+          "ytViews": 88763720
+        },
+        {
+          "rank": 45,
+          "title": "ケセラセラ",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
+          "releaseDate": "2023-04-25",
+          "youtubeId": "Jy-QS27q7lA",
+          "ytViews": 131138861
         },
         {
           "rank": 46,
@@ -487,6 +487,16 @@
         },
         {
           "rank": 49,
+          "title": "プロジェクト4",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%884/6808172946?i=6808173277",
+          "releaseDate": null,
+          "youtubeId": "44cICMd3jW4",
+          "ytViews": 145091370
+        },
+        {
+          "rank": 50,
           "title": "Pretender",
           "artist": "Official髭男dism",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1f/b6/36/1fb6364f-77fc-7653-3750-811631832ee9/PCCA_04785.jpg/400x400bb.jpg",
@@ -494,16 +504,6 @@
           "releaseDate": "2019-04-17",
           "youtubeId": "TQ8WlA2GXbk",
           "ytViews": 648048679
-        },
-        {
-          "rank": 50,
-          "title": "わたがし",
-          "artist": "back number",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1b/a4/3f/1ba43f2b-26a6-e4bc-ad09-b36f4e2c2524/00602577303852.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%8F%E3%81%9F%E3%81%8C%E3%81%97/1451567083?i=1451567084",
-          "releaseDate": "2012-07-18",
-          "youtubeId": "uy_BaRBJIzQ",
-          "ytViews": 33799646
         }
       ],
       "appleRss": [
@@ -626,21 +626,21 @@
         },
         {
           "rank": 14,
-          "title": "It's Me",
-          "artist": "ILLIT",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
-          "youtubeId": "bMhDJ0S0OBA",
-          "ytViews": 136374337
-        },
-        {
-          "rank": 15,
           "title": "シンデレラ",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
           "appleUrl": "https://music.apple.com/jp/album/%E3%82%B7%E3%83%B3%E3%83%87%E3%83%AC%E3%83%A9/6808172946?i=6808173126",
           "youtubeId": "FYhxYcXfhYA",
           "ytViews": 52589151
+        },
+        {
+          "rank": 15,
+          "title": "It's Me",
+          "artist": "ILLIT",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
+          "youtubeId": "bMhDJ0S0OBA",
+          "ytViews": 136374337
         },
         {
           "rank": 16,
@@ -707,12 +707,12 @@
         },
         {
           "rank": 23,
-          "title": "見知らぬ糸",
-          "artist": "スピッツ",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
-          "youtubeId": "LuRf7LUAtUI",
-          "ytViews": 313259
+          "title": "本と彗星",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22321130
         },
         {
           "rank": 24,
@@ -725,30 +725,30 @@
         },
         {
           "rank": 25,
-          "title": "Blue Jeans",
-          "artist": "HANA",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d0/c4/4d/d0c44ddb-0fd9-ef8c-7839-33a103cb08dc/4547366759990.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/blue-jeans/1821849174?i=1821849522",
-          "youtubeId": "r_AOa3yVz8A",
-          "ytViews": 52258218
+          "title": "見知らぬ糸",
+          "artist": "スピッツ",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
+          "youtubeId": "LuRf7LUAtUI",
+          "ytViews": 313259
         },
         {
           "rank": 26,
-          "title": "本と彗星",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22321130
-        },
-        {
-          "rank": 27,
           "title": "ア・ポステリオリ",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
           "appleUrl": "https://music.apple.com/jp/album/%E3%82%A2-%E3%83%9D%E3%82%B9%E3%83%86%E3%83%AA%E3%82%AA%E3%83%AA/6808172946?i=6808173143",
           "youtubeId": "atJbRXERvH8",
           "ytViews": 22844234
+        },
+        {
+          "rank": 27,
+          "title": "Blue Jeans",
+          "artist": "HANA",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d0/c4/4d/d0c44ddb-0fd9-ef8c-7839-33a103cb08dc/4547366759990.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/blue-jeans/1821849174?i=1821849522",
+          "youtubeId": "r_AOa3yVz8A",
+          "ytViews": 52258218
         },
         {
           "rank": 28,
@@ -806,21 +806,21 @@
         },
         {
           "rank": 34,
-          "title": "風と町",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22306249
-        },
-        {
-          "rank": 35,
           "title": "エピソード",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
           "appleUrl": "https://music.apple.com/jp/album/%E3%82%A8%E3%83%94%E3%82%BD%E3%83%BC%E3%83%89/6808172946?i=6808173145",
           "youtubeId": "44cICMd3jW4",
           "ytViews": 145071804
+        },
+        {
+          "rank": 35,
+          "title": "風と町",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22306249
         },
         {
           "rank": 36,
@@ -869,33 +869,6 @@
         },
         {
           "rank": 41,
-          "title": "ROSE",
-          "artist": "HANA",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
-          "youtubeId": "rGPd0FyjQ9w",
-          "ytViews": 88763720
-        },
-        {
-          "rank": 42,
-          "title": "Wherever you are",
-          "artist": "ONE OK ROCK",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
-          "youtubeId": "qs4Q4cQxyU4",
-          "ytViews": 15871593
-        },
-        {
-          "rank": 43,
-          "title": "ケセラセラ",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
-          "youtubeId": "Jy-QS27q7lA",
-          "ytViews": 131138861
-        },
-        {
-          "rank": 44,
           "title": "Really Really",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -904,13 +877,40 @@
           "ytViews": 249359565
         },
         {
-          "rank": 45,
+          "rank": 42,
           "title": "瞞し",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
           "appleUrl": "https://music.apple.com/jp/album/%E7%9E%9E%E3%81%97/6808172946?i=6808173279",
           "youtubeId": "6Ul-wFnquno",
           "ytViews": 19176131
+        },
+        {
+          "rank": 43,
+          "title": "Wherever you are",
+          "artist": "ONE OK ROCK",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
+          "youtubeId": "qs4Q4cQxyU4",
+          "ytViews": 15871593
+        },
+        {
+          "rank": 44,
+          "title": "ROSE",
+          "artist": "HANA",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
+          "youtubeId": "rGPd0FyjQ9w",
+          "ytViews": 88763720
+        },
+        {
+          "rank": 45,
+          "title": "ケセラセラ",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
+          "youtubeId": "Jy-QS27q7lA",
+          "ytViews": 131138861
         },
         {
           "rank": 46,
@@ -941,21 +941,21 @@
         },
         {
           "rank": 49,
+          "title": "プロジェクト4",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%884/6808172946?i=6808173277",
+          "youtubeId": "44cICMd3jW4",
+          "ytViews": 145091370
+        },
+        {
+          "rank": 50,
           "title": "Pretender",
           "artist": "Official髭男dism",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1f/b6/36/1fb6364f-77fc-7653-3750-811631832ee9/PCCA_04785.jpg/400x400bb.jpg",
           "appleUrl": "https://music.apple.com/jp/album/pretender/1459216693?i=1459216694",
           "youtubeId": "TQ8WlA2GXbk",
           "ytViews": 648048679
-        },
-        {
-          "rank": 50,
-          "title": "わたがし",
-          "artist": "back number",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1b/a4/3f/1ba43f2b-26a6-e4bc-ad09-b36f4e2c2524/00602577303852.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%8F%E3%81%9F%E3%81%8C%E3%81%97/1451567083?i=1451567084",
-          "youtubeId": "uy_BaRBJIzQ",
-          "ytViews": 33799646
         }
       ],
       "youtube": [
@@ -1092,6 +1092,18 @@
           "rank": 11
         },
         {
+          "title": "プロジェクト4",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%884/6808172946?i=6808173277",
+          "ytViews": 145091370,
+          "youtubeId": "44cICMd3jW4",
+          "ytTitle": "Mrs. GREEN APPLE「Soranji」Official Music Video",
+          "ytChannel": "Mrs. GREEN APPLE",
+          "confidence": "high",
+          "rank": 12
+        },
+        {
           "title": "エピソード",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
@@ -1101,7 +1113,7 @@
           "ytTitle": "Mrs. GREEN APPLE「Soranji」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 12
+          "rank": 13
         },
         {
           "title": "Soranji",
@@ -1113,7 +1125,7 @@
           "ytTitle": "Mrs. GREEN APPLE「Soranji」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 13
+          "rank": 14
         },
         {
           "title": "It's Me",
@@ -1125,7 +1137,7 @@
           "ytTitle": "ILLIT (아일릿) ‘It’s Me’ Official MV",
           "ytChannel": "HYBE LABELS、ILLIT",
           "confidence": "high",
-          "rank": 14
+          "rank": 15
         },
         {
           "title": "ケセラセラ",
@@ -1137,7 +1149,7 @@
           "ytTitle": "Mrs. GREEN APPLE「ケセラセラ」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 15
+          "rank": 16
         },
         {
           "title": "爆裂愛してる/好きすぎて滅!",
@@ -1149,7 +1161,7 @@
           "ytTitle": "M!LK - 好きすぎて滅！(Official Music Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 16
+          "rank": 17
         },
         {
           "title": "好きすぎて滅!",
@@ -1161,7 +1173,7 @@
           "ytTitle": "M!LK - 好きすぎて滅！(Official Music Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 17
+          "rank": 18
         },
         {
           "title": "115万キロのフィルム",
@@ -1173,7 +1185,7 @@
           "ytTitle": "Official髭男dism - 115万キロのフィルム［Official Audio］",
           "ytChannel": "Official髭男dism",
           "confidence": "high",
-          "rank": 18
+          "rank": 19
         },
         {
           "title": "ROSE",
@@ -1185,7 +1197,7 @@
           "ytTitle": "HANA / ROSE -Music Video-",
           "ytChannel": "HANA official",
           "confidence": "high",
-          "rank": 19
+          "rank": 20
         },
         {
           "title": "点描の唄 (feat. 井上苑子)",
@@ -1197,7 +1209,7 @@
           "ytTitle": "Mrs. GREEN APPLE「点描の唄」Official Live Lyric Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 20
+          "rank": 21
         },
         {
           "title": "ダーリン",
@@ -1209,7 +1221,7 @@
           "ytTitle": "Mrs. GREEN APPLE「ダーリン」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 21
+          "rank": 22
         },
         {
           "title": "ヒロイン",
@@ -1221,7 +1233,7 @@
           "ytTitle": "back number - ヒロイン (full)",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 22
+          "rank": 23
         },
         {
           "title": "AIZO",
@@ -1233,7 +1245,7 @@
           "ytTitle": "King Gnu - AIZO",
           "ytChannel": "King Gnu official YouTube channel",
           "confidence": "high",
-          "rank": 23
+          "rank": 24
         },
         {
           "title": "HAPPY BIRTHDAY",
@@ -1245,7 +1257,7 @@
           "ytTitle": "back number - HAPPY BIRTHDAY (full)",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 24
+          "rank": 25
         },
         {
           "title": "爆裂愛してる",
@@ -1257,7 +1269,7 @@
           "ytTitle": "M!LK - 爆裂愛してる (Official Music Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 25
+          "rank": 26
         },
         {
           "title": "lulu.",
@@ -1269,7 +1281,7 @@
           "ytTitle": "Mrs. GREEN APPLE「lulu.」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 26
+          "rank": 27
         },
         {
           "title": "Yes! 東京 (feat. 超特急,M!LK,SUPER★DRAGON,Sakurashimeji,ONE N' ONLY,原因は自分にある。,BUDDiiS,ICEx,Lienel)",
@@ -1281,7 +1293,7 @@
           "ytTitle": "EBiDAN(恵比寿学園男子部) 「Yes! 東京」 MUSIC VIDEO",
           "ytChannel": "EBiDAN、他 9 チャンネル",
           "confidence": "high",
-          "rank": 27
+          "rank": 28
         },
         {
           "title": "花束",
@@ -1293,7 +1305,7 @@
           "ytTitle": "back number - 花束 (full)",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 28
+          "rank": 29
         },
         {
           "title": "夜の踊り子",
@@ -1305,7 +1317,7 @@
           "ytTitle": "サカナクション / 夜の踊り子　-Music Video-",
           "ytChannel": "サカナクション sakanaction",
           "confidence": "high",
-          "rank": 29
+          "rank": 30
         },
         {
           "title": "BAD",
@@ -1317,7 +1329,7 @@
           "ytTitle": "ATEEZ(에이티즈) - 'BAD' Official MV",
           "ytChannel": "KQ ENTERTAINMENT、ATEEZ",
           "confidence": "high",
-          "rank": 30
+          "rank": 31
         },
         {
           "title": "シンデレラ",
@@ -1329,7 +1341,7 @@
           "ytTitle": "Mrs. GREEN APPLE「familie」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 31
+          "rank": 32
         },
         {
           "title": "Blue Jeans",
@@ -1341,7 +1353,7 @@
           "ytTitle": "HANA / Blue Jeans -Music Video-",
           "ytChannel": "HANA official",
           "confidence": "high",
-          "rank": 32
+          "rank": 33
         },
         {
           "title": "CLICK",
@@ -1353,7 +1365,7 @@
           "ytTitle": "JISOO - CLICK (Official MV)",
           "ytChannel": "JISOO",
           "confidence": "high",
-          "rank": 33
+          "rank": 34
         },
         {
           "title": "青と夏",
@@ -1365,7 +1377,7 @@
           "ytTitle": "Mrs. GREEN APPLE – 「青と夏」 Official Lyric Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 34
+          "rank": 35
         },
         {
           "title": "とくべチュ、して",
@@ -1377,7 +1389,7 @@
           "ytTitle": "＝LOVE（イコールラブ）/ 18th Single『とくべチュ、して』【MV full】",
           "ytChannel": "＝LOVE（イコールラブ）公式チャンネル",
           "confidence": "low",
-          "rank": 35
+          "rank": 36
         },
         {
           "title": "ブルーアンバー",
@@ -1389,7 +1401,7 @@
           "ytTitle": "back number - ブルーアンバー 【カンテレ・フジテレビ系月10ドラマ『あなたを奪ったその日から』主題歌】",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 36
+          "rank": 37
         },
         {
           "title": "Five",
@@ -1401,7 +1413,7 @@
           "ytTitle": "ARASHI - Five [Official Music Video]",
           "ytChannel": "ARASHI",
           "confidence": "low",
-          "rank": 37
+          "rank": 38
         },
         {
           "title": "マイオンリー",
@@ -1413,7 +1425,7 @@
           "ytTitle": "SixTONES – マイオンリー",
           "ytChannel": "SixTONES",
           "confidence": "high",
-          "rank": 38
+          "rank": 39
         },
         {
           "title": "Dance Forever",
@@ -1425,19 +1437,19 @@
           "ytTitle": "SixTONES – Dance Forever",
           "ytChannel": "SixTONES",
           "confidence": "high",
-          "rank": 39
+          "rank": 40
         },
         {
           "title": "わたがし",
           "artist": "back number",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1b/a4/3f/1ba43f2b-26a6-e4bc-ad09-b36f4e2c2524/00602577303852.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%8F%E3%81%9F%E3%81%8C%E3%81%97/1451567083?i=1451567084",
+          "artwork": null,
+          "appleUrl": null,
           "ytViews": 33799646,
           "youtubeId": "uy_BaRBJIzQ",
           "ytTitle": "back number - わたがし (full)",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 40
+          "rank": 41
         },
         {
           "title": "You!Joy!Parade!",
@@ -1449,7 +1461,7 @@
           "ytTitle": "M!LK - You!Joy!Parade! (Official Music Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 41
+          "rank": 42
         },
         {
           "title": "禁じた遊び",
@@ -1461,7 +1473,7 @@
           "ytTitle": "Mrs. GREEN APPLE - Attitude",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "low",
-          "rank": 42
+          "rank": 43
         },
         {
           "title": "アイドルパワー",
@@ -1473,7 +1485,7 @@
           "ytTitle": "M!LK - アイドルパワー (Official Promotion Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 43
+          "rank": 44
         },
         {
           "title": "GOOD DAY",
@@ -1485,7 +1497,7 @@
           "ytTitle": "Mrs. GREEN APPLE「GOOD DAY」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 44
+          "rank": 45
         },
         {
           "title": "ア・ポステリオリ",
@@ -1497,7 +1509,7 @@
           "ytTitle": "Mrs. GREEN APPLE – ア・プリオリ【LIVE from “Harmony”】",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "low",
-          "rank": 45
+          "rank": 46
         },
         {
           "title": "本と彗星",
@@ -1509,7 +1521,7 @@
           "ytTitle": "Mrs. GREEN APPLE「風と町」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 46
+          "rank": 47
         },
         {
           "title": "風と町",
@@ -1521,7 +1533,7 @@
           "ytTitle": "Mrs. GREEN APPLE「風と町」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 47
+          "rank": 48
         },
         {
           "title": "BUGS LIFE",
@@ -1533,7 +1545,7 @@
           "ytTitle": "Number_i - BUGS LIFE (Official Music Video)",
           "ytChannel": "Number_i OFFICIAL",
           "confidence": "high",
-          "rank": 48
+          "rank": 49
         },
         {
           "title": "瞞し",
@@ -1545,7 +1557,7 @@
           "ytTitle": "Mrs. GREEN APPLE – umbrella【LIVE from “Atlantis”】",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "low",
-          "rank": 49
+          "rank": 50
         },
         {
           "title": "セツナハナビ(Setsuna Hanabi)",
@@ -1557,7 +1569,7 @@
           "ytTitle": "TXT (투모로우바이투게더) 'セツナハナビ (Setsuna Hanabi)' Official MV",
           "ytChannel": "HYBE LABELS、TOMORROW X TOGETHER OFFICIAL",
           "confidence": "high",
-          "rank": 50
+          "rank": 51
         },
         {
           "title": "Brand New",
@@ -1569,7 +1581,7 @@
           "ytTitle": "Mrs. GREEN APPLE「Brand New」Official Music Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 51
+          "rank": 52
         },
         {
           "title": "ANTHEM(You Know What To Do)",
@@ -1581,7 +1593,7 @@
           "ytTitle": "INI｜'You Know What To Do' Official MV",
           "ytChannel": "INI",
           "confidence": "high",
-          "rank": 52
+          "rank": 53
         },
         {
           "title": "You Know What To Do",
@@ -1593,7 +1605,7 @@
           "ytTitle": "INI｜'You Know What To Do' Official MV",
           "ytChannel": "INI",
           "confidence": "high",
-          "rank": 53
+          "rank": 54
         },
         {
           "title": "I Got Your Back",
@@ -1605,7 +1617,7 @@
           "ytTitle": "ILLIT (아일릿) 'I Got Your Back (Feat. JISOO, MOMOKA of HANA)' Official MV",
           "ytChannel": "HYBE LABELS、ILLIT",
           "confidence": "high",
-          "rank": 54
+          "rank": 55
         },
         {
           "title": "JANE DOE",
@@ -1617,7 +1629,7 @@
           "ytTitle": "米津玄師,宇多田ヒカル「JANE DOE」×『チェンソーマン レゼ篇』MV/KenshiYonezu,HikaruUtada-JANE DOE×ChainsawMan–TheMovie:RezeArc",
           "ytChannel": "Kenshi Yonezu  米津玄師",
           "confidence": "low",
-          "rank": 55
+          "rank": 56
         },
         {
           "title": "好きでいて",
@@ -1629,7 +1641,7 @@
           "ytTitle": "【Ado】会いたくて",
           "ytChannel": "Ado",
           "confidence": "low",
-          "rank": 56
+          "rank": 57
         },
         {
           "title": "グッタイム",
@@ -1641,7 +1653,7 @@
           "ytTitle": "Snow Man 'グッタイム' Music Video",
           "ytChannel": "Snow Man",
           "confidence": "high",
-          "rank": 57
+          "rank": 58
         },
         {
           "title": "烏",
@@ -1653,7 +1665,7 @@
           "ytTitle": "米津玄師 - 烏　Kenshi Yonezu -  Karasu",
           "ytChannel": "Kenshi Yonezu  米津玄師",
           "confidence": "high",
-          "rank": 58
+          "rank": 59
         },
         {
           "title": "Wherever you are",
@@ -1665,7 +1677,7 @@
           "ytTitle": "Wherever you are",
           "ytChannel": "ONE OK ROCK",
           "confidence": "high",
-          "rank": 59
+          "rank": 60
         },
         {
           "title": "Answer",
@@ -1677,7 +1689,7 @@
           "ytTitle": "Trigger (\"Ultraman Trigger NEW GENERATION TIGA\" ) /Opening Theme Takao Sakuma [Official Video]",
           "ytChannel": "佐久間貴生 Official Channel",
           "confidence": "low",
-          "rank": 60
+          "rank": 61
         },
         {
           "title": "恋",
@@ -1689,7 +1701,7 @@
           "ytTitle": "back number - 新しい恋人達に [Official Audio]",
           "ytChannel": "back number",
           "confidence": "high",
-          "rank": 61
+          "rank": 62
         },
         {
           "title": "好きish",
@@ -1701,7 +1713,7 @@
           "ytTitle": "好きish / AKB48 68th Single【公式Music Video】",
           "ytChannel": "AKB48",
           "confidence": "high",
-          "rank": 62
+          "rank": 63
         },
         {
           "title": "KAKERA -運命のピース-",
@@ -1713,7 +1725,7 @@
           "ytTitle": "온유 ONEW '매력 (beat drum)' M/V",
           "ytChannel": "온유 ONEW",
           "confidence": "low",
-          "rank": 63
+          "rank": 64
         },
         {
           "title": "ガチ夢中!",
@@ -1725,7 +1737,7 @@
           "ytTitle": "超特急「ガチ夢中！」MUSIC VIDEO",
           "ytChannel": "超特急",
           "confidence": "high",
-          "rank": 64
+          "rank": 65
         },
         {
           "title": "WATCH ME feat. BIA",
@@ -1737,7 +1749,7 @@
           "ytTitle": "BE:FIRST / WATCH ME feat. BIA -Music Video-",
           "ytChannel": "BE:FIRST Official、BIA",
           "confidence": "high",
-          "rank": 65
+          "rank": 66
         },
         {
           "title": "Missing",
@@ -1749,7 +1761,7 @@
           "ytTitle": "BE:FIRST / Missing -Music Video- (Move ver.)",
           "ytChannel": "BE:FIRST Official",
           "confidence": "high",
-          "rank": 66
+          "rank": 67
         },
         {
           "title": "罪と罰と雨とキス (佐野勇斗&吉田仁人)",
@@ -1761,7 +1773,7 @@
           "ytTitle": "M!LK - 罪と罰と雨とキス (佐野勇斗＆吉田仁人) (Official Music Video)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 67
+          "rank": 68
         },
         {
           "title": "恋、はじめました。",
@@ -1773,7 +1785,7 @@
           "ytTitle": "＝LOVE（イコールラブ）/ 21st Single『恋、はじめました。』【MV full】",
           "ytChannel": "＝LOVE（イコールラブ）公式チャンネル",
           "confidence": "low",
-          "rank": 68
+          "rank": 69
         },
         {
           "title": "SWEET STEP",
@@ -1785,7 +1797,7 @@
           "ytTitle": "【MV】SWEET STEADY『SWEET STEP』",
           "ytChannel": "KAWAII LAB.、SWEET STEADY ",
           "confidence": "high",
-          "rank": 69
+          "rank": 70
         },
         {
           "title": "夜鷹",
@@ -1797,7 +1809,7 @@
           "ytTitle": "米津玄師「夜鷹」Kenshi Yonezu - Yodaka",
           "ytChannel": "Kenshi Yonezu  米津玄師",
           "confidence": "high",
-          "rank": 70
+          "rank": 71
         },
         {
           "title": "BPM (feat. KREVA)",
@@ -1809,7 +1821,7 @@
           "ytTitle": "Kvi Baba / BPM feat. KREVA (Music Video)",
           "ytChannel": "Kvi Baba、他 2 チャンネル",
           "confidence": "high",
-          "rank": 71
+          "rank": 72
         },
         {
           "title": "共犯",
@@ -1821,7 +1833,7 @@
           "ytTitle": "Mrs. GREEN APPLE「ProPose」Official Lyric Video",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 72
+          "rank": 73
         },
         {
           "title": "So Honey",
@@ -1833,7 +1845,7 @@
           "ytTitle": "King & Prince「So Honey」MV",
           "ytChannel": "King & Prince",
           "confidence": "low",
-          "rank": 73
+          "rank": 74
         },
         {
           "title": "Made My Night",
@@ -1845,7 +1857,7 @@
           "ytTitle": "LE SSERAFIM (르세라핌) 'Made My Night' OFFICIAL PERFORMANCE FILM @ THE LOBBY",
           "ytChannel": "HYBE LABELS、LE SSERAFIM",
           "confidence": "high",
-          "rank": 74
+          "rank": 75
         },
         {
           "title": "灰色",
@@ -1857,7 +1869,7 @@
           "ytTitle": "Motoki Ohmori -「灰色」Official MV",
           "ytChannel": "大森元貴 / Motoki Ohmori",
           "confidence": "high",
-          "rank": 75
+          "rank": 76
         },
         {
           "title": "ありふれた世界の果てに (feat. Awich, CHICO CARLITO, ONE OK ROCK & Paledusk)",
@@ -1869,7 +1881,7 @@
           "ytTitle": "YAO - 777 (feat. Awich, CHICO CARLITO, ONE OK ROCK & Paledusk) [Official Music Video]",
           "ytChannel": "YAO、他 4 チャンネル",
           "confidence": "high",
-          "rank": 76
+          "rank": 77
         },
         {
           "title": "Yes! 東京",
@@ -1881,7 +1893,7 @@
           "ytTitle": "EBiDAN(恵比寿学園男子部) 「Yes! 東京」 MUSIC VIDEO -おのおののネームver.-",
           "ytChannel": "EBiDAN",
           "confidence": "high",
-          "rank": 77
+          "rank": 78
         },
         {
           "title": "New Beginning(LOVE しない?)",
@@ -1893,7 +1905,7 @@
           "ytTitle": "新浜レオン「Fun! Fun! Fun!」ミュージックビデオ【公式】",
           "ytChannel": "新浜レオン",
           "confidence": "high",
-          "rank": 78
+          "rank": 79
         },
         {
           "title": "是非に及ばず",
@@ -1905,7 +1917,7 @@
           "ytTitle": "乃木坂46『是非に及ばず』MUSIC VIDEO",
           "ytChannel": "乃木坂46 OFFICIAL YouTube CHANNEL",
           "confidence": "high",
-          "rank": 79
+          "rank": 80
         },
         {
           "title": "愛MUST BE",
@@ -1917,7 +1929,7 @@
           "ytTitle": "櫻坂46 『愛MUST BE』 MUSIC VIDEO",
           "ytChannel": "櫻坂46 OFFICIAL YouTube CHANNEL",
           "confidence": "high",
-          "rank": 80
+          "rank": 81
         },
         {
           "title": "KAKERA -運命のピース-",
@@ -1929,7 +1941,7 @@
           "ytTitle": "ONEW オンユ '鱗(うろこ)' Live Video",
           "ytChannel": "SHINee",
           "confidence": "low",
-          "rank": 81
+          "rank": 82
         },
         {
           "title": "イチャイチャ虫",
@@ -1941,7 +1953,7 @@
           "ytTitle": "日向坂46『イチャイチャ虫』MUSIC VIDEO",
           "ytChannel": "日向坂46 OFFICIAL YouTube CHANNEL",
           "confidence": "high",
-          "rank": 82
+          "rank": 83
         },
         {
           "title": "ため息未来",
@@ -1953,7 +1965,7 @@
           "ytTitle": "SKE48 「ため息未来」 Music Video / 2026.9.9 release",
           "ytChannel": "SKE48",
           "confidence": "high",
-          "rank": 83
+          "rank": 84
         },
         {
           "title": "霞日和/Starry Smile Story",
@@ -1965,7 +1977,7 @@
           "ytTitle": "コブクロ「Star Song」",
           "ytChannel": "コブクロ 公式チャンネル",
           "confidence": "low",
-          "rank": 84
+          "rank": 85
         },
         {
           "title": "運命さがし",
@@ -1977,7 +1989,7 @@
           "ytTitle": "マカロニえんぴつ「運命さがし」(Official Audio)",
           "ytChannel": "公式マカロニえんぴつ",
           "confidence": "high",
-          "rank": 85
+          "rank": 86
         },
         {
           "title": "時空超えてユニバース",
@@ -1989,7 +2001,7 @@
           "ytTitle": "M!LK - 時空超えてユニバース (Official Audio)",
           "ytChannel": "M!LK",
           "confidence": "high",
-          "rank": 86
+          "rank": 87
         },
         {
           "title": "IGNITE",
@@ -2001,7 +2013,7 @@
           "ytTitle": "JO1｜'IGNITE' PRACTICE VIDEO (MOVING VER.)",
           "ytChannel": "JO1",
           "confidence": "high",
-          "rank": 87
+          "rank": 88
         },
         {
           "title": "Yes! 東京 (feat. SUPER★DRAGON, Sakurashimeji, ONE N' ONLY, BUDDiiS, ICEx & Lienel)",
@@ -2013,7 +2025,7 @@
           "ytTitle": "EBiDAN(恵比寿学園男子部) 「Yes! 東京」Making Lyric Video",
           "ytChannel": "EBiDAN",
           "confidence": "low",
-          "rank": 88
+          "rank": 89
         },
         {
           "title": "Variety",
@@ -2025,7 +2037,7 @@
           "ytTitle": "Variety",
           "ytChannel": "Mrs. GREEN APPLE",
           "confidence": "high",
-          "rank": 89
+          "rank": 90
         },
         {
           "title": "見知らぬ糸",
@@ -2037,7 +2049,7 @@
           "ytTitle": "スピッツ「見知らぬ糸」- Symphonic Version｜TBSドラマ「Tシャツが乾くまで」主題歌ファンメイドMV",
           "ytChannel": "Classic Reimagined Lab  名曲再解釈ラボ",
           "confidence": "low",
-          "rank": 90
+          "rank": 91
         },
         {
           "title": "New Sensation",
@@ -2049,7 +2061,7 @@
           "ytTitle": "New Sensation",
           "ytChannel": "ŹOOĻ - Topic",
           "confidence": "low",
-          "rank": 91
+          "rank": 92
         },
         {
           "title": "MY LiFE!",
@@ -2061,7 +2073,7 @@
           "ytTitle": "IDOLiSH7『MY LiFE!』【パフォーマンス映像＋ストーリー冒頭公開】",
           "ytChannel": "【公式】アイドリッシュセブン 大神万理",
           "confidence": "low",
-          "rank": 92
+          "rank": 93
         },
         {
           "title": "NAVIGATOR:",
@@ -2073,7 +2085,7 @@
           "ytTitle": "NAVIGATOR:",
           "ytChannel": "Re:vale - Topic",
           "confidence": "high",
-          "rank": 93
+          "rank": 94
         },
         {
           "title": "運命さがし EP",
@@ -2085,7 +2097,7 @@
           "ytTitle": "マカロニえんぴつ「運命さがし」EP  |  OKKAKE盤・初回限定盤Blu-ray Teaser Trailer",
           "ytChannel": "公式マカロニえんぴつ",
           "confidence": "high",
-          "rank": 94
+          "rank": 95
         },
         {
           "title": "Yes, Call in LOVE",
@@ -2097,7 +2109,7 @@
           "ytTitle": "【MV】前田大翔「Yes, Call in LOVE」",
           "ytChannel": "前田大翔 / Taisho Maeda",
           "confidence": "high",
-          "rank": 95
+          "rank": 96
         },
         {
           "title": "陽が沈む前に…/プルメリア ラプソディ",
@@ -2109,7 +2121,7 @@
           "ytTitle": "真田ナオキ 両A面シングル「陽が沈む前に… / プルメリア ラプソディ」ティザー映像",
           "ytChannel": "真田ナオキ / Naoki Sanada、TEICHIKU RECORDS",
           "confidence": "high",
-          "rank": 96
+          "rank": 97
         },
         {
           "title": "音銀河",
@@ -2121,7 +2133,7 @@
           "ytTitle": "【玉置浩二・ASKA】絶品！！！美味しすぎる！堪能させていただきました。【音銀河】【リアクション】",
           "ytChannel": "ハレルヤ!みずほチャンネル",
           "confidence": "low",
-          "rank": 97
+          "rank": 98
         },
         {
           "title": "わったらいふ!",
@@ -2133,7 +2145,7 @@
           "ytTitle": "わーすた（WASUTA）「わったらいふ！」",
           "ytChannel": "わーすた （The World Standard）",
           "confidence": "high",
-          "rank": 98
+          "rank": 99
         },
         {
           "title": "BLUE MAGIC",
@@ -2145,7 +2157,7 @@
           "ytTitle": "小林愛香 「グミチュウ」Music Video",
           "ytChannel": "小林愛香公式YouTubeチャンネル",
           "confidence": "high",
-          "rank": 99
+          "rank": 100
         },
         {
           "title": "Twilight Magic",
@@ -2157,7 +2169,7 @@
           "ytTitle": "中川翔子『Twilight Magic』×TVアニメ『黒猫と魔女の教室』コラボMV",
           "ytChannel": "Shoko Nakagawa OFFICIAL YouTube CHANNEL",
           "confidence": "high",
-          "rank": 100
+          "rank": 101
         },
         {
           "title": "Goddamn!!!!!",
@@ -2169,7 +2181,7 @@
           "ytTitle": "LUCY 『Goddamn!!!!!』MUSIC VIDEO",
           "ytChannel": "LUCY",
           "confidence": "high",
-          "rank": 101
+          "rank": 102
         },
         {
           "title": "ハートフル☆メモリーズ",
@@ -2181,7 +2193,7 @@
           "ytTitle": "Luce Twinkle Wink☆「ハートフル☆メモリーズ MV -Dance ver.-」",
           "ytChannel": "Luce Twinkle Wink Official YouTube Channel",
           "confidence": "high",
-          "rank": 102
+          "rank": 103
         }
       ],
       "billboard": [
@@ -3309,7 +3321,7 @@
           "ranks": {
             "apple": 4,
             "appleRss": 4,
-            "youtube": 17,
+            "youtube": 18,
             "billboard": 6
           },
           "sources": [
@@ -3318,10 +3330,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.78263,
+          "score": 0.78099,
           "rank": 1,
           "appleRank": 4,
-          "youtubeRank": 17
+          "youtubeRank": 18
         },
         {
           "title": "Brand New",
@@ -3333,7 +3345,7 @@
           "ranks": {
             "apple": 3,
             "appleRss": 3,
-            "youtube": 51,
+            "youtube": 52,
             "billboard": 5
           },
           "sources": [
@@ -3342,10 +3354,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.72596,
+          "score": 0.72497,
           "rank": 2,
           "appleRank": 3,
-          "youtubeRank": 51
+          "youtubeRank": 52
         },
         {
           "title": "lulu.",
@@ -3357,7 +3369,7 @@
           "ranks": {
             "apple": 6,
             "appleRss": 6,
-            "youtube": 26,
+            "youtube": 27,
             "billboard": 17
           },
           "sources": [
@@ -3366,10 +3378,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.71798,
+          "score": 0.71651,
           "rank": 3,
           "appleRank": 6,
-          "youtubeRank": 26
+          "youtubeRank": 27
         },
         {
           "title": "ライラック",
@@ -3390,7 +3402,7 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.7162,
+          "score": 0.71629,
           "rank": 4,
           "appleRank": 5,
           "youtubeRank": 6
@@ -3405,7 +3417,7 @@
           "ranks": {
             "apple": 7,
             "appleRss": 7,
-            "youtube": 38,
+            "youtube": 39,
             "billboard": 8
           },
           "sources": [
@@ -3414,10 +3426,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.71445,
+          "score": 0.71321,
           "rank": 5,
           "appleRank": 7,
-          "youtubeRank": 38
+          "youtubeRank": 39
         },
         {
           "title": "爆裂愛してる",
@@ -3429,7 +3441,7 @@
           "ranks": {
             "apple": 11,
             "appleRss": 11,
-            "youtube": 25,
+            "youtube": 26,
             "billboard": 9
           },
           "sources": [
@@ -3438,34 +3450,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.70894,
+          "score": 0.70746,
           "rank": 6,
           "appleRank": 11,
-          "youtubeRank": 25
-        },
-        {
-          "title": "It's Me",
-          "artist": "ILLIT",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
-          "youtubeId": "bMhDJ0S0OBA",
-          "ytViews": 136374337,
-          "ranks": {
-            "apple": 14,
-            "appleRss": 14,
-            "youtube": 14,
-            "billboard": 10
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.70651,
-          "rank": 7,
-          "appleRank": 14,
-          "youtubeRank": 14
+          "youtubeRank": 26
         },
         {
           "title": "IRIS OUT",
@@ -3486,10 +3474,34 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.70024,
-          "rank": 8,
+          "score": 0.70035,
+          "rank": 7,
           "appleRank": 10,
           "youtubeRank": 7
+        },
+        {
+          "title": "It's Me",
+          "artist": "ILLIT",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/cc/76/26/cc76262a-dc2e-0746-ed85-070a56d23d40/26UMGIM46377.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/its-me/1894837142?i=1894837345",
+          "youtubeId": "bMhDJ0S0OBA",
+          "ytViews": 136374337,
+          "ranks": {
+            "apple": 15,
+            "appleRss": 15,
+            "youtube": 15,
+            "billboard": 10
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.69782,
+          "rank": 8,
+          "appleRank": 15,
+          "youtubeRank": 15
         },
         {
           "title": "ありふれた世界の果てに (feat. Awich, CHICO CARLITO, ONE OK ROCK & Paledusk)",
@@ -3501,7 +3513,7 @@
           "ranks": {
             "apple": 1,
             "appleRss": 1,
-            "youtube": 76,
+            "youtube": 77,
             "billboard": 4
           },
           "sources": [
@@ -3510,10 +3522,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.69394,
+          "score": 0.69343,
           "rank": 9,
           "appleRank": 1,
-          "youtubeRank": 76
+          "youtubeRank": 77
         },
         {
           "title": "マリーゴールド",
@@ -3534,7 +3546,7 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.63004,
+          "score": 0.63006,
           "rank": 10,
           "appleRank": 21,
           "youtubeRank": 2
@@ -3549,7 +3561,7 @@
           "ranks": {
             "apple": 9,
             "appleRss": 9,
-            "youtube": 86,
+            "youtube": 87,
             "billboard": 3
           },
           "sources": [
@@ -3558,10 +3570,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.62133,
+          "score": 0.62101,
           "rank": 11,
           "appleRank": 9,
-          "youtubeRank": 86
+          "youtubeRank": 87
         },
         {
           "title": "恋、はじめました。",
@@ -3573,7 +3585,7 @@
           "ranks": {
             "apple": 18,
             "appleRss": 18,
-            "youtube": 68,
+            "youtube": 69,
             "billboard": 14,
             "oricon": 20
           },
@@ -3584,10 +3596,10 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.61563,
+          "score": 0.61496,
           "rank": 12,
           "appleRank": 18,
-          "youtubeRank": 68
+          "youtubeRank": 69
         },
         {
           "title": "運命さがし",
@@ -3599,7 +3611,7 @@
           "ranks": {
             "apple": 8,
             "appleRss": 8,
-            "youtube": 85,
+            "youtube": 86,
             "billboard": 13
           },
           "sources": [
@@ -3608,10 +3620,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.60029,
+          "score": 0.59995,
           "rank": 13,
           "appleRank": 8,
-          "youtubeRank": 85
+          "youtubeRank": 86
         },
         {
           "title": "高嶺の花子さん",
@@ -3632,7 +3644,7 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.59227,
+          "score": 0.59241,
           "rank": 14,
           "appleRank": 17,
           "youtubeRank": 8
@@ -3647,7 +3659,7 @@
           "ranks": {
             "apple": 20,
             "appleRss": 20,
-            "youtube": 43,
+            "youtube": 44,
             "billboard": 16
           },
           "sources": [
@@ -3656,10 +3668,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.58965,
+          "score": 0.5885,
           "rank": 15,
           "appleRank": 20,
-          "youtubeRank": 43
+          "youtubeRank": 44
         },
         {
           "title": "Dance Forever",
@@ -3669,7 +3681,7 @@
           "youtubeId": "lmYusdmVg28",
           "ytViews": 37430254,
           "ranks": {
-            "youtube": 39,
+            "youtube": 40,
             "billboard": 12,
             "oricon": 4
           },
@@ -3678,34 +3690,10 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.52749,
+          "score": 0.52627,
           "rank": 16,
           "appleRank": null,
-          "youtubeRank": 39
-        },
-        {
-          "title": "点描の唄 (feat. 井上苑子)",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/34/27/08/3427087f-2d39-4847-9b19-052dd3589014/18UMGIM36633.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E7%82%B9%E6%8F%8F%E3%81%AE%E5%94%84-feat-%E4%BA%95%E4%B8%8A%E8%8B%91%E5%AD%90/1408505088?i=1408505419",
-          "youtubeId": "rWsiVWlvw2E",
-          "ytViews": 88155890,
-          "ranks": {
-            "apple": 24,
-            "appleRss": 24,
-            "youtube": 20,
-            "billboard": 48
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.51075,
-          "rank": 17,
-          "appleRank": 24,
-          "youtubeRank": 20
+          "youtubeRank": 40
         },
         {
           "title": "You!Joy!Parade!",
@@ -3717,7 +3705,7 @@
           "ranks": {
             "apple": 31,
             "appleRss": 31,
-            "youtube": 41,
+            "youtube": 42,
             "billboard": 18
           },
           "sources": [
@@ -3726,10 +3714,34 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.51057,
-          "rank": 18,
+          "score": 0.50939,
+          "rank": 17,
           "appleRank": 31,
-          "youtubeRank": 41
+          "youtubeRank": 42
+        },
+        {
+          "title": "点描の唄 (feat. 井上苑子)",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/34/27/08/3427087f-2d39-4847-9b19-052dd3589014/18UMGIM36633.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E7%82%B9%E6%8F%8F%E3%81%AE%E5%94%84-feat-%E4%BA%95%E4%B8%8A%E8%8B%91%E5%AD%90/1408505088?i=1408505419",
+          "youtubeId": "rWsiVWlvw2E",
+          "ytViews": 88155890,
+          "ranks": {
+            "apple": 24,
+            "appleRss": 24,
+            "youtube": 21,
+            "billboard": 48
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.50917,
+          "rank": 18,
+          "appleRank": 24,
+          "youtubeRank": 21
         },
         {
           "title": "ブルーアンバー",
@@ -3741,7 +3753,7 @@
           "ranks": {
             "apple": 19,
             "appleRss": 19,
-            "youtube": 36,
+            "youtube": 37,
             "billboard": 51
           },
           "sources": [
@@ -3750,34 +3762,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.50537,
+          "score": 0.5041,
           "rank": 19,
           "appleRank": 19,
-          "youtubeRank": 36
-        },
-        {
-          "title": "見知らぬ糸",
-          "artist": "スピッツ",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
-          "youtubeId": "LuRf7LUAtUI",
-          "ytViews": 313259,
-          "ranks": {
-            "apple": 23,
-            "appleRss": 23,
-            "youtube": 90,
-            "billboard": 7
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.50349,
-          "rank": 20,
-          "appleRank": 23,
-          "youtubeRank": 90
+          "youtubeRank": 37
         },
         {
           "title": "夜の踊り子",
@@ -3789,7 +3777,7 @@
           "ranks": {
             "apple": 37,
             "appleRss": 37,
-            "youtube": 29,
+            "youtube": 30,
             "billboard": 15
           },
           "sources": [
@@ -3798,10 +3786,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.5011,
-          "rank": 21,
+          "score": 0.49969,
+          "rank": 20,
           "appleRank": 37,
-          "youtubeRank": 29
+          "youtubeRank": 30
         },
         {
           "title": "花束",
@@ -3813,7 +3801,7 @@
           "ranks": {
             "apple": 12,
             "appleRss": 12,
-            "youtube": 28,
+            "youtube": 29,
             "billboard": 74
           },
           "sources": [
@@ -3822,10 +3810,34 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.50106,
-          "rank": 22,
+          "score": 0.49963,
+          "rank": 21,
           "appleRank": 12,
-          "youtubeRank": 28
+          "youtubeRank": 29
+        },
+        {
+          "title": "見知らぬ糸",
+          "artist": "スピッツ",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ab/0d/29/ab0d292f-3675-729e-4a8f-eb79a4c88367/26UMGIM87104.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E8%A6%8B%E7%9F%A5%E3%82%89%E3%81%AC%E7%B3%B8/6793888333?i=6793888335",
+          "youtubeId": "LuRf7LUAtUI",
+          "ytViews": 313259,
+          "ranks": {
+            "apple": 25,
+            "appleRss": 25,
+            "youtube": 91,
+            "billboard": 7
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.48924,
+          "rank": 22,
+          "appleRank": 25,
+          "youtubeRank": 91
         },
         {
           "title": "ハッピーエンド",
@@ -3846,7 +3858,7 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.47639,
+          "score": 0.47658,
           "rank": 23,
           "appleRank": 16,
           "youtubeRank": 11
@@ -3870,7 +3882,7 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.44908,
+          "score": 0.44912,
           "rank": 24,
           "appleRank": 38,
           "youtubeRank": 3
@@ -3883,17 +3895,17 @@
           "youtubeId": "KsHKaP50FBE",
           "ytViews": 65440125,
           "ranks": {
-            "youtube": 27,
+            "youtube": 28,
             "billboard": 2
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.44602,
+          "score": 0.44457,
           "rank": 25,
           "appleRank": null,
-          "youtubeRank": 27
+          "youtubeRank": 28
         },
         {
           "title": "Blue Jeans",
@@ -3903,9 +3915,9 @@
           "youtubeId": "r_AOa3yVz8A",
           "ytViews": 52258218,
           "ranks": {
-            "apple": 25,
-            "appleRss": 25,
-            "youtube": 32,
+            "apple": 27,
+            "appleRss": 27,
+            "youtube": 33,
             "billboard": 66
           },
           "sources": [
@@ -3914,10 +3926,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.42622,
+          "score": 0.41086,
           "rank": 26,
-          "appleRank": 25,
-          "youtubeRank": 32
+          "appleRank": 27,
+          "youtubeRank": 33
         },
         {
           "title": "Soranji",
@@ -3929,7 +3941,7 @@
           "ranks": {
             "apple": 30,
             "appleRss": 30,
-            "youtube": 13,
+            "youtube": 14,
             "billboard": 73
           },
           "sources": [
@@ -3938,10 +3950,32 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.40747,
+          "score": 0.40576,
           "rank": 27,
           "appleRank": 30,
-          "youtubeRank": 13
+          "youtubeRank": 14
+        },
+        {
+          "title": "シンデレラ",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B7%E3%83%B3%E3%83%87%E3%83%AC%E3%83%A9/6808172946?i=6808173126",
+          "youtubeId": "FYhxYcXfhYA",
+          "ytViews": 52589151,
+          "ranks": {
+            "apple": 14,
+            "appleRss": 14,
+            "youtube": 32
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.39881,
+          "rank": 28,
+          "appleRank": 14,
+          "youtubeRank": 32
         },
         {
           "title": "You Know What To Do",
@@ -3951,17 +3985,17 @@
           "youtubeId": "HWZwkF2gYQs",
           "ytViews": 18515827,
           "ranks": {
-            "youtube": 53,
+            "youtube": 54,
             "billboard": 1
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.39804,
-          "rank": 28,
+          "score": 0.39709,
+          "rank": 29,
           "appleRank": null,
-          "youtubeRank": 53
+          "youtubeRank": 54
         },
         {
           "title": "スパークル",
@@ -3978,32 +4012,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.39512,
-          "rank": 29,
+          "score": 0.39517,
+          "rank": 30,
           "appleRank": null,
           "youtubeRank": 4
-        },
-        {
-          "title": "シンデレラ",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B7%E3%83%B3%E3%83%87%E3%83%AC%E3%83%A9/6808172946?i=6808173126",
-          "youtubeId": "FYhxYcXfhYA",
-          "ytViews": 52589151,
-          "ranks": {
-            "apple": 15,
-            "appleRss": 15,
-            "youtube": 31
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.39318,
-          "rank": 30,
-          "appleRank": 15,
-          "youtubeRank": 31
         },
         {
           "title": "Yes, Call in LOVE",
@@ -4013,7 +4025,7 @@
           "youtubeId": "swiYQVYN3PU",
           "ytViews": 96364,
           "ranks": {
-            "youtube": 95,
+            "youtube": 96,
             "billboard": 23,
             "oricon": 3
           },
@@ -4022,10 +4034,10 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.38969,
+          "score": 0.38953,
           "rank": 31,
           "appleRank": null,
-          "youtubeRank": 95
+          "youtubeRank": 96
         },
         {
           "title": "Yes! 東京 (feat. SUPER★DRAGON, Sakurashimeji, ONE N' ONLY, BUDDiiS, ICEx & Lienel)",
@@ -4037,17 +4049,17 @@
           "ranks": {
             "apple": 2,
             "appleRss": 2,
-            "youtube": 88
+            "youtube": 89
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.37241,
+          "score": 0.37213,
           "rank": 32,
           "appleRank": 2,
-          "youtubeRank": 88
+          "youtubeRank": 89
         },
         {
           "title": "HAPPY BIRTHDAY",
@@ -4059,17 +4071,17 @@
           "ranks": {
             "apple": 22,
             "appleRss": 22,
-            "youtube": 24
+            "youtube": 25
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.3579,
+          "score": 0.3564,
           "rank": 33,
           "appleRank": 22,
-          "youtubeRank": 24
+          "youtubeRank": 25
         },
         {
           "title": "BPM (feat. KREVA)",
@@ -4081,7 +4093,7 @@
           "ranks": {
             "apple": 40,
             "appleRss": 40,
-            "youtube": 71,
+            "youtube": 72,
             "billboard": 30
           },
           "sources": [
@@ -4090,34 +4102,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.35275,
+          "score": 0.35214,
           "rank": 34,
           "appleRank": 40,
-          "youtubeRank": 71
-        },
-        {
-          "title": "風と町",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22306249,
-          "ranks": {
-            "apple": 34,
-            "appleRss": 34,
-            "youtube": 47,
-            "billboard": 61
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.3488,
-          "rank": 35,
-          "appleRank": 34,
-          "youtubeRank": 47
+          "youtubeRank": 72
         },
         {
           "title": "Five",
@@ -4127,17 +4115,17 @@
           "youtubeId": "1DzBKtD3JzI",
           "ytViews": 37868568,
           "ranks": {
-            "youtube": 37,
+            "youtube": 38,
             "billboard": 28
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.34841,
-          "rank": 36,
+          "score": 0.34716,
+          "rank": 35,
           "appleRank": null,
-          "youtubeRank": 37
+          "youtubeRank": 38
         },
         {
           "title": "WATCH ME feat. BIA",
@@ -4147,37 +4135,41 @@
           "youtubeId": "uzsSnLLHx5M",
           "ytViews": 8668835,
           "ranks": {
-            "youtube": 65,
+            "youtube": 66,
             "billboard": 11
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.34451,
-          "rank": 37,
+          "score": 0.34379,
+          "rank": 36,
           "appleRank": null,
-          "youtubeRank": 65
+          "youtubeRank": 66
         },
         {
-          "title": "AIZO",
-          "artist": "King Gnu",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "zz2a9Q2Wru0",
-          "ytViews": 74097667,
+          "title": "風と町",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2f/ec/7a/2fec7a5e-7ea1-ebc4-4d41-164790ccbabd/26UMGIM40658.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E9%A2%A8%E3%81%A8%E7%94%BA/1891943324?i=1891943326",
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22306249,
           "ranks": {
-            "youtube": 23,
-            "billboard": 40
+            "apple": 35,
+            "appleRss": 35,
+            "youtube": 48,
+            "billboard": 61
           },
           "sources": [
+            "apple",
+            "appleRss",
             "youtube",
             "billboard"
           ],
-          "score": 0.33986,
-          "rank": 38,
-          "appleRank": null,
-          "youtubeRank": 23
+          "score": 0.34074,
+          "rank": 37,
+          "appleRank": 35,
+          "youtubeRank": 48
         },
         {
           "title": "幸せ",
@@ -4194,10 +4186,30 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.33835,
-          "rank": 39,
+          "score": 0.33852,
+          "rank": 38,
           "appleRank": null,
           "youtubeRank": 10
+        },
+        {
+          "title": "AIZO",
+          "artist": "King Gnu",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "zz2a9Q2Wru0",
+          "ytViews": 74097667,
+          "ranks": {
+            "youtube": 24,
+            "billboard": 40
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.33834,
+          "rank": 39,
+          "appleRank": null,
+          "youtubeRank": 24
         },
         {
           "title": "BAD",
@@ -4207,17 +4219,17 @@
           "youtubeId": "-q_S27LbNKU",
           "ytViews": 59642347,
           "ranks": {
-            "youtube": 30,
+            "youtube": 31,
             "billboard": 36
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.33814,
+          "score": 0.33675,
           "rank": 40,
           "appleRank": null,
-          "youtubeRank": 30
+          "youtubeRank": 31
         },
         {
           "title": "烏",
@@ -4227,17 +4239,17 @@
           "youtubeId": "YjPMupS1Lg4",
           "ytViews": 17187009,
           "ranks": {
-            "youtube": 58,
+            "youtube": 59,
             "billboard": 20
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.33124,
+          "score": 0.33038,
           "rank": 41,
           "appleRank": null,
-          "youtubeRank": 58
+          "youtubeRank": 59
         },
         {
           "title": "共犯",
@@ -4249,17 +4261,17 @@
           "ranks": {
             "apple": 13,
             "appleRss": 13,
-            "youtube": 72
+            "youtube": 73
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.32678,
+          "score": 0.32619,
           "rank": 42,
           "appleRank": 13,
-          "youtubeRank": 72
+          "youtubeRank": 73
         },
         {
           "title": "ダーリン",
@@ -4271,7 +4283,7 @@
           "ranks": {
             "apple": 47,
             "appleRss": 47,
-            "youtube": 21,
+            "youtube": 22,
             "billboard": 55
           },
           "sources": [
@@ -4280,10 +4292,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.32678,
+          "score": 0.32522,
           "rank": 43,
           "appleRank": 47,
-          "youtubeRank": 21
+          "youtubeRank": 22
         },
         {
           "title": "CLICK",
@@ -4293,17 +4305,17 @@
           "youtubeId": "sf02ugzPFE4",
           "ytViews": 48537730,
           "ranks": {
-            "youtube": 33,
+            "youtube": 34,
             "billboard": 39
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.32325,
+          "score": 0.32192,
           "rank": 44,
           "appleRank": null,
-          "youtubeRank": 33
+          "youtubeRank": 34
         },
         {
           "title": "青と夏",
@@ -4315,7 +4327,7 @@
           "ranks": {
             "apple": 39,
             "appleRss": 39,
-            "youtube": 34,
+            "youtube": 35,
             "billboard": 69
           },
           "sources": [
@@ -4324,10 +4336,10 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.31529,
+          "score": 0.31398,
           "rank": 45,
           "appleRank": 39,
-          "youtubeRank": 34
+          "youtubeRank": 35
         },
         {
           "title": "ハートフル☆メモリーズ",
@@ -4337,7 +4349,7 @@
           "youtubeId": "cmpuViGx1LE",
           "ytViews": 8836,
           "ranks": {
-            "youtube": 102,
+            "youtube": 103,
             "billboard": 37,
             "oricon": 7
           },
@@ -4346,10 +4358,10 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.31396,
+          "score": 0.31394,
           "rank": 46,
           "appleRank": null,
-          "youtubeRank": 102
+          "youtubeRank": 103
         },
         {
           "title": "Missing",
@@ -4359,41 +4371,39 @@
           "youtubeId": "I_6m6_Ylyd8",
           "ytViews": 8378893,
           "ranks": {
-            "youtube": 66,
+            "youtube": 67,
             "billboard": 21
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.31255,
+          "score": 0.31184,
           "rank": 47,
           "appleRank": null,
-          "youtubeRank": 66
+          "youtubeRank": 67
         },
         {
-          "title": "わたがし",
-          "artist": "back number",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1b/a4/3f/1ba43f2b-26a6-e4bc-ad09-b36f4e2c2524/00602577303852.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%8F%E3%81%9F%E3%81%8C%E3%81%97/1451567083?i=1451567084",
-          "youtubeId": "uy_BaRBJIzQ",
-          "ytViews": 33799646,
+          "title": "本と彗星",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
+          "youtubeId": "9NJI7cLZ2Qg",
+          "ytViews": 22321130,
           "ranks": {
-            "apple": 50,
-            "appleRss": 50,
-            "youtube": 40,
-            "billboard": 44
+            "apple": 23,
+            "appleRss": 23,
+            "youtube": 47
           },
           "sources": [
             "apple",
             "appleRss",
-            "youtube",
-            "billboard"
+            "youtube"
           ],
-          "score": 0.30153,
+          "score": 0.30668,
           "rank": 48,
-          "appleRank": 50,
-          "youtubeRank": 40
+          "appleRank": 23,
+          "youtubeRank": 47
         },
         {
           "title": "グッタイム",
@@ -4403,17 +4413,17 @@
           "youtubeId": "h-TPXFw_q0I",
           "ytViews": 17648598,
           "ranks": {
-            "youtube": 57,
+            "youtube": 58,
             "billboard": 31
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.3002,
+          "score": 0.29932,
           "rank": 49,
           "appleRank": null,
-          "youtubeRank": 57
+          "youtubeRank": 58
         },
         {
           "title": "GOOD DAY",
@@ -4425,7 +4435,7 @@
           "ranks": {
             "apple": 28,
             "appleRss": 28,
-            "youtube": 44,
+            "youtube": 45,
             "billboard": 94
           },
           "sources": [
@@ -4434,10 +4444,52 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.29769,
+          "score": 0.29656,
           "rank": 50,
           "appleRank": 28,
-          "youtubeRank": 44
+          "youtubeRank": 45
+        },
+        {
+          "title": "エピソード",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%A8%E3%83%94%E3%82%BD%E3%83%BC%E3%83%89/6808172946?i=6808173145",
+          "youtubeId": "44cICMd3jW4",
+          "ytViews": 145071804,
+          "ranks": {
+            "apple": 34,
+            "appleRss": 34,
+            "youtube": 13
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.2957,
+          "rank": 51,
+          "appleRank": 34,
+          "youtubeRank": 13
+        },
+        {
+          "title": "わたがし",
+          "artist": "back number",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "uy_BaRBJIzQ",
+          "ytViews": 33799646,
+          "ranks": {
+            "youtube": 41,
+            "billboard": 44
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.29333,
+          "rank": 52,
+          "appleRank": null,
+          "youtubeRank": 41
         },
         {
           "title": "I Got Your Back",
@@ -4447,7 +4499,7 @@
           "youtubeId": "_Pk6xfju3l0",
           "ytViews": 18240912,
           "ranks": {
-            "youtube": 54,
+            "youtube": 55,
             "billboard": 57,
             "oricon": 18
           },
@@ -4456,10 +4508,30 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.29308,
-          "rank": 51,
+          "score": 0.29215,
+          "rank": 53,
           "appleRank": null,
-          "youtubeRank": 54
+          "youtubeRank": 55
+        },
+        {
+          "title": "愛MUST BE",
+          "artist": "櫻坂46",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "Sp4xl7wtqtc",
+          "ytViews": 1858201,
+          "ranks": {
+            "youtube": 81,
+            "billboard": 19
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.29066,
+          "rank": 54,
+          "appleRank": null,
+          "youtubeRank": 81
         },
         {
           "title": "ヒロイン",
@@ -4471,87 +4543,25 @@
           "ranks": {
             "apple": 32,
             "appleRss": 32,
-            "youtube": 22
+            "youtube": 23
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.29182,
-          "rank": 52,
-          "appleRank": 32,
-          "youtubeRank": 22
-        },
-        {
-          "title": "愛MUST BE",
-          "artist": "櫻坂46",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "Sp4xl7wtqtc",
-          "ytViews": 1858201,
-          "ranks": {
-            "youtube": 80,
-            "billboard": 19
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.2911,
-          "rank": 53,
-          "appleRank": null,
-          "youtubeRank": 80
-        },
-        {
-          "title": "エピソード",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%A8%E3%83%94%E3%82%BD%E3%83%BC%E3%83%89/6808172946?i=6808173145",
-          "youtubeId": "44cICMd3jW4",
-          "ytViews": 145071804,
-          "ranks": {
-            "apple": 35,
-            "appleRss": 35,
-            "youtube": 12
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.29043,
-          "rank": 54,
-          "appleRank": 35,
-          "youtubeRank": 12
-        },
-        {
-          "title": "BUGS LIFE",
-          "artist": "Number_i",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "qFhspt7zsXg",
-          "ytViews": 21926837,
-          "ranks": {
-            "youtube": 48,
-            "billboard": 41
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.28784,
+          "score": 0.29028,
           "rank": 55,
-          "appleRank": null,
-          "youtubeRank": 48
+          "appleRank": 32,
+          "youtubeRank": 23
         },
         {
-          "title": "本と彗星",
+          "title": "ア・ポステリオリ",
           "artist": "Mrs. GREEN APPLE",
           "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E6%9C%AC%E3%81%A8%E5%BD%97%E6%98%9F/6808172946?i=6808173138",
-          "youtubeId": "9NJI7cLZ2Qg",
-          "ytViews": 22321130,
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%A2-%E3%83%9D%E3%82%B9%E3%83%86%E3%83%AA%E3%82%AA%E3%83%AA/6808172946?i=6808173143",
+          "youtubeId": "atJbRXERvH8",
+          "ytViews": 22844234,
           "ranks": {
             "apple": 26,
             "appleRss": 26,
@@ -4562,10 +4572,30 @@
             "appleRss",
             "youtube"
           ],
-          "score": 0.28676,
+          "score": 0.28762,
           "rank": 56,
           "appleRank": 26,
           "youtubeRank": 46
+        },
+        {
+          "title": "BUGS LIFE",
+          "artist": "Number_i",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "qFhspt7zsXg",
+          "ytViews": 21926837,
+          "ranks": {
+            "youtube": 49,
+            "billboard": 41
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.2868,
+          "rank": 57,
+          "appleRank": null,
+          "youtubeRank": 49
         },
         {
           "title": "灰色",
@@ -4575,17 +4605,17 @@
           "youtubeId": "EUCRNhQlKYc",
           "ytViews": 3166401,
           "ranks": {
-            "youtube": 75,
+            "youtube": 76,
             "billboard": 24
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.2859,
-          "rank": 57,
+          "score": 0.28537,
+          "rank": 58,
           "appleRank": null,
-          "youtubeRank": 75
+          "youtubeRank": 76
         },
         {
           "title": "JANE DOE",
@@ -4595,39 +4625,17 @@
           "youtubeId": "E8N8CAihLT0",
           "ytViews": 18094206,
           "ranks": {
-            "youtube": 55,
+            "youtube": 56,
             "billboard": 38
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.28312,
-          "rank": 58,
-          "appleRank": null,
-          "youtubeRank": 55
-        },
-        {
-          "title": "ア・ポステリオリ",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%A2-%E3%83%9D%E3%82%B9%E3%83%86%E3%83%AA%E3%82%AA%E3%83%AA/6808172946?i=6808173143",
-          "youtubeId": "atJbRXERvH8",
-          "ytViews": 22844234,
-          "ranks": {
-            "apple": 27,
-            "appleRss": 27,
-            "youtube": 45
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.28173,
+          "score": 0.2822,
           "rank": 59,
-          "appleRank": 27,
-          "youtubeRank": 45
+          "appleRank": null,
+          "youtubeRank": 56
         },
         {
           "title": "罪と罰と雨とキス (佐野勇斗&吉田仁人)",
@@ -4637,17 +4645,17 @@
           "youtubeId": "7VqCdhFGE78",
           "ytViews": 7964345,
           "ranks": {
-            "youtube": 67,
+            "youtube": 68,
             "billboard": 32
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.27759,
+          "score": 0.2769,
           "rank": 60,
           "appleRank": null,
-          "youtubeRank": 67
+          "youtubeRank": 68
         },
         {
           "title": "ため息未来",
@@ -4657,7 +4665,7 @@
           "youtubeId": "cTlvAqzTqRQ",
           "ytViews": 1143750,
           "ranks": {
-            "youtube": 83,
+            "youtube": 84,
             "billboard": 60,
             "oricon": 8
           },
@@ -4666,10 +4674,10 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.27722,
+          "score": 0.27683,
           "rank": 61,
           "appleRank": null,
-          "youtubeRank": 83
+          "youtubeRank": 84
         },
         {
           "title": "KAKERA -運命のピース-",
@@ -4679,41 +4687,17 @@
           "youtubeId": "m5CyFhGzS98",
           "ytViews": 1360219,
           "ranks": {
-            "youtube": 81,
+            "youtube": 82,
             "billboard": 25
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.27114,
+          "score": 0.27072,
           "rank": 62,
           "appleRank": null,
-          "youtubeRank": 81
-        },
-        {
-          "title": "ケセラセラ",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
-          "youtubeId": "Jy-QS27q7lA",
-          "ytViews": 131138861,
-          "ranks": {
-            "apple": 43,
-            "appleRss": 43,
-            "youtube": 15,
-            "billboard": 87
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.27055,
-          "rank": 63,
-          "appleRank": 43,
-          "youtubeRank": 15
+          "youtubeRank": 82
         },
         {
           "title": "IGNITE",
@@ -4723,37 +4707,17 @@
           "youtubeId": "3rTOBRwAi24",
           "ytViews": 641612,
           "ranks": {
-            "youtube": 87,
+            "youtube": 88,
             "billboard": 22
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.26837,
-          "rank": 64,
+          "score": 0.26807,
+          "rank": 63,
           "appleRank": null,
-          "youtubeRank": 87
-        },
-        {
-          "title": "爆裂愛してる/好きすぎて滅!",
-          "artist": "M!LK",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "ZVUxJsPfoX8",
-          "ytViews": 127490217,
-          "ranks": {
-            "youtube": 16,
-            "oricon": 12
-          },
-          "sources": [
-            "youtube",
-            "oricon"
-          ],
-          "score": 0.26559,
-          "rank": 65,
-          "appleRank": null,
-          "youtubeRank": 16
+          "youtubeRank": 88
         },
         {
           "title": "とくべチュ、して",
@@ -4765,7 +4729,7 @@
           "ranks": {
             "apple": 33,
             "appleRss": 33,
-            "youtube": 35,
+            "youtube": 36,
             "billboard": 99
           },
           "sources": [
@@ -4774,110 +4738,30 @@
             "youtube",
             "billboard"
           ],
-          "score": 0.26533,
-          "rank": 66,
+          "score": 0.26404,
+          "rank": 64,
           "appleRank": 33,
-          "youtubeRank": 35
+          "youtubeRank": 36
         },
         {
-          "title": "イチャイチャ虫",
-          "artist": "日向坂46",
+          "title": "爆裂愛してる/好きすぎて滅!",
+          "artist": "M!LK",
           "artwork": null,
           "appleUrl": null,
-          "youtubeId": "mgFUz_c4ToM",
-          "ytViews": 1294171,
+          "youtubeId": "ZVUxJsPfoX8",
+          "ytViews": 127490217,
           "ranks": {
-            "youtube": 82,
-            "billboard": 29
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.25718,
-          "rank": 67,
-          "appleRank": null,
-          "youtubeRank": 82
-        },
-        {
-          "title": "好きでいて",
-          "artist": "Ado",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "jTVSU-Lr1ew",
-          "ytViews": 18035479,
-          "ranks": {
-            "youtube": 56,
-            "billboard": 46
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.25716,
-          "rank": 68,
-          "appleRank": null,
-          "youtubeRank": 56
-        },
-        {
-          "title": "Made My Night",
-          "artist": "LE SSERAFIM",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "ZdgVpnHq70o",
-          "ytViews": 3594207,
-          "ranks": {
-            "youtube": 74,
-            "billboard": 35
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.25486,
-          "rank": 69,
-          "appleRank": null,
-          "youtubeRank": 74
-        },
-        {
-          "title": "ANTHEM(You Know What To Do)",
-          "artist": "INI",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "HWZwkF2gYQs",
-          "ytViews": 18515904,
-          "ranks": {
-            "youtube": 52,
-            "oricon": 1
+            "youtube": 17,
+            "oricon": 12
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.25,
-          "rank": 70,
+          "score": 0.26393,
+          "rank": 65,
           "appleRank": null,
-          "youtubeRank": 52
-        },
-        {
-          "title": "夜鷹",
-          "artist": "米津玄師",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "l2jvIuTp534",
-          "ytViews": 6250573,
-          "ranks": {
-            "youtube": 70,
-            "billboard": 42
-          },
-          "sources": [
-            "youtube",
-            "billboard"
-          ],
-          "score": 0.24171,
-          "rank": 71,
-          "appleRank": null,
-          "youtubeRank": 70
+          "youtubeRank": 17
         },
         {
           "title": "Really Really",
@@ -4887,8 +4771,8 @@
           "youtubeId": "QjrkrVmC-8M",
           "ytViews": 249359565,
           "ranks": {
-            "apple": 44,
-            "appleRss": 44,
+            "apple": 41,
+            "appleRss": 41,
             "youtube": 5
           },
           "sources": [
@@ -4896,10 +4780,134 @@
             "appleRss",
             "youtube"
           ],
-          "score": 0.24116,
-          "rank": 72,
-          "appleRank": 44,
+          "score": 0.26223,
+          "rank": 66,
+          "appleRank": 41,
           "youtubeRank": 5
+        },
+        {
+          "title": "イチャイチャ虫",
+          "artist": "日向坂46",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "mgFUz_c4ToM",
+          "ytViews": 1294171,
+          "ranks": {
+            "youtube": 83,
+            "billboard": 29
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.25678,
+          "rank": 67,
+          "appleRank": null,
+          "youtubeRank": 83
+        },
+        {
+          "title": "好きでいて",
+          "artist": "Ado",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "jTVSU-Lr1ew",
+          "ytViews": 18035479,
+          "ranks": {
+            "youtube": 57,
+            "billboard": 46
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.25626,
+          "rank": 68,
+          "appleRank": null,
+          "youtubeRank": 57
+        },
+        {
+          "title": "ケセラセラ",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/25/22/db/2522db04-1404-086a-c8a2-253484030b36/23UMGIM37150.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%82%B1%E3%82%BB%E3%83%A9%E3%82%BB%E3%83%A9/1681600496?i=1681600508",
+          "youtubeId": "Jy-QS27q7lA",
+          "ytViews": 131138861,
+          "ranks": {
+            "apple": 45,
+            "appleRss": 45,
+            "youtube": 16,
+            "billboard": 87
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.25487,
+          "rank": 69,
+          "appleRank": 45,
+          "youtubeRank": 16
+        },
+        {
+          "title": "Made My Night",
+          "artist": "LE SSERAFIM",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "ZdgVpnHq70o",
+          "ytViews": 3594207,
+          "ranks": {
+            "youtube": 75,
+            "billboard": 35
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.25431,
+          "rank": 70,
+          "appleRank": null,
+          "youtubeRank": 75
+        },
+        {
+          "title": "ANTHEM(You Know What To Do)",
+          "artist": "INI",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "HWZwkF2gYQs",
+          "ytViews": 18515904,
+          "ranks": {
+            "youtube": 53,
+            "oricon": 1
+          },
+          "sources": [
+            "youtube",
+            "oricon"
+          ],
+          "score": 0.24903,
+          "rank": 71,
+          "appleRank": null,
+          "youtubeRank": 53
+        },
+        {
+          "title": "夜鷹",
+          "artist": "米津玄師",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "l2jvIuTp534",
+          "ytViews": 6250573,
+          "ranks": {
+            "youtube": 71,
+            "billboard": 42
+          },
+          "sources": [
+            "youtube",
+            "billboard"
+          ],
+          "score": 0.24108,
+          "rank": 72,
+          "appleRank": null,
+          "youtubeRank": 71
         },
         {
           "title": "恋",
@@ -4909,39 +4917,17 @@
           "youtubeId": "RnB8V5Syuo0",
           "ytViews": 12905831,
           "ranks": {
-            "youtube": 61,
+            "youtube": 62,
             "billboard": 50
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.23535,
+          "score": 0.23455,
           "rank": 73,
           "appleRank": null,
-          "youtubeRank": 61
-        },
-        {
-          "title": "ROSE",
-          "artist": "HANA",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
-          "youtubeId": "rGPd0FyjQ9w",
-          "ytViews": 88763720,
-          "ranks": {
-            "apple": 41,
-            "appleRss": 41,
-            "youtube": 19
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.23471,
-          "rank": 74,
-          "appleRank": 41,
-          "youtubeRank": 19
+          "youtubeRank": 62
         },
         {
           "title": "So Honey",
@@ -4951,17 +4937,17 @@
           "youtubeId": "Zlvi1XhyPSk",
           "ytViews": 3721271,
           "ranks": {
-            "youtube": 73,
+            "youtube": 74,
             "billboard": 43
           },
           "sources": [
             "youtube",
             "billboard"
           ],
-          "score": 0.23282,
-          "rank": 75,
+          "score": 0.23225,
+          "rank": 74,
           "appleRank": null,
-          "youtubeRank": 73
+          "youtubeRank": 74
         },
         {
           "title": "禁じた遊び",
@@ -4973,17 +4959,17 @@
           "ranks": {
             "apple": 36,
             "appleRss": 36,
-            "youtube": 42
+            "youtube": 43
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.22461,
-          "rank": 76,
+          "score": 0.22345,
+          "rank": 75,
           "appleRank": 36,
-          "youtubeRank": 42
+          "youtubeRank": 43
         },
         {
           "title": "音銀河",
@@ -4993,7 +4979,7 @@
           "youtubeId": "2soxkEQ8i1c",
           "ytViews": 66909,
           "ranks": {
-            "youtube": 97,
+            "youtube": 98,
             "billboard": 68,
             "oricon": 9
           },
@@ -5002,10 +4988,32 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.22076,
-          "rank": 77,
+          "score": 0.22065,
+          "rank": 76,
           "appleRank": null,
-          "youtubeRank": 97
+          "youtubeRank": 98
+        },
+        {
+          "title": "ROSE",
+          "artist": "HANA",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/5b/f9/06/5bf9064c-9e3c-005f-22c8-0ad331a55c84/4547366741339.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/rose/1803063207?i=1803063210",
+          "youtubeId": "rGPd0FyjQ9w",
+          "ytViews": 88763720,
+          "ranks": {
+            "apple": 44,
+            "appleRss": 44,
+            "youtube": 20
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.21211,
+          "rank": 77,
+          "appleRank": 44,
+          "youtubeRank": 20
         },
         {
           "title": "Pretender",
@@ -5015,8 +5023,8 @@
           "youtubeId": "TQ8WlA2GXbk",
           "ytViews": 648048679,
           "ranks": {
-            "apple": 49,
-            "appleRss": 49,
+            "apple": 50,
+            "appleRss": 50,
             "youtube": 1
           },
           "sources": [
@@ -5024,9 +5032,9 @@
             "appleRss",
             "youtube"
           ],
-          "score": 0.214,
+          "score": 0.207,
           "rank": 78,
-          "appleRank": 49,
+          "appleRank": 50,
           "youtubeRank": 1
         },
         {
@@ -5046,7 +5054,7 @@
             "appleRss",
             "youtube"
           ],
-          "score": 0.20531,
+          "score": 0.20547,
           "rank": 79,
           "appleRank": 48,
           "youtubeRank": 9
@@ -5059,17 +5067,17 @@
           "youtubeId": "hps1BMuUOL4",
           "ytViews": 9765314,
           "ranks": {
-            "youtube": 63,
+            "youtube": 64,
             "oricon": 6
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.20343,
+          "score": 0.20267,
           "rank": 80,
           "appleRank": null,
-          "youtubeRank": 63
+          "youtubeRank": 64
         },
         {
           "title": "115万キロのフィルム",
@@ -5081,17 +5089,17 @@
           "ranks": {
             "apple": 46,
             "appleRss": 46,
-            "youtube": 18
+            "youtube": 19
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.20167,
+          "score": 0.20005,
           "rank": 81,
           "appleRank": 46,
-          "youtubeRank": 18
+          "youtubeRank": 19
         },
         {
           "title": "Yes! 東京",
@@ -5101,17 +5109,39 @@
           "youtubeId": "2sKrO1oFQHg",
           "ytViews": 3035032,
           "ranks": {
-            "youtube": 77,
+            "youtube": 78,
             "oricon": 2
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.19598,
+          "score": 0.19549,
           "rank": 82,
           "appleRank": null,
-          "youtubeRank": 77
+          "youtubeRank": 78
+        },
+        {
+          "title": "プロジェクト4",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E3%83%97%E3%83%AD%E3%82%B8%E3%82%A7%E3%82%AF%E3%83%884/6808172946?i=6808173277",
+          "youtubeId": "44cICMd3jW4",
+          "ytViews": 145091370,
+          "ranks": {
+            "apple": 49,
+            "appleRss": 49,
+            "youtube": 12
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.19264,
+          "rank": 83,
+          "appleRank": 49,
+          "youtubeRank": 12
         },
         {
           "title": "Variety",
@@ -5123,17 +5153,17 @@
           "ranks": {
             "apple": 29,
             "appleRss": 29,
-            "youtube": 89
+            "youtube": 90
           },
           "sources": [
             "apple",
             "appleRss",
             "youtube"
           ],
-          "score": 0.18145,
-          "rank": 83,
+          "score": 0.18118,
+          "rank": 84,
           "appleRank": 29,
-          "youtubeRank": 89
+          "youtubeRank": 90
         },
         {
           "title": "New Beginning(LOVE しない?)",
@@ -5143,17 +5173,17 @@
           "youtubeId": "1kcJtac-_i8",
           "ytViews": 2811472,
           "ranks": {
-            "youtube": 78,
+            "youtube": 79,
             "oricon": 5
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.17902,
-          "rank": 84,
+          "score": 0.17854,
+          "rank": 85,
           "appleRank": null,
-          "youtubeRank": 78
+          "youtubeRank": 79
         },
         {
           "title": "セツナハナビ(Setsuna Hanabi)",
@@ -5163,7 +5193,7 @@
           "youtubeId": "Tg076GY2a-Q",
           "ytViews": 18861500,
           "ranks": {
-            "youtube": 50,
+            "youtube": 51,
             "billboard": 81,
             "oricon": 28
           },
@@ -5172,9 +5202,31 @@
             "billboard",
             "oricon"
           ],
-          "score": 0.17892,
-          "rank": 85,
+          "score": 0.17791,
+          "rank": 86,
           "appleRank": null,
+          "youtubeRank": 51
+        },
+        {
+          "title": "瞞し",
+          "artist": "Mrs. GREEN APPLE",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/%E7%9E%9E%E3%81%97/6808172946?i=6808173279",
+          "youtubeId": "6Ul-wFnquno",
+          "ytViews": 19176131,
+          "ranks": {
+            "apple": 42,
+            "appleRss": 42,
+            "youtube": 50
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.16785,
+          "rank": 87,
+          "appleRank": 42,
           "youtubeRank": 50
         },
         {
@@ -5185,61 +5237,17 @@
           "youtubeId": "1546cwoU6Wg",
           "ytViews": 6524543,
           "ranks": {
-            "youtube": 69,
+            "youtube": 70,
             "oricon": 13
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.15667,
-          "rank": 86,
-          "appleRank": null,
-          "youtubeRank": 69
-        },
-        {
-          "title": "Wherever you are",
-          "artist": "ONE OK ROCK",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
-          "youtubeId": "qs4Q4cQxyU4",
-          "ytViews": 15871593,
-          "ranks": {
-            "apple": 42,
-            "appleRss": 42,
-            "youtube": 59
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.14927,
-          "rank": 87,
-          "appleRank": 42,
-          "youtubeRank": 59
-        },
-        {
-          "title": "瞞し",
-          "artist": "Mrs. GREEN APPLE",
-          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d9/cc/da/d9ccdae5-6251-b671-dbf3-5b0508dc52ad/26UM1IM13923.rgb.jpg/400x400bb.jpg",
-          "appleUrl": "https://music.apple.com/jp/album/%E7%9E%9E%E3%81%97/6808172946?i=6808173279",
-          "youtubeId": "6Ul-wFnquno",
-          "ytViews": 19176131,
-          "ranks": {
-            "apple": 45,
-            "appleRss": 45,
-            "youtube": 49
-          },
-          "sources": [
-            "apple",
-            "appleRss",
-            "youtube"
-          ],
-          "score": 0.14788,
+          "score": 0.15602,
           "rank": 88,
-          "appleRank": 45,
-          "youtubeRank": 49
+          "appleRank": null,
+          "youtubeRank": 70
         },
         {
           "title": "イイじゃん",
@@ -5278,6 +5286,28 @@
           "youtubeRank": null
         },
         {
+          "title": "Wherever you are",
+          "artist": "ONE OK ROCK",
+          "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/53/f4/a1/53f4a1a3-ae4f-2406-2e89-f49e8a3d1ec1/25UMGIM89645.rgb.jpg/400x400bb.jpg",
+          "appleUrl": "https://music.apple.com/jp/album/wherever-you-are/1838917127?i=1838917139",
+          "youtubeId": "qs4Q4cQxyU4",
+          "ytViews": 15871593,
+          "ranks": {
+            "apple": 43,
+            "appleRss": 43,
+            "youtube": 60
+          },
+          "sources": [
+            "apple",
+            "appleRss",
+            "youtube"
+          ],
+          "score": 0.14144,
+          "rank": 91,
+          "appleRank": 43,
+          "youtubeRank": 60
+        },
+        {
           "title": "TSUNAMI",
           "artist": "サザンオールスターズ",
           "artwork": null,
@@ -5291,7 +5321,7 @@
             "billboard"
           ],
           "score": 0.141,
-          "rank": 91,
+          "rank": 92,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5303,17 +5333,17 @@
           "youtubeId": "IT2X9ZtjHoI",
           "ytViews": 11816064,
           "ranks": {
-            "youtube": 62,
+            "youtube": 63,
             "oricon": 19
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.14039,
-          "rank": 92,
+          "score": 0.13961,
+          "rank": 93,
           "appleRank": null,
-          "youtubeRank": 62
+          "youtubeRank": 63
         },
         {
           "title": "HOT LIMIT",
@@ -5329,29 +5359,9 @@
             "billboard"
           ],
           "score": 0.135,
-          "rank": 93,
-          "appleRank": null,
-          "youtubeRank": null
-        },
-        {
-          "title": "Answer",
-          "artist": "TRIGGER",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "QtPvVzuAbcM",
-          "ytViews": 12973788,
-          "ranks": {
-            "youtube": 60,
-            "oricon": 22
-          },
-          "sources": [
-            "youtube",
-            "oricon"
-          ],
-          "score": 0.12931,
           "rank": 94,
           "appleRank": null,
-          "youtubeRank": 60
+          "youtubeRank": null
         },
         {
           "title": "アゲハ蝶",
@@ -5372,6 +5382,26 @@
           "youtubeRank": null
         },
         {
+          "title": "Answer",
+          "artist": "TRIGGER",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "QtPvVzuAbcM",
+          "ytViews": 12973788,
+          "ranks": {
+            "youtube": 61,
+            "oricon": 22
+          },
+          "sources": [
+            "youtube",
+            "oricon"
+          ],
+          "score": 0.1285,
+          "rank": 96,
+          "appleRank": null,
+          "youtubeRank": 61
+        },
+        {
           "title": "MY LiFE!",
           "artist": "IDOLiSH7",
           "artwork": null,
@@ -5379,17 +5409,17 @@
           "youtubeId": "65mGwXtkYJw",
           "ytViews": 174525,
           "ranks": {
-            "youtube": 92,
+            "youtube": 93,
             "oricon": 10
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.12657,
-          "rank": 96,
+          "score": 0.12636,
+          "rank": 97,
           "appleRank": null,
-          "youtubeRank": 92
+          "youtubeRank": 93
         },
         {
           "title": "晴々",
@@ -5405,7 +5435,7 @@
             "billboard"
           ],
           "score": 0.126,
-          "rank": 97,
+          "rank": 98,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5423,7 +5453,7 @@
             "billboard"
           ],
           "score": 0.117,
-          "rank": 98,
+          "rank": 99,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5441,7 +5471,7 @@
             "billboard"
           ],
           "score": 0.114,
-          "rank": 99,
+          "rank": 100,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5459,7 +5489,7 @@
             "billboard"
           ],
           "score": 0.111,
-          "rank": 100,
+          "rank": 101,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5471,17 +5501,17 @@
           "youtubeId": "xFB6QtNTVSk",
           "ytViews": 64202,
           "ranks": {
-            "youtube": 98,
+            "youtube": 99,
             "oricon": 11
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.1098,
-          "rank": 101,
+          "score": 0.10971,
+          "rank": 102,
           "appleRank": null,
-          "youtubeRank": 98
+          "youtubeRank": 99
         },
         {
           "title": "好き",
@@ -5497,7 +5527,7 @@
             "billboard"
           ],
           "score": 0.108,
-          "rank": 102,
+          "rank": 103,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5515,7 +5545,7 @@
             "billboard"
           ],
           "score": 0.102,
-          "rank": 103,
+          "rank": 104,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5527,17 +5557,17 @@
           "youtubeId": "IU2buH5dGTc",
           "ytViews": 101994,
           "ranks": {
-            "youtube": 94,
+            "youtube": 95,
             "oricon": 15
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.09765,
-          "rank": 104,
+          "score": 0.09748,
+          "rank": 105,
           "appleRank": null,
-          "youtubeRank": 94
+          "youtubeRank": 95
         },
         {
           "title": "是非に及ばず",
@@ -5547,17 +5577,17 @@
           "youtubeId": "ogAufBgPpBk",
           "ytViews": 2110041,
           "ranks": {
-            "youtube": 79,
+            "youtube": 80,
             "oricon": 21
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.09706,
-          "rank": 105,
+          "score": 0.0966,
+          "rank": 106,
           "appleRank": null,
-          "youtubeRank": 79
+          "youtubeRank": 80
         },
         {
           "title": "怪獣",
@@ -5573,7 +5603,7 @@
             "billboard"
           ],
           "score": 0.093,
-          "rank": 106,
+          "rank": 107,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5585,17 +5615,17 @@
           "youtubeId": "hUpspJlHBUQ",
           "ytViews": 57453,
           "ranks": {
-            "youtube": 99,
+            "youtube": 100,
             "oricon": 14
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.09284,
-          "rank": 107,
+          "score": 0.09277,
+          "rank": 108,
           "appleRank": null,
-          "youtubeRank": 99
+          "youtubeRank": 100
         },
         {
           "title": "777 (feat. Awich, CHICO CARLITO, ONE OK ROCK & Paledusk)",
@@ -5611,7 +5641,7 @@
             "billboard"
           ],
           "score": 0.09,
-          "rank": 108,
+          "rank": 109,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5629,7 +5659,7 @@
             "billboard"
           ],
           "score": 0.087,
-          "rank": 109,
+          "rank": 110,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5641,17 +5671,17 @@
           "youtubeId": "0beWrfj7AvE",
           "ytViews": 9613548,
           "ranks": {
-            "youtube": 64,
+            "youtube": 65,
             "oricon": 29
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.08647,
-          "rank": 110,
+          "score": 0.08573,
+          "rank": 111,
           "appleRank": null,
-          "youtubeRank": 64
+          "youtubeRank": 65
         },
         {
           "title": "Goddamn!!!!!",
@@ -5661,17 +5691,17 @@
           "youtubeId": "DTKNT0g9wFg",
           "ytViews": 17173,
           "ranks": {
-            "youtube": 101,
+            "youtube": 102,
             "oricon": 16
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.07892,
-          "rank": 111,
+          "score": 0.07888,
+          "rank": 112,
           "appleRank": null,
-          "youtubeRank": 101
+          "youtubeRank": 102
         },
         {
           "title": "革命道中",
@@ -5687,7 +5717,7 @@
             "billboard"
           ],
           "score": 0.078,
-          "rank": 112,
+          "rank": 113,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5705,29 +5735,9 @@
             "billboard"
           ],
           "score": 0.075,
-          "rank": 113,
-          "appleRank": null,
-          "youtubeRank": null
-        },
-        {
-          "title": "霞日和/Starry Smile Story",
-          "artist": "コブクロ",
-          "artwork": null,
-          "appleUrl": null,
-          "youtubeId": "nEgs5y-e8Ec",
-          "ytViews": 1070901,
-          "ranks": {
-            "youtube": 84,
-            "oricon": 24
-          },
-          "sources": [
-            "youtube",
-            "oricon"
-          ],
-          "score": 0.07225,
           "rank": 114,
           "appleRank": null,
-          "youtubeRank": 84
+          "youtubeRank": null
         },
         {
           "title": "show time…",
@@ -5748,6 +5758,26 @@
           "youtubeRank": null
         },
         {
+          "title": "霞日和/Starry Smile Story",
+          "artist": "コブクロ",
+          "artwork": null,
+          "appleUrl": null,
+          "youtubeId": "nEgs5y-e8Ec",
+          "ytViews": 1070901,
+          "ranks": {
+            "youtube": 85,
+            "oricon": 24
+          },
+          "sources": [
+            "youtube",
+            "oricon"
+          ],
+          "score": 0.07189,
+          "rank": 116,
+          "appleRank": null,
+          "youtubeRank": 85
+        },
+        {
           "title": "『映画名探偵プリキュア!不思議な庭と2人の秘密』主題歌シングル(FIRST PRISM/First Step)",
           "artist": "石井あみ,増井優花,吉武千颯",
           "artwork": null,
@@ -5761,7 +5791,7 @@
             "oricon"
           ],
           "score": 0.07,
-          "rank": 116,
+          "rank": 117,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5779,7 +5809,7 @@
             "billboard"
           ],
           "score": 0.069,
-          "rank": 117,
+          "rank": 118,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5797,7 +5827,7 @@
             "billboard"
           ],
           "score": 0.066,
-          "rank": 118,
+          "rank": 119,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5815,7 +5845,7 @@
             "billboard"
           ],
           "score": 0.063,
-          "rank": 119,
+          "rank": 120,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5833,7 +5863,7 @@
             "billboard"
           ],
           "score": 0.057,
-          "rank": 120,
+          "rank": 121,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5851,7 +5881,7 @@
             "billboard"
           ],
           "score": 0.054,
-          "rank": 121,
+          "rank": 122,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5863,17 +5893,17 @@
           "youtubeId": "9CAhKwBUmoc",
           "ytViews": 91344,
           "ranks": {
-            "youtube": 96,
+            "youtube": 97,
             "oricon": 23
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.05373,
-          "rank": 122,
+          "score": 0.05359,
+          "rank": 123,
           "appleRank": null,
-          "youtubeRank": 96
+          "youtubeRank": 97
         },
         {
           "title": "NAVIGATOR:",
@@ -5883,17 +5913,17 @@
           "youtubeId": "hcnUir_AQj8",
           "ytViews": 138094,
           "ranks": {
-            "youtube": 93,
+            "youtube": 94,
             "oricon": 25
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.04961,
-          "rank": 123,
+          "score": 0.04942,
+          "rank": 124,
           "appleRank": null,
-          "youtubeRank": 93
+          "youtubeRank": 94
         },
         {
           "title": "ロビンソン",
@@ -5909,7 +5939,7 @@
             "billboard"
           ],
           "score": 0.048,
-          "rank": 124,
+          "rank": 125,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5927,7 +5957,7 @@
             "billboard"
           ],
           "score": 0.045,
-          "rank": 125,
+          "rank": 126,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5939,17 +5969,17 @@
           "youtubeId": "bN11xrmkeiY",
           "ytViews": 221372,
           "ranks": {
-            "youtube": 91,
+            "youtube": 92,
             "oricon": 27
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.04353,
-          "rank": 126,
+          "score": 0.0433,
+          "rank": 127,
           "appleRank": null,
-          "youtubeRank": 91
+          "youtubeRank": 92
         },
         {
           "title": "劇薬中毒",
@@ -5965,7 +5995,7 @@
             "billboard"
           ],
           "score": 0.039,
-          "rank": 127,
+          "rank": 128,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -5983,7 +6013,7 @@
             "billboard"
           ],
           "score": 0.036,
-          "rank": 128,
+          "rank": 129,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6001,7 +6031,7 @@
             "billboard"
           ],
           "score": 0.033,
-          "rank": 129,
+          "rank": 130,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6013,17 +6043,17 @@
           "youtubeId": "UZ9yWk2r5x4",
           "ytViews": 37765,
           "ranks": {
-            "youtube": 100,
+            "youtube": 101,
             "oricon": 26
           },
           "sources": [
             "youtube",
             "oricon"
           ],
-          "score": 0.03088,
-          "rank": 130,
+          "score": 0.03083,
+          "rank": 131,
           "appleRank": null,
-          "youtubeRank": 100
+          "youtubeRank": 101
         },
         {
           "title": "オールドファッション",
@@ -6039,7 +6069,7 @@
             "billboard"
           ],
           "score": 0.03,
-          "rank": 131,
+          "rank": 132,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6057,7 +6087,7 @@
             "billboard"
           ],
           "score": 0.027,
-          "rank": 132,
+          "rank": 133,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6075,7 +6105,7 @@
             "billboard"
           ],
           "score": 0.024,
-          "rank": 133,
+          "rank": 134,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6093,7 +6123,7 @@
             "billboard"
           ],
           "score": 0.018,
-          "rank": 134,
+          "rank": 135,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6111,7 +6141,7 @@
             "billboard"
           ],
           "score": 0.015,
-          "rank": 135,
+          "rank": 136,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6129,7 +6159,7 @@
             "billboard"
           ],
           "score": 0.012,
-          "rank": 136,
+          "rank": 137,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6147,7 +6177,7 @@
             "billboard"
           ],
           "score": 0.009,
-          "rank": 137,
+          "rank": 138,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6165,7 +6195,7 @@
             "oricon"
           ],
           "score": 0.005,
-          "rank": 138,
+          "rank": 139,
           "appleRank": null,
           "youtubeRank": null
         },
@@ -6183,7 +6213,7 @@
             "billboard"
           ],
           "score": 0.003,
-          "rank": 139,
+          "rank": 140,
           "appleRank": null,
           "youtubeRank": null
         }

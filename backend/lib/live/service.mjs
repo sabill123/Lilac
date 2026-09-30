@@ -19,6 +19,9 @@ import { newsFeed } from './news.mjs';
 import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanNamesFor, japaneseNamesFor, checkAppleIdentity, koreanNameFits } from './artist-info.mjs';
 import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts } from './fanclub.mjs';
+import { eventPoster, ogImage } from './posters.mjs';
+import { krFestivals, eplusFestivals, groupFestivals, melonLineup, eplusLineup, melonNation } from './festivals.mjs';
+import { fetchText } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
 import { createHash } from 'node:crypto';
 
@@ -37,6 +40,37 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const fcClicks = new KV('fc-referrals');
   const fcSearch = new KV('fc-search');
   const appleCheck = new KV('apple-check');
+  /* 공연 상세 페이지 대표 이미지(e+·팬클럽 투어 페이지 og:image) */
+  const eventPosters = new KV('event-posters');
+  const festLineups = new KV('fest-lineups');
+  const melonNations = new KV('melon-nation');
+  eventPosters.ready().catch(() => {});
+  const posterQueue = [];
+  let posterWorking = false;
+  const siteOg = new Map();
+  const posterHost = (it) => { try { const h = new URL(it.url).host; return it.provider === 'fanclub' || /(^|\.)eplus\.jp$/.test(h) ? h : null; } catch { return null; } };
+  function eventPosterOf(it) {
+    if (!it?.url || it.posterKind === 'official' || !eventPosters.map || !posterHost(it)) return null;
+    const v = eventPosters.get(it.url);
+    if (v?.img) return { poster: v.img, posterKind: 'event' };
+    const stale = !v || Date.now() - v.at > (v.none ? 24 : 7 * 24) * 3600e3;
+    if (stale && !posterQueue.includes(it.url) && posterQueue.length < 300) { posterQueue.push(it.url); pumpPosters().catch(() => {}); }
+    return null;
+  }
+  async function pumpPosters() {
+    if (posterWorking) return;
+    posterWorking = true;
+    try {
+      await eventPosters.ready();
+      const siteImage = async (origin) => { if (!siteOg.has(origin)) siteOg.set(origin, fetchText(`${origin}/`, { timeout: 9000, retries: 0, headers: { 'Accept-Language': 'ja' } }).then((h) => ogImage(h, origin)).catch(() => undefined)); return siteOg.get(origin); };
+      while (posterQueue.length) {
+        const url = posterQueue.shift();
+        const r = await eventPoster(url, { siteImage, body: !/eplus\.jp/.test(url) });
+        if (r) eventPosters.set(url, { ...r, at: Date.now() }); /* 받기 실패(null)는 저장하지 않는다 */
+        await new Promise((res) => setTimeout(res, 400));
+      }
+    } finally { posterWorking = false; }
+  }
   const photoQueue = [];
   let photoWorking = false;
   async function pumpPhotos() {
@@ -207,7 +241,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   /* 표시용 한국어 이름 */
   function withKo(it) {
     const a = it.artistId && rosterCache ? rosterCache.find((x) => x.id === it.artistId) : null;
-    return a?.nameKo && a.nameKo !== it.performer ? { ...it, performerKo: a.nameKo } : it;
+    const ko = a?.nameKo && a.nameKo !== it.performer ? { ...it, performerKo: a.nameKo } : it;
+    const ep = eventPosterOf(ko);
+    return ep ? { ...ko, ...ep } : ko;
   }
 
   /* 같은 투어(같은 예매처·같은 공연명)의 날짜별 목록을 하나로 묶는다 */
@@ -538,7 +574,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       links: a?.links || null,
       official: a?.official || null,
       operator: a?.operator || null,
-      concerts: shows,
+      concerts: shows.map(withKo),
       fetchedAt: new Date().toISOString(),
     };
   }
@@ -729,6 +765,78 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
 
   /* ---------- 홈 요약 ---------- */
+
+  /* ---------- 페스티벌 (한국·일본) ---------- */
+  async function fetchFestivals() {
+    const [kr, jp] = await Promise.allSettled([krFestivals(), eplusFestivals()]);
+    const raw = [...(kr.status === 'fulfilled' ? kr.value.items : []), ...(jp.status === 'fulfilled' ? jp.value : [])];
+    if (!raw.length) throw new Error('festival sources failed');
+    const items = groupFestivals(raw);
+    /* 라인업: 멜론 출연진·e+ 「出演」. 하루 안에 읽은 페이지는 다시 읽지 않는다. 받기 실패는 저장하지 않는다 */
+    await festLineups.ready();
+    let fetched = 0;
+    /* 멜론(한국 페스티벌) 먼저 — 출연진과 국적을 함께 주는 소스다 */
+    const hasMelon = (f) => (f.links.some((l) => l.provider === 'melon') ? 1 : 0);
+    for (const f of [...items].sort((a, b) => hasMelon(b) - hasMelon(a))) {
+      for (const l of f.links.filter((x) => x.provider === 'melon' || x.provider === 'eplus').slice(0, 2)) {
+        const prev = festLineups.get(l.url);
+        if (prev && Date.now() - prev.at < 24 * HOUR) continue;
+        if (fetched >= 150) break;
+        try {
+          const html = await fetchText(l.url, { timeout: 12000, retries: 1, headers: { 'Accept-Language': l.provider === 'eplus' ? 'ja' : 'ko' } });
+          festLineups.set(l.url, { names: l.provider === 'melon' ? melonLineup(html) : eplusLineup(html).map((name) => ({ name })), at: Date.now() });
+        } catch { /* 다음에 다시 */ }
+        fetched++;
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    /* 멜론 출연진은 멜론 아티스트 페이지의 국적으로 한국·일본을 가린다(로마자로 적힌 일본 아티스트: YUZU, natori …).
+       국적은 바뀌지 않으므로 한 번 읽으면 계속 쓴다. 받기 실패는 저장하지 않는다 */
+    await melonNations.ready();
+    let nationFetched = 0;
+    for (const f of items) for (const l of f.links) for (const e of festLineups.get(l.url)?.names || []) {
+      if (!e?.melonId || melonNations.get(e.melonId) || nationFetched >= 200) continue;
+      try {
+        const html = await fetchText(`https://www.melon.com/artist/detail.htm?artistId=${e.melonId}`, { timeout: 9000, retries: 1 });
+        const n = melonNation(html);
+        melonNations.set(e.melonId, { nation: n || 'unknown', at: Date.now() });
+      } catch { /* 다음에 다시 */ }
+      nationFetched++;
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    return {
+      items,
+      sources: [...(kr.status === 'fulfilled' ? kr.value.sources : [{ provider: 'kr:festival', ok: false }]), { provider: 'eplus:festival', ok: jp.status === 'fulfilled', count: jp.status === 'fulfilled' ? jp.value.length : 0 }],
+    };
+  }
+
+  async function festivals({ edition = 'kr', country = null, budgetMs = 12000 } = {}) {
+    const r = await cached('festivals', 3 * HOUR, fetchFestivals, { budgetMs });
+    await festLineups.ready();
+    await melonNations.ready();
+    await origins.ready();
+    const list = await roster();
+    let queuedNames = 0;
+    const items = (r.items || []).map((f) => {
+      const seenN = new Set();
+      const entries = f.links.flatMap((l) => (festLineups.get(l.url)?.names || []).map((e) => (typeof e === 'string' ? { name: e } : e))).filter((e) => e?.name && !seenN.has(e.name) && seenN.add(e.name));
+      const lineup = entries.map(({ name: n, melonId }) => {
+        const a = rosterMatch(list, n);
+        const mn = melonId ? melonNations.get(melonId)?.nation : null;
+        /* 로스터·판정 캐시가 먼저. 아직 모르면 표기 문자로: 가나 → 일본, 한글 → 한국, 일본 페스티벌의 한자 이름 → 일본 */
+        const script = /[぀-ヿ]/.test(n) ? 'jp' : /[가-힣]/.test(n) ? 'kr' : f.country === 'JP' && /^[一-龯々〆ヵヶ\s]+$/.test(n) ? 'jp' : null;
+        const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || origins.get(norm(n))?.origin || script;
+        if (!a && !mn && !origins.get(norm(n)) && !script && queuedNames < 80) { enqueue(n, f.country === 'KR'); queuedNames++; }
+        return { name: a ? a.name : n, artistId: a?.id || null, origin: o === 'jp' || o === 'kr' ? o : null };
+      });
+      return withKo({ ...f, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });
+    }).filter((f) => !country || f.country === country);
+    if (queue.length) pump().catch(() => {});
+    /* 에디션에 맞는 순서: 한국 팬(kr)은 일본 아티스트가 많이 나오는 페스티벌·일본 페스티벌을 먼저 보지 않고 날짜순을 유지하되,
+       라인업에서 반대편 나라 아티스트 수를 함께 내려 화면이 강조한다 */
+    return { items, cache: r.cache || null, sources: r.sources || [], edition, fetchedAt: new Date().toISOString() };
+  }
+
   async function home({ edition = 'kr' } = {}) {
     const charts = await getCharts().catch(() => null);
     const chartCountries = edition === 'kr' ? ['jp'] : edition === 'jp' ? ['kr'] : ['jp', 'kr'];
@@ -747,12 +855,15 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     ]);
     const fx = await readJson('fx', null);
     const fcf = await fanclubFeed({ edition });
+    const fest = await festivals({ edition, budgetMs: 1500 }).catch(() => ({ items: [] }));
     return {
       edition,
       fanclub: fcf.windows.filter((w) => !w.isPublic).slice(0, 8), fanclubTotal: fcf.windows.filter((w) => !w.isPublic).length,
       tickets: t.items.slice(0, 12), ticketsTotal: t.items.length,
       visiting: v.items.filter((x) => !x.unconfirmed).slice(0, 12), visitingTotal: v.items.filter((x) => !x.unconfirmed).length, visitingGroups: v.groups,
       abroad: a.items.slice(0, 8), abroadTotal: a.items.length,
+      /* 홈: 한국 페스티벌의 J-POP·일본 페스티벌의 K-POP 출연이 많은 곳 먼저, 나머지는 날짜순 */
+      festivals: [...fest.items].sort((x, y) => ((y.country === 'JP' ? y.lineupKr : y.lineupJp) || 0) - ((x.country === 'JP' ? x.lineupKr : x.lineupJp) || 0) || String(x.startDate).localeCompare(String(y.startDate))).slice(0, 16), festivalsTotal: fest.items.length,
       news: (n.items || []).slice(0, 8), newsTotal: (n.items || []).length, newsCache: n.cache || null,
       chart,
       releases: rel.items,
@@ -1293,6 +1404,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       await concerts({ edition: 'jp', scope: 'abroad' });
       await tickets({ edition: 'jp' });
       await concerts({ edition: 'kr', scope: 'abroad' });
+      await festivals({ edition: 'kr' }).catch(() => {});
       await fillPhotos();
       await warmFanclubs();
     } catch (e) {
@@ -1311,6 +1423,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/goods', wrap((req) => goods({ q: req.query.q, market: ['kr', 'jp', 'all'].includes(req.query.market) ? req.query.market : 'kr' })));
     app.get('/api/live/artist', wrap(async (req) => (await artist({ id: req.query.id ? String(req.query.id) : null, name: req.query.name ? String(req.query.name).slice(0, 80) : null, edition: ed(req.query.edition) })) || { error: 'not found' }));
     app.get('/api/live/status', wrap(() => status()));
+    app.get('/api/live/festivals', wrap((req) => festivals({ edition: ed(req.query.edition), country: ['KR', 'JP'].includes(String(req.query.country)) ? String(req.query.country) : null })));
     /* 팬클럽 다시 받기(로컬에서만): ?ids=a,b 또는 ?platform=familyclub */
     app.post('/api/live/admin/refresh-fc', async (req, res) => {
       const ip = req.ip || req.socket?.remoteAddress || '';
@@ -1405,5 +1518,5 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/fc-referrals', wrap(async () => { await fcClicks.ready(); return { items: [...fcClicks.map].map(([artistId, v]) => ({ artistId, ...v })).sort((a, b) => (b.join + b.sale) - (a.join + a.sale)) }; }));
   }
 
-  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, goods, artist, status, home, search, artists, artistBrief, releases, fillPhotos, fanclubFeed };
+  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, goods, artist, status, home, festivals, search, artists, artistBrief, releases, fillPhotos, fanclubFeed };
 }

@@ -104,6 +104,15 @@ export async function signup(email: string, password: string, name: string) {
   setToken(r.token);
   await loadSession();
 }
+/* 탈퇴 뒤에는 서버 세션이 이미 없다 — 이 기기의 로그인 정보만 지운다 */
+export function forgetSession() {
+  setToken(null);
+  state.me = null;
+  state.follows = [];
+  emit('auth');
+}
+export async function refreshMe2() { state.me = await refreshMe().catch(() => state.me); emit('auth'); }
+
 export async function logout() {
   await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
   setToken(null);
