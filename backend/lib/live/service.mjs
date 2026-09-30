@@ -52,7 +52,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   function eventPosterOf(it) {
     if (!it?.url || it.posterKind === 'official' || !eventPosters.map || !posterHost(it)) return null;
     const v = eventPosters.get(it.url);
-    if (v?.img) return { poster: v.img, posterKind: 'event' };
+    if (v?.img && !/webclip|no_thumb|daitai|noimage/i.test(v.img)) return { poster: v.img, posterKind: 'event' };
     const stale = !v || Date.now() - v.at > (v.none ? 24 : 7 * 24) * 3600e3;
     if (stale && !posterQueue.includes(it.url) && posterQueue.length < 300) { posterQueue.push(it.url); pumpPosters().catch(() => {}); }
     return null;
@@ -66,7 +66,12 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       while (posterQueue.length) {
         const url = posterQueue.shift();
         const r = await eventPoster(url, { siteImage, body: !/eplus\.jp/.test(url) });
-        if (r) eventPosters.set(url, { ...r, at: Date.now() }); /* 받기 실패(null)는 저장하지 않는다 */
+        if (r?.img) {
+          /* 서로 다른 공연 페이지 셋 이상이 같은 이미지를 주면 사이트 공통 이미지다(e+ webclip.png) — 모두 없음으로 */
+          const same = [...eventPosters.map.entries()].filter(([u, v]) => v?.img === r.img && u !== url);
+          if (same.length >= 2) { for (const [u] of same) eventPosters.set(u, { none: true, at: Date.now() }); eventPosters.set(url, { none: true, at: Date.now() }); }
+          else eventPosters.set(url, { ...r, at: Date.now() });
+        } else if (r) eventPosters.set(url, { ...r, at: Date.now() }); /* 받기 실패(null)는 저장하지 않는다 */
         await new Promise((res) => setTimeout(res, 400));
       }
     } finally { posterWorking = false; }
@@ -825,8 +830,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
         const mn = melonId ? melonNations.get(melonId)?.nation : null;
         /* 로스터·판정 캐시가 먼저. 아직 모르면 표기 문자로: 가나 → 일본, 한글 → 한국, 일본 페스티벌의 한자 이름 → 일본 */
         const script = /[぀-ヿ]/.test(n) ? 'jp' : /[가-힣]/.test(n) ? 'kr' : f.country === 'JP' && /^[一-龯々〆ヵヶ\s]+$/.test(n) ? 'jp' : null;
-        const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || origins.get(norm(n))?.origin || script;
-        if (!a && !mn && !origins.get(norm(n)) && !script && queuedNames < 80) { enqueue(n, f.country === 'KR'); queuedNames++; }
+        /* 라인업의 나라는 믿을 수 있는 근거만: 로스터, 멜론 아티스트 국적, 표기 문자.
+           이름 검색 기반 출신 판정은 무명 밴드를 엉뚱한 나라로 붙여(일본 인디 밴드가 K-POP으로) 쓰지 않는다 */
+        const o = a?.origin || (mn === 'jp' || mn === 'kr' ? mn : null) || script;
         return { name: a ? a.name : n, artistId: a?.id || null, origin: o === 'jp' || o === 'kr' ? o : null };
       });
       return withKo({ ...f, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });

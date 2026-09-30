@@ -8,7 +8,7 @@
  *   - 받기 실패는 "이미지 없음"으로 저장하지 않는다(다음에 다시 시도). 이미지가 없다고 확인된 페이지만 하루 동안 다시 묻지 않는다 */
 import { fetchText } from './http.mjs';
 
-const GENERIC = /noimage|no_image|no-image|dummy|default|placeholder|logo|favicon|apple-touch|common\/(?:img\/)?ogp|\/ogp?\.(?:png|jpe?g)$/i;
+const GENERIC = /noimage|no_image|no-image|no_thumb|daitai|webclip|dummy|default|placeholder|logo|favicon|apple-touch|common\/(?:img\/)?ogp|\/ogp?\.(?:png|jpe?g)$/i;
 
 export function ogImage(html, base) {
   const h = String(html || '');

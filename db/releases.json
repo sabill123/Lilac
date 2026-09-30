@@ -460,6 +460,61 @@
     ]
   },
   {
+    "id": "ap-6813318028",
+    "tier": "discovered",
+    "artistId": "candy-tune",
+    "artist": "CANDY TUNE",
+    "artistKo": "CANDY TUNE",
+    "title": "総意♡So Free / スペシャル感謝祭 - EP",
+    "titleKo": "総意♡So Free / スペシャル感謝祭 - EP",
+    "country": "jp",
+    "type": "mini",
+    "releaseDate": "2026-09-30",
+    "currency": "JPY",
+    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/63/31/29/633129be-9306-bcda-f331-17d0d9757c36/885288504187.jpg/600x600bb.jpg",
+    "appleUrl": "https://music.apple.com/jp/album/%E7%B7%8F%E6%84%8F-so-free-%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E6%84%9F%E8%AC%9D%E7%A5%AD-ep/6813318028?uo=4",
+    "trackCount": 6,
+    "albumArtist": "CANDY TUNE",
+    "source": {
+      "name": "Apple iTunes API",
+      "url": "https://music.apple.com/jp/album/%E7%B7%8F%E6%84%8F-so-free-%E3%82%B9%E3%83%9A%E3%82%B7%E3%83%A3%E3%83%AB%E6%84%9F%E8%AC%9D%E7%A5%AD-ep/6813318028?uo=4",
+      "collectedAt": "2026-09-30",
+      "auto": true
+    },
+    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
+    "editions": [
+      {
+        "id": "digital",
+        "label": "디지털 (실물 사양 확인 중)",
+        "listPrice": 1528,
+        "listCurrency": "JPY",
+        "feeKind": "album",
+        "includes": [
+          "디지털 음원"
+        ],
+        "estimated": false
+      }
+    ],
+    "offers": [],
+    "searchHints": [
+      {
+        "store": "TOWER RECORDS",
+        "storeKo": "타워레코드",
+        "searchUrl": "https://tower.jp/artist/search?kwd=CANDY%20TUNE"
+      },
+      {
+        "store": "HMV&BOOKS online",
+        "storeKo": "HMV",
+        "searchUrl": "https://www.hmv.co.jp/search/keyword_CANDY%20TUNE/"
+      },
+      {
+        "store": "Amazon.co.jp",
+        "storeKo": "아마존 재팬",
+        "searchUrl": "https://www.amazon.co.jp/s?k=CANDY%20TUNE&i=popular"
+      }
+    ]
+  },
+  {
     "id": "ap-6814761026",
     "tier": "discovered",
     "artistId": "onew",
@@ -5531,61 +5586,6 @@
         "store": "알라딘",
         "storeKo": "알라딘",
         "searchUrl": "https://www.aladin.co.kr/search/wsearchresult.aspx?SearchWord=BOYNEXTDOOR"
-      }
-    ]
-  },
-  {
-    "id": "ap-6798969667",
-    "tier": "discovered",
-    "artistId": "candy-tune",
-    "artist": "CANDY TUNE",
-    "artistKo": "CANDY TUNE",
-    "title": "CANDY TUNE UNIT BOX - Single",
-    "titleKo": "CANDY TUNE UNIT BOX - Single",
-    "country": "jp",
-    "type": "single",
-    "releaseDate": "2026-08-14",
-    "currency": "JPY",
-    "artwork": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a1/c2/7d/a1c27d20-a243-0502-8b8b-d29875fa84cc/885288199840.jpg/600x600bb.jpg",
-    "appleUrl": "https://music.apple.com/jp/album/candy-tune-unit-box-single/6798969667?uo=4",
-    "trackCount": 3,
-    "albumArtist": "CANDY TUNE",
-    "source": {
-      "name": "Apple iTunes API",
-      "url": "https://music.apple.com/jp/album/candy-tune-unit-box-single/6798969667?uo=4",
-      "collectedAt": "2026-09-30",
-      "auto": true
-    },
-    "note": "판매처와 특전은 아직 확인되지 않았습니다. 발매 정보만 자동 수집된 상태입니다.",
-    "editions": [
-      {
-        "id": "digital",
-        "label": "디지털 (실물 사양 확인 중)",
-        "listPrice": 765,
-        "listCurrency": "JPY",
-        "feeKind": "single",
-        "includes": [
-          "디지털 음원"
-        ],
-        "estimated": false
-      }
-    ],
-    "offers": [],
-    "searchHints": [
-      {
-        "store": "TOWER RECORDS",
-        "storeKo": "타워레코드",
-        "searchUrl": "https://tower.jp/artist/search?kwd=CANDY%20TUNE"
-      },
-      {
-        "store": "HMV&BOOKS online",
-        "storeKo": "HMV",
-        "searchUrl": "https://www.hmv.co.jp/search/keyword_CANDY%20TUNE/"
-      },
-      {
-        "store": "Amazon.co.jp",
-        "storeKo": "아마존 재팬",
-        "searchUrl": "https://www.amazon.co.jp/s?k=CANDY%20TUNE&i=popular"
       }
     ]
   },
