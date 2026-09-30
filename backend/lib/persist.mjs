@@ -213,14 +213,18 @@ export function createPersistence({ url = process.env.DATABASE_URL, dbDir, inter
       if (timer) return;
       timer = setInterval(() => { flush().catch((e) => log.warn('[persist] flush 실패:', e.message)); }, intervalMs);
       timer.unref?.();
-      collectedTimer = setInterval(() => {
-        flushCollected().then((r) => { if (r.uploaded) log.log(`[persist] 수집 캐시 ${r.uploaded}개 저장`); }).catch((e) => log.warn('[persist] 수집 캐시 저장 실패:', e.message));
-      }, collectedIntervalMs);
+      const saveCollected = () => flushCollected().then((r) => log.log(`[persist] 수집 캐시 ${r.uploaded}개 저장`)).catch((e) => log.warn('[persist] 수집 캐시 저장 실패:', e.message));
+      /* 첫 백업은 부팅 10분 뒤(부팅 수집이 끝날 즈음) — 첫 주기 전에 죽어도 기준본이 남게. 이후 1시간마다 */
+      collectedTimer = setTimeout(() => {
+        void saveCollected();
+        collectedTimer = setInterval(saveCollected, collectedIntervalMs);
+        collectedTimer.unref?.();
+      }, Math.min(10 * 60_000, collectedIntervalMs));
       collectedTimer.unref?.();
     },
     async stop() {
       if (timer) clearInterval(timer);
-      if (collectedTimer) clearInterval(collectedTimer);
+      if (collectedTimer) { clearTimeout(collectedTimer); clearInterval(collectedTimer); }
       timer = null; collectedTimer = null;
       /* 사용자 데이터가 먼저 — 수집 캐시는 그다음(강제 종료되더라도 사용자 데이터는 저장돼 있게) */
       try { const r = await flush(); log.log(`[persist] 종료 전 저장 ${r.uploaded}개`); } catch (e) { log.warn('[persist] 종료 전 저장 실패:', e.message); }
