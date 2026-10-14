@@ -277,8 +277,10 @@ const keyOf = (t, a) => `${norm(t).slice(0, 12)}|${norm(a).slice(0, 6)}`;
 
 function buildCombined(sources, weights) {
   const map = new Map();
-  for (const [name, list] of Object.entries(sources)) {
-    if (!list?.length || !weights[name]) continue;
+  for (const [name, raw] of Object.entries(sources)) {
+    if (!raw?.length || !weights[name]) continue;
+    /* 원천마다 이스케이프 처리가 달라 &amp;·&#039;가 섞여 들어온다 — 합치기 전에 한 번 풀어 둔다 */
+    const list = raw.map((e) => ({ ...e, title: decodeHtml(e.title), artist: decodeHtml(e.artist) }));
     const N = list.length;
     list.forEach((e) => {
       const k = keyOf(e.title, e.artist);

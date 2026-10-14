@@ -84,6 +84,19 @@ export async function fetchJson(url, opts = {}) {
 }
 
 /* HTML 엔티티·태그 정리 */
+/* 수집처가 이스케이프한 채로 준 글자(&amp; · &#039; · &#x27; …)를 원래 글자로. 차트·뉴스 제목에 그대로 노출되던 문제 */
+const NAMED_ENT = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", hellip: '…', middot: '·', ndash: '–', mdash: '—', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”' };
+export function unescapeHtml(s) {
+  let out = String(s ?? '');
+  for (let i = 0; i < 2 && /&(#\d+|#x[0-9a-f]+|[a-z]+);/i.test(out); i++) {
+    out = out.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (m, k) => {
+      if (k[0] === '#') { const n = k[1] === 'x' || k[1] === 'X' ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10); return Number.isFinite(n) && n > 0 && n < 0x110000 ? String.fromCodePoint(n) : m; }
+      return NAMED_ENT[k.toLowerCase()] ?? m;
+    });
+  }
+  return out;
+}
+
 export function clean(s) {
   if (s == null) return '';
   return String(s)

@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { createSceneLifecycle } from './lifecycle';
 import type { SceneHandle } from './lifecycle';
 
-export interface StageItem { image: string; label: string }
+export interface StageItem { image: string; label: string; title?: string; sub?: string }
 export interface StageHandle extends SceneHandle {
   go(delta: number): void;
   goTo(index: number): void;
@@ -98,6 +98,29 @@ interface Card {
 const wrap = (v: number, n: number) => ((v % n) + n) % n;
 const damp = (a: number, b: number, k: number, dt: number) => a + (b - a) * (1 - Math.exp(-k * dt));
 
+/* 이미지 대신 쓰는 글자 표지 — 3:4, 어두운 바탕에 제목·부제(무대의 다른 카드와 같은 톤) */
+function textPoster(it: StageItem): THREE.Texture | null {
+  try {
+    const c = document.createElement('canvas');
+    c.width = 600; c.height = 800;
+    const g = c.getContext('2d');
+    if (!g) return null;
+    g.fillStyle = '#1D1D24'; g.fillRect(0, 0, 600, 800);
+    g.strokeStyle = 'rgba(255,255,255,.14)'; g.lineWidth = 2; g.strokeRect(36, 36, 528, 728);
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '500 26px "Geist Mono", ui-monospace, monospace';
+    g.fillText((it.label || '').toUpperCase(), 64, 100);
+    g.fillStyle = '#F4F4F5'; g.font = '700 64px "Host Grotesk", "Pretendard Variable", Pretendard, sans-serif';
+    const words = String(it.title || it.label || '').split(/(\s+)/);
+    const lines: string[] = []; let cur = '';
+    for (const w of words) { const next = cur + w; if (g.measureText(next).width > 470 && cur.trim()) { lines.push(cur.trim()); cur = w.trimStart(); } else cur = next; }
+    if (cur.trim()) lines.push(cur.trim());
+    lines.slice(0, 6).forEach((l, i) => g.fillText(l, 64, 560 - (Math.min(lines.length, 6) - 1 - i) * 76));
+    if (it.sub) { g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '400 28px "Pretendard Variable", Pretendard, sans-serif'; g.fillText(it.sub.slice(0, 30), 64, 700); }
+    const t = new THREE.CanvasTexture(c);
+    return t;
+  } catch { return null; }
+}
+
 export function createStage3D(host: HTMLElement, items: StageItem[], opts: StageOptions = {}): StageHandle | null {
   if (!items.length) return null;
   let renderer: THREE.WebGLRenderer;
@@ -130,7 +153,9 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   const loadTex = (src: number) => {
     if (!texCache.has(src)) {
       texCache.set(src, new Promise((resolve) => {
-        loader.load(source[src].image, (t) => { t.anisotropy = Math.min(8, maxAniso); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; resolve(t); }, undefined, () => resolve(null));
+        const done = (t: THREE.Texture) => { t.anisotropy = Math.min(8, maxAniso); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; resolve(t); };
+        /* 포스터를 못 받으면 검은 판으로 두지 않고, 제목으로 만든 표지를 붙인다 */
+        loader.load(source[src].image, done, undefined, () => { const t = textPoster(source[src]); if (t) done(t); else resolve(null); });
       }));
     }
     return texCache.get(src)!;

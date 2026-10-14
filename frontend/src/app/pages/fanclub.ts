@@ -18,13 +18,15 @@ interface Fees { annual: number | null; monthly: number | null; joinFee: number 
 export interface FanclubCache { state?: string; lastError?: string | null; updatedAt?: string | null }
 
 /* Last successful observation is not a claim that fees or availability are current. */
-export function fanclubCacheNotice(cache?: FanclubCache | null): string {
+export function fanclubCacheNotice(cache?: FanclubCache | null, { compact = false } = {}): string {
   if (!cache) return '';
   const ja = getLocale() === 'ja';
   const warning = cache.lastError ? (ja ? '更新に失敗したため、以前に確認した情報を表示しています。入会前に公式ページをご確認ください。' : '갱신에 실패해 이전에 확인한 정보를 표시합니다. 가입 전에 공식 페이지를 확인하세요.')
     : cache.state === 'stale' ? (ja ? '更新間隔を過ぎた情報です。入会前に公式ページをご確認ください。' : '확인 주기가 지난 정보입니다. 가입 전에 공식 페이지를 확인하세요.')
     : cache.state === 'pending' ? (ja ? '公式情報を確認中です。' : '공식 정보를 확인 중입니다.') : '';
   const at = fmtDateTime(cache.updatedAt);
+  /* 목록 카드: 같은 경고 문장이 카드마다 반복되면 읽히지 않는다 — 확인 시각만 짧게, 경고는 점과 툴팁·스크린리더 문장으로(목록 위에 한 번 크게 안내) */
+  if (compact && at) return `<span class="fresh fresh-c${warning ? ' is-stale' : ''}"${warning ? ` title="${esc(warning)}"` : ''}>${warning ? `<i class="fresh-dot" aria-hidden="true"></i><span class="sr-only">${esc(warning)}</span>` : ''}${esc(`${ja ? '確認' : '확인'} ${at}`)}</span>`;
   const label = [warning, at ? `${ja ? '最終確認' : '마지막 확인'} ${at}` : ''].filter(Boolean).join(' · ');
   return label ? `<span class="fresh${warning ? ' is-stale' : ''}"${warning ? ' role="status"' : ''}>${esc(label)}</span>` : '';
 }
@@ -91,7 +93,7 @@ export async function renderFanclubPage(root: HTMLElement, alive: () => boolean)
         <b class="fct-name">${esc(clubName(x.name) || (plat(x) === 'weverse' ? 'Weverse Membership' : `${ja && x.artistLatin ? x.artistLatin : x.artist} ${t('fc.official')}`))}</b>
         <span class="fct-price">${price(x)}</span>
         <span class="fcl-cond">${cond(x)}</span>
-        ${fanclubCacheNotice(x.cache)}
+        ${fanclubCacheNotice(x.cache, { compact: true })}
       </a>
     </li>`;
   const counts = { all: found.length, ovs: found.filter((x) => ovsOf(x) === 'yes').length, open: found.filter(isOpen).length };
@@ -100,10 +102,11 @@ export async function renderFanclubPage(root: HTMLElement, alive: () => boolean)
 
     <section class="sec"><div class="sec-head"><h2>${t('fcp.fees')}</h2></div>
       <div class="toolbar fc-toolbar"><label class="find">${icon('i-search')}<input type="search" id="fcQuery" maxlength="100" aria-label="${ja ? 'アーティスト・ファンクラブを検索' : '아티스트·팬클럽 검색'}" placeholder="${ja ? 'アーティスト・ファンクラブを検索' : '아티스트·팬클럽 검색'}"></label><div class="chips" role="group">
-        <button type="button" class="chip on" data-f="all" aria-pressed="true">${t('fcl.all')} ${counts.all}</button>
-        ${kr ? `<button type="button" class="chip" data-f="ovs" aria-pressed="false">${t('fc.overseas.yes2')} ${counts.ovs}</button>` : ''}
-        <button type="button" class="chip" data-f="open" aria-pressed="false">${t('fcp.openNow')} ${counts.open}</button>
+        <button type="button" class="chip on" data-f="all" aria-pressed="true">${t('fcl.all')} <span class="n">${counts.all}</span></button>
+        ${kr ? `<button type="button" class="chip" data-f="ovs" aria-pressed="false">${t('fc.overseas.yes2')} <span class="n">${counts.ovs}</span></button>` : ''}
+        <button type="button" class="chip" data-f="open" aria-pressed="false">${t('fcp.openNow')} <span class="n">${counts.open}</span></button>
       </div></div>
+      ${found.some((x) => x.cache?.lastError || x.cache?.state === 'stale') ? `<p class="fc-stale-note" role="note"><i class="fresh-dot" aria-hidden="true"></i>${ja ? '点の付いたカードは更新間隔を過ぎた情報です。料金・入会条件は入会前に公式ページでご確認ください。' : '점이 붙은 카드는 확인 주기가 지난 정보입니다. 회비·가입 조건은 가입 전에 공식 페이지에서 확인하세요.'}</p>` : ''}
       <p class="fc-result-count" role="status" aria-live="polite"></p>
       ${found.length ? `<ul class="fct-grid" id="fcl">${found.map(row).join('')}</ul>` : emptyState(t('empty.generic'))}
       <p class="fc-filter-empty muted" hidden>${ja ? '一致するファンクラブがありません。検索語や条件を変えてください。' : '일치하는 팬클럽이 없습니다. 검색어나 조건을 바꿔 보세요.'}</p>

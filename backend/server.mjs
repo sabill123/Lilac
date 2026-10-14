@@ -23,6 +23,7 @@ import { MECHANICS, mechanicsFor } from './lib/fandom.mjs';
 import { register as registerInstance, heartbeat as instanceHeartbeat, unregister as unregisterInstance } from './lib/instance.mjs';
 import { syncReleases } from './lib/sync-releases.mjs';
 import { createLiveService } from './lib/live/service.mjs';
+import { unescapeHtml } from './lib/live/http.mjs';
 import { createCommunity } from './lib/community.mjs';
 import { createPersistence } from './lib/persist.mjs';
 import { flushAllKv } from './lib/live/cache.mjs';
@@ -1179,7 +1180,7 @@ app.get('/api/charts', async (req, res) => {
   /* 차트마다 같은 아티스트를 다르게 쓴다("Mrs.GREEN APPLE" ↔ "Mrs. GREEN APPLE"). 띄어쓰기·기호만 다르면 로스터 표기로 */
   const canon = await chartArtistNames();
   const slim = (e) => ({
-    rank: e.rank, title: e.title, artist: canon.get(norm(e.artist)) || e.artist,
+    rank: e.rank, title: unescapeHtml(e.title), artist: canon.get(norm(unescapeHtml(e.artist))) || unescapeHtml(e.artist),
     artwork: e.artwork || null, appleUrl: e.appleUrl || null,
     youtubeId: e.youtubeId || null, ytViews: e.ytViews || null,
     ranks: e.ranks || null, sources: e.sources || null, score: e.score,

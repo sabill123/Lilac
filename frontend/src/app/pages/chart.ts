@@ -87,7 +87,7 @@ async function paintMoves(root: HTMLElement, country: 'jp' | 'kr', alive: () => 
   try { m = await api(`/api/live/chart-moves?country=${country}`); } catch { return; }
   if (!alive() || !m.source || (!m.rising.length && !m.entries.length)) return;
   const card = (e: Move, i: number, kind: 'up' | 'new') => `<li class="shelf-card">
-      <button class="shelf-art" data-shelf="${kind}" data-i="${i}" aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist })}<span class="crow-play">${icon('i-play', 'ic')}</span></button>
+      <button class="shelf-art" data-shelf="${kind}" data-i="${i}" aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist, cover: { title: e.title, sub: e.artist } })}<span class="crow-play">${icon('i-play', 'ic')}</span></button>
       <p class="shelf-move">${kind === 'up' && e.lastRank ? esc(t('ch.moveUp', { from: e.lastRank, to: e.rank })) : esc(t('ch.moveNew', { r: e.rank }))}</p>
       <b>${esc(e.title)}</b><a href="#/artist/name/${encodeURIComponent(e.artist)}">${esc(e.artist)}</a>
     </li>`;

@@ -22,7 +22,7 @@ import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts, searchEngine } from './fanclub.mjs';
 import { eventPoster, ogImage } from './posters.mjs';
 import { krFestivals, eplusFestivals, jpFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation, eplusOfficialSite, findFestivalSite } from './festivals.mjs';
-import { fetchText, halfwidth, nameInTitle } from './http.mjs';
+import { fetchText, halfwidth, nameInTitle, unescapeHtml } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
 import { createHash } from 'node:crypto';
 
@@ -1141,7 +1141,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const fill = (e) => {
       const m = (byTitle.get(tkey(e.title)) || []).find((v) => sameArtist(v.artist, e.artist));
       const alt = m?.artwork ? null : artistImg(e.artist);
-      return { rank: e.rank, lastRank: e.lastRank ?? null, move: e.move || null, title: e.title, artist: e.artist, artwork: m?.artwork || alt || null, artworkKind: m?.artwork ? 'track' : alt ? 'artist' : null, appleUrl: m?.appleUrl || null };
+      return { rank: e.rank, lastRank: e.lastRank ?? null, move: e.move || null, title: unescapeHtml(e.title), artist: unescapeHtml(e.artist), artwork: m?.artwork || alt || null, artworkKind: m?.artwork ? 'track' : alt ? 'artist' : null, appleUrl: m?.appleUrl || null };
     };
     const list = c[srcKey];
     const entries = list.filter((e) => e.move === 'new').slice(0, 12).map(fill);

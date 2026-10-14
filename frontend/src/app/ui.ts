@@ -128,9 +128,12 @@ export function approxMoney(v: number | null | undefined, from: string, to: stri
 }
 
 /* 이미지 — 핫링크 차단을 피하려 referrer 없이. 실패하면 이니셜 판으로 바꾼다 */
-export function img(src: string | null | undefined, alt: string, cls = '', { ratio = '', initial = '', text = false } = {}) {
+export function img(src: string | null | undefined, alt: string, cls = '', { ratio = '', initial = '', text = false, cover = null as null | { title: string; sub?: string } } = {}) {
   const label = (initial || alt || '·').trim();
-  const fallback = text
+  /* 재킷이 없을 때 회색 상자에 글자 하나 대신, 제목·아티스트로 만든 표지(레코드 가게 임시 슬리브처럼) */
+  const fallback = cover
+    ? `<span class="ph ph-cover" aria-hidden="true"><b>${esc(cover.title)}</b><span>${esc(cover.sub || '')}</span></span>`
+    : text
     ? `<span class="ph ph-text" aria-hidden="true">${esc(label.length > 28 ? label.slice(0, 27) + '…' : label)}</span>`
     : `<span class="ph" aria-hidden="true">${esc(label.slice(0, 1).toUpperCase())}</span>`;
   src = safeImage(src);
@@ -146,7 +149,8 @@ export function skeletonCards(n = 6) {
 }
 
 export function emptyState(msg: string, action = '') {
-  return `<div class="empty"><p>${esc(msg)}</p>${action}</div>`;
+  /* affectUI Empty Calendar 참고 — 비어 있음을 겹친 빈 달력 카드로(마우스를 올리면 부채꼴로 펼쳐진다) */
+  return `<div class="empty"><div class="fx-empty-cal" aria-hidden="true"><i></i><i></i><i></i></div><p>${esc(msg)}</p>${action}</div>`;
 }
 export function errorState(msg: string) {
   return `<div class="empty is-error"><p>${esc(msg)}</p><button class="btn btn-line" data-retry>${t('retry')}</button></div>`;

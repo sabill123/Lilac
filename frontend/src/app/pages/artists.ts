@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { state, buyerCurrency } from '../state';
 import { t, getLocale } from '../i18n';
 import { esc, icon, img, skeletonRows, skeletonCards, errorState, emptyState, genreLabel } from '../ui';
-import { artistCard, posterCard, newsRow, goodsCard, followButton, bindFollow } from '../cards';
+import { artistCard, posterCard, newsRow, goodsCard, followButton, bindFollow, artistName } from '../cards';
 import type { ArtistLite, Concert, News, Offer } from '../cards';
 import { playList, markPlaying, keyOf } from '../player';
 import { fanclubSection } from '../fanclub';
@@ -14,6 +14,7 @@ import { ct } from '../cm-i18n';
 import { displayName } from '../fcguide';
 import type { CmKey } from '../cm-i18n';
 import { nickHtml, when } from '../social';
+import { bindMarquee } from '../fx';
 
 const norm = (s: string) => s.normalize('NFKC').toLowerCase().replace(/\s+/g, '');
 
@@ -21,6 +22,7 @@ export async function renderArtists(root: HTMLElement, alive: () => boolean) {
   const ed = state.edition;
   root.innerHTML = `
     <section class="page-head"><h1>${t('a.title')}</h1></section>
+    <div id="aMq"></div>
     <div class="toolbar"><label class="find"><input type="search" id="aFind" placeholder="${t('a.find')}" autocomplete="off"></label><span class="count" id="aCount"></span></div>
     <div class="grid-artists" id="aGrid">${skeletonRows(18, 'sk-round')}</div>`;
   let items: ArtistLite[] = [];
@@ -33,6 +35,19 @@ export async function renderArtists(root: HTMLElement, alive: () => boolean) {
     return;
   }
   if (!alive()) return;
+  /* 차트 순 상위 아티스트가 두 줄로 반대 방향으로 흐른다(affectUI Logo Marquee) — 올리면 멈추고, 끌면 관성으로 */
+  const top = items.slice(0, 28);
+  if (top.length >= 10) {
+    const half = Math.ceil(top.length / 2);
+    const chip = (x: ArtistLite) => `<a class="fx-mq-item" href="#/artist/${encodeURIComponent(x.id)}" draggable="false">${x.photo || x.artwork ? `<img src="${esc((x.photo || x.artwork)!)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;fx-mq-ini&quot;>${esc(x.name.slice(0, 1))}</span>'">` : `<span class="fx-mq-ini">${esc(x.name.slice(0, 1))}</span>`}${esc(artistName(x))}${x.nameOriginal && x.nameOriginal !== x.name ? `<small>${esc(x.nameOriginal)}</small>` : ''}</a>`;
+    const row = (list: ArtistLite[]) => `<div class="fx-mq-row">${list.map(chip).join('')}${list.map(chip).join('').replace(/<a /g, '<a tabindex="-1" aria-hidden="true" ')}</div>`;
+    const mq = root.querySelector<HTMLElement>('#aMq')!;
+    mq.innerHTML = `<div class="fx-mq" aria-label="${esc(t('home.artists'))}">${row(top.slice(0, half))}${row(top.slice(half))}</div>`;
+    const ctl = new AbortController();
+    const stop = () => { if (!alive()) { ctl.abort(); } else setTimeout(stop, 2000); };
+    stop();
+    bindMarquee(mq.querySelector<HTMLElement>('.fx-mq')!, ctl.signal);
+  }
   const grid = root.querySelector<HTMLElement>('#aGrid')!;
   const paint = (q = '') => {
     const rows = q ? items.filter((a) => norm(`${a.name} ${a.nameOriginal || ''}`).includes(norm(q))) : items;

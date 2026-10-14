@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { state } from '../state';
 import { t, getLocale } from '../i18n';
 import { esc, icon, img, errorState, emptyState, ddayOf } from '../ui';
-import { festCard, posterCard, openCard, newsRow, releaseCard, artistCard, chartRow, concertRegistry, openConcert, placeOf, whenOf, providerName, artistName } from '../cards';
+import { festCard, posterCard, boardHtml, releaseFlowItem, newsRow, artistCard, chartRow, concertRegistry, openConcert, placeOf, whenOf, providerName, artistName } from '../cards';
 import { ct } from '../cm-i18n';
 import { when } from '../social';
 import type { Concert, News, Release, ArtistLite, ChartEntry } from '../cards';
@@ -16,6 +16,7 @@ import { mountStage3D, disposeScene } from '../../three';
 import type { StageHandle } from '../../three/stage3d';
 import { homeAwardsHtml, mountHomeAwards } from '../../awards';
 import '../../awards/awards.css';
+import { coverFlowHtml, bindCoverFlow, bindBoard } from '../fx';
 
 interface HomeData {
   edition: string;
@@ -154,7 +155,7 @@ function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
   }
   show(0);
   stage.classList.add('is-loading');
-  mountStage3D(host, slides.map((s) => ({ image: texUrl(s.image), label: s.label })), { onFocus: show, onPick: pick }).then((h) => {
+  mountStage3D(host, slides.map((s) => ({ image: texUrl(s.image), label: s.label, title: s.c ? (s.c.performer || s.c.title) : s.r?.title, sub: s.c ? s.c.title : s.r?.artist })), { onFocus: show, onPick: pick }).then((h) => {
     if (signal.aborted) { h?.destroy(); return; }
     handle = h;
     stage.classList.remove('is-loading');
@@ -243,7 +244,7 @@ function sectionsHtml(d: HomeData) {
   return `
     ${visList.length ? shelf('secVisiting', t(`home.visiting.${ed}`), '#/concerts/visiting', visList.slice(0, 16).map((c) => li(posterCard(c))).join(''), 'rail-posters')
       : `<section class="sec" id="secVisiting"><div class="sec-head"><h2>${esc(t(`home.visiting.${ed}`))}</h2></div>${emptyState(d.classifying ? t('c.classifying', { n: d.classifying }) : t('empty.generic'))}</section>`}
-    ${opens.length ? shelf('secTickets', t('home.opens'), '#/concerts/tickets', opens.slice(0, 14).map(openCard).join(''), 'rail-opens') : ''}
+    ${opens.length ? `<section class="sec" id="secTickets"><div class="sec-head"><h2>${esc(t('home.opens'))}</h2><a class="more" href="#/concerts/tickets">${t('more')}</a></div>${boardHtml(opens.slice(0, 8))}</section>` : ''}
     <div class="split">
       <section class="sec" id="secNews"><div class="sec-head"><h2>${esc(t('home.news'))}</h2><a class="more" href="#/news">${t('more')}</a></div>${d.news.length ? `<ul class="nlist">${d.news.slice(0, 8).map(newsRow).join('')}</ul>` : emptyState(t('empty.generic'))}</section>
       <section class="sec" id="secChart">${ch ? `<div class="sec-head"><h2>${esc(t(`home.chart.${ch.country}`))}</h2><a class="more" href="#/chart/${ch.country}">${t('more')}</a></div><ol class="clist compact">${ch.items.map((e, i) => chartRow(e, i, { compact: true })).join('')}</ol>` : ''}</section>
@@ -252,7 +253,7 @@ function sectionsHtml(d: HomeData) {
       <section class="sec" id="secTalk"><div class="sec-head"><h2>${esc(ct('home.talk'))}</h2><a class="more" href="#/community">${t('more')}</a></div><div class="talk-body">${'<div class="sk sk-line"></div>'.repeat(5)}</div></section>
       <section class="sec" id="secGals"><div class="sec-head"><h2>${esc(ct('home.gals'))}</h2><a class="more" href="#/community/list">${t('more')}</a></div><ol class="gal-rank">${'<li class="sk sk-line"></li>'.repeat(5)}</ol></section>
     </div>
-    ${d.releases.length ? shelf('secReleases', t('home.releases'), '#/goods', d.releases.slice(0, 16).map((r) => li(releaseCard(r))).join(''), 'rail-squares') : ''}
+    ${d.releases.length ? `<section class="sec" id="secReleases"><div class="sec-head"><h2>${esc(t('home.releases'))}</h2><a class="more" href="#/goods">${t('more')}</a></div>${coverFlowHtml(d.releases.slice(0, 16).map(releaseFlowItem), t('home.releases'))}</section>` : ''}
     ${d.festivals?.length ? shelf('secFest', getLocale() === 'ja' ? '韓国・日本の音楽フェス' : '한국·일본 음악 페스티벌', '#/concerts/festivals', d.festivals.slice(0, 16).map((c) => li(festCard(c))).join(''), 'rail-posters') : ''}
     ${d.abroad.length ? shelf('secAbroad', t(`home.abroad.${ed}`), '#/concerts/abroad', d.abroad.slice(0, 12).map((c) => li(posterCard(c))).join(''), 'rail-posters') : ''}
     <div class="awards-wrap">${homeAwardsHtml()}</div>
@@ -267,6 +268,13 @@ function bindSections(root: HTMLElement, d: HomeData, alive: () => boolean, sign
   }
   void paintTalk(root, state.edition, () => alive() && !signal.aborted);
   bindRails(root, signal);
+  bindCoverFlow(root, d.releases.slice(0, 16).map(releaseFlowItem), signal);
+  const board = root.querySelector<HTMLElement>('#secTickets .fx-board');
+  if (board) {
+    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { io.disconnect(); board.classList.add('is-on'); bindBoard(board.parentElement!); } }, { threshold: 0.2 });
+    io.observe(board);
+    signal.addEventListener('abort', () => io.disconnect(), { once: true });
+  }
   const aw = root.querySelector<HTMLElement>('.awards-wrap');
   if (aw) mountHomeAwards(aw, signal);
 }

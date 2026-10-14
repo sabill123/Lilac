@@ -2,6 +2,8 @@
 import './app.css';
 import './editorial.css';
 import './tl.css';
+import './fx.css';
+import { installFx, markRoute } from './fx';
 import { state, setEdition, setLang, onChange, loadSession } from './state';
 import type { Edition } from './state';
 import { t, getLocale } from './i18n';
@@ -156,6 +158,7 @@ const LEGACY: Record<string, string> = {
 
 let gen = 0;
 async function route() {
+  markRoute();
   const my = ++gen;
   const alive = () => my === gen;
   const [s, a, b] = seg();
@@ -377,6 +380,7 @@ async function boot() {
   if (hdrEl && 'ResizeObserver' in window) new ResizeObserver(() => document.documentElement.style.setProperty('--hdr-total', `${Math.round(hdrEl.getBoundingClientRect().height)}px`)).observe(hdrEl);
   document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); $('page').focus(); $('page').scrollIntoView({ block: 'start' }); });
   installFcTracking();
+  installFx();
   renderShell();
   loadAliases().catch(() => {});
   window.addEventListener('hashchange', () => { pendingLive = null; void route(); });

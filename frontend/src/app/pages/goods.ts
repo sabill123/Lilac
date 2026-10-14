@@ -5,7 +5,8 @@ import { t } from '../i18n';
 import { esc, icon, img, skeletonRows, errorState, emptyState, freshness, params, money, convert, fmtDay, approxMoney } from '../ui';
 import { likeBtn, shareBtn, bindSocial, commentsHtml, bindComments, targetAdapter, releaseTarget } from '../social';
 import { ct } from '../cm-i18n';
-import { goodsCard, releaseCard } from '../cards';
+import { goodsCard, releaseCard, releaseFlowItem } from '../cards';
+import { coverFlowHtml, bindCoverFlow } from '../fx';
 import type { Offer, Release, ArtistLite } from '../cards';
 
 interface StoreInfo { id: string; label: string; market: string; currency: string; shipsToNote: string; homepage: string; policySource: string }
@@ -119,9 +120,13 @@ async function browseView(body: HTMLElement, alive: () => boolean) {
   ]);
   if (!alive()) return;
   const curated: Release[] = (cur.releases || []).map((r: Release & { offerCount?: number }) => ({ ...r, tier: 'curated' }));
+  /* 최신 14장은 3D 커버 플로로, 나머지는 격자로 — 같은 앨범을 두 번 보여 주지 않는다 */
+  const flow: Release[] = rel.items.length >= 5 ? rel.items.slice(0, 14) : [];
+  const rest: Release[] = rel.items.slice(flow.length);
   body.innerHTML = `
     ${curated.length ? `<section class="sec"><div class="sec-head"><h2>${t('g.compare')}</h2></div><div class="grid-squares">${curated.map(releaseCard).join('')}</div></section>` : ''}
-    <section class="sec"><div class="sec-head"><h2>${t('g.new')}</h2></div>${rel.items.length ? `<div class="grid-squares">${rel.items.map(releaseCard).join('')}</div>` : emptyState(t('empty.generic'))}</section>`;
+    <section class="sec"><div class="sec-head"><h2>${t('g.new')}</h2></div>${flow.length ? coverFlowHtml(flow.map(releaseFlowItem), t('g.new')) : ''}${rest.length ? `<div class="grid-squares${flow.length ? ' after-flow' : ''}">${rest.map(releaseCard).join('')}</div>` : flow.length ? '' : emptyState(t('empty.generic'))}</section>`;
+  if (flow.length) bindCoverFlow(body, flow.map(releaseFlowItem));
 }
 
 /* 판매처·특전 비교 (사람이 확인한 발매) */
