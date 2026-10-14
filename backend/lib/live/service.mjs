@@ -1,3 +1,4 @@
+import { fetchAwardNews, mergeAwardFeed, AWARD_SERIES } from './awards.mjs';
 import { concertsInCountry } from './geography.mjs';
 import { fetchArtwork, validateArtworkUrl } from './image-proxy.mjs';
 import { attachStream } from './stream.mjs';
@@ -604,6 +605,17 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     if (parts.length === 1) return parts[0].r;
     const items = parts.flatMap((p) => (p.r.items || []).map((x) => ({ ...x, edition: p.ed }))).sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)));
     return { items, sources: parts.flatMap((p) => p.r.sources || []), cache: parts[0].r.cache };
+  }
+
+  /* ---------- 어워즈 발표: 편집 수상 기록과 별도로 주기 갱신 ---------- */
+  const awardSeries = AWARD_SERIES.map(({ id, name, country, officialUrl }) => ({ id, name, country, officialUrl }));
+  async function fetchAwards() {
+    const previous = await peek('awards-updates-v1');
+    return mergeAwardFeed(await fetchAwardNews(), previous?.items || []);
+  }
+  async function awards() {
+    const result = await cached('awards-updates-v1', 10 * MIN, fetchAwards, { budgetMs: 1500, empty: { items: [], sources: [] } });
+    return { ...result, series: awardSeries, refreshEverySec: 600 };
   }
 
   /* ---------- 굿즈 ---------- */
@@ -1550,6 +1562,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
 
   const SYNC = [
+    { name: 'awards', every: 10 * MIN, first: 15000, run: () => revalidate('awards-updates-v1', fetchAwards) },
     { name: 'kr-opens', every: 5 * MIN, run: () => revalidate('kr-opens', SRC_FN['kr-opens']) },
     { name: 'news', every: 5 * MIN, run: async () => { await news({ edition: 'kr', force: true }); await news({ edition: 'jp', force: true }); } },
     { name: 'jp-kpop', every: 10 * MIN, run: () => revalidate('jp-kpop', SRC_FN['jp-kpop']) },
@@ -1625,6 +1638,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/concerts', wrap((req) => concerts({ edition: ed(req.query.edition), scope: String(req.query.scope || 'visiting'), origin: String(req.query.origin || 'default') })));
     app.get('/api/live/tickets', wrap((req) => tickets({ edition: ed(req.query.edition), origin: String(req.query.origin || 'default') })));
     app.get('/api/live/news', wrap((req) => news({ edition: ed(req.query.edition), artist: req.query.artist ? String(req.query.artist).slice(0, 80) : null })));
+    app.get('/api/live/awards', wrap(() => awards()));
     app.get('/api/live/goods', wrap((req) => goods({ q: req.query.q, market: ['kr', 'jp', 'all'].includes(req.query.market) ? req.query.market : 'kr' })));
     app.get('/api/live/artist', wrap(async (req) => (await artist({ id: req.query.id ? String(req.query.id) : null, name: req.query.name ? String(req.query.name).slice(0, 80) : null, edition: ed(req.query.edition) })) || { error: 'not found' }));
     app.get('/api/live/status', wrap(() => status()));
@@ -1723,5 +1737,5 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/fc-referrals', wrap(async () => { await fcClicks.ready(); return { items: [...fcClicks.map].map(([artistId, v]) => ({ artistId, ...v })).sort((a, b) => (b.join + b.sale) - (a.join + a.sale)) }; }));
   }
 
-  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, goods, artist, status, home, festivals, search, artists, artistBrief, releases, fillPhotos, fanclubFeed };
+  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, awards, goods, artist, status, home, festivals, search, artists, artistBrief, releases, fillPhotos, fanclubFeed };
 }

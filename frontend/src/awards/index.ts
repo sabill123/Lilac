@@ -1,6 +1,6 @@
 import { EVENT_ORDER, findEdition, panelHtml, sectionHtml } from './view';
 // Ephemeral UI state only. No storage, history, document/window listeners or audio.
-let selected = 'mama-2025';
+let selected = EVENT_ORDER[0];
 const opened = new Set<string>();
 const mounts = new WeakMap<HTMLElement, () => void>();
 export function homeAwardsHtml(): string { return sectionHtml(selected, opened); }

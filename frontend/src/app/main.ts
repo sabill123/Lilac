@@ -317,6 +317,7 @@ async function softRoute(): Promise<boolean> {
 const ST_KEY: Record<string, [string, string]> = {
   'kr-visiting': ['내한 공연', '来韓公演'], 'kr-opens': ['티켓 오픈(한국)', 'チケット発売(韓国)'], 'kr-domestic': ['국내 공연', '韓国国内公演'],
   'jp-kpop': ['일본 K-POP 공연', '日本のK-POP公演'], 'news-kr': ['뉴스(한국)', 'ニュース(韓国)'], 'news-jp': ['뉴스(일본)', 'ニュース(日本)'],
+  awards: ['어워즈 발표', 'アワード発表'],
   festivals: ['페스티벌', 'フェス'], news: ['뉴스', 'ニュース'], 'fanclub-windows': ['팬클럽 선행 접수', 'FC先行受付'], goods: ['앨범·굿즈 가격', 'CD・グッズ価格'],
   'roster-identity': ['아티스트 정보 보정', 'アーティスト情報の補正'], photos: ['아티스트 사진', 'アーティスト写真'],
 };

@@ -15,6 +15,7 @@ import type { Track } from '../player';
 import { mountStage3D, disposeScene } from '../../three';
 import type { StageHandle } from '../../three/stage3d';
 import { homeAwardsHtml, mountHomeAwards } from '../../awards';
+import { awardsUpdatesHtml, mountAwardsUpdates } from '../../awards/live';
 import '../../awards/awards.css';
 import { coverFlowHtml, bindCoverFlow, bindBoard } from '../fx';
 
@@ -256,7 +257,7 @@ function sectionsHtml(d: HomeData) {
     ${d.releases.length ? `<section class="sec" id="secReleases"><div class="sec-head"><h2>${esc(t('home.releases'))}</h2><a class="more" href="#/goods">${t('more')}</a></div>${coverFlowHtml(d.releases.slice(0, 16).map(releaseFlowItem), t('home.releases'))}</section>` : ''}
     ${d.festivals?.length ? shelf('secFest', getLocale() === 'ja' ? '韓国・日本の音楽フェス' : '한국·일본 음악 페스티벌', '#/concerts/festivals', d.festivals.slice(0, 16).map((c) => li(festCard(c))).join(''), 'rail-posters') : ''}
     ${d.abroad.length ? shelf('secAbroad', t(`home.abroad.${ed}`), '#/concerts/abroad', d.abroad.slice(0, 12).map((c) => li(posterCard(c))).join(''), 'rail-posters') : ''}
-    <div class="awards-wrap">${homeAwardsHtml()}</div>
+    <div class="awards-wrap">${awardsUpdatesHtml()}${homeAwardsHtml()}</div>
     ${shelf('secArtists', t('home.artists'), '#/artists', d.artists.slice(0, 18).map((a) => li(artistCard(a))).join(''), 'rail-artists')}`;
 }
 
@@ -276,7 +277,7 @@ function bindSections(root: HTMLElement, d: HomeData, alive: () => boolean, sign
     signal.addEventListener('abort', () => io.disconnect(), { once: true });
   }
   const aw = root.querySelector<HTMLElement>('.awards-wrap');
-  if (aw) mountHomeAwards(aw, signal);
+  if (aw) { mountHomeAwards(aw, signal); mountAwardsUpdates(aw, signal); }
 }
 
 /* 커뮤니티 — 개념글이 있으면 개념글, 없으면 새 글. 옆에는 활발한 갤러리 순위(글이 없으면 차트 순) */
