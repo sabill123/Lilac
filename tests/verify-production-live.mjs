@@ -1,3 +1,5 @@
+import childProcess from 'node:child_process';
+import { syncBuiltinESMExports } from 'node:module';
 import { piaTag } from '../backend/lib/live/tickets-jp.mjs';
 import { eventGeography, concertsInCountry } from '../backend/lib/live/geography.mjs';
 import { Readable } from 'node:stream';
@@ -143,16 +145,21 @@ try {
       { id: 'pia:fixture-unknown', provider: 'pia', title: 'Fixture JAPAN TOUR', country: 'JP' },
     ].map(x => ({ ...x, startDate: '2099-10-03', endDate: '2099-10-04', poster: 'https://fixture.example/image.png', kind: 'concert' }));
     await revalidate('jp-kpop', async () => ({ items: events, sources: [{ ok: true }] }));
-    for (const key of ['kr-opens', 'kr-domestic', 'news-jp', 'eplus-search-']) await revalidate(key, async () => ({ items: [], sources: [{ ok: true }] }));
+    for (const key of ['kr-opens', 'kr-domestic', 'news-jp', 'eplus-search-', 'festivals']) await revalidate(key, async () => ({ items: [], sources: [{ ok: true }] }));
     const api = createLiveService({ dbDir: dir, readJson: async (_k, fallback) => fallback, getCharts: async () => ({}) });
     const originalFetch = globalThis.fetch;
+    const originalExecFile = childProcess.execFile;
+    let unexpectedProcesses = 0;
+    childProcess.execFile = (...args) => { unexpectedProcesses++; const cb=args.at(-1); queueMicrotask(()=>cb(Error('offline fixture must not spawn external transport'))); return { kill() {} }; };
+    syncBuiltinESMExports();
     globalThis.fetch = async () => { throw Error('offline fixture must not access network'); };
     try {
       const result = await api.home({ edition: 'jp' });
       assert.deepEqual(result.visiting.map(x => x.id), ['pia:fixture-japan']);
       assert.equal(result.visiting[0].direction, 'jp-visiting');
       assert.equal(result.visiting[0].country, 'JP'); assert.equal(result.visitingTotal, 1);
-    } finally { api.dispose(); globalThis.fetch = originalFetch; }
+      assert.equal(unexpectedProcesses, 0, 'all home sources must be fixture-backed, including curl-based festivals');
+    } finally { api.dispose(); globalThis.fetch = originalFetch; childProcess.execFile = originalExecFile; syncBuiltinESMExports(); }
   });
   await test('Cold all-source failure is an error, never a fresh empty result', async () => {
     const v = await cached('cold', 60000, async () => ({ items: [], sources: [{ provider: 'fixture', ok: false, error: '503' }] }));
