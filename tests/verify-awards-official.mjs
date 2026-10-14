@@ -147,4 +147,8 @@ check('collector has no current article slug/title and no awards circular import
   assert.equal(/from\s+['"]\.\/awards\.mjs/.test(moduleSource), false);
 });
 await assert.rejects(fetchOfficialAwardNews({ now: 'invalid', get }), /Invalid official award collection time/);
+
+
+const noTimezone=await fetchOfficialAwardNews({now,get:async(url)=>url===mmaUrl?card('local-clock','MMA2026 라인업 발표'):url===mamaUrl?rss(): '<script type="application/ld+json">{"datePublished":"2026-10-14T11:22:33"}</script>'});
+check('timezone-free publisher timestamp retains day without inventing clock',()=>assert.equal(noTimezone.items[0].publishedAt,'2026-10-14'));
 console.log(`${checks} passed`);

@@ -27,6 +27,7 @@
  * 원칙: 값은 모두 예매처 응답에서 온다. 모르는 값은 null. 예매처 하나가 실패해도 나머지는 반환한다.
  */
 import { fetchText, fetchJson, clean, halfwidth, normDate, pool } from './http.mjs';
+import { readMelon, inspectMelonNotices } from './melon-transport.mjs';
 import { ticketlinkList, yes24List, mergeVendors } from './vendors-extra.mjs';
 
 const NOL_LIST = 'https://nol.yanolja.com/ticket/genre/api/cx-display/widget/v1/multiple-filtered-entertainment-list/items';
@@ -232,10 +233,11 @@ function melonStatus(flag, dates) {
   return dates.length ? 'onsale' : 'unknown';
 }
 
-export async function melonList(genre = 'GENRE_CON_ALL') {
+export async function melonList(genre = 'GENRE_CON_ALL', { read = readMelon, timeout = 8000 } = {}) {
   const fetchedAt = new Date().toISOString();
   const url = `${MELON_LIST}?commCode=&sortType=HIT&perfGenreCode=${encodeURIComponent(genre)}&perfThemeCode=&filterCode=FILTER_ALL&v=1`;
-  const j = await fetchJson(url, { headers: { Referer: 'https://ticket.melon.com/concert/index.htm' }, timeout: 12000 });
+  const j = await read(url, { json: true, timeout });
+  if (!Array.isArray(j?.data)) throw new Error('Melon invalid list response');
   const now = Date.now();
   return (j.data || []).map((d) => {
     const [startDate, endDate] = splitRange(d.periodInfo);
@@ -266,19 +268,36 @@ export async function melonList(genre = 'GENRE_CON_ALL') {
   });
 }
 
-export async function melonTicketOpens({ pages = 3, schGcode = 'GENRE_CON_ALL', query = '' } = {}) {
+export async function melonTicketOpens({ pages = 3, schGcode = 'GENRE_CON_ALL', query = '', read = readMelon, budgetMs = 12000, requestMs = 5000, concurrency = 2 } = {}) {
   const fetchedAt = new Date().toISOString();
   const out = [];
-  for (let p = 1; p <= pages; p++) {
-    const url = `${MELON_CSOON}?orderType=0&pageIndex=${p}&schGcode=${schGcode}&schText=${encodeURIComponent(query)}`;
-    const html = await fetchText(url, { headers: { Referer: 'https://ticket.melon.com/csoon/index.htm' } });
-    const lis = html.split(/<li>/).slice(1);
-    if (!lis.length) break;
-    for (const li of lis) {
-      const id = (li.match(/csoonId=(\d+)/) || [])[1];
-      if (!id) continue;
+  const deadline = Date.now() + Math.max(1, budgetMs);
+  const pageCount = Math.min(3, Math.max(1, Math.floor(pages) || 1));
+  let nextPage = 1;
+  const docs = [];
+  const errors = [];
+  await Promise.all(Array.from({ length: Math.min(2, Math.max(1, concurrency), pageCount) }, async () => {
+    while (nextPage <= pageCount) {
+      if (Date.now() >= deadline) { errors.push('Melon source budget exhausted'); break; }
+      const p = nextPage++;
+      const url = `${MELON_CSOON}?orderType=0&pageIndex=${p}&schGcode=${schGcode}&schText=${encodeURIComponent(query)}`;
+      try { docs[p] = await read(url, { timeout: Math.min(requestMs, Math.max(1, deadline - Date.now())) }); }
+      catch (e) {
+        if (e.partialHtml) docs[p] = e.partialHtml;
+        else errors.push(`page ${p}: ${e.message || e}`);
+      }
+    }
+  }));
+  // Workers are settled before returning, including aborted body reads.
+  let parsedPages = 0;
+  for (const [p, html] of docs.entries()) {
+    if (!html) continue;
+    const parsed = inspectMelonNotices(html);
+    if (parsed.errors.length) errors.push(...parsed.errors.map(error => `page ${p}: ${error}`));
+    else parsedPages++;
+    for (const { html: li, id, title: rawTitle } of parsed.rows) {
       const date = clean((li.match(/<span class="date">([\s\S]*?)<\/span>/) || [])[1]);
-      const title = halfwidth(clean((li.match(/class="tit">([\s\S]*?)<\/a>/) || [])[1]).replace(/\s*티켓\s*오픈\s*안내\s*$/, '').replace(/\s*티켓오픈\s*안내\s*$/, ''));
+      const title = halfwidth(rawTitle.replace(/\s*티켓\s*오픈\s*안내\s*$/, '').replace(/\s*티켓오픈\s*안내\s*$/, ''));
       const img = (li.match(/<img src=\s*"([^"]+)"/) || [])[1] || null;
       const state = clean((li.match(/<span class="ticket_state">([\s\S]*?)<\/span>/) || [])[1]);
       const dm = date.match(/(\d{4})\.(\d{2})\.(\d{2})\([^)]*\)\s*(\d{2}):(\d{2})/);
@@ -306,7 +325,10 @@ export async function melonTicketOpens({ pages = 3, schGcode = 'GENRE_CON_ALL', 
       });
     }
   }
-  return out;
+  const seen = new Set();
+  const items = out.filter((it) => !seen.has(it.id) && seen.add(it.id));
+  Object.defineProperty(items, 'sourceMeta', { value: { ok: errors.length === 0, partial: errors.length > 0 && (items.length > 0 || parsedPages > 0), error: errors.length ? errors.join('; ') : null, requestedPages: pageCount, completedPages: parsedPages } });
+  return items;
 }
 
 /* ---------- 묶음 API ---------- */
@@ -316,8 +338,9 @@ async function timed(provider, fn) {
   const t0 = Date.now();
   try {
     let capT;
-    const items = await Promise.race([fn(), new Promise((_, rej) => { capT = setTimeout(() => rej(new Error(`source timeout ${Math.round(SOURCE_CAP_MS / 1000)}s`)), SOURCE_CAP_MS); capT.unref?.(); })]).finally(() => clearTimeout(capT));
-    return { provider, ok: true, count: items.length, ms: Date.now() - t0, items };
+    // Melon owns and awaits its abortable deadline; don't detach its workers.
+    const items = await (provider.startsWith('melon:') ? fn() : Promise.race([fn(), new Promise((_, rej) => { capT = setTimeout(() => rej(new Error(`source timeout ${Math.round(SOURCE_CAP_MS / 1000)}s`)), SOURCE_CAP_MS); capT.unref?.(); })]).finally(() => clearTimeout(capT)));
+    return { provider, ok: true, ...items.sourceMeta, count: items.length, ms: Date.now() - t0, items };
   } catch (e) {
     return { provider, ok: false, count: 0, ms: Date.now() - t0, error: String(e?.message || e), items: [] };
   }

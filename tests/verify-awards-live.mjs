@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { AWARD_SERIES, fetchAwardNews, isAwardAnnouncement, awardRelevant, awardEditionYear, awardNoticeKind, parseVmajNotices, mergeAwardFeed } from '../backend/lib/live/awards.mjs';
+import { AWARD_SERIES, fetchAwardNews, presentAwardFeed, awardNoticeKinds, isAwardAnnouncement, awardRelevant, awardEditionYear, awardNoticeKind, parseVmajNotices, mergeAwardFeed } from '../backend/lib/live/awards.mjs';
+import { latestAwardFirst, awardDateMillis } from '../backend/lib/live/award-notice.mjs';
 let checks = 0;
 const check = (name, fn) => { fn(); checks++; console.log('PASS', name); };
 const now = Date.parse('2026-10-14T12:00:00Z');
@@ -90,4 +91,40 @@ check('past award biography is not new ceremony announcement',()=>{assert.equal(
 
 const negotiated=await fetchAwardNews({now,get:async(url,options)=>{if(url.includes('mtvjapan.com')){assert.match(options.headers.Accept,/text\/html/);assert.match(options.headers['User-Agent'],/Chrome/);return notice(2026,'2026-10-14','MTV VMAJ 2026 VTR出演発表');}return rss([]);}});
 check('official transport requests real HTML rather than a successful shell',()=>assert.equal(negotiated.sources.find(s=>s.provider==='official:awards:vmaj').ok,true));
+
+check('mixed official awards and live acts match both facets',()=>assert.deepEqual(awardNoticeKinds('MTV VMAJ 2026 特別賞発表！LIVE ACT追加、チケット受付'),['results','lineup','schedule']));
+check('VTR and hosts remain distinct from the live lineup facet',()=>{assert.deepEqual(awardNoticeKinds('MTV VMAJ 2026 特別賞 & VTR出演発表'),['results','appearance']);assert.deepEqual(awardNoticeKinds('MAMA AWARDS MC 발표'),['appearance']);assert.equal(awardNoticeKinds('MAMA Fan Festa lineup announcement')[0],'news');});
+check('day-only KR JP dates share a boundary without inventing precision',()=>{const rows=[{id:'day',publishedAt:'2026-10-14'},{id:'timed',publishedAt:'2026-10-13T16:00:00Z'},{id:'unknown',publishedAt:null}].sort(latestAwardFirst);assert.deepEqual(rows.map(x=>x.id),['timed','day','unknown']);assert.ok(Number.isNaN(awardDateMillis('2026-02-30')));});
+check('one malformed official anchor cannot discard valid notices',()=>{const html='<a href="http://[">invalid</a>'+notice(2026,'2026-10-14','MTV VMAJ 2026 LIVE ACT発表');assert.equal(parseVmajNotices(html,{now}).length,1);assert.equal(parseVmajNotices(notice(2026,'2026-09-31','MTV VMAJ 2026 LIVE ACT発表'),{now}).length,0);});
+const longFeed=await fetchAwardNews({now,get:async(url)=>url.includes('news.google.com')?rss([...Array.from({length:120},(_,i)=>xmlItem(`unrelated new music ${i}`)),xmlItem('MAMA AWARDS 2026 라인업','2026-10-13')]):'<html/>'});
+check('relevance filtering still precedes limiting after 100 unrelated rows',()=>assert.equal(longFeed.items.filter(x=>x.series==='mama').length,1));
+for(const bad of ['<rss><channel>','<rss><channel><item></channel></rss>','<rss><channel><item><title>missing URL</title></item></channel></rss>']){
+  const broken=await fetchAwardNews({now,get:async(url)=>url.includes('news.google.com')?bad:'<html/>'});
+  check('malformed RSS cannot evict previous records as healthy empty',()=>assert.ok(broken.sources.filter(x=>x.provider.startsWith('google-news:')).every(x=>!x.ok)));
+}
+const failedSource={provider:'official:awards:vmaj',ok:false};
+const nextPartial={checkedAt:new Date(now).toISOString(),sources:[failedSource],items:[{id:'same',provider:failedSource.provider,title:'MTV VMAJ LIVE ACT発表',publishedAt:'2026-10-10'}]};
+const corrected=mergeAwardFeed(nextPartial,[{id:'same',provider:failedSource.provider,title:'old',publishedAt:'2026-10-12'}]);
+check('current corrected date wins over newer-looking stale duplicate',()=>{assert.equal(corrected.items.length,1);assert.equal(corrected.items[0].title,'MTV VMAJ LIVE ACT発表');assert.equal(corrected.items[0].stale,false);assert.equal(corrected.items[0].observedAt,nextPartial.checkedAt);});
+const expired=mergeAwardFeed({...nextPartial,items:[]},[{id:'expired',provider:failedSource.provider,publishedAt:'2025-01-01'},{id:'legacy-unknown',provider:failedSource.provider,publishedAt:null},{id:'observed',provider:failedSource.provider,publishedAt:null,observedAt:'2026-10-13T00:00:00Z'}]);
+check('failed source cannot retain expired or untraceably undated rows forever',()=>assert.deepEqual(expired.items.map(x=>x.id),['observed']));
+const staleView=presentAwardFeed({...expired,cache:{state:'fresh',updatedAt:new Date(now).toISOString(),checkedAt:new Date(now).toISOString()}},now);
+check('all-provider failure is not disguised by a cache write as fresh',()=>{assert.equal(staleView.cache.state,'stale');assert.equal(staleView.cache.updatedAt,'2026-10-13T00:00:00.000Z');assert.ok(staleView.cache.lastError);assert.equal(staleView.cache.checkedAt,new Date(now).toISOString());assert.ok(staleView.items.every(x=>x.stale));});
+check('all-provider empty failure is error, not no-announcements success',()=>assert.equal(presentAwardFeed({...nextPartial,items:[]}).cache.state,'error'));
+
+
+check('lineup plus MC retains both independent facets',()=>{assert.deepEqual(awardNoticeKinds('MAMA AWARDS 라인업 및 MC 발표'),['lineup','appearance']);assert.deepEqual(awardNoticeKinds('MTV VMAJ VTR出演アーティスト ラインナップ発表'),['appearance']);assert.deepEqual(awardNoticeKinds('MAMA AWARDS guest lineup announced'),['appearance']);});
+// Cache has no initialized disk directory in this test: exercise real fallback
+// logic without writes, network or a production cache key.
+const { revalidate, peek } = await import('../backend/lib/live/cache.mjs');
+{
+  const cacheKey='award-retention-test-'+process.pid;
+  await revalidate(cacheKey,async()=>({items:[{id:'expired',provider:failedSource.provider,publishedAt:'2025-01-01'}],sources:[{...failedSource,ok:true}]}));
+  await revalidate(cacheKey,async()=>mergeAwardFeed({...nextPartial,items:[]},[{id:'expired',provider:failedSource.provider,publishedAt:'2025-01-01'}]));
+  const fallback=await peek(cacheKey);
+  check('actual generic cache fallback cannot reintroduce expired records',()=>{assert.equal(fallback.items.length,1);assert.equal(fallback.cache.state,'stale');assert.equal(presentAwardFeed(fallback,now).items.length,0);});
+}
+
+
+check('independent performers survive host mentions but guest rosters stay non-live',()=>{assert.deepEqual(awardNoticeKinds('MAMA AWARDS performers and hosts announced'),['lineup','appearance']);assert.deepEqual(awardNoticeKinds('MTV VMAJ ゲストセレブリティ ラインアップ発表'),['appearance']);assert.deepEqual(awardNoticeKinds('MTV VMAJ VTR performers announced'),['appearance']);assert.deepEqual(awardNoticeKinds('MTV VMAJ lineup of VTR performers announced'),['appearance']);});
 console.log(`${checks} passed`);

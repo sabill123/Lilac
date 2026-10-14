@@ -1,6 +1,7 @@
 /* Official publisher notices only. No edition clock, performer roster, OCR, or
  * article inventory: discover links on the current publisher list/feed. */
 import { createHash } from 'node:crypto';
+import { awardNoticeKind as kind, awardNoticeKinds, latestAwardFirst as latestFirst } from './award-notice.mjs';
 import { fetchText, clean } from './http.mjs';
 
 const MMA_URL = 'https://newsroom.kakaoent.com/newsroom/media/';
@@ -11,7 +12,6 @@ const DEFINITIONS = [
 ];
 const text = (s) => clean(String(s || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'));
 const attr = (s, name) => s.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`, 'i'))?.[1];
-const latestFirst = (a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')) || a.id.localeCompare(b.id);
 function officialUrl(value, def) {
   try {
     const u = new URL(text(value), def.url);
@@ -25,15 +25,6 @@ function relevant(title, id) {
   if (/\b(?:UFC|fighter|fight|octagon)\b|격투|MAMA\s*밴드|밴드\s*MAMA/i.test(title)) return false;
   if (id === 'mma') return /\bMelon\s+Music\s+Awards\b|멜론\s*뮤직\s*어워[즈드]|\bMMA\s*20\d{2}\b|\b20\d{2}\s*MMA\b/i.test(title) || /\bMMA\b/i.test(title) && /시상|라인업|어워[즈드]|line[ -]?up|awards?|performers?/i.test(title);
   return /\bMAMA\s*AWARDS\b|마마\s*어워즈|\bMnet\s+Asian\s+Music\s+Awards\b/i.test(title) || /\b(?:20\d{2}\s*MAMA|MAMA\s*20\d{2})\b/i.test(title) && /시상|라인업|어워[즈드]|수상|후보|팬\s*페스타|슈퍼팬|line[ -]?up|awards?|performers?|fan\s*festa|super\s*fan/i.test(title);
-}
-function kind(title) {
-  // A fan event/recruitment is not evidence of the ceremony's performer lineup.
-  if (/팬\s*페스타|fan\s*festa|슈퍼\s*팬|super\s*fan/i.test(title)) return 'news';
-  if (/후보|\bnomine(?:e|es|ation|ations|ated)\b/i.test(title)) return 'nominees';
-  if (/수상|결과|\b(?:winners?|wins|won|results)\b/i.test(title)) return 'results';
-  if (/라인업|출연|\b(?:line[ -]?up|performers?)\b|welcomes?\b.*\b(?:artists?|acts?|k-pop|heavyweights)\b|brings?\b.*\bstage\b/i.test(title)) return 'lineup';
-  if (/개최|일정|방송|\b(?:schedule|scheduled|dates?|venue)\b/i.test(title)) return 'schedule';
-  return 'news';
 }
 function editionYear(title, id) {
   const aliases = id === 'mma' ? 'Melon\\s+Music\\s+Awards|멜론\\s*뮤직\\s*어워[즈드]|MMA' : 'MAMA\\s*AWARDS|마마\\s*어워즈|Mnet\\s+Asian\\s+Music\\s+Awards|MAMA';
@@ -62,7 +53,11 @@ function publication(value, provenance) {
     if (date.getUTCFullYear() !== y || date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d) return null;
     return { publishedAt: date.toISOString().slice(0, 10), publishedAtSource: provenance };
   }
-  // Full timestamps require an explicit year and time, not a loose Date.parse guess.
+  // Missing timezone is not evidence for the server's local timezone. Preserve
+  // an explicit ISO calendar day, but never manufacture its publication hour.
+  const isoDay = raw.match(/^(\d{4}-\d{2}-\d{2})[T ]\d{2}:\d{2}/)?.[1];
+  if (isoDay && !publication(isoDay, provenance)) return null;
+  if (!/(?:Z|[+-]\d{2}:?\d{2}|GMT|UTC)\s*$/i.test(raw)) return isoDay ? publication(isoDay, provenance) : null;
   if (!/\b\d{4}\b/.test(raw) || !/\d{1,2}:\d{2}/.test(raw)) return null;
   const ms = Date.parse(raw);
   return Number.isFinite(ms) ? { publishedAt: new Date(ms).toISOString(), publishedAtSource: provenance } : null;
@@ -101,7 +96,7 @@ function item(def, title, url, published) {
     provider: `official:awards:${def.id}`, series: def.id, seriesName: def.name, country: 'KR',
     title, url, source: def.source, sourceUrl: new URL(def.url).origin + '/',
     publishedAt: published?.publishedAt || null, publishedAtSource: published?.publishedAtSource || null,
-    kind: kind(title), editionYear: editionYear(title, def.id),
+    kind: kind(title), kinds: awardNoticeKinds(title), editionYear: editionYear(title, def.id),
   };
 }
 async function collectMma(def, get) {

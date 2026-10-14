@@ -1,4 +1,4 @@
-import { fetchAwardNews, mergeAwardFeed, AWARD_SERIES } from './awards.mjs';
+import { fetchAwardNews, mergeAwardFeed, presentAwardFeed, AWARD_SERIES } from './awards.mjs';
 import { concertsInCountry } from './geography.mjs';
 import { fetchArtwork, validateArtworkUrl } from './image-proxy.mjs';
 import { attachStream } from './stream.mjs';
@@ -615,7 +615,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
   async function awards() {
     const result = await cached('awards-updates-v1', 10 * MIN, fetchAwards, { budgetMs: 1500, empty: { items: [], sources: [] } });
-    return { ...result, series: awardSeries, refreshEverySec: 600 };
+    return { ...presentAwardFeed(result), series: awardSeries, refreshEverySec: 600 };
   }
 
   /* ---------- 굿즈 ---------- */

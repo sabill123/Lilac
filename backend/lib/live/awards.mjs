@@ -5,6 +5,8 @@
  * Cache/stale-source retention belongs to the caller, including partial source failure.
  */
 import { createHash } from 'node:crypto';
+import { awardNoticeKind, awardNoticeKinds, awardDateMillis, latestAwardFirst as latestFirst } from './award-notice.mjs';
+export { awardNoticeKind, awardNoticeKinds } from './award-notice.mjs';
 import { fetchOfficialAwardNews } from './award-official.mjs';
 import { pool, clean, fetchText } from './http.mjs';
 
@@ -85,23 +87,12 @@ export function awardEditionYear(title, seriesId) {
   return years.size === 1 ? [...years][0] : null;
 }
 
-export function awardNoticeKind(title) {
-  const t = normal(title);
-  if (/후보|노미네이트|ノミネート|候補|\bnomine(?:e|es|ated|ation|ations)\b/i.test(t)) return 'nominees';
-  if (/수상|수상자|결과|受賞|受賞者|結果|特別賞|\b(?:winner|winners|wins|won|results)\b/i.test(t)) return 'results';
-  if (/\bVTR\b|ゲストセレブリティ|\bMC\b/i.test(t) && !/LIVE ACT|ライブアクト/i.test(t)) return 'news';
-  if (/라인업|출연|나온다|出演|出場|ライン[・\s]?(?:ナップ|アップ)|\b(?:line[ -]?up|performers?)\b/i.test(t)) return 'lineup';
-  if (/개최|일정|방송|開催|日程|放送|\b(?:schedule|scheduled|dates?|venue)\b/i.test(t)) return 'schedule';
-  return 'news';
-}
-
 export function isAwardAnnouncement(title) {
   // A past award in an artist's biography is not a new awards announcement.
   if (/国歌独唱|国歌斉唱|始球式|파이널스테이지|국가\s*독창/i.test(title) && !/ライン[・\s]?(?:ナップ|アップ)|라인업|出演者発表|수상자\s*발표/i.test(title)) return false;
   return /발표|공개|라인업|후보|개최|확정|출연|나온다|수상|결과|시상|예매|티켓|일정|중계|모집|페스타|発表|開催|決定|候補|ノミネート|受賞|結果|出場|出演|ライン[・\s]?(?:ナップ|アップ)|授賞|チケット|放送|日程|announc|line[ -]?up|nomine|winner|results?|ceremony|ticket|schedul|perform|fan\s*festa/i.test(title);
 }
 
-const latestFirst = (a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')) || a.id.localeCompare(b.id);
 const webUrl = (value) => {
   try { const url = new URL(value); return /^https?:$/.test(url.protocol) ? url.href : null; } catch { return null; }
 };
@@ -135,7 +126,7 @@ export async function fetchAwardNews({ get = fetchText, now = Date.now(), perSer
           provider, series: series.id, seriesName: series.name, country: series.country,
           title: row.title, url, source: row.source, sourceUrl: webUrl(row.sourceUrl),
           publishedAt: row.publishedAt, publishedAtSource: row.publishedAtSource,
-          kind: awardNoticeKind(row.title), editionYear: awardEditionYear(row.title, series.id),
+          kind: awardNoticeKind(row.title), kinds: awardNoticeKinds(row.title), editionYear: awardEditionYear(row.title, series.id),
         });
       }
       const accepted = items.slice(0, limit);
@@ -146,7 +137,7 @@ export async function fetchAwardNews({ get = fetchText, now = Date.now(), perSer
   });
   // Run after the RSS pool so publisher fallbacks still respect concurrency 2.
   const official = await fetchOfficialAwardNews({ get, now: timestamp });
-  const recentOfficial = official.items.filter(x => !x.publishedAt || (Date.parse(x.publishedAt) >= timestamp - 120 * 864e5 && Date.parse(x.publishedAt) <= timestamp + 864e5));
+  const recentOfficial = official.items.filter(x => !x.publishedAt || (awardDateMillis(x.publishedAt) >= timestamp - 120 * 864e5 && awardDateMillis(x.publishedAt) <= timestamp + 864e5));
   return {
     items: [...results.flatMap((result) => result.items), ...recentOfficial].sort(latestFirst),
     sources: [...results.map((result) => result.source), ...official.sources.map(s => ({ ...s, count: recentOfficial.filter(x => x.provider === s.provider).length }))],
@@ -159,10 +150,13 @@ export async function fetchAwardNews({ get = fetchText, now = Date.now(), perSer
 async function awardRss(query, { lang, days, now, get }) {
   const gl = lang === 'ja' ? 'JP' : 'KR';
   const xml = await get(`https://news.google.com/rss/search?q=${encodeURIComponent(`(${query}) when:${days}d`)}&hl=${lang}&gl=${gl}&ceid=${gl}:${lang}`, { timeout: 9000, retries: 1 });
-  if (!/<rss[\s>]/i.test(xml) || !/<channel[\s>]/i.test(xml)) throw new Error('Invalid Google News RSS response');
+  if (!/<rss[\s>]/i.test(xml) || !/<channel[\s>]/i.test(xml) || !/<\/channel\s*>\s*<\/rss\s*>\s*$/i.test(xml)) throw new Error('Invalid Google News RSS response');
   const decode = (x) => clean(String(x || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1'));
   const rows = [];
-  for (const match of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+  const blocks = [...xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)];
+  if ((xml.match(/<item\b/gi) || []).length !== blocks.length) throw new Error('Truncated Google News RSS items');
+  let valid = 0;
+  for (const match of blocks) {
     const body = match[1];
     const tag = (name) => decode((body.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`)) || [])[1]);
     const src = body.match(/<source\s+url=["']([^"']*)["'][^>]*>([\s\S]*?)<\/source>/);
@@ -172,6 +166,7 @@ async function awardRss(query, { lang, days, now, get }) {
     const title = source && rawTitle.endsWith(` - ${source}`) ? rawTitle.slice(0, -(source.length + 3)) : rawTitle;
     const url = tag('link');
     if (!title || !webUrl(url)) continue;
+    valid++;
     if (/카지노|토토|바카라|슬롯|먹튀|대출|성인|오피사이트|casino|betting|カジノ|パチンコ/i.test(title + ' ' + source)) continue;
     if (/^(YouTube|youtu\.be|youtube\.com|m\.youtube\.com|TikTok|tiktok\.com|Instagram|instagram\.com|X|x\.com|Twitter|twitter\.com|Facebook|facebook\.com|note|note\.com|Hypebeast\.KR)$/i.test(source || '')) continue;
     const date = Date.parse(tag('pubDate'));
@@ -179,7 +174,8 @@ async function awardRss(query, { lang, days, now, get }) {
     rows.push({ id: tag('guid') || url, title, url, source, sourceUrl,
       publishedAt: Number.isFinite(date) ? new Date(date).toISOString() : null, publishedAtSource: 'google-news-rss' });
   }
-  return rows.sort(latestFirst).slice(0, 100);
+  if (blocks.length && !valid) throw new Error('Google News RSS has no valid title/link pairs');
+  return rows.sort(latestFirst); // Relevance filtering must precede the per-series cap.
 }
 
 // MTV's CDN varies the document by browser content negotiation. Generic requests
@@ -193,11 +189,12 @@ export function parseVmajNotices(html, { baseUrl = VMAJ_BOOTSTRAP, now = Date.no
   const series = AWARD_SERIES.find((s) => s.id === 'vmaj');
   const items = [];
   for (const anchor of String(html).matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
-    const url = new URL(anchor[1], baseUrl);
-    if (url.hostname !== 'www.mtvjapan.com') continue;
+    let url;
+    try { url = new URL(anchor[1], baseUrl); } catch { continue; }
+    if (url.protocol !== 'https:' || url.hostname !== 'www.mtvjapan.com' || url.username || url.password) continue;
     const date = url.pathname.match(/^\/event\/vmaj\/\d{4}\/news\/(\d{4}-\d{2}-\d{2})[^/]*\/$/);
     if (!date) continue;
-    const stamp = Date.parse(date[1] + 'T00:00:00+09:00');
+    const stamp = awardDateMillis(date[1]);
     if (!Number.isFinite(stamp) || stamp < now - 120 * 864e5 || stamp > now + 864e5) continue;
     const heading = anchor[2].match(/<h[2-6]\b[^>]*>([\s\S]*?)<\/h[2-6]>/i);
     const title = clean(heading ? heading[1] : anchor[2]);
@@ -206,7 +203,7 @@ export function parseVmajNotices(html, { baseUrl = VMAJ_BOOTSTRAP, now = Date.no
       provider: 'official:awards:vmaj', series: 'vmaj', seriesName: series.name, country: 'JP',
       title, url: url.href, source: 'MTV Japan', sourceUrl: VMAJ_ROOT,
       publishedAt: new Date(stamp).toISOString(), publishedAtSource: 'official-url-date',
-      kind: awardNoticeKind(title), editionYear: awardEditionYear(title, 'vmaj') });
+      kind: awardNoticeKind(title), kinds: awardNoticeKinds(title), editionYear: awardEditionYear(title, 'vmaj') });
   }
   return [...new Map(items.sort(latestFirst).map((item) => [item.url, item])).values()];
 }
@@ -230,13 +227,44 @@ async function collectOfficialVmaj({ get, now, limit }) {
 /* Retain only failed providers, never successful-empty sources. Old untagged cache
  * rows cannot safely be associated with a provider and are deliberately not retained. */
 export function mergeAwardFeed(next, previousItems = []) {
+  const checked = Date.parse(next.checkedAt);
+  const now = Number.isFinite(checked) ? checked : Date.now();
+  const observedAt = new Date(now).toISOString();
   const failed = new Set((next.sources || []).filter((s) => !s.ok).map((s) => s.provider));
-  const rows = [...(next.items || []), ...previousItems.filter((item) => failed.has(item.provider)).map((item) => ({ ...item, stale: true }))];
+  const current = (next.items || []).map(item => ({ ...item, kinds: awardNoticeKinds(item.title), observedAt, stale: false }));
+  const retained = previousItems.filter(item => {
+    if (!failed.has(item.provider)) return false;
+    // Undated notices need a real previous observation, not an invented date.
+    const date = awardDateMillis(item.publishedAt || item.observedAt);
+    return Number.isFinite(date) && date >= now - 120 * 864e5 && date <= now + 864e5;
+  }).map(item => ({ ...item, kinds: awardNoticeKinds(item.title), stale: true }));
   const seen = new Set();
-  const items = rows.sort(latestFirst).filter((item) => {
+  // Current observations win even when a publisher corrected a date backwards.
+  const items = [...current, ...retained].filter(item => {
     const key = `${item.provider}:${item.id}`;
     if (seen.has(key)) return false;
     seen.add(key); return true;
-  });
+  }).sort(latestFirst);
   return { ...next, items };
+}
+
+/* The shared cache can store retained rows even when every provider failed.
+ * Do not label that write as a successful fresh source update. */
+export function presentAwardFeed(result, now = Date.now()) {
+  // Generic cache failure fallback can restore a previous value after merge
+  // pruned it to empty. Enforce the same age limit at the response boundary.
+  const items = (result.items || []).filter(item => {
+    const age = awardDateMillis(item.publishedAt || item.observedAt || result.cache?.updatedAt);
+    return Number.isFinite(age) && age >= now - 120 * 864e5 && age <= now + 864e5;
+  }).map(item => ({ ...item, kinds: awardNoticeKinds(item.title) }));
+  const allFailed = result.sources?.length > 0 && result.sources.every(source => !source.ok);
+  if (!allFailed) return { ...result, items };
+  const observations = items.map(item => Date.parse(item.observedAt)).filter(Number.isFinite);
+  const observed = observations.length ? Math.max(...observations) : null;
+  return { ...result, items: items.map(item => ({ ...item, stale: true })), cache: {
+    ...result.cache, state: items.length ? 'stale' : 'error',
+    updatedAt: observed == null ? null : new Date(observed).toISOString(),
+    ageSec: observed == null ? null : Math.max(0, Math.round((now - observed) / 1000)),
+    lastError: 'All award sources failed; retained information is not a successful refresh',
+  } };
 }

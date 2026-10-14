@@ -173,3 +173,13 @@
 @media(max-width:760px){.award-updates{padding:24px 16px}.award-updates h2{font-size:21px}.award-notice-list{grid-template-columns:1fr}.award-notice-controls{gap:10px}.award-notice-controls>span{flex-basis:100%;margin-left:0}.award-updates header{align-items:start}.award-updates header>span{white-space:nowrap}}
 
 .award-official-links{display:flex;flex-wrap:wrap;gap:8px 16px;margin:20px 0 10px}.award-official-links a{font-size:11px;color:var(--ink-3,#666);text-decoration:underline;text-underline-offset:3px}
+
+/* Stable live controls stay readable at phone widths; no fixed-width selects. */
+.award-updates{min-width:0}
+.award-notice-controls label{min-width:0;flex:1 1 150px;flex-direction:column;align-items:stretch;gap:6px}
+.award-notice-controls select{width:100%;max-width:none;min-width:0;min-height:44px}
+.award-result-count{font-size:13px;line-height:1.6;font-weight:600;margin:12px 0 4px;overflow-wrap:anywhere}
+.award-notice-source,.award-official-links a{overflow-wrap:anywhere}
+.award-retry{font:inherit;font-size:13px;min-height:44px;padding:8px 16px;background:transparent;color:inherit;border:1px solid var(--line,#ddd);border-radius:6px;cursor:pointer}
+.award-updates [hidden]{display:none!important}
+@media(max-width:440px){.award-updates header{flex-wrap:wrap;gap:8px}.award-updates header>span{white-space:normal}.award-notice-controls{gap:12px}.award-notice-controls label{flex-basis:100%}.award-more{max-width:100%;min-height:44px}.award-official-links a{display:inline-flex;align-items:center;min-height:44px}}
