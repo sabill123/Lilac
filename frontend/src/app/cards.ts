@@ -346,7 +346,7 @@ export function boardRow(c: Concert, i: number) {
   const who = artistName({ name: c.performer || '', nameOriginal: (c as Concert & { performerKo?: string }).performerKo || null }) || placeOf(c);
   return `<button type="button" class="fx-board-row" style="--r:${i}" data-open-concert="${esc(c.id)}">
     <span class="fx-board-time"><b data-flap>${esc(hm)}</b><small>${esc([dayL, verb].filter(Boolean).join(' '))}</small></span>
-    <span class="fx-board-t">${poster ? `<img src="${esc(poster)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=&quot;fx-board-ini&quot;>${esc((c.performer || c.title).slice(0, 1))}</span>'">` : `<span class="fx-board-ini">${esc((c.performer || c.title).slice(0, 1))}</span>`}<div><b>${esc(c.title)}</b><span>${esc(who)}</span></div></span>
+    <span class="fx-board-t">${poster ? `<img src="${esc(poster)}" alt="" loading="lazy" referrerpolicy="no-referrer" onload="if(this.naturalWidth<8)this.onerror()" onerror="this.outerHTML='<span class=&quot;fx-board-ini&quot;>${esc((c.performer || c.title).slice(0, 1))}</span>'">` : `<span class="fx-board-ini">${esc((c.performer || c.title).slice(0, 1))}</span>`}<div><b>${esc(c.title)}</b><span>${esc(who)}</span></div></span>
     <span class="fx-board-kind${c.provider === 'fanclub' ? ' is-fc' : ''}">${esc(kind)}</span>
     <span class="fx-board-prov">${esc(providerName(c))}</span>
     <span class="fx-board-st ${stCls}">${esc(st)}</span>
