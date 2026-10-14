@@ -16,6 +16,7 @@
  *   - 무료 Postgres(Neon)는 쿼리가 있을 때만 깨어 있는 시간을 쓰므로, 1시간마다(그리고 종료 때) 바뀐 파일만 묶어 올린다.
  *   - 복원은 덮어쓰기가 아니라 병합: 목록 캐시는 수집 시각(at)이 더 새로운 쪽, KV는 키마다 at이 더 새로운 쪽.
  *     그래서 새 배포 시드가 더 새로우면 시드가, 운영에서 더 최근에 모은 값이면 저장본이 이긴다. */
+import { postgresPoolOptions } from './pg-config.mjs';
 import { readFile, writeFile, mkdir, readdir, stat, unlink } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -92,7 +93,7 @@ export function createPersistence({ url = process.env.DATABASE_URL, dbDir, inter
     if (connect) pool = await connect();
     else {
       const { default: pg } = await import('pg');
-      pool = new pg.Pool({ connectionString: url, max: 3, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 15_000, ssl: /sslmode=disable/.test(url) ? false : { rejectUnauthorized: false } });
+      pool = new pg.Pool({ ...postgresPoolOptions(url), max: 3, idleTimeoutMillis: 30_000, connectionTimeoutMillis: 15_000 });
       pool.on('error', (e) => log.warn('[persist] pool error:', e.message));
     }
     await pool.query(`CREATE TABLE IF NOT EXISTS lilac_files (
