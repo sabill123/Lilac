@@ -27,7 +27,7 @@ export function likeBtn(tg: Target, cls = '') {
 }
 export function shareBtn(tg: Target | null, hash: string, title: string, cls = '') {
   const id = tg ? reg(tg) : '';
-  return `<button type="button" class="soc-btn soc-share ${cls}" data-soc-share="${id}" data-hash="${esc(hash)}" data-title="${esc(title)}">${icon('i-share')}<span>${ct('soc.share')}</span></button>`;
+  return `<button type="button" class="soc-btn soc-share ${cls}" aria-label="${esc(ct('soc.share'))}" data-soc-share="${id}" data-hash="${esc(hash)}" data-title="${esc(title)}">${icon('i-share')}<span>${ct('soc.share')}</span></button>`;
 }
 export function cmtCount(tg: Target, href: string, cls = '') {
   return `<a class="soc-btn soc-cmt ${cls}" href="${esc(safeHref(href))}" data-soc-cmt="${reg(tg)}">${icon('i-comment')}<span class="n">0</span></a>`;
