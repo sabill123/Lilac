@@ -60,6 +60,12 @@ export async function renderChart(root: HTMLElement, alive: () => boolean, sub?:
     : { billboard: '빌보드', oricon: '오리콘', melon: '멜론', genie: '지니', apple: 'Apple Music', appleRss: 'Apple 공식 피드', youtube: 'YouTube' };
   root.querySelector('#chTools')!.innerHTML = `<div class="chips">${['combined', ...d.sources].map((s) => `<a class="chip ${s === source ? 'on' : ''}" href="#/chart/${country}/${encodeURIComponent(s)}">${esc(labels[s] || s)}</a>`).join('')}</div>
     <span class="fresh">${d.live ? 'LIVE · ' : ''}${esc(t('updated', { t: ago(d.updated) }))}</span>`;
+  const sourceRail = root.querySelector<HTMLElement>('#chTools .chips');
+  const selectedSource = sourceRail?.querySelector<HTMLElement>('.on');
+  if (sourceRail && selectedSource && sourceRail.scrollWidth > sourceRail.clientWidth) {
+    const railBox = sourceRail.getBoundingClientRect(), selectedBox = selectedSource.getBoundingClientRect();
+    sourceRail.scrollLeft += selectedBox.left - railBox.left - (railBox.width - selectedBox.width) / 2;
+  }
   let list = d.list || [];
   /* 일본어 화면: 한국 차트의 한글 아티스트명을 로스터의 일본어·로마자 표기로(아이유 → IU, 한로로 → HANRORO) */
   if (ja && list.some((e) => /[가-힣]/.test(e.artist))) {

@@ -366,3 +366,12 @@
   .page:not(.is-home) .suggest > * { flex: none; }
   .page:not(.is-home) .suggest .chip { min-height: 40px; }
 }
+/* Chart sources are a single horizontal choice, not five rows before the first song. */
+.page:not(.is-home) #chTools { min-width: 0; }
+.page:not(.is-home) #chTools .fx-glide { display: none; }
+.page:not(.is-home) #chTools .chip.on { color: #fff; background: #18191d; }
+@media (max-width:760px) {
+  .page:not(.is-home) #chTools { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; }
+  .page:not(.is-home) #chTools .chips { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding-block: 3px 6px; }
+  .page:not(.is-home) #chTools .chip { flex: none; white-space: nowrap; }
+}
