@@ -2,7 +2,7 @@
  *
  * 카메라가 원통 안쪽에 서 있고, 공연 포스터가 원통 안쪽 면을 따라 둘러선다.
  * 카드마다 정점 셰이더에서 원통 곡면으로 휘고(평면을 돌려 세운 것이 아니라 면 자체가 휜다),
- * 끌기·관성·스냅·자동 넘김, 속도에 따른 기울임과 색 번짐, 초점 카드만 선명한 명암, 바닥 반사를 넣었다.
+ * 가로 끌기·짧은 스냅·자동 넘김을 지원한다. 원본 색을 보존하고 초점·깊이만 절제해 강조한다.
  * DOM이 제목과 버튼을 맡는다. 이 모듈은 그림과 입력만 다룬다. */
 import * as THREE from 'three';
 import { createSceneLifecycle } from './lifecycle';
@@ -18,7 +18,9 @@ export interface StageOptions {
   onFocus?(index: number): void;
   onPick?(index: number): void;
   autoplayMs?: number;
-  /* 바닥 반사 — 기본은 끈다(v14: 반사가 싸구려 무대처럼 보인다는 평가). 켜려면 true */
+  /** Context loss is terminal; the DOM owner can expose its static carousel. */
+  onFallback?(): void;
+  /** @deprecated Retained for callers; floor reflections are no longer rendered. */
   reflect?: boolean;
 }
 
@@ -26,8 +28,7 @@ const VERT = /* glsl */ `
 uniform float uTheta;
 uniform float uRadius;
 uniform float uLift;
-uniform float uVel;
-uniform float uTime;
+uniform float uFocus;
 uniform float uIntro;
 uniform float uY;
 uniform float uFloor;
@@ -36,19 +37,14 @@ varying vec2 vUv;
 void main() {
   vUv = uv;
   vec3 p = position;
+  // A small focus scale and lift give depth without bending the artwork like cloth.
+  p *= 0.94 + 0.06 * uFocus;
   float a = uTheta + p.x / uRadius;
-  float r = uRadius - uLift * 0.45;
-  // 움직이는 동안 천처럼 살짝 물결치고, 진행 방향으로 기운다
-  float wave = sin(a * 4.0 + uTime * 2.4 + p.y * 1.3) * uVel * 0.09;
-  float y = p.y + wave;
-  float skew = p.y * uVel * 0.05;
-  // 등장: 아래에서 올라오며 펼쳐진다
-  float intro = uIntro;
-  y = mix(y * 0.6 - 2.4, y, intro);
-  r = mix(r + 3.0, r, intro);
+  float r = uRadius - uLift * 0.12 - uFocus * 0.14;
+  float y = p.y - (1.0 - uIntro) * 0.16;
   float worldY = uY + y;
   if (uReflect > 0.5) worldY = 2.0 * uFloor - worldY;
-  vec3 world = vec3(sin(a) * r + skew, worldY, -cos(a) * r);
+  vec3 world = vec3(sin(a) * r, worldY, -cos(a) * r);
   gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
 }`;
 
@@ -58,7 +54,6 @@ uniform float uLoaded;
 uniform float uImgAspect;
 uniform float uCardAspect;
 uniform float uFocus;
-uniform float uVel;
 uniform float uIntro;
 uniform float uReflect;
 uniform vec3 uBase;
@@ -69,25 +64,20 @@ float box(vec2 p, vec2 b, float r) {
 }
 void main() {
   vec2 size = vec2(uCardAspect, 1.0);
-  float d = box((vUv - 0.5) * size, size * 0.5, 0.035);
+  float d = box((vUv - 0.5) * size, size * 0.5, 0.018);
   float edge = 1.0 - smoothstep(-0.0025, 0.0025, d);
   // 이미지 비율이 달라도 카드를 채운다(cover)
   vec2 s = vec2(1.0);
   if (uImgAspect > uCardAspect) s.x = uCardAspect / uImgAspect; else s.y = uImgAspect / uCardAspect;
   vec2 tuv = (vUv - 0.5) * s + 0.5;
-  float shift = clamp(uVel, -2.0, 2.0) * 0.006;
-  vec3 col = vec3(
-    texture2D(uMap, tuv + vec2(shift, 0.0)).r,
-    texture2D(uMap, tuv).g,
-    texture2D(uMap, tuv - vec2(shift, 0.0)).b
-  );
-  col = mix(uBase, col, uLoaded);
-  float g = dot(col, vec3(0.299, 0.587, 0.114));
-  col = mix(vec3(g), col, 0.2 + 0.8 * uFocus);
-  col *= 0.42 + 0.58 * uFocus;
+  // SRGB textures are decoded to linear by WebGL. Encode once at final output.
+  // No RGB offset or desaturation: dates and small poster lettering remain readable.
+  vec3 col = mix(uBase, texture2D(uMap, tuv).rgb, uLoaded);
+  col *= mix(0.62, 1.0, uFocus);
   float alpha = edge * uIntro;
   if (uReflect > 0.5) alpha *= 0.16 * (1.0 - smoothstep(0.0, 0.5, vUv.y));
   gl_FragColor = vec4(col, alpha);
+  #include <colorspace_fragment>
 }`;
 
 interface Card {
@@ -127,8 +117,9 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   try {
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance', failIfMajorPerformanceCaveat: true });
   } catch { return null; }
-  renderer.outputColorSpace = THREE.LinearSRGBColorSpace; // 텍스처를 그대로 내보내 원본 색을 지킨다
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setClearColor(0x000000, 0);
   const canvas = renderer.domElement;
   canvas.setAttribute('aria-hidden', 'true');
@@ -153,7 +144,7 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   const loadTex = (src: number) => {
     if (!texCache.has(src)) {
       texCache.set(src, new Promise((resolve) => {
-        const done = (t: THREE.Texture) => { t.anisotropy = Math.min(8, maxAniso); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; resolve(t); };
+        const done = (t: THREE.Texture) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = Math.min(8, maxAniso); t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; resolve(t); };
         /* 포스터를 못 받으면 검은 판으로 두지 않고, 제목으로 만든 표지를 붙인다 */
         loader.load(source[src].image, done, undefined, () => { const t = textPoster(source[src]); if (t) done(t); else resolve(null); });
       }));
@@ -163,17 +154,17 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
 
   const baseUniforms = () => ({
     uMap: { value: null as THREE.Texture | null }, uLoaded: { value: 0 }, uImgAspect: { value: 0.75 }, uCardAspect: { value: W / H },
-    uFocus: { value: 0 }, uVel: { value: 0 }, uTime: { value: 0 }, uIntro: { value: 0 }, uTheta: { value: 0 }, uRadius: { value: R },
+    uFocus: { value: 0 }, uIntro: { value: 0 }, uTheta: { value: 0 }, uRadius: { value: R },
     uLift: { value: 0 }, uY: { value: 0 }, uFloor: { value: 0 }, uReflect: { value: 0 }, uBase: { value: new THREE.Color(0x1d1d24) },
   });
   const cards: Card[] = list.map((src) => {
-    const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: baseUniforms(), transparent: true, depthWrite: false });
-    const mirrorMat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: baseUniforms(), transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: baseUniforms(), transparent: true, depthWrite: false, toneMapped: false });
+    const mirrorMat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: baseUniforms(), transparent: true, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
     mirrorMat.uniforms.uReflect.value = 1;
     const mesh = new THREE.Mesh(geo, mat);
     const mirror = new THREE.Mesh(geo, mirrorMat);
     mesh.frustumCulled = false; mirror.frustumCulled = false;
-    mirror.visible = !!opts.reflect;
+    mirror.visible = false; // Reflections intentionally disabled; the poster is the content.
     scene.add(mirror); scene.add(mesh);
     const card: Card = { mesh, mirror, mat, mirrorMat, tex: null, loaded: 0, focus: 0, lift: 0, intro: 0, theta: 0 };
     void loadTex(src).then((t) => {
@@ -188,14 +179,14 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   });
 
   let destroyed = false;
-  let offset = -2.6; // 등장할 때 한 바퀴 반쯤 돌며 들어온다
+  let offset = 0; // Start at the selected poster, never an unrelated intro sweep.
   let target = 0;
-  let vel = 0;
-  let lastOffset = offset;
   let focused = -1;
   let hovered = -1;
   let dragging = false;
-  let dragX = 0, dragOffset = 0, dragMoved = 0, lastMoveX = 0, lastMoveT = 0, flick = 0;
+  let pointerId: number | null = null;
+  let axis: 'pending' | 'horizontal' | 'vertical' = 'pending';
+  let dragX = 0, dragY = 0, dragOffset = 0, dragMoved = 0, lastMoveX = 0, lastMoveT = 0, flick = 0;
   let pxPerItem = 300;
   let introT = 0;
   let parX = 0, parY = 0, tParX = 0, tParY = 0;
@@ -209,13 +200,13 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
     const mobile = w < 640;
     camera.aspect = w / h;
     camera.fov = mobile ? 38 : 30;
-    R = mobile ? 6.0 : 7.6;
+    R = mobile ? 7.0 : 9.6;
     CAMZ = mobile ? 1.6 : 2.9;
     // 카드 높이를 화면 높이의 비율로 정한다 — 아래쪽은 제목·버튼 자리
     const visH = 2 * (R + CAMZ) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    H = visH * (mobile ? 0.4 : 0.445);
+    H = visH * (mobile ? 0.43 : 0.49);
     W = H * 0.74;
-    GAP = H * (mobile ? 0.1 : 0.13);
+    GAP = H * (mobile ? 0.12 : 0.16);
     step = (W + GAP) / R;
     camera.position.set(0, 0, CAMZ);
     camera.lookAt(0, 0, -R);
@@ -237,9 +228,11 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   const geoRef: { current: THREE.BufferGeometry | null } = { current: null };
 
   // 화면 좌표로 카드 모서리를 투영해 고른다(정점 셰이더에서 휘기 때문에 레이캐스트 대신)
-  const project = (theta: number, x: number, y: number) => {
-    const a = theta + x / R;
-    return new THREE.Vector3(Math.sin(a) * R, y, -Math.cos(a) * R).project(camera);
+  const project = (card: Card, x: number, y: number) => {
+    const scale = 0.94 + 0.06 * card.focus;
+    const radius = R - card.lift * 0.12 - card.focus * 0.14;
+    const a = card.theta + x * scale / R;
+    return new THREE.Vector3(Math.sin(a) * radius, y * scale - (1 - card.intro) * 0.16, -Math.cos(a) * radius).project(camera);
   };
   const pick = (clientX: number, clientY: number) => {
     const rect = host.getBoundingClientRect();
@@ -248,8 +241,8 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
     let best = -1, bestD = Infinity;
     cards.forEach((c, i) => {
       if (Math.cos(c.theta) < 0.2) return;
-      const l = project(c.theta, -W / 2, 0), r = project(c.theta, W / 2, 0);
-      const top = project(c.theta, 0, H / 2), bot = project(c.theta, 0, -H / 2);
+      const l = project(c, -W / 2, 0), r = project(c, W / 2, 0);
+      const top = project(c, 0, H / 2), bot = project(c, 0, -H / 2);
       if (nx >= Math.min(l.x, r.x) && nx <= Math.max(l.x, r.x) && ny >= bot.y && ny <= top.y) {
         const d = Math.abs(c.theta);
         if (d < bestD) { bestD = d; best = i; }
@@ -265,12 +258,10 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
     const dt = moving ? delta : 1;
     if (!moving) { offset = target; introT = 10; }
     introT += dt;
-    if (!dragging) offset = damp(offset, target, moving ? 5.2 : 50, dt);
-    const v = dt > 0 ? (offset - lastOffset) / Math.max(dt, 1 / 120) : 0;
-    lastOffset = offset;
-    vel = damp(vel, moving ? Math.max(-3, Math.min(3, v)) : 0, 10, dt);
-    parX = damp(parX, tParX, 3, dt); parY = damp(parY, tParY, 3, dt);
-    camera.lookAt(parX * 0.9, parY * 0.35, -R);
+    if (!dragging) offset = damp(offset, target, 13, dt);
+    if (Math.abs(offset - target) < 0.001) offset = target;
+    parX = damp(parX, moving ? tParX : 0, 8, dt); parY = damp(parY, moving ? tParY : 0, 8, dt);
+    camera.lookAt(parX * 0.32, parY * 0.12, -R);
 
     const f = wrap(Math.round(offset), N);
     if (f !== focused) { focused = f; opts.onFocus?.(list[f]); }
@@ -281,83 +272,107 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
       const focusT = Math.max(0, 1 - Math.abs(d) * 0.85);
       c.focus = damp(c.focus, focusT, 10, dt);
       c.lift = damp(c.lift, i === hovered && !dragging ? 1 : 0, 9, dt);
-      const delay = Math.min(1.2, Math.abs(Math.round(d)) * 0.09 + 0.1);
-      const tIntro = Math.min(1, Math.max(0, (introT - delay) / 1.1));
+      const delay = Math.min(0.08, Math.abs(Math.round(d)) * 0.02);
+      const tIntro = Math.min(1, Math.max(0, (introT - delay) / 0.32));
       c.intro = moving ? 1 - Math.pow(1 - tIntro, 4) : 1;
       if (c.tex) c.loaded = damp(c.loaded, 1, 6, dt);
       if (c.intro < 1 || (c.tex && c.loaded < 0.995) || Math.abs(c.focus - focusT) > 0.002) pending = true;
       const hide = Math.abs(d) > N / 2 - 0.6 ? 0 : 1; // 원 뒤편에서 순간 이동하는 카드는 숨긴다
       for (const m of [c.mat, c.mirrorMat]) {
         const u = m.uniforms;
-        u.uTheta.value = c.theta; u.uFocus.value = c.focus; u.uLift.value = c.lift; u.uVel.value = vel;
-        u.uTime.value = _elapsed; u.uIntro.value = c.intro * hide; u.uLoaded.value = c.loaded;
+        u.uTheta.value = c.theta; u.uFocus.value = c.focus; u.uLift.value = c.lift;
+        u.uIntro.value = c.intro * hide; u.uLoaded.value = c.loaded;
       }
       // 먼 카드부터 그린다
       c.mesh.renderOrder = 100 - Math.round(Math.abs(d) * 10);
       c.mirror.renderOrder = c.mesh.renderOrder - 50;
     });
     renderer.render(scene, camera);
-    if (moving && (pending || Math.abs(offset - target) > 0.0005 || Math.abs(vel) > 0.002 || dragging)) lifecycle?.invalidate();
+    if (moving && (pending || Math.abs(offset - target) > 0.0005 || dragging)) lifecycle?.invalidate();
   };
 
   const lifecycle = createSceneLifecycle(host, draw, layout);
 
   // 자동 넘김: 사용자가 만지지 않을 때만
-  const autoplayMs = opts.autoplayMs ?? 5200;
+  const autoplayMs = Math.max(3000, opts.autoplayMs ?? 6500);
   const auto = setInterval(() => {
-    if (destroyed || dragging || hovered >= 0 || media.matches || document.hidden || !lifecycle.isMoving()) return;
+    if (destroyed || pointerId !== null || hovered >= 0 || media.matches || document.hidden || !lifecycle.isMoving()) return;
+    const rect = host.getBoundingClientRect();
+    if (rect.top + rect.height <= 0 || rect.top >= window.innerHeight) return;
+    if (host.closest('section')?.contains(document.activeElement)) return;
     if (Date.now() - lastTouch < autoplayMs * 1.6) return;
     target += 1; lifecycle.invalidate();
   }, autoplayMs);
   let lastTouch = 0;
   const touch = () => { lastTouch = Date.now(); };
 
+  const release = (id: number) => { try { canvas.releasePointerCapture(id); } catch { /* no capture */ } };
+  const resetPointer = () => {
+    const id = pointerId;
+    pointerId = null; dragging = false; axis = 'pending'; flick = 0;
+    canvas.style.cursor = 'grab';
+    if (id !== null) release(id);
+  };
   const onDown = (e: PointerEvent) => {
-    if (e.button !== 0) return;
-    dragging = true; touch();
-    dragX = e.clientX; dragOffset = offset; dragMoved = 0; lastMoveX = e.clientX; lastMoveT = performance.now(); flick = 0;
-    canvas.setPointerCapture(e.pointerId);
-    canvas.style.cursor = 'grabbing';
-    lifecycle.invalidate();
+    if (e.button !== 0 || pointerId !== null || e.isPrimary === false) return;
+    pointerId = e.pointerId; axis = 'pending'; touch();
+    dragX = e.clientX; dragY = e.clientY; dragOffset = offset; dragMoved = 0;
+    lastMoveX = e.clientX; lastMoveT = performance.now(); flick = 0;
+    // Touch is not captured until a horizontal intention is established. pan-y stays native.
+    if (e.pointerType === 'mouse') canvas.setPointerCapture(e.pointerId);
   };
   const onMove = (e: PointerEvent) => {
     const rect = host.getBoundingClientRect();
-    tParX = ((e.clientX - rect.left) / rect.width - 0.5) * 0.35;
-    tParY = -((e.clientY - rect.top) / rect.height - 0.5) * 0.25;
-    if (dragging) {
-      const dx = e.clientX - dragX;
-      dragMoved = Math.max(dragMoved, Math.abs(dx));
-      offset = dragOffset - dx / pxPerItem;
-      const now = performance.now();
-      if (now - lastMoveT > 0) flick = damp(flick, -(e.clientX - lastMoveX) / pxPerItem / ((now - lastMoveT) / 1000), 0.9, 1);
-      lastMoveX = e.clientX; lastMoveT = now;
-      target = offset;
-      touch();
-    } else if (e.pointerType === 'mouse') {
-      const h = pick(e.clientX, e.clientY);
-      if (h !== hovered) { hovered = h; canvas.style.cursor = h >= 0 ? 'pointer' : 'grab'; }
+    if (e.pointerType === 'mouse') {
+      tParX = ((e.clientX - rect.left) / rect.width - 0.5) * 0.22;
+      tParY = -((e.clientY - rect.top) / rect.height - 0.5) * 0.16;
+    }
+    if (pointerId === e.pointerId) {
+      const dx = e.clientX - dragX, dy = e.clientY - dragY;
+      dragMoved = Math.max(dragMoved, Math.hypot(dx, dy));
+      if (axis === 'pending' && dragMoved >= 8) {
+        if (Math.abs(dy) > Math.abs(dx) * 1.15) axis = 'vertical';
+        else if (Math.abs(dx) > Math.abs(dy) * 1.15) {
+          axis = 'horizontal'; dragging = true;
+          try { canvas.setPointerCapture(e.pointerId); } catch { /* pointer ended */ }
+          canvas.style.cursor = 'grabbing';
+        }
+      }
+      if (axis === 'horizontal') {
+        offset = dragOffset - dx / pxPerItem;
+        const now = performance.now();
+        const dt = (now - lastMoveT) / 1000;
+        if (dt > 0) flick = damp(flick, -(e.clientX - lastMoveX) / pxPerItem / dt, 18, dt);
+        lastMoveX = e.clientX; lastMoveT = now;
+        target = offset; touch();
+      }
+    } else if (e.pointerType === 'mouse' && pointerId === null) {
+      hovered = pick(e.clientX, e.clientY);
+      canvas.style.cursor = hovered >= 0 ? 'pointer' : 'grab';
     }
     lifecycle.invalidate();
   };
   const onUp = (e: PointerEvent) => {
-    if (!dragging) return;
-    dragging = false;
-    canvas.style.cursor = 'grab';
-    try { canvas.releasePointerCapture(e.pointerId); } catch { /* 이미 풀림 */ }
-    if (dragMoved < 6) {
+    if (pointerId !== e.pointerId) return;
+    const wasHorizontal = axis === 'horizontal', wasTap = axis === 'pending' && dragMoved < 8;
+    const velocity = performance.now() - lastMoveT < 100 ? flick : 0;
+    resetPointer();
+    if (wasTap) {
       const i = pick(e.clientX, e.clientY);
       if (i >= 0) {
         const d = Math.round(rel(i));
         if (d === 0) opts.onPick?.(list[i]);
         else target = Math.round(offset) + d;
-      } else target = Math.round(offset);
-    } else {
-      // 튕긴 속도만큼 더 가서 가장 가까운 카드에 멈춘다
-      const throwTo = offset + Math.max(-3, Math.min(3, flick * 0.28));
-      target = Math.round(throwTo);
+      }
+    } else if (wasHorizontal) {
+      target = Math.round(offset + Math.max(-1.25, Math.min(1.25, velocity * 0.16)));
     }
-    touch();
-    lifecycle.invalidate();
+    touch(); lifecycle.invalidate();
+  };
+  const onCancel = (e: PointerEvent) => {
+    if (pointerId !== e.pointerId) return;
+    resetPointer(); target = Math.round(offset); touch(); lifecycle.invalidate();
+    // Browser-owned vertical scroll and lost capture never activate a poster.
   };
   const onLeave = () => { tParX = 0; tParY = 0; if (hovered >= 0) { hovered = -1; } lifecycle.invalidate(); };
   const onWheel = (e: WheelEvent) => {
@@ -373,28 +388,42 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
   canvas.addEventListener('pointerdown', onDown);
   canvas.addEventListener('pointermove', onMove);
   canvas.addEventListener('pointerup', onUp);
-  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('pointercancel', onCancel);
+  canvas.addEventListener('lostpointercapture', onCancel);
   canvas.addEventListener('pointerleave', onLeave);
   canvas.addEventListener('wheel', onWheel, { passive: false });
 
-  const onLost = (e: Event) => { e.preventDefault(); handle.destroy(); host.dataset.scene3d = 'fallback'; };
+  const onLost = (e: Event) => { e.preventDefault(); handle.destroy(); host.dataset.scene3d = 'fallback'; opts.onFallback?.(); };
   canvas.addEventListener('webglcontextlost', onLost);
 
   host.dataset.scene3d = 'ready';
   lifecycle.invalidate();
 
+  const notifyStatic = () => {
+    if (!lifecycle.isMoving()) {
+      offset = target;
+      const f = current();
+      if (f !== focused) { focused = f; opts.onFocus?.(list[f]); }
+    }
+    lifecycle.invalidate();
+  };
   const handle: StageHandle = {
-    go(delta) { touch(); target = Math.round(target) + delta; lifecycle.invalidate(); },
+    go(delta) { if (destroyed || !Number.isFinite(delta)) return; touch(); target = Math.round(target) + Math.trunc(delta); notifyStatic(); },
     goTo(index) {
+      if (destroyed || !Number.isInteger(index)) return;
       touch();
       const cands = list.map((s, i) => (s === index ? i : -1)).filter((i) => i >= 0);
       if (!cands.length) return;
-      const best = cands.map((i) => Math.round(rel(i))).sort((a, b) => Math.abs(a) - Math.abs(b))[0];
-      target = Math.round(offset) + best;
-      lifecycle.invalidate();
+      const base = Math.round(target);
+      const best = cands.map((i) => {
+        const d = wrap(i - base, N);
+        return d > N / 2 ? d - N : d;
+      }).sort((a, b) => Math.abs(a) - Math.abs(b))[0];
+      target = base + best;
+      notifyStatic();
     },
     index() { return list[current()]; },
-    setPaused(p) { lifecycle.setPaused(p); },
+    setPaused(p) { if (!destroyed) { lifecycle.setPaused(p); if (p) notifyStatic(); } },
     destroy() {
       if (destroyed) return;
       destroyed = true;
@@ -404,12 +433,13 @@ export function createStage3D(host: HTMLElement, items: StageItem[], opts: Stage
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerup', onUp);
-      canvas.removeEventListener('pointercancel', onUp);
+      canvas.removeEventListener('pointercancel', onCancel);
+      canvas.removeEventListener('lostpointercapture', onCancel);
       canvas.removeEventListener('pointerleave', onLeave);
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('webglcontextlost', onLost);
       for (const c of cards) { c.mat.dispose(); c.mirrorMat.dispose(); }
-      void Promise.all([...texCache.values()]).then((ts) => ts.forEach((t) => t?.dispose()));
+      for (const promise of texCache.values()) void promise.then((texture) => texture?.dispose());
       geo.dispose(); geoRef.current?.dispose();
       renderer.dispose();
       renderer.forceContextLoss();

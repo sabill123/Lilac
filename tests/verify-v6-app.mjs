@@ -90,7 +90,10 @@ const fxTs = read(path.join(APP, 'fx.ts'));
 const noMask = fxCss.replace(/(-webkit-)?mask-image:[^;]+;/g, '');
 check('fx 레이어: 그라디언트 글자·글로우·방사 그라디언트 없음, 선형 그라디언트는 가장자리 마스크에만', !/background-clip:\s*text|text-shadow|radial-gradient/.test(fxCss) && !/linear-gradient/.test(noMask));
 check('fx 레이어: 글꼴은 직접 호스팅(라틴 서브셋)·OFL 원문·서드파티 고지', /url\(\/fonts\/HostGrotesk-latin\.woff2\)/.test(fxCss) && /url\(\/fonts\/GeistMono-latin\.woff2\)/.test(fxCss) && ['HostGrotesk-latin.woff2', 'GeistMono-latin.woff2', 'OFL-HostGrotesk.txt', 'OFL-GeistMono.txt'].every((f) => existsSync(path.join(FE, 'public', 'fonts', f))) && existsSync(path.join(ROOT, 'THIRD_PARTY_NOTICES.md')) && !/fonts\.googleapis|fonts\.gstatic/.test(read(path.join(FE, 'index.html'))));
-check('fx 레이어: 움직임 줄이기면 미끄럼·굴림·등장·기울기·커버 플로 모두 끈다', /prefers-reduced-motion: reduce/.test(fxCss) && (fxTs.match(/reduce\(\)/g) || []).length >= 6);
+// Calling reduce() more often does not prove behavior: execute the real flow functions instead.
+let flowMotionPassed = false;
+try { await import('./verify-flow-redesign.mjs'); flowMotionPassed = true; } catch (error) { console.error(error); }
+check('fx 레이어: CSS 모션 축소 + 실제 커버 플로·띠의 설정 변경·정리 동작', /prefers-reduced-motion: reduce/.test(fxCss) && flowMotionPassed);
 check('fx 레이어: 굴러가는 숫자는 원문을 투명하게 남겨 textContent·접근성 이름을 바꾸지 않는다', /fx-ghost/.test(fxTs) && /::before \{ content: "0\\A 1/.test(fxCss) && /aria-hidden="true"/.test(fxTs));
 check('홈: 티켓 오픈은 출발 안내판, 새 앨범은 3D 커버 플로(무대는 그대로)', /boardHtml\(opens/.test(home) && /coverFlowHtml\(d\.releases/.test(home) && home.indexOf('stageHtml(slides)') > 0);
 const order = ['secVisiting', 'secTickets', 'secNews', 'secChart', 'secReleases', 'secAbroad', 'awards-wrap', 'secArtists'].map((k) => Math.max(home.indexOf(`'${k}'`), home.indexOf(`id="${k}"`), home.indexOf(`class="${k}"`)));

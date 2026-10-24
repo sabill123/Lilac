@@ -3,6 +3,8 @@ import './app.css';
 import './editorial.css';
 import './tl.css';
 import './fx.css';
+import './redesign.css';
+import './product-redesign.css';
 import { installFx, markRoute } from './fx';
 import { state, setEdition, setLang, onChange, loadSession } from './state';
 import type { Edition } from './state';

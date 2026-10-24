@@ -10,7 +10,7 @@ import type { ArtistLite, Concert, Release, News } from '../cards';
 
 export async function renderSearch(root: HTMLElement, alive: () => boolean) {
   const q = (params().get('q') || '').trim();
-  root.innerHTML = `<form class="bigsearch" id="sForm" role="search">${icon('i-search')}<input type="search" name="q" value="${esc(q)}" placeholder="${t('search.ph')}" autocomplete="off" aria-label="${t('search.ph')}"${q ? '' : ' autofocus'}><button class="btn btn-solid">${t('search.go')}</button></form>
+  root.innerHTML = `${!q ? `<section class="page-head"><h1>${t('search.go')}</h1></section>` : ''}<form class="bigsearch" id="sForm" role="search">${icon('i-search')}<input type="search" name="q" value="${esc(q)}" placeholder="${t('search.ph')}" autocomplete="off" aria-label="${t('search.ph')}"${q ? '' : ' autofocus'}><button class="btn btn-solid">${t('search.go')}</button></form>
     ${q ? `<section class="page-head search-head"><h1>${esc(t('s.title', { q }))}</h1></section>` : ''}<div id="sBody">${q ? skeletonRows(6) : ''}</div>`;
   const form = root.querySelector<HTMLFormElement>('#sForm')!;
   form.addEventListener('submit', (e) => { e.preventDefault(); const v = String(new FormData(form).get('q') || '').trim(); if (v) location.hash = `#/search?q=${encodeURIComponent(v)}`; });

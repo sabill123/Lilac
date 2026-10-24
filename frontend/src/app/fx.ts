@@ -187,10 +187,38 @@ export function coverFlowHtml(items: FlowItem[], label: string) {
     <div class="fx-cf-foot"><button type="button" class="fx-cf-btn" data-cf-step="-1" aria-label="${getLocale() === 'ja' ? '前へ' : '이전'}">‹</button><a class="fx-cf-cap" href="#"><b></b><span></span></a><button type="button" class="fx-cf-btn" data-cf-step="1" aria-label="${getLocale() === 'ja' ? '次へ' : '다음'}">›</button></div>
   </div>`;
 }
+/* Cover flow and marquee own their listeners/observers, including callers without a route signal. */
+function flowLifetime(box: HTMLElement, external?: AbortSignal) {
+  const ctrl = new AbortController();
+  const disposers: (() => void)[] = [];
+  let removed: MutationObserver | null = null;
+  const destroy = () => {
+    if (ctrl.signal.aborted) return;
+    ctrl.abort();
+    removed?.disconnect();
+    external?.removeEventListener('abort', destroy);
+    disposers.splice(0).forEach((fn) => fn());
+  };
+  const alive = () => {
+    if (!box.isConnected || external?.aborted) destroy();
+    return !ctrl.signal.aborted;
+  };
+  if (external?.aborted || !box.isConnected) destroy();
+  else {
+    external?.addEventListener('abort', destroy, { once: true });
+    removed = new MutationObserver(() => { if (!box.isConnected) destroy(); });
+    removed.observe(document.body, { childList: true, subtree: true });
+  }
+  return { signal: ctrl.signal, alive, cleanup(fn: () => void) { if (ctrl.signal.aborted) fn(); else disposers.push(fn); } };
+}
+
 export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: AbortSignal) {
   const box = root.querySelector<HTMLElement>('[data-fx-flow]');
-  if (!box || box.dataset.bound) return;
+  if (!box || box.dataset.bound || signal?.aborted || !box.isConnected) return;
   box.dataset.bound = '1';
+  const life = flowLifetime(box, signal);
+  signal = life.signal;
+  const media = matchMedia('(prefers-reduced-motion: reduce)');
   const cards = Array.from(box.querySelectorAll<HTMLElement>('.fx-cf-card'));
   const cap = box.querySelector<HTMLAnchorElement>('.fx-cf-cap')!;
   const last = Math.max(items.length - 1, 0);
@@ -223,9 +251,12 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     }
   };
   const run = () => {
-    if (st.raf) return;
+    if (!life.alive() || st.raf) return;
     st.t = performance.now();
     const frame = (now: number) => {
+      st.raf = 0;
+      if (!life.alive()) return;
+      if (media.matches) { st.pos = st.target = Math.min(last, Math.max(0, Math.round(st.target))); st.vel = 0; paint(); return; }
       const dt = Math.min(now - st.t, 32) / 1000;
       st.t = now;
       const k = 190, c = 2 * Math.sqrt(k) * 0.92; // 임계 감쇠보다 살짝 아래 — 아주 조금만 출렁이고 멈춘다
@@ -237,9 +268,10 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     };
     st.raf = requestAnimationFrame(frame);
   };
-  const goTo = (i: number) => { st.target = Math.min(Math.max(Math.round(i), 0), last); if (reduce()) { st.pos = st.target; st.vel = 0; paint(); } else run(); };
-  const fit = () => { st.scale = Math.min(1, Math.max(0.5, box.clientWidth / (W * 3.2))); box.style.setProperty('--cf-s', String(st.scale)); paint(); };
-  new ResizeObserver(fit).observe(box);
+  const goTo = (i: number) => { if (!life.alive()) return; st.target = Math.min(Math.max(Math.round(i), 0), last); if (media.matches) { st.pos = st.target; st.vel = 0; paint(); } else run(); };
+  const fit = () => { if (!life.alive()) return; st.scale = Math.min(1, Math.max(0.5, box.clientWidth / (W * 3.2))); box.style.setProperty('--cf-s', String(st.scale)); paint(); };
+  const sizing = new ResizeObserver(fit); sizing.observe(box);
+  life.cleanup(() => sizing.disconnect());
   fit();
   box.querySelectorAll<HTMLButtonElement>('[data-cf-step]').forEach((b) => b.addEventListener('click', () => goTo(st.target + Number(b.dataset.cfStep)), { signal }));
   box.addEventListener('keydown', (e) => {
@@ -253,23 +285,29 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     const dx = e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX;
     if (Math.abs(dx) <= Math.abs(e.deltaY) && !e.shiftKey) return;
     e.preventDefault();
+    clearTimeout(snap);
+    if (media.matches) { goTo(st.target + Math.sign(dx)); return; }
     st.target = Math.min(Math.max(st.target + dx / (110 * st.scale * 1.4), -0.35), last + 0.35);
     run();
     clearTimeout(snap);
     snap = window.setTimeout(() => goTo(st.target + Math.sign(dx) * 0.3), 110);
   }, { passive: false, signal } as AddEventListenerOptions);
   // 끌기·튕기기: 손가락을 1:1로 따라오고 놓으면 속도만큼 더 간 뒤 가까운 커버에 선다
-  let drag: { id: number; x: number; from: number; moved: boolean; hit: number | null; s: { x: number; t: number }[] } | null = null;
+  let drag: { id: number; x: number; y: number; from: number; moved: boolean; hit: number | null; s: { x: number; t: number }[] } | null = null;
   const stage = box.querySelector<HTMLElement>('.fx-cf-stage')!;
   stage.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || drag || !life.alive()) return;
     const hit = (e.target as HTMLElement).closest<HTMLElement>('[data-cf]');
-    drag = { id: e.pointerId, x: e.clientX, from: st.pos, moved: false, hit: hit ? Number(hit.dataset.cf) : null, s: [{ x: e.clientX, t: performance.now() }] };
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, from: st.pos, moved: false, hit: hit ? Number(hit.dataset.cf) : null, s: [{ x: e.clientX, t: performance.now() }] };
   }, { signal });
   stage.addEventListener('pointermove', (e) => {
     if (!drag || drag.id !== e.pointerId) return;
-    const dx = e.clientX - drag.x;
-    if (!drag.moved) { if (Math.abs(dx) < 6) return; drag.moved = true; stage.setPointerCapture(e.pointerId); box.dataset.dragging = ''; }
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved) {
+      if (Math.abs(dy) >= 8 && Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) * 1.15) return;
+      drag.moved = true; stage.setPointerCapture(e.pointerId); box.dataset.dragging = '';
+    }
     cancelAnimationFrame(st.raf); st.raf = 0;
     let p = drag.from - dx / (110 * st.scale);
     if (p < 0) p *= 0.3;
@@ -282,6 +320,7 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     const d = drag;
     if (!d || d.id !== e.pointerId) return;
     drag = null;
+    if (stage.hasPointerCapture?.(d.id)) stage.releasePointerCapture(d.id);
     delete box.dataset.dragging;
     if (!d.moved) {
       if (d.hit === null) return;
@@ -291,74 +330,112 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     }
     const a = d.s[0], b = d.s[d.s.length - 1];
     const v = -((b.x - a.x) / Math.max(b.t - a.t, 1)) * 1000 / (110 * st.scale);
-    st.vel = reduce() ? 0 : v;
+    st.vel = media.matches ? 0 : v;
     let to = Math.round(st.pos + v * 0.18);
     if (Math.abs(v) > 0.8 && to === Math.round(d.from)) to += Math.sign(v);
     goTo(to);
   };
   stage.addEventListener('pointerup', up, { signal });
-  stage.addEventListener('pointercancel', up, { signal });
+  const cancel = (e?: PointerEvent) => {
+    if (e && (!drag || drag.id !== e.pointerId)) return;
+    const d = drag; drag = null;
+    if (d && stage.hasPointerCapture?.(d.id)) stage.releasePointerCapture(d.id);
+    delete box.dataset.dragging;
+    st.target = Math.min(last, Math.max(0, Math.round(st.pos))); st.vel = 0;
+    if (life.alive()) goTo(st.target);
+  };
+  stage.addEventListener('pointercancel', cancel, { signal });
+  stage.addEventListener('lostpointercapture', cancel, { signal });
+  const onMotion = () => {
+    clearTimeout(snap); snap = 0;
+    cancelAnimationFrame(st.raf); st.raf = 0;
+    cancel();
+    st.pos = st.target; st.vel = 0; paint();
+  };
+  media.addEventListener('change', onMotion, { signal });
+  life.cleanup(() => {
+    clearTimeout(snap); cancelAnimationFrame(st.raf); st.raf = 0;
+    const d = drag; drag = null;
+    if (d && stage.hasPointerCapture?.(d.id)) stage.releasePointerCapture(d.id);
+    delete box.dataset.dragging;
+  });
   paint();
 }
 
 /* ---------- 6. 끝없는 띠 (Logo Marquee) ---------- */
 export function bindMarquee(box: HTMLElement, signal?: AbortSignal, speed = 32) {
   const rows = Array.from(box.querySelectorAll<HTMLElement>('.fx-mq-row'));
-  if (!rows.length || box.dataset.bound) return;
+  if (!rows.length || box.dataset.bound || signal?.aborted || !box.isConnected) return;
   box.dataset.bound = '1';
+  const life = flowLifetime(box, signal);
+  signal = life.signal;
+  const media = matchMedia('(prefers-reduced-motion: reduce)');
   const state = rows.map((row, i) => ({ row, x: 0, v: 0, dir: i % 2 ? 1 : -1, w: 0 }));
-  const measure = () => state.forEach((s) => { s.w = (s.row.scrollWidth) / 2; });
-  measure();
-  new ResizeObserver(measure).observe(box);
-  let hover = false, drag: { x: number; id: number; s: { x: number; t: number }[]; row: (typeof state)[number] } | null = null;
+  const measure = () => { if (life.alive()) state.forEach((s) => { s.w = s.row.scrollWidth / 2; }); };
+  let hover = false, visible = true, raf = 0, t0 = 0, blockedUntil = 0;
+  let drag: { x: number; y: number; startX: number; moved: boolean; id: number; s: { x: number; t: number }[]; row: (typeof state)[number] } | null = null;
+  const sizing = new ResizeObserver(measure); sizing.observe(box); measure();
+  const paint = () => state.forEach(s => {
+    // Modulo wrapping is bounded even after a long frame or a very fast fling.
+    if (s.w > 0) s.x = ((s.x % s.w) + s.w) % s.w - s.w;
+    s.row.style.transform = `translate3d(${s.x.toFixed(2)}px,0,0)`;
+  });
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; t0 = 0; };
+  const eligible = () => life.alive() && visible && !document.hidden && !media.matches;
+  const frame = (now: number) => {
+    raf = 0;
+    if (!eligible()) return;
+    const dt = t0 ? Math.min(now - t0, 48) / 1000 : 0; t0 = now;
+    for (const s of state) {
+      if (drag?.row === s) continue;
+      const target = hover ? 0 : speed * s.dir;
+      s.v += (target - s.v) * Math.min(1, dt * (Math.abs(s.v - target) > 120 ? 2.2 : 4));
+      s.x += s.v * dt;
+    }
+    paint(); raf = requestAnimationFrame(frame);
+  };
+  const schedule = () => { if (eligible()) { if (!raf) raf = requestAnimationFrame(frame); } else stop(); };
+  const visibility = new IntersectionObserver(([e]) => { visible = e.isIntersecting; schedule(); }); visibility.observe(box);
   box.addEventListener('pointerenter', () => { hover = true; }, { signal });
-  box.addEventListener('pointerleave', () => { hover = false; }, { signal });
+  box.addEventListener('pointerleave', () => { hover = box.contains(document.activeElement); }, { signal });
   box.addEventListener('focusin', () => { hover = true; }, { signal });
-  box.addEventListener('focusout', () => { hover = false; }, { signal });
+  box.addEventListener('focusout', () => { hover = box.matches(':hover'); }, { signal });
   box.addEventListener('pointerdown', (e) => {
     const row = state.find((s) => s.row.contains(e.target as Node));
-    if (!row || e.button !== 0) return;
-    drag = { x: e.clientX, id: e.pointerId, s: [{ x: e.clientX, t: performance.now() }], row };
+    if (!row || e.button !== 0 || drag || !life.alive()) return;
+    drag = { x: e.clientX, y: e.clientY, startX: e.clientX, moved: false, id: e.pointerId, s: [{ x: e.clientX, t: performance.now() }], row };
   }, { signal });
   box.addEventListener('pointermove', (e) => {
     if (!drag || drag.id !== e.pointerId) return;
-    const dx = e.clientX - drag.x;
-    if (Math.abs(dx) > 4) box.dataset.dragging = '';
-    drag.row.x += dx; drag.x = e.clientX; drag.row.v = 0;
-    drag.s.push({ x: e.clientX, t: performance.now() }); if (drag.s.length > 6) drag.s.shift();
-  }, { signal });
-  const up = (e: PointerEvent) => {
-    if (!drag || drag.id !== e.pointerId) return;
-    const a = drag.s[0], b = drag.s[drag.s.length - 1];
-    drag.row.v = ((b.x - a.x) / Math.max(b.t - a.t, 1)) * 1000; // 놓을 때 속도로 관성
-    drag = null;
-    setTimeout(() => delete box.dataset.dragging, 0);
-  };
-  box.addEventListener('pointerup', up, { signal });
-  box.addEventListener('pointercancel', up, { signal });
-  // 끌다가 놓은 직후의 클릭은 링크로 넘어가지 않게
-  box.addEventListener('click', (e) => { if (box.dataset.dragging !== undefined) e.preventDefault(); }, { capture: true, signal });
-  if (reduce()) return;
-  let t0 = performance.now(), raf = 0, visible = true;
-  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(box);
-  const frame = (now: number) => {
-    if (signal?.aborted || !box.isConnected) return;
-    const dt = Math.min(now - t0, 48) / 1000;
-    t0 = now;
-    if (visible && !document.hidden) {
-      for (const s of state) {
-        if (drag?.row === s) continue;
-        const target = hover ? 0 : speed * s.dir;
-        s.v += (target - s.v) * Math.min(1, dt * (Math.abs(s.v - target) > 120 ? 2.2 : 4));
-        s.x += s.v * dt;
-        if (s.w > 0) { while (s.x <= -s.w) s.x += s.w; while (s.x > 0) s.x -= s.w; }
-        s.row.style.transform = `translate3d(${s.x.toFixed(2)}px,0,0)`;
-      }
+    const totalX = e.clientX - drag.startX, totalY = e.clientY - drag.y;
+    if (!drag.moved) {
+      if (Math.abs(totalY) >= 8 && Math.abs(totalY) > Math.abs(totalX)) { drag = null; blockedUntil = performance.now() + 250; return; }
+      if (Math.abs(totalX) < 8 || Math.abs(totalX) <= Math.abs(totalY) * 1.15) return;
+      drag.moved = true; box.dataset.dragging = ''; box.setPointerCapture(e.pointerId);
     }
-    raf = requestAnimationFrame(frame);
+    drag.row.x += e.clientX - drag.x; drag.x = e.clientX; drag.row.v = 0;
+    drag.s.push({ x: e.clientX, t: performance.now() }); if (drag.s.length > 6) drag.s.shift();
+    paint();
+  }, { signal });
+  const finish = (e?: PointerEvent, cancelled = false) => {
+    if (e && (!drag || drag.id !== e.pointerId)) return;
+    const d = drag; drag = null;
+    if (d && box.hasPointerCapture?.(d.id)) box.releasePointerCapture(d.id);
+    if (d) {
+      const a = d.s[0], b = d.s[d.s.length - 1];
+      d.row.v = cancelled || media.matches || !d.moved ? 0 : Math.max(-1500, Math.min(1500, ((b.x - a.x) / Math.max(b.t - a.t, 1)) * 1000));
+      if (d.moved || cancelled) blockedUntil = performance.now() + 250;
+    }
+    delete box.dataset.dragging;
   };
-  raf = requestAnimationFrame(frame);
-  signal?.addEventListener('abort', () => cancelAnimationFrame(raf), { once: true });
+  box.addEventListener('pointerup', e => finish(e), { signal });
+  box.addEventListener('pointercancel', e => finish(e, true), { signal });
+  box.addEventListener('lostpointercapture', e => finish(e, true), { signal });
+  box.addEventListener('click', e => { if (drag?.moved || performance.now() < blockedUntil) e.preventDefault(); }, { capture: true, signal });
+  document.addEventListener('visibilitychange', schedule, { signal });
+  media.addEventListener('change', () => { finish(undefined, true); state.forEach(s => { s.v = 0; }); schedule(); }, { signal });
+  life.cleanup(() => { stop(); finish(undefined, true); sizing.disconnect(); visibility.disconnect(); });
+  paint(); schedule();
 }
 
 /* ---------- 7. 출발 안내판 (Airport matrix time) — 시각은 한 칸씩 넘어가며 들어온다 ---------- */

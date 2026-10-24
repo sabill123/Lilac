@@ -12,7 +12,7 @@ import { when } from '../social';
 import type { Concert, News, Release, ArtistLite, ChartEntry } from '../cards';
 import { playList } from '../player';
 import type { Track } from '../player';
-import { mountStage3D, disposeScene } from '../../three';
+import { mountStage3D, disposeScene, setSceneMotionPaused, isSceneMotionPaused } from '../../three';
 import type { StageHandle } from '../../three/stage3d';
 import { homeAwardsHtml, mountHomeAwards } from '../../awards';
 import { awardsUpdatesHtml, mountAwardsUpdates } from '../../awards/live';
@@ -95,10 +95,11 @@ function stageHtml(slides: Slide[]) {
     <div class="stage-canvas" data-stage aria-hidden="true"></div>
     <div class="stage-flat" aria-hidden="true">${slides.map((s, i) => `<button type="button" class="stage-flat-item" data-flat="${i}" tabindex="-1">${img(s.image, '', 'poster', { ratio: '3/4' })}</button>`).join('')}</div>
     <div class="stage-in">
-      <div class="stage-info" aria-live="polite">${slides[0] ? slideInfo(slides[0]) : ''}</div>
+      <div class="stage-info" id="stageInfo" aria-live="off">${slides[0] ? slideInfo(slides[0]) : ''}</div>
       <div class="stage-nav">
+        <button type="button" class="stage-motion" data-stage-motion aria-pressed="${isSceneMotionPaused()}" aria-label="${getLocale() === 'ja' ? '自動再生を一時停止' : '자동 넘김 일시정지'}">${isSceneMotionPaused() ? icon('i-play') : icon('i-pause')}</button>
         <span class="stage-position" aria-hidden="true"><b>01</b> / ${pad2(n)}</span>
-        <div class="stage-bars" role="tablist" aria-label="${esc(t('stage.label'))}">${slides.map((s, i) => `<button type="button" role="tab" data-stage-to="${i}" aria-selected="${i === 0}" aria-label="${i + 1} / ${n} · ${esc(s.c?.performer || s.c?.title || s.r?.artist || s.label)}"></button>`).join('')}</div>
+        <div class="stage-bars" role="tablist" aria-label="${esc(t('stage.label'))}">${slides.map((s, i) => `<button type="button" role="tab" data-stage-to="${i}" tabindex="${i === 0 ? 0 : -1}" aria-controls="stageInfo" aria-selected="${i === 0}" aria-label="${i + 1} / ${n} · ${esc(s.c?.performer || s.c?.title || s.r?.artist || s.label)}"></button>`).join('')}</div>
         <button type="button" class="stage-arrow" data-stage-go="-1" aria-label="${esc(t('stage.prev'))}">${icon('i-chev-l')}</button>
         <button type="button" class="stage-arrow" data-stage-go="1" aria-label="${esc(t('stage.next'))}">${icon('i-chev-r')}</button>
       </div>
@@ -115,16 +116,31 @@ function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
   const flats = Array.from(stage.querySelectorAll<HTMLElement>('[data-flat]'));
   const bars = Array.from(stage.querySelectorAll<HTMLButtonElement>('[data-stage-to]'));
   const n = slides.length;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   let cur = -1;
   let handle: StageHandle | null = null;
   let timer = 0;
+  let paused = isSceneMotionPaused();
+  let inView = true;
+  const motion = stage.querySelector<HTMLButtonElement>('[data-stage-motion]')!;
+  const syncMotion = () => {
+    motion.disabled = reduce.matches;
+    motion.setAttribute('aria-pressed', String(paused || reduce.matches));
+    motion.setAttribute('aria-label', getLocale() === 'ja' ? (paused ? '自動再生を再開' : '自動再生を一時停止') : (paused ? '자동 넘김 재개' : '자동 넘김 일시정지'));
+    if (reduce.matches) motion.setAttribute('aria-label', getLocale() === 'ja' ? '端末のモーション軽減設定を使用中' : '기기의 모션 줄이기 설정 적용 중');
+    motion.innerHTML = icon(paused || reduce.matches ? 'i-play' : 'i-pause');
+  };
+  motion.addEventListener('click', () => { paused = !paused; setSceneMotionPaused(paused); syncMotion(); restartFlat(); }, { signal });
+  syncMotion();
+  const visibility = new IntersectionObserver(([e]) => { inView = e.isIntersecting; });
+  visibility.observe(stage);
   const show = (i: number) => {
     if (signal.aborted || i === cur) return;
     cur = i;
     info.innerHTML = slideInfo(slides[i]);
     info.classList.remove('is-in'); void info.offsetWidth; info.classList.add('is-in');
     pos.innerHTML = `<b>${pad2(i + 1)}</b> / ${pad2(n)}`;
-    bars.forEach((b, k) => b.setAttribute('aria-selected', String(k === i)));
+    bars.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1; });
     flats.forEach((el, k) => {
       let d = k - i; if (d > n / 2) d -= n; if (d < -n / 2) d += n;
       el.style.setProperty('--d', String(d));
@@ -138,8 +154,13 @@ function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
   bars.forEach((b) => b.addEventListener('click', () => { goTo(Number(b.dataset.stageTo)); restartFlat(); }, { signal }));
   stage.addEventListener('keydown', (e) => {
     if ((e.target as HTMLElement).closest('input, textarea')) return;
-    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
-    if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : ((cur + (e.key === 'ArrowRight' ? 1 : -1) + n) % n);
+      goTo(next);
+      if ((e.target as HTMLElement).hasAttribute('data-stage-to')) bars[next].focus();
+      restartFlat();
+    }
   }, { signal });
   const pick = (i: number) => {
     const s = slides[i];
@@ -148,15 +169,18 @@ function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
   };
   flats.forEach((el, k) => el.addEventListener('click', () => (k === cur ? pick(k) : goTo(k)), { signal }));
   /* 평면 캐러셀의 자동 넘김 — 3D는 자체 자동 넘김을 쓴다. 모션 줄이기면 멈춘다 */
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   function restartFlat() {
     clearInterval(timer);
-    if (handle || reduce.matches || n < 2) return;
-    timer = window.setInterval(() => { if (!document.hidden && !stage!.matches(':hover, :focus-within')) goTo(cur + 1); }, 5200);
+    if (handle || paused || reduce.matches || n < 2) return;
+    timer = window.setInterval(() => { if (inView && !document.hidden && !stage!.matches(':hover, :focus-within')) goTo(cur + 1); }, 5200);
   }
+  reduce.addEventListener('change', () => { syncMotion(); restartFlat(); }, { signal });
   show(0);
   stage.classList.add('is-loading');
-  mountStage3D(host, slides.map((s) => ({ image: texUrl(s.image), label: s.label, title: s.c ? (s.c.performer || s.c.title) : s.r?.title, sub: s.c ? s.c.title : s.r?.artist })), { onFocus: show, onPick: pick }).then((h) => {
+  mountStage3D(host, slides.map((s) => ({ image: texUrl(s.image), label: s.label, title: s.c ? (s.c.performer || s.c.title) : s.r?.title, sub: s.c ? s.c.title : s.r?.artist })), { onFocus: show, onPick: pick, onFallback: () => {
+    if (signal.aborted) return;
+    handle = null; stage.classList.remove('is-3d'); stage.classList.add('is-flat'); restartFlat();
+  } }).then((h) => {
     if (signal.aborted) { h?.destroy(); return; }
     handle = h;
     stage.classList.remove('is-loading');
@@ -165,7 +189,7 @@ function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
     if (h) { clearInterval(timer); if (cur > 0) h.goTo(cur); }
     else restartFlat();
   });
-  signal.addEventListener('abort', () => { clearInterval(timer); disposeScene(); }, { once: true });
+  signal.addEventListener('abort', () => { clearInterval(timer); visibility.disconnect(); disposeScene(); }, { once: true });
 }
 
 /* 가로 선반: 제목 · 전체보기 · 앞뒤 버튼 */
@@ -242,7 +266,14 @@ function sectionsHtml(d: HomeData) {
   const opens = [...d.fanclub, ...d.tickets.filter((x) => x.provider !== 'fanclub')]
     .sort((a, b) => String(a.saleSortAt || a.ticketOpenAt || '').localeCompare(String(b.saleSortAt || b.ticketOpenAt || '')));
   const li = (html: string) => `<li>${html}</li>`;
-  return `
+  const ja = getLocale() === 'ja';
+  const paths = [
+    { href: '#/concerts/visiting', title: t(`home.visiting.${ed}`), ic: 'i-ticket' },
+    { href: '#/concerts/tickets', title: t('home.opens'), ic: 'i-cal' },
+    { href: '#/fanclub', title: t('nav.fanclub'), ic: 'i-heart' },
+    { href: '#/goods', title: t('home.releases'), ic: 'i-bag' },
+  ];
+  return `<nav class="home-paths" aria-label="${ja ? '見つける' : '빠르게 찾기'}">${paths.map(p => `<a href="${p.href}"><span class="home-path-icon">${icon(p.ic)}</span><span><b>${esc(p.title)}</b><small>${p.href === '#/fanclub' ? (ja ? '入会条件を比較' : '가입 조건 비교') : (ja ? '情報を見る' : '일정·정보 보기')}</small></span>${icon('i-chev-r', 'ic xs')}</a>`).join('')}</nav>
     ${visList.length ? shelf('secVisiting', t(`home.visiting.${ed}`), '#/concerts/visiting', visList.slice(0, 16).map((c) => li(posterCard(c))).join(''), 'rail-posters')
       : `<section class="sec" id="secVisiting"><div class="sec-head"><h2>${esc(t(`home.visiting.${ed}`))}</h2></div>${emptyState(d.classifying ? t('c.classifying', { n: d.classifying }) : t('empty.generic'))}</section>`}
     ${opens.length ? `<section class="sec" id="secTickets"><div class="sec-head"><h2>${esc(t('home.opens'))}</h2><a class="more" href="#/concerts/tickets">${t('more')}</a></div>${boardHtml(opens.slice(0, 8))}</section>` : ''}
