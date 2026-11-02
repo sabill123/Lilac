@@ -3,6 +3,8 @@
  * 규칙
  *  - 신선하면(ttl 이내) 바로 돌려준다.
  *  - 오래됐으면 오래된 값을 즉시 돌려주고 백그라운드에서 갱신한다(stale-while-revalidate).
+ *  - 너무 오래됐으면(maxStaleMs 초과) 오래된 값을 현재 값처럼 내지 않는다: 갱신을 staleWaitMs까지 기다려 새 값을 주고,
+ *    그때까지 못 받거나 실패하면 오래된 값을 state:'stale' + updatedAt(마지막 성공 시각)과 함께 돌려준다.
  *  - 값이 아예 없으면 갱신을 기다리되 budgetMs를 넘기면 pending으로 응답하고 갱신은 계속한다.
  *  - "전부 실패"는 "결과 없음"이 아니다: 모든 소스가 실패해 0건이면 이전 값을 지키고 lastError만 기록한다.
  *  - 같은 키의 갱신은 동시에 하나만 돈다.
@@ -123,11 +125,27 @@ function shape(entry, state) {
   };
 }
 
-export async function cached(key, ttlMs, fn, { budgetMs = 9000, retryAfterMs = 30000, empty = { items: [], sources: [] } } = {}) {
+export async function cached(key, ttlMs, fn, { budgetMs = 9000, retryAfterMs = 30000, empty = { items: [], sources: [] }, maxStaleMs = null, staleWaitMs = 8000 } = {}) {
   const entry = await load(key);
   if (entry && Date.now() - entry.at < ttlMs && (!entry.lastError || Date.now() - entry.checkedAt < retryAfterMs)) return shape(entry, 'fresh');
   if (entry) {
-    refresh(key, fn).catch(() => {});
+    const p = refresh(key, fn);
+    p.catch(() => {});
+    /* 아주 오래된 값: 방금 실패한 게 아니면 짧게 기다려 새 값을 준다 */
+    const veryStale = maxStaleMs != null && Date.now() - entry.at > maxStaleMs;
+    const justFailed = entry.lastError && Date.now() - (entry.checkedAt || 0) < retryAfterMs;
+    if (veryStale && !justFailed) {
+      let timer;
+      const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(null), staleWaitMs); timer.unref?.(); });
+      try {
+        const got = await Promise.race([p, timeout]);
+        /* 갱신이 실패하면 refresh는 이전 값에 lastError를 붙여 돌려준다 → shape가 stale로 표시 */
+        if (got) return shape(got, Date.now() - got.at < ttlMs ? 'fresh' : 'stale');
+      } catch { /* 아래에서 이전 값 */ } finally {
+        clearTimeout(timer);
+      }
+      return shape(mem.get(key) || entry, 'stale');
+    }
     return shape(entry, 'stale');
   }
   const p = refresh(key, fn);

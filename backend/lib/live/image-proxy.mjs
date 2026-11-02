@@ -15,10 +15,16 @@ export const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const HOSTS = /(^|\.)(pia\.jp|eplus\.jp|eplus\.co\.jp|interpark\.com|melon\.co\.kr|mzstatic\.com|dzcdn\.net|aladin\.co\.kr|hmv\.co\.jp|ktown4u\.com|wikimedia\.org|yanolja\.com|nol-universe\.com|yes24\.com|toast\.com|l-tike\.com)$/i;
 const TYPES = new Set(['image/jpeg', 'image/png', 'image/apng', 'image/gif', 'image/webp', 'image/avif', 'image/bmp', 'image/x-icon', 'image/vnd.microsoft.icon']);
 const fail = (status, message) => Object.assign(new Error(message), { status });
-export function validateArtworkUrl(value) {
+/* trusted(href): 서버가 직접 공연 페이지에서 뽑아 저장한 '정확한' 이미지 주소인지.
+   팬클럽 투어 포스터는 아티스트마다 호스트가 달라(member.vaundy.jp …) 고정 목록에 없다.
+   그래서 홈 3D 무대(WebGL 텍스처는 중계가 필요)가 403을 받고 글자로 대체됐다(운영 2026-10-22, Vaundy).
+   임의 주소를 열어 주는 게 아니라 서버가 저장한 주소와 문자 그대로 같을 때만 통과한다.
+   DNS 사설망 차단·리다이렉트 검사·형식 검사는 그대로다. */
+export function validateArtworkUrl(value, { trusted = null } = {}) {
   let u;
   try { u = new URL(value); } catch { throw fail(400, 'Invalid image URL'); }
-  if (!/^https?:$/.test(u.protocol) || !HOSTS.test(u.hostname) || u.username || u.password || u.port) throw fail(403, 'Image destination not allowed');
+  if (!/^https?:$/.test(u.protocol) || u.username || u.password || u.port) throw fail(403, 'Image destination not allowed');
+  if (!HOSTS.test(u.hostname) && !(typeof trusted === 'function' && trusted(u.href))) throw fail(403, 'Image destination not allowed');
   return u;
 }
 export function isPublicAddress(address) {
@@ -60,8 +66,10 @@ function responseFor(url, address, signal, request) {
     req.end();
   });
 }
-export async function fetchArtwork(value, { lookup = dnsLookup, request = nativeRequest, maxBytes = MAX_IMAGE_BYTES, timeoutMs = 8000, maxRedirects = 4 } = {}) {
-  let url = validateArtworkUrl(value);
+export async function fetchArtwork(value, { lookup = dnsLookup, request = nativeRequest, maxBytes = MAX_IMAGE_BYTES, timeoutMs = 8000, maxRedirects = 4, trusted = null } = {}) {
+  let url = validateArtworkUrl(value, { trusted });
+  /* 신뢰된 첫 주소가 같은 호스트 안에서 옮겨 가는 것만 허용한다(다른 호스트는 고정 목록 검사) */
+  const trustedHost = HOSTS.test(url.hostname) ? null : url.hostname;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
@@ -75,7 +83,8 @@ export async function fetchArtwork(value, { lookup = dnsLookup, request = native
         const location = response.headers.location;
         response.destroy();
         if (!location || hop >= maxRedirects) throw fail(502, 'Image redirect limit');
-        url = validateArtworkUrl(new URL(location, url).href);
+        const next = new URL(location, url).href;
+        url = validateArtworkUrl(next, { trusted: (href) => !!trustedHost && new URL(href).hostname === trustedHost });
         continue;
       }
       if (response.statusCode < 200 || response.statusCode >= 300) throw fail(502, 'Image upstream failure');

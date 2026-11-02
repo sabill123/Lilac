@@ -184,9 +184,23 @@
         "bonus": "메탈 로고 키체인",
         "bonusJa": "メタルロゴキーチェーン",
         "greenCode": true,
-        "shipsToKorea": false,
+        "shipsToKorea": true,
         "verified": true,
-        "note": "UNIVERSAL MUSIC STORE와 특전 공통. 한국 직배송을 하지 않아 대행이 필요하다."
+        "note": "UNIVERSAL MUSIC STORE와 특전 공통. 공식 Help(2026-11-02 확인)에 해외 배송(DHL·EMS)이 안내되어 있고, 해외 배송비는 주문 화면에서 배송지 기준으로 표시되며 수입 관세·세금·수수료는 받는 사람이 냅니다.",
+        "editionUrls": {
+          "box-bd": "https://mga-officialstore.com/products/upch29510",
+          "box-dvd": "https://mga-officialstore.com/products/upch29511",
+          "ltd-bd": "https://mga-officialstore.com/products/upch29512",
+          "ltd-dvd": "https://mga-officialstore.com/products/upch29513",
+          "regular": "https://mga-officialstore.com/products/upch20726"
+        },
+        "editionUrlsCheckedAt": "2026-11-02",
+        "shippingSource": {
+          "url": "https://mga-officialstore.com/pages/help",
+          "checkedAt": "2026-11-02",
+          "quote": "日本国外への配送 配送方法 DHLもしくはEMS 送料 配送方法・配送地域/国により異なります。",
+          "dutyQuote": "国際貨物の受取人は、輸入税、手数料、関税などの費用が課せられます。"
+        }
       },
       {
         "id": "umstore",

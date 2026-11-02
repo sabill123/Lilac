@@ -37,7 +37,15 @@ export async function deezerArtist(names, { knownTitles = null } = {}) {
         if (known && known.size) {
           const top = await dz(`https://api.deezer.com/artist/${best.id}/top?limit=15`).catch(() => { failed++; return null; });
           await sleep(250);
-          const hit = (top?.data || []).some((t) => [...segs(t.title), ...segs(t.title_short)].some((x) => known.has(x)));
+          let hit = (top?.data || []).some((t) => [...segs(t.title), ...segs(t.title_short)].some((x) => known.has(x)));
+          /* 인기곡(top)은 재생 가능한 지역의 곡만 준다. 서버 지역(싱가포르)·한국에서 일본 아티스트 다수가 빈 목록이라
+             대조가 늘 실패했다(M!LK·乃木坂46 …: top 0곡, 앨범 70·161장). 인기곡이 비었을 때만 앨범명으로 대조한다.
+             동명이인(남아공 래퍼 'Snow Man')은 앨범명이 우리 카탈로그와 겹치지 않아 여전히 걸러진다. */
+          if (!hit && top && !(top.data || []).length) {
+            const albums = await dz(`https://api.deezer.com/artist/${best.id}/albums?limit=100`).catch(() => { failed++; return null; });
+            await sleep(250);
+            hit = (albums?.data || []).some((al) => segs(al.title).some((x) => known.has(x)));
+          }
           if (!hit) continue;
         } else if (!exact.length && (best.nb_fan || 0) < 5000) continue;
         return { id: best.id, name: best.name, picture: best.picture_xl, pictureMedium: best.picture_big || best.picture_medium, fans: best.nb_fan ?? null, url: best.link, verified: !!known };
@@ -246,12 +254,40 @@ function cut(s) {
  * 로 한글 표기를 얻는다. 위키백과 API는 UA 없는 대량 요청을 막으므로 UA를 붙이고 순차 호출한다. */
 const WIKI_UA = { 'User-Agent': 'Lilac/0.9 (cross-border fandom demo)' };
 
+/* 일본어 위키백과 문서 첫머리의 읽기(후리가나) — "大森 元貴（おおもり もとき、1996年9月14日 - ）は、日本のミュージシャン"
+   채택 조건(하나라도 안 맞으면 null — 지어내지 않는다):
+   - 찾는 제목에 한자가 있다(가나만인 이름은 그대로 읽힌다)
+   - 문서 첫머리가 그 제목과 같은 이름(공백 무시)으로 시작하고 곧바로 괄호가 온다(다른 사람 이름·리다이렉트 대상 거름)
+   - 괄호의 첫 조각이 가나로만 됐다(날짜·英:·本名 등 거름)
+   - 괄호 뒤 첫 문장이 음악가 문서다, 동음이의 문서가 아니다 */
+const KANJI = /[㐀-䶿一-鿿々]/;
+const PURE_KANA = /^[ぁ-ゖゝゞァ-ヺー・ヽヾ ]+$/;
+const JA_MUSICIAN = /(歌手|グループ|バンド|アイドル|ユニット|ラッパー|シンガー|ミュージシャン|デュオ|トリオ|ボーカル|作曲家|作詞家|音楽プロデューサー|ギタリスト|ベーシスト|ドラマー|キーボーディスト|音楽家|演奏家)/;
+const compactJa = (s) => String(s || '').normalize('NFKC').replace(/[\s　_「」『』‘’“”"']/g, '');
+export function jaLeadReading({ title, extract, disambiguation = false }) {
+  if (disambiguation || !KANJI.test(title || '')) return null;
+  const text = String(extract || '').normalize('NFKC').replace(/^\s+/, '');
+  const m = text.match(/^([^()\n]{1,80}?)\s*\(([^()\n]{1,200})\)\s*([^。\n]{0,200})/);
+  if (!m || compactJa(m[1]) !== compactJa(title)) return null;
+  const kana = m[2].split(/[、,;；]/)[0].replace(/\s+/g, ' ').trim();
+  const bare = kana.replace(/[ ・]/g, '');
+  if (!PURE_KANA.test(kana) || bare.length < 2 || bare.length > 40) return null;
+  if (!JA_MUSICIAN.test(m[3])) return null;
+  return kana;
+}
+
+/* out.meta: 원래 제목 → { title(한국어판 문서 제목), url(그 문서), via:'title'|'lead' } — 표시 이름의 출처를 함께 낸다.
+   out.readings: 원래 제목 → { kana, sourceUrl(일본어판 문서), title } — 같은 요청(langlinks와 함께 읽는 첫머리)에서 추가 호출 없이.
+   요약을 못 받은 이름은 "없음"이 아니라 "다음에 다시" — checked에서 뺀다(일본어 방향과 같은 규칙). */
 export async function koreanNamesFor(titles) {
   const out = new Map();
+  const meta = new Map();
+  const readings = new Map();
   const checked = new Set();
   for (let i = 0; i < titles.length; i += 20) {
     const chunk = titles.slice(i, i + 20);
-    const url = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=langlinks&lllang=ko&redirects=1&format=json`;
+    /* lllimit: 기본값 10은 묶음 전체 합계라 20제목이면 뒤 10개의 링크가 빠진다. exintro는 한 번에 20문서까지 */
+    const url = `https://ja.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(chunk.join('|'))}&prop=langlinks%7Cextracts%7Cpageprops&lllang=ko&lllimit=max&exintro=1&explaintext=1&exchars=400&exlimit=20&ppprop=disambiguation&redirects=1&format=json`;
     let j;
     try { j = await fetchJson(url, { timeout: 9000, headers: WIKI_UA }); } catch { await sleep(2500); continue; }
     for (const t of chunk) checked.add(t);
@@ -260,6 +296,10 @@ export async function koreanNamesFor(titles) {
     for (const r of j.query?.redirects || []) back.set(r.to, back.get(r.from) || r.from);
     for (const p of Object.values(j.query?.pages || {})) {
       const src = back.get(p.title) || p.title;
+      if (!('missing' in p) && typeof p.extract === 'string') {
+        const kana = jaLeadReading({ title: src, extract: p.extract, disambiguation: !!(p.pageprops && 'disambiguation' in p.pageprops) });
+        if (kana) readings.set(src, { kana, title: p.title, sourceUrl: `https://ja.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/ /g, '_'))}` });
+      }
       const koRaw = p.langlinks?.[0]?.['*'];
       if (!koRaw) continue;
       const ko = koRaw.replace(/\s*\([^)]*\)\s*$/, '');
@@ -269,19 +309,22 @@ export async function koreanNamesFor(titles) {
         // 같은 이름의 다른 문서(언어·숫자·동음이의)로 연결된 경우를 거른다 — 음악가 문서만
         const about = `${s.description || ''} ${String(s.extract || '').slice(0, 200)}`;
         if (s.type === 'disambiguation' || !/(가수|밴드|그룹|아이돌|싱어|음악|듀오|유닛|뮤지션|래퍼|보컬|프로듀서|작곡가)/.test(about)) continue;
-        if (/[가-힣]/.test(ko)) { out.set(src, [ko]); continue; }
+        const url = s.content_urls?.desktop?.page || `https://ko.wikipedia.org/wiki/${encodeURIComponent(koRaw.replace(/ /g, '_'))}`;
+        if (/[가-힣]/.test(ko)) { out.set(src, [ko]); meta.set(src, { title: koRaw, url, via: 'title' }); continue; }
         const par = String(s.extract || '').match(/^[^(（]{0,80}[(（]([^)）]{1,120})[)）]/);
         if (par) {
           const tokens = par[1].split(/[,，;、]/).map((x) => x.trim());
           const pick = tokens.map((x) => (/^한국어\s*:/.test(x) ? x.replace(/^한국어\s*:\s*/, '') : /:/.test(x) ? '' : x))
             .find((x) => /^[가-힣][가-힣 ·]*[가-힣]$/.test(x));
-          if (pick) out.set(src, [pick]);
+          if (pick) { out.set(src, [pick]); meta.set(src, { title: koRaw, url, via: 'lead' }); }
         }
-      } catch { /* 없음 */ }
+      } catch { checked.delete(src); }
     }
     await sleep(400);
   }
   out.checked = checked;
+  out.meta = meta;
+  out.readings = readings;
   return out;
 }
 
@@ -289,6 +332,7 @@ export async function koreanNamesFor(titles) {
    같은 이름의 다른 문서로 이어지는 것을 막으려고 일본어판 요약이 음악가 문서일 때만 쓴다. */
 export async function japaneseNamesFor(titles, { second = true } = {}) {
   const out = new Map();
+  const meta = new Map();
   const checked = new Set();
   for (let i = 0; i < titles.length; i += 20) {
     const chunk = titles.slice(i, i + 20);
@@ -309,7 +353,7 @@ export async function japaneseNamesFor(titles, { second = true } = {}) {
         const about = `${sum.description || ''} ${String(sum.extract || '').slice(0, 200)}`;
         if (sum.type === 'disambiguation' || !/(歌手|グループ|バンド|アイドル|ユニット|ラッパー|シンガー|音楽|ミュージシャン|デュオ|ボーカル|作曲家|プロデューサー)/.test(about)) continue;
         const ja = jaRaw.replace(/\s*[(（][^)）]*[)）]\s*$/, '').trim();
-        if (ja && !/[가-힣]/.test(ja)) out.set(src, ja);
+        if (ja && !/[가-힣]/.test(ja)) { out.set(src, ja); meta.set(src, { title: jaRaw, url: sum.content_urls?.desktop?.page || `https://ja.wikipedia.org/wiki/${encodeURIComponent(jaRaw.replace(/ /g, '_'))}`, via: 'title' }); }
       } catch {
         /* 요약을 못 받은 건 "없음"이 아니라 "다음에 다시" — 확인한 것으로 치지 않는다 */
         checked.delete(src);
@@ -324,12 +368,13 @@ export async function japaneseNamesFor(titles, { second = true } = {}) {
       const r2 = await japaneseNamesFor(rest.map((t) => `${t} (가수)`), { second: false });
       for (const t of rest) {
         const v = r2.get(`${t} (가수)`);
-        if (v) out.set(t, v);
+        if (v) { out.set(t, v); if (r2.meta?.has(`${t} (가수)`)) meta.set(t, r2.meta.get(`${t} (가수)`)); }
         if (!r2.checked.has(`${t} (가수)`)) checked.delete(t);
       }
     }
   }
   out.checked = checked;
+  out.meta = meta;
   return out;
 }
 

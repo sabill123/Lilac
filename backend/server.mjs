@@ -1,3 +1,4 @@
+import { withReleaseImages } from './lib/release-images.mjs';
 // Lilac demo backend v0.3
 // DB = 로컬 폴더(../db)의 JSON 파일. 데모용 단순 구현 (실서비스 보안 아님)
 import express from 'express';
@@ -18,6 +19,7 @@ import { backfillOperator } from './lib/backfill-operator.mjs';
 import { fetchFx, fxAgeHours } from './lib/fx.mjs';
 import { acquire as acquireSyncLock } from './lib/sync-lock.mjs';
 import { syncCatalog } from './lib/sync-catalog.mjs';
+import { releaseEventsFrom } from './lib/release-events.mjs';
 import { backfillLinks } from './lib/backfill-links.mjs';
 import { MECHANICS, mechanicsFor } from './lib/fandom.mjs';
 import { register as registerInstance, heartbeat as instanceHeartbeat, unregister as unregisterInstance } from './lib/instance.mjs';
@@ -28,6 +30,7 @@ import { createCommunity } from './lib/community.mjs';
 import { createPersistence } from './lib/persist.mjs';
 import { flushAllKv } from './lib/live/cache.mjs';
 import { cp, access } from 'node:fs/promises';
+import { serverTimeHandler } from './lib/server-time.mjs';
 
 const DB_DIR = process.env.LILAC_DB_DIR ? path.resolve(process.env.LILAC_DB_DIR) : path.join(__dirname, '..', 'db');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -354,7 +357,9 @@ async function fetchJsonRetry(url, tries = 3) {
   return null;
 }
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.4', uptimeSec: Math.round(process.uptime()), rssMb: Math.round(process.memoryUsage().rss / 1048576) }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'lilac-backend', version: '0.4', revision: process.env.RENDER_GIT_COMMIT || process.env.LILAC_RELEASE_REVISION || null, uptimeSec: Math.round(process.uptime()), rssMb: Math.round(process.memoryUsage().rss / 1048576) }));
+// 티켓 오픈 경계·화면 KST 서버시계의 기준. 인증 없음, 고정 크기, no-store.
+app.get('/api/time', serverTimeHandler());
 
 /* ================= Focus Desk / AI 큐레이터 =================
    YouTube ID는 사람이 확인한 허용 목록만 사용한다. LLM은 URL을 만들지 않고
@@ -738,7 +743,13 @@ app.get('/api/status', async (_req, res) => {
   for (const [code, c] of Object.entries(charts?.countries || {})) {
     for (const [k, v] of Object.entries(c)) {
       if (!Array.isArray(v)) continue;
-      chartSources.push({ country: code, source: k, count: v.length, ok: v.length > 0 });
+      /* 수집기가 남긴 원천별 결과(실패 이유·이전 목록 유지 여부)를 같이 보여 준다 — 0곡만 보여서는 왜인지 알 수 없었다 */
+      const meta = c.sourceMeta?.[k] || null;
+      chartSources.push({
+        country: code, source: k, count: v.length, ok: meta ? meta.ok !== false && v.length > 0 : v.length > 0,
+        ...(meta?.error ? { error: meta.error } : {}),
+        ...(meta?.carriedFrom ? { carriedFrom: meta.carriedFrom } : {}),
+      });
     }
   }
 
@@ -762,12 +773,19 @@ app.get('/api/status', async (_req, res) => {
       running: chartSync.running,
       lastError: chartSync.lastError,
     }, CHART_STALE_H * 2, CHART_INTERVAL_MS / 36e5),
-    {
-      id: 'products', name: '스토어 상품', kind: '외부 수집',
-      ok: products.length > 0,
-      updatedAt: fx?.collectedAt || null, ageHours: ageH(fx?.collectedAt),
-      detail: `${products.length}건 (일본반 ${products.filter((p) => (p.origin || 'jp') === 'jp').length} · 한국반 ${products.filter((p) => p.origin === 'kr').length})`,
-    },
+    /* 예전엔 상품의 갱신 시각으로 환율 갱신 시각(fx.collectedAt)을 보여 줬다. 환율은 6시간마다 따로 갱신되므로
+       상품이 몇 주 묵어도 '5시간 전'으로 보였다. 상품은 수동 수집본(collect-products)이라 자동 갱신이 없다 —
+       상품에 남은 환율 기준일만 근거로 보여 준다(모르면 모른다고). */
+    (() => {
+      const rateDates = products.map((p) => p.rateDate).filter(Boolean).sort();
+      const basis = rateDates.at(-1) || null;
+      return {
+        id: 'products', name: '스토어 상품', kind: '외부 수집 (수동)',
+        ok: products.length > 0, auto: false,
+        updatedAt: null, ageHours: null, rateBasisDate: basis,
+        detail: `${products.length}건 (일본반 ${products.filter((p) => (p.origin || 'jp') === 'jp').length} · 한국반 ${products.filter((p) => p.origin === 'kr').length}) · 수동 수집본${basis ? ` · 환율 기준일 ${basis}` : ''}`,
+      };
+    })(),
     {
       id: 'artists', name: '아티스트 로스터', kind: '외부 수집 (자동)',
       ok: artists.length > 0,
@@ -776,15 +794,18 @@ app.get('/api/status', async (_req, res) => {
       detail: `${artists.length}팀 (J-POP ${artists.filter((a) => a.country === 'jp').length} · K-POP ${artists.filter((a) => a.country === 'kr').length})`,
     },
     {
-      id: 'events', name: '일정', kind: '외부 수집',
-      ok: events.length > 0, updatedAt: null, ageHours: null,
-      detail: `${events.length}건 (발매 ${events.filter((e) => e.type === '발매').length} · 캠페인 마감 ${events.filter((e) => String(e.id || '').startsWith('camp-')).length})`,
+      id: 'events', name: '일정', kind: '외부 수집 (자동)',
+      ok: events.length > 0, updatedAt: eventsSync.lastAt, ageHours: ageH(eventsSync.lastAt),
+      lastError: eventsSync.lastError,
+      detail: `${events.length}건 (발매 ${events.filter((e) => e.type === '발매').length} · 캠페인 마감 ${events.filter((e) => String(e.id || '').startsWith('camp-')).length})${eventsSync.lastAt ? ` · 릴리스 파생 ${eventsSync.derivedReleases}건` : ''}`,
     },
     {
       id: 'catalog', name: '곡 카탈로그', kind: '외부 수집 (자동)',
       ok: true, updatedAt: catalogSync.lastAt, ageHours: ageH(catalogSync.lastAt),
       running: catalogSync.running, lastError: catalogSync.lastError,
-      detail: await (async () => { const c = await readCatalog(); const arts = Object.values(c.artists || {}); return `${arts.length}팀 · ${arts.reduce((s2, a) => s2 + (a.count || 0), 0).toLocaleString()}곡 (Apple, 상한 ${arts.filter((a) => a.capped).length}팀)`; })(),
+      detail: await (async () => { const c = await readCatalog(); const arts = Object.values(c.artists || {}); /* '상한 N팀'은 갱신 상한이 아니라 Apple lookup 이 스토어당 200곡까지만 주는 팀 수다(오래된 곡이 잘린다, 최신곡은 들어 있다) */
+        const stale = arts.filter((a) => !a.fetchedAt || now - Date.parse(a.fetchedAt) > 8 * 24 * 36e5).length;
+        return `${arts.length}팀 · ${arts.reduce((s2, a) => s2 + (a.count || 0), 0).toLocaleString()}곡 (Apple, 스토어당 200곡 상한 도달 ${arts.filter((a) => a.capped).length}팀 · 8일 넘게 미갱신 ${stale}팀)`; })(),
     },
     mark({
       id: 'fx', name: '환율', kind: '실시간 API (자동)',
@@ -1620,6 +1641,7 @@ async function buildComparison(release, planTier, buyerCountry) {
 
   const rows = [];
   for (const offer of release.offers || []) {
+    const directShipping=buyerCountry==='kr'?offer.shipsToKorea:offer.shipsToJapan;
     for (const edId of offer.editions || []) {
       const ed = (release.editions || []).find((e) => e.id === edId);
       if (!ed) continue;
@@ -1633,6 +1655,8 @@ async function buildComparison(release, planTier, buyerCountry) {
       });
       rows.push({
         editionId: ed.id,
+        image: ed.image || ed.artwork || offer.image || null,
+        imageKind: ed.image || ed.artwork || offer.image ? 'product-photo' : null,
         editionLabel: ed.label,
         catalogNo: ed.catalogNo || null,
         includes: ed.includes || [],
@@ -1642,7 +1666,7 @@ async function buildComparison(release, planTier, buyerCountry) {
         store: offer.store,
         storeKo: offer.storeKo || offer.store,
         storeCountry: offer.country,
-        url: offer.url,
+        url: (offer.editionUrls && typeof offer.editionUrls[ed.id] === 'string' && offer.editionUrls[ed.id]) || offer.url,
         bonus: offer.bonus || null,
         bonusJa: offer.bonusJa || null,
         /* 캠페인 대상 여부 — MGA 의 GREEN CODE 처럼 "이 판매처에서 사야만"
@@ -1650,7 +1674,7 @@ async function buildComparison(release, planTier, buyerCountry) {
         campaignEligible: release.campaign
           ? Boolean(offer.greenCode) && (release.campaign.eligibleEditions || []).includes(ed.id)
           : null,
-        shipsDirect: buyerCountry === 'kr' ? Boolean(offer.shipsToKorea) : Boolean(offer.shipsToJapan),
+        shipsDirect: typeof directShipping==='boolean'?directShipping:null,
         verified: offer.verified !== false,
         offerNote: offer.note || null,
         listPrice: ed.listPrice,
@@ -1710,6 +1734,8 @@ let syncState = { running: false, lastAt: null, lastResult: null };
    예전엔 events.json 에 "Mrs. GREEN APPLE 단독 내한 공연" 같은
    지어낸 일정 12건이 isDemo 로 들어 있었다. 팬이 그걸 보고 일정을 잡을 수 있어
    비어 있는 것보다 나쁘다. 출처가 있는 마감일만 남긴다. */
+let eventsSync = { lastAt: null, lastError: null, derivedReleases: 0 };
+
 async function rebuildCampaignEvents() {
   const releases = await readJson(RELEASE_COLLECTION, []);
   const derived = [];
@@ -1733,13 +1759,16 @@ async function rebuildCampaignEvents() {
   }
 
   const events = await readJson('events', []);
-  // 지어낸 일정과 이전 파생분을 걷어내고 다시 만든다
-  const kept = events.filter((e) => !e.isDemo && !String(e.id || '').startsWith('camp-'));
-  const merged = [...kept, ...derived].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const relEvents = releaseEventsFrom(releases);
+  const relIds = new Set(relEvents.map((e) => e.id));
+  // 지어낸 일정과 이전 파생분을 걷어내고 다시 만든다 (릴리스에서 다시 만들어지는 발매 행도 새 것으로)
+  const kept = events.filter((e) => !e.isDemo && !String(e.id || '').startsWith('camp-') && !relIds.has(e.id));
+  const merged = [...kept, ...relEvents, ...derived].sort((a, b) => String(a.date).localeCompare(String(b.date)));
   const removed = events.length - kept.length;
   await writeJson('events', merged);
+  eventsSync = { lastAt: new Date().toISOString(), lastError: null, derivedReleases: relEvents.length };
   if (removed || derived.length) {
-    console.log(`[lilac] 일정 정리 — 지어낸/구파생 ${removed}건 제거, 캠페인 파생 ${derived.length}건 생성`);
+    console.log(`[lilac] 일정 정리 — 지어낸/구파생·재생성 발매 ${removed}건 교체, 릴리스 발매 ${relEvents.length}건 · 캠페인 파생 ${derived.length}건 생성`);
   }
 }
 
@@ -1947,7 +1976,7 @@ async function runReleaseSync(reason = 'manual') {
       console.warn('[lilac] 릴리스 커버 보강 실패:', e.message);
     }
 
-    await rebuildCampaignEvents();
+    await rebuildCampaignEvents().catch((e) => { eventsSync.lastError = e.message; console.warn('[lilac] 일정 재구성 실패:', e.message); });
 
     /* 아티스트 아트워크 보강 — 새 아티스트가 들어와도 자동으로 채워지게 한다.
        손으로 채우면 다음에 추가되는 팀에서 또 빈다. */
@@ -2015,7 +2044,8 @@ app.get('/api/store/releases', async (req, res) => {
   const total = list.length;
   const limit = Math.min(Math.max(Number(req.query.limit) || 24, 1), 200);
   const offset = Math.max(Number(req.query.offset) || 0, 0);
-  const page = list.slice(offset, offset + limit);
+  const imageCatalog = await readJson('catalog', {artists:{}});
+  const page = list.slice(offset, offset + limit).map(r => withReleaseImages(r,{catalog:imageCatalog}));
 
   res.json({
     total, offset, limit, hasMore: offset + limit < total,
@@ -2041,7 +2071,8 @@ app.get('/api/store/releases', async (req, res) => {
 
 app.get('/api/store/releases/:id', async (req, res) => {
   const list = await readJson(RELEASE_COLLECTION, []);
-  const release = list.find((r) => r.id === req.params.id);
+  const rawRelease = list.find((r) => r.id === req.params.id);
+  const release = rawRelease ? withReleaseImages(rawRelease,{catalog:await readJson('catalog',{artists:{}})}) : null;
   if (!release) return res.status(404).json({ error: '릴리스를 찾을 수 없습니다', code: 'NOT_FOUND' });
 
   const user = await currentUser(req);
@@ -2053,7 +2084,7 @@ app.get('/api/store/releases/:id', async (req, res) => {
       id: release.id, artist: release.artist, artistKo: release.artistKo, artistId: release.artistId,
       title: release.title, titleKo: release.titleKo, country: release.country,
       type: release.type, releaseDate: release.releaseDate, currency: release.currency,
-      tier: release.tier || 'curated', artwork: release.artwork || null, appleUrl: release.appleUrl || null,
+      tier: release.tier || 'curated', artwork: release.artwork || null, artworkKind:release.artworkKind || null, artworkSource:release.artworkSource || null, appleUrl: release.appleUrl || null,
       // 확인된 판매처가 없을 때 화면이 대안을 제시할 수 있게 함께 내려준다
       searchHints: release.searchHints || [],
       note: release.note, source: release.source, campaign: release.campaign || null,

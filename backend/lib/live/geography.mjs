@@ -3,7 +3,7 @@
  * title saying JAPAN TOUR, or a Japanese seller. Legacy JP caches contained
  * country:'JP' defaults (and 海外 -> KR); ignore those unsupported defaults.
  */
-const JP_VENDOR = /^(pia|eplus)$/i;
+const JP_VENDOR = /^(pia|eplus|ltike)$/i;
 const codeOf = value => {
   const s = String(value?.name || value || '').trim().toUpperCase();
   if (/^(JP|JPN|JAPAN|日本|일본)$/.test(s)) return 'JP';

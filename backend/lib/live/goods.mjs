@@ -41,15 +41,42 @@ function yen(s) {
   return m ? Number(m[1]) : null;
 }
 
-/* 형식: "[2LP]" "(アナログ盤)" "LP판"처럼 숫자·기호가 붙은 LP도 잡는다. CD는 제목에 CD라고 있거나 다른 형식이 없을 때만 */
+/* 형식: "[2LP]" "(アナログ盤)" "(重量盤レコード)" "LP판"처럼 숫자·기호가 붙은 LP도 잡는다.
+   제목에 형식 표시가 없으면 형식을 주장하지 않는다(null). 예전에는 모르면 CD로 찍어 HMV의 LP·책이 CD로 보였다. */
 export function formatOf(title) {
   const t = title || '';
   const parts = [];
   if (/Blu-?ray|ブルーレイ|블루레이/i.test(t)) parts.push('Blu-ray');
   if (/DVD/i.test(t)) parts.push('DVD');
-  if (/(?:^|[^A-Za-z])\d*\s*LP(?![A-Za-z])|アナログ|Vinyl|バイナル|레코드|LP판/i.test(t)) parts.push('LP');
-  if (/(?:^|[^A-Za-z])\d*\s*CD(?![A-Za-z])/i.test(t) || !parts.length) parts.unshift('CD');
-  return [...new Set(parts)].join('+');
+  /* "LP Sized Jacket"(LP 크기 종이 슬리브의 CD)은 LP가 아니다 */
+  if (/(?:^|[^A-Za-z])\d*\s*LP(?![A-Za-z])(?!\s*(?:sized|size|サイズ))|アナログ|レコード|重量盤|Vinyl|バイナル|ヴァイナル|바이닐|레코드|LP판|\d+\s*inch(?![A-Za-z])/i.test(t)) parts.push('LP');
+  if (/写真集|フォトブック|photo\s?book|화보집|포토북/i.test(t)) parts.push('Photobook');
+  if (/(?:^|[^A-Za-z])\d*\s*CD(?![A-Za-z])/i.test(t)) parts.unshift('CD');
+  return parts.length ? [...new Set(parts)].join('+') : null;
+}
+
+/* HMV 상품 분류 표시(greenItemWide) → 형식. 분류가 CD인데 제목에 (CD+DVD)처럼 영상이 같이 있으면 붙인다.
+   "LPレコード" "12inchシングル" "本"이 예전 허용 목록에 없어 제목 추정(=CD)으로 떨어졌다. */
+const HMV_CATEGORY = [
+  [/^CDシングル$/i, 'CDシングル'],
+  [/^(CD|SACD|SHM-CD|UHQCD|Blu-?spec ?CD2?|HQCD)$/i, 'CD'],
+  [/^DVD$/i, 'DVD'],
+  [/^(Blu-?ray( Disc)?|Ultra HD.*|4K.*)$/i, 'Blu-ray'],
+  [/^(LP|EP|LPレコード|アナログ.*|レコード|.*\d+\s*inch.*|.*インチ.*)$/i, 'LP'],
+  [/^カセット.*$/, 'カセット'],
+  [/^(本|書籍|雑誌|ムック|コミック|写真集)$/, 'Book'],
+  [/^(グッズ|Goods)$/i, 'グッズ'],
+];
+export function hmvFormat(cats, title) {
+  for (const c of cats || []) {
+    const hit = HMV_CATEGORY.find(([re]) => re.test(String(c).trim()));
+    if (!hit) continue;
+    const base = hit[1];
+    if (base !== 'CD' && base !== 'CDシングル') return base;
+    const extra = (formatOf(title) || '').split('+').filter((p) => p === 'Blu-ray' || p === 'DVD');
+    return [base, ...extra].join('+');
+  }
+  return formatOf(title);
 }
 /* 알라딘 제목 앞 머리표([수입] [LP] [미개봉] [예약] …)는 형식을 읽은 뒤 떼어 낸다 */
 export const stripTags = (t) => String(t || '').replace(/^(\s*\[[^\]]{1,12}\]\s*)+/, '').trim();
@@ -125,16 +152,32 @@ function editionOf(title) {
 }
 
 /* ---------- HMV ---------- */
-export async function hmvSearch(query, { limit = 20 } = {}) {
-  const fetchedAt = new Date().toISOString();
+/* 2026-10 확인: 쿠키 없는 첫 요청에는 HMV가 200 OK로 "検索ページへ遷移する" 링크만 있는 중간 페이지를 준다
+   (같은 주소를 쿠키를 붙여 다시 부르면 결과 목록). 서버는 매 요청이 첫 방문이라 늘 중간 페이지를 받아 0건이 됐다.
+   HMV 자체 언어 쿠키(HMV=LANG=ja)를 붙여 부른다. 그래도 목록도 "결과 없음" 표시도 없으면 0건이 아니라 실패로 알린다. */
+export const HMV_HEADERS = { Cookie: 'HMV=LANG=ja', Accept: 'text/html,application/xhtml+xml' };
+export async function hmvSearch(query, { limit = 20, fetch: fetcher = fetchText } = {}) {
   const url = `https://www.hmv.co.jp/search/keyword_${encodeURIComponent(query)}/target_MUSIC/type_sr/`;
-  const html = await fetchText(url, { encoding: 'shift_jis', timeout: 12000, retries: 2 });
+  const html = await fetcher(url, { encoding: 'shift_jis', timeout: 12000, retries: 2, headers: HMV_HEADERS });
+  return parseHmv(html, { limit });
+}
+
+export function parseHmv(html, { limit = 20 } = {}) {
+  const fetchedAt = new Date().toISOString();
+  html = String(html || '');
   const blocks = html.split('<li class="list clearfix">').slice(1);
+  if (!blocks.length) {
+    if (/productNoListByEmpty|は見つかりませんでした/.test(html)) return [];
+    if (/検索ページへ遷移する/.test(html)) throw new Error('hmv interstitial page (no result list; cookie gate)');
+    throw new Error('hmv result list not found (markup changed or blocked)');
+  }
   const out = [];
+  let parsed = 0;
   for (const raw of blocks) {
     const b = raw.split(/<\/li>\s*<li class="list clearfix">/)[0];
     const href = (b.match(/<h3 class="title">[\s\S]*?<a href="([^"]+)"/) || [])[1];
     if (!href) continue;
+    parsed++;
     /* 음반이 아닌 악보(楽譜) 상품은 뺀다 — 주소가 artist_楽譜 로 시작한다 */
     if (/artist_(%E6%A5%BD%E8%AD%9C|楽譜)/i.test(href)) continue;
     const title = halfwidth(clean((b.match(/<h3 class="title">[\s\S]*?<a [^>]*>([\s\S]*?)<\/a>/) || [])[1]));
@@ -157,7 +200,7 @@ export async function hmvSearch(query, { limit = 20 } = {}) {
       id: `hmv:${sku || href}`,
       store: 'hmv', storeLabel: STORE_BY_ID.hmv.label,
       title, artist,
-      format: cats.find((c) => /^(グッズ|CDシングル|CD|DVD|Blu-?ray.*|LP|アナログ.*|カセット|書籍|雑誌)$/i.test(c)) || formatOf(title),
+      format: hmvFormat(cats, title),
       edition: editionOf(title) || cats.find((c) => /限定|通常/.test(c)) || null,
       catalogNo: null,
       price: list?.value ?? null,
@@ -173,6 +216,7 @@ export async function hmvSearch(query, { limit = 20 } = {}) {
     });
     if (out.length >= limit) break;
   }
+  if (!parsed) throw new Error(`hmv markup changed (${blocks.length} list blocks, no title links)`);
   return out;
 }
 
@@ -286,12 +330,14 @@ export function relevance(it, q) {
   return s;
 }
 
-export async function searchGoods(query, { market = 'kr', limit = 40, stores } = {}) {
+const SEARCHERS = { aladin: aladinSearch, hmv: hmvSearch, ktown4u: ktown4uSearch };
+export async function searchGoods(query, { market = 'kr', limit = 40, stores, searchers = SEARCHERS } = {}) {
   const want = stores || (market === 'kr' ? ['aladin', 'hmv'] : market === 'jp' ? ['ktown4u', 'hmv'] : ['aladin', 'hmv', 'ktown4u']);
+  const s = { ...SEARCHERS, ...searchers };
   const jobs = [];
-  if (want.includes('aladin')) jobs.push(timed('aladin', () => aladinSearch(query)));
-  if (want.includes('hmv')) jobs.push(timed('hmv', () => hmvSearch(query)));
-  if (want.includes('ktown4u')) jobs.push(timed('ktown4u', () => ktown4uSearch(query)));
+  if (want.includes('aladin')) jobs.push(timed('aladin', () => s.aladin(query)));
+  if (want.includes('hmv')) jobs.push(timed('hmv', () => s.hmv(query)));
+  if (want.includes('ktown4u')) jobs.push(timed('ktown4u', () => s.ktown4u(query)));
   const res = await Promise.all(jobs);
   const seen = new Set();
   let items = [];

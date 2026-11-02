@@ -1,5 +1,11 @@
+import { deriveEditionSources } from '../release-images.mjs';
+import { collectOfficialPortrait } from './official-portraits.mjs';
+import { buildCoverMedia, editionReleaseRows } from './cover-media.mjs';
+import { officialProfileHandoff } from './profile-handoff.mjs';
+import { collectAssistance } from './assistance.mjs';
+import { fanclubAssistanceSource, offerHasSource } from './assistance-source.mjs';
 import { fetchAwardNews, mergeAwardFeed, presentAwardFeed, AWARD_SERIES } from './awards.mjs';
-import { concertsInCountry } from './geography.mjs';
+import { concertsInCountry, eventGeography } from './geography.mjs';
 import { fetchArtwork, validateArtworkUrl } from './image-proxy.mjs';
 import { attachStream } from './stream.mjs';
 import { exposeMembership, matchesMembershipOwner } from './membership-policy.mjs';
@@ -16,27 +22,121 @@ import { cached, initCache, KV, peek, revalidate, cacheEvents } from './cache.mj
 import { fetchKrConcerts, fetchKrTicketOpens } from './tickets-kr.mjs';
 import { fetchJpConcerts, searchJpConcerts } from './tickets-jp.mjs';
 import { searchGoods, STORES, tidyOffer, aladinReleaseDate } from './goods.mjs';
+import { createGoodsRefresher, suggestQuery, GOODS_SEEDS_FALLBACK } from './goods-refresh.mjs';
 import { carryFailed } from './vendors-extra.mjs';
-import { newsFeed, looksLikeDomain, publisherName } from './news.mjs';
+import { newsFeed, looksLikeDomain, publisherName, NEWS_TOPIC_QUERIES, NEWS_CONTEXT, artistQueryBatches, rotate } from './news.mjs';
 import { deezerArtist, wikiSummary, classifyOrigin, performerCandidates, koreanNamesFor, japaneseNamesFor, checkAppleIdentity, koreanNameFits } from './artist-info.mjs';
 import { todayKst } from './http.mjs';
 import { fanclubFor, searchFanclub, fanclubFacts, searchEngine } from './fanclub.mjs';
-import { eventPoster, ogImage } from './posters.mjs';
+import { eventPoster, ogImage, repairJoinedOrigin, posterNeedsCheck, POSTER_RECHECK_MS } from './posters.mjs';
+import { createRefreshQueue, recheckDue, artistPhoto, artistFallbackImage, posterMissingReason } from './media-refresh.mjs';
 import { krFestivals, eplusFestivals, jpFestivals, groupFestivals, melonLineup, eplusLineup, melonNation, melonArtistResults, melonExactMatches, melonAgency, nameSearchNation, eplusOfficialSite, findFestivalSite } from './festivals.mjs';
-import { fetchText, halfwidth, nameInTitle, unescapeHtml } from './http.mjs';
+import { fetchText, fetchJson, halfwidth, nameInTitle, unescapeHtml } from './http.mjs';
 import { concertDetail, PROVIDER_GUIDE } from './detail.mjs';
+import { createDisplayNameResolver, DISPLAY_NAME_MAX_IDS } from './display-names.mjs';
 import { createHash } from 'node:crypto';
 
 const MIN = 60e3;
 const HOUR = 60 * MIN;
+const PORTRAIT_RULE=3;
+const FC_FACTS_RULE=2;
 const JP_GENRE = /^(j-pop|j-rock|アニメ|anime|歌謡曲|演歌|enka|일본 만화 영화|ボーカロイド|vocaloid)/i;
 const norm = (s) => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s.・·'’"“”!?&＆_-]/g, '');
 
-export function createLiveService({ dbDir, readJson, writeJson = null, rosterLock = null, getCharts }) {
+export function createLiveService({ dbDir, readJson, writeJson = null, rosterLock = null, getCharts, assistanceCollector = collectAssistance, portraitCollector = collectOfficialPortrait, artistPhotoLookup = deezerArtist, displayNameCollectors = { ko: koreanNamesFor, ja: japaneseNamesFor }, displayNameWaitMs = 4000 }) {
   initCache(dbDir);
   const origins = new KV('origins');
   const photos = new KV('photos');
+  const portraits = new KV('official-portraits');
+  const exposePortrait=p=>p?{artistId:p.artistId,status:p.status,method:p.method,imageUrl:p.imageUrl,sourceUrl:p.sourceUrl,checkedAt:p.checkedAt}:null;
+  const portraitNames = new KV('portrait-names');
+  async function portraitIdentityNames(a) {
+    const names=[...new Set([a.nameOriginal,a.name,a.nameJa,a.nameKo,...(a.aliases||[])].filter(Boolean))];
+    if(names.some(n=>/[A-Za-z]{2}/.test(n))||!/^\d+$/.test(String(a.appleArtistId||'')))return names;
+    await portraitNames.ready();const key=a.id+'|'+a.appleArtistId,previous=portraitNames.get(key);
+    if(previous&&Date.now()-previous.at<(previous.name?30:1)*24*HOUR)return previous.name?[...names,previous.name]:names;
+    try {
+      const data=await fetchJson('https://itunes.apple.com/lookup?id='+a.appleArtistId+'&entity=musicArtist&country=us',{timeout:5000,retries:0});
+      const hit=(data.results||[]).find(x=>x.wrapperType==='artist'&&String(x.artistId)===String(a.appleArtistId)&&typeof x.artistName==='string'&&x.artistName.length<160);
+      portraitNames.set(key,{name:hit?.artistName||null,at:Date.now(),artistId:a.id,appleArtistId:a.appleArtistId,source:'itunes-exact-artist-id'});
+      if(hit)names.push(hit.artistName);
+    } catch { /* Keep original evidence, never invent a transliteration. */ }
+    return [...new Set(names)];
+  }
+  const portraitFlights = new Map();
+  let portraitActive = 0;
+  const portraitQueue = [];
+  async function portraitSlot(work) {
+    if (portraitActive >= 3) await new Promise(resolve => portraitQueue.push(resolve));
+    else portraitActive++;
+    try { return await work(); } finally { const next=portraitQueue.shift(); if(next)next(); else portraitActive--; }
+  }
+  const officialPortraitUrl = a => {
+    try { const u = new URL(officialOf(a)); if (!/^https?:$/.test(u.protocol) || u.username || u.password) return null; u.protocol = 'https:'; u.hash = ''; return u.href; } catch { return null; }
+  };
+  function currentPortrait(a) {
+    const hit = portraits.get(a.id), age = Date.now() - Date.parse(hit?.checkedAt || '');
+    return hit?.status === 'verified' && hit.rule===PORTRAIT_RULE && hit.artistId === a.id && hit.officialUrl === officialPortraitUrl(a) && age >= -60000 && age < 24 * HOUR ? hit : null;
+  }
+  async function portraitFor(a) {
+    await portraits.ready();
+    const officialUrl = officialPortraitUrl(a), previous = portraits.get(a.id);
+    if (!officialUrl) return null;
+    const fresh = currentPortrait(a); if (fresh) return fresh;
+    if (previous?.officialUrl === officialUrl && (previous.lastAttemptRule===PORTRAIT_RULE||previous.rule===PORTRAIT_RULE) && Date.now() - (previous.lastAttemptAt || 0) < 15 * MIN) return null;
+    const key = a.id + '|' + officialUrl;
+    if (portraitFlights.has(key)) return portraitFlights.get(key);
+    const job = portraitSlot(async () => {
+      const names=await portraitIdentityNames(a);
+      let result = await portraitCollector({ artistId:a.id,officialUrl,names }).catch(()=>null);
+      if(result?.status!=='verified'&&['no_profile_link','identity_not_verified','no_bound_portrait'].includes(result?.reason)){
+        const handoff=await officialProfileHandoff(officialUrl,names).catch(()=>null);
+        if(handoff){const next=await portraitCollector({artistId:a.id,officialUrl:handoff.url,names}).catch(()=>null);if(next?.status==='verified')result={...next,discovery:handoff};}
+      }
+      const lastAttemptAt = Date.now();
+      if (result?.status === 'verified' && result.artistId === a.id && result.imageUrl && result.sourceUrl && result.method === 'official-profile') {
+        const next = { ...result, officialUrl, rule:PORTRAIT_RULE, lastAttemptAt, firstSeenAt: previous?.imageUrl === result.imageUrl ? previous.firstSeenAt || result.checkedAt : result.checkedAt, imageChangedAt: previous?.imageUrl === result.imageUrl ? previous.imageChangedAt || result.checkedAt : result.checkedAt };
+        const changed=!currentPortrait(a)||previous?.imageUrl!==next.imageUrl;
+        portraits.set(a.id,next);
+        if(changed)publish('media',{key:'artist-media:'+a.id});
+      } else {
+        // A failed recheck never makes the previous photograph newer.
+        portraits.set(a.id, previous?.status === 'verified' && previous.officialUrl === officialUrl ? { ...previous, lastAttemptRule:PORTRAIT_RULE, lastAttemptAt, lastError: result?.reason || 'unavailable' } : { artistId:a.id, officialUrl, status:'unavailable', rule:PORTRAIT_RULE, lastAttemptAt, reason:result?.reason || 'unavailable' });
+      }
+      return currentPortrait(a);
+    }).finally(() => portraitFlights.delete(key));
+    portraitFlights.set(key,job); return job;
+  }
+  async function portraitBatch(ids) {
+    if (!Array.isArray(ids) || !ids.length || ids.length > 12 || ids.some(id => typeof id !== 'string' || !id || id.length > 160)) throw Object.assign(new Error('invalid artist ids'), {status:400});
+    const list = await roster(), own = new Map(list.map(a => [a.id,a]));
+    if (ids.some(id => !own.has(id))) throw Object.assign(new Error('unknown artist'), {status:404});
+    await Promise.all([portraits.ready(),portraitNames.ready()]);
+    return { items: await Promise.all([...new Set(ids)].map(async id => ({ id, portrait: exposePortrait(await portraitFor(own.get(id))) }))) };
+  }
+  /* 홈·아티스트 응답이 스스로 공식 프로필을 다시 확인한다(응답은 기다리지 않는다).
+     대기 12개·동시 3개·같은 아티스트 하나로 합치기·실패하면 15분부터 24시간까지 자동 쉬기(media-refresh.mjs).
+     24시간 안 확인 조건(currentPortrait)은 그대로 — 다시 확인돼야 다음 응답부터 공식 사진이 나온다 */
+  const portraitRefresh = createRefreshQueue({ max: 12, concurrency: 3, run: async (a) => {
+    const got = await portraitFor(a).catch(() => null);
+    if (got) return { ok: true };
+    const rec = portraits.get(a.id);
+    return { ok: false, reason: rec?.lastError || rec?.reason || 'unavailable' };
+  } });
+  function refreshPortraitsFor(list) {
+    if (!portraits.map) return;
+    for (const a of list || []) if (a?.id && !currentPortrait(a) && officialPortraitUrl(a)) portraitRefresh.enqueue(a.id, a);
+  }
   const namePhotos = new KV('name-photos');
+  /* 화면 언어별 표시 이름(로스터 id만 받는다) — display-names.mjs */
+  const displayNames = createDisplayNameResolver({ kv: new KV('display-names'), collectors: displayNameCollectors, waitMs: displayNameWaitMs });
+  async function displayNameBatch(locale, ids) {
+    if (!['ko', 'ja'].includes(locale)) throw Object.assign(new Error('invalid locale'), { status: 400 });
+    if (!Array.isArray(ids) || !ids.length || ids.length > DISPLAY_NAME_MAX_IDS || ids.some((id) => typeof id !== 'string' || !id || id.length > 160)) throw Object.assign(new Error('invalid artist ids'), { status: 400 });
+    const list = await roster(), own = new Map(list.map((a) => [a.id, a]));
+    if (ids.some((id) => !own.has(id))) throw Object.assign(new Error('unknown artist'), { status: 404 });
+    return displayNames.resolve({ locale, artists: [...new Set(ids)].map((id) => own.get(id)) });
+  }
   const koNames = new KV('ko-names');
   const jaNames = new KV('ja-names');
   const fcClicks = new KV('fc-referrals');
@@ -91,11 +191,29 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const posterHost = (it) => { try { const h = new URL(it.url).host; return it.provider === 'fanclub' || /(^|\.)eplus\.jp$/.test(h) ? h : null; } catch { return null; } };
   function eventPosterOf(it) {
     if (!it?.url || it.posterKind === 'official' || !eventPosters.map || !posterHost(it)) return null;
-    const v = eventPosters.get(it.url);
-    if (v?.img && !/webclip|no_thumb|daitai|noimage/i.test(v.img)) return { poster: v.img, posterKind: 'event' };
-    const stale = !v || Date.now() - v.at > (v.none ? 24 : 7 * 24) * 3600e3;
+    let v = eventPosters.get(it.url);
+    /* 예전에 저장된 깨진 OGP 주소('/' 빠진 호스트)는 읽을 때 고쳐 저장한다 */
+    if (v?.img) { const fixed = repairJoinedOrigin(v.img, it.url); if (fixed !== v.img) { v = { ...v, img: fixed }; eventPosters.set(it.url, v); } }
+    /* 예전엔 이미지를 한 번 받으면 다시 묻지 않았다(7일 재확인 분기가 닿지 않았다).
+       공연 페이지의 키 비주얼은 바뀌고 지워진다 — 받아 둔 것을 보여 주면서 7일마다 다시 확인한다 */
+    const stale = posterNeedsCheck(v);
     if (stale && !posterQueue.includes(it.url) && posterQueue.length < 300) { posterQueue.push(it.url); pumpPosters().catch(() => {}); }
+    if (v?.img && !/webclip|no_thumb|daitai|noimage/i.test(v.img)) return { poster: v.img, posterKind: 'event', posterImageKind: null };
     return null;
+  }
+  /* 포스터가 끝내 없는 공연: 사유를 정직하게(가짜 이미지로 채우지 않는다) */
+  function withPosterStatus(it) {
+    if (!it || it.poster) return it;
+    const eligible = !!(it.url && posterHost(it));
+    return { ...it, posterStatus: posterMissingReason({ eligible, eventPoster: eligible ? eventPosters.get(it.url) : undefined, queued: eligible && posterQueue.includes(it.url) }) };
+  }
+  /* 이미지 중계 허용: 서버가 공연 페이지에서 직접 뽑아 저장한 포스터 주소와 문자 그대로 같을 때만 */
+  function isKnownPoster(href) {
+    if (!eventPosters.map) return false;
+    for (const v of eventPosters.map.values()) if (v?.img === href) return true;
+    /* 페스티벌 공식 사이트 대표 이미지도 서버가 직접 확인해 저장한 주소다 */
+    if (festSites.map) for (const v of festSites.map.values()) if (v?.image === href) return true;
+    return false;
   }
   async function pumpPosters() {
     if (posterWorking) return;
@@ -111,12 +229,17 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
           const same = [...eventPosters.map.entries()].filter(([u, v]) => v?.img === r.img && u !== url);
           if (same.length >= 2) { for (const [u] of same) eventPosters.set(u, { none: true, at: Date.now() }); eventPosters.set(url, { none: true, at: Date.now() }); }
           else eventPosters.set(url, { ...r, at: Date.now() });
-        } else if (r) eventPosters.set(url, { ...r, at: Date.now() }); /* 받기 실패(null)는 저장하지 않는다 */
+        } else if (r) eventPosters.set(url, { ...r, at: Date.now() });
+        /* 받기 실패(null)는 '없음'으로 저장하지 않는다. 받아 둔 이미지는 그대로 두고 6시간 뒤에 다시 확인한다(화면마다 다시 두드리지 않게) */
+        else { const prev = eventPosters.get(url); if (prev?.img) eventPosters.set(url, { ...prev, at: Date.now() - POSTER_RECHECK_MS.img + 6 * 3600e3 }); }
         await new Promise((res) => setTimeout(res, 400));
       }
     } finally { posterWorking = false; }
   }
   const photoQueue = [];
+  /* 이름 기반 사진 캐시: 있으면 계속 쓰고, '없음'(v2)은 예전엔 영원히 다시 보지 않았다 → 규칙 버전 + 3일 TTL로 다시 본다 */
+  const NAME_PHOTO_RULE = 2;
+  const namePhotoDue = (had) => recheckDue(had, { rule: NAME_PHOTO_RULE, positiveMs: Infinity, negativeMs: 3 * 24 * HOUR });
   let photoWorking = false;
   async function pumpPhotos() {
     if (photoWorking) return;
@@ -125,7 +248,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       while (photoQueue.length) {
         const n = photoQueue.shift();
         const had = namePhotos.get(norm(n));
-        if (had && (had.photo || had.v === 2)) continue;
+        if (!namePhotoDue(had)) continue;
         const d = await deezerArtist([n]).catch(() => undefined);
         let photo = d?.pictureMedium || null;
         /* 디저에 없으면(한국 인디·팬미팅 출연자 등) 멜론에서 이름이 정확히 같은 아티스트의 프로필 사진 */
@@ -159,20 +282,45 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     await jaNames.ready();
     const seen = new Set();
     const out = [];
-    /* 같은 Apple 아티스트가 이름만 달리 여러 번 들어 있다(米津玄師 / 요네즈 켄시). 하나로 합친다 */
-    const byApple = new Map();
+    /* 같은 아티스트가 이름만 달리 여러 번 들어 있다(米津玄師 / 요네즈 켄시). 하나로 합친다.
+       같은 사람인지는 Apple ID만으로 보지 않는다: 한 행의 Apple ID가 MusicBrainz가 가리키는 다른 Apple 페이지로 바뀌면
+       (운영: 米津玄師 1623628876 ↔ kenshi 530814268) Apple ID가 갈라져 두 행이 따로 남고, 뉴스 옆 칸에 같은 사람이 두 줄로 나왔다.
+       MusicBrainz ID·Spotify 아티스트·Wikidata 항목이 같아도 같은 사람으로 본다. Apple ID가 없는 행은 예전처럼 이름으로도 묶는다. */
+    const idKeys = (a) => {
+      const ks = [];
+      if (a.appleArtistId) ks.push(`apple:${a.appleArtistId}`);
+      if (a.mbid) ks.push(`mbid:${a.mbid}`);
+      const sp = String(a.links?.spotify?.url || '').match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?artist\/([A-Za-z0-9]+)/);
+      if (sp) ks.push(`spotify:${sp[1]}`);
+      const wd = String(a.links?.wikidata?.url || '').match(/wikidata\.org\/wiki\/(Q\d+)/);
+      if (wd) ks.push(`wikidata:${wd[1]}`);
+      if (!a.appleArtistId) ks.push(`name:${norm(a.nameOriginal || a.name)}`);
+      return ks;
+    };
+    const holders = [];
+    const byKey = new Map();
+    const claim = (h, ks) => { for (const k of ks) if (!byKey.has(k)) byKey.set(k, h); };
     for (const a of raw) {
-      const k = a.appleArtistId ? `apple:${a.appleArtistId}` : `name:${norm(a.nameOriginal || a.name)}`;
-      let prev = byApple.get(k);
-      if (!prev) { byApple.set(k, { ...a, aliases: [...(a.aliases || [])] }); continue; }
+      const ks = idKeys(a);
+      const hitKey = ks.find((k) => byKey.has(k));
+      if (!hitKey) { const h = { row: { ...a, aliases: [...(a.aliases || [])] } }; holders.push(h); claim(h, ks); continue; }
+      const h = byKey.get(hitKey);
+      const prev = h.row;
       /* 같은 Apple ID인데 대표 이름(name·nameOriginal·nameJa)이 겹치지 않으면 한쪽이 잘못 수집된 행이다
          (星野源 행에 aespa의 Apple ID·별칭이 붙어 있었다). 차트 기록이 적은 쪽을 버린다 — 틀린 사진·곡을 보여주지 않게. */
       const prim = (x) => [x.name, x.nameOriginal, x.nameJa].filter(Boolean).map(norm);
       if (!prim(prev).some((n) => prim(a).includes(n))) {
-        // 이름과 검색어가 일치하는 행이 제대로 수집된 행이다 (青木遥 행의 검색어는 BTS였다)
-        const ok = (x) => prim(x).includes(norm(x.searchTerm));
-        const better = ok(a) !== ok(prev) ? ok(a) : (a.chartHits || 0) > (prev.chartHits || 0);
-        if (better) byApple.set(k, { ...a, aliases: [...(a.aliases || [])] });
+        if (hitKey.startsWith('apple:')) {
+          // 이름과 검색어가 일치하는 행이 제대로 수집된 행이다 (青木遥 행의 검색어는 BTS였다)
+          const ok = (x) => prim(x).includes(norm(x.searchTerm));
+          const better = ok(a) !== ok(prev) ? ok(a) : (a.chartHits || 0) > (prev.chartHits || 0);
+          if (better) h.row = { ...a, aliases: [...(a.aliases || [])] };
+          continue;
+        }
+        /* 링크만 같고 이름이 전혀 다르면 합치지도 버리지도 않는다(링크 하나로 행을 지우지 않게) */
+        const nh = { row: { ...a, aliases: [...(a.aliases || [])] } };
+        holders.push(nh);
+        claim(nh, ks);
         continue;
       }
       const keep = (a.chartHits || 0) > (prev.chartHits || 0) || (!prev.links && a.links) ? { ...a, aliases: [...(a.aliases || [])] } : prev;
@@ -182,9 +330,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       keep.artwork = keep.artwork || other.artwork;
       keep.chartHits = Math.max(keep.chartHits || 0, other.chartHits || 0);
       keep.mergedIds = [...new Set([...(prev.mergedIds || [prev.id]), a.id])];
-      byApple.set(k, keep);
+      h.row = keep;
+      claim(h, ks);
     }
-    for (const a of byApple.values()) {
+    for (const a of holders.map((h) => h.row)) {
       if (seen.has(a.id)) continue;
       seen.add(a.id);
       let origin = a.country;
@@ -281,18 +430,20 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       }
       let poster = it.poster;
       let posterKind = poster ? 'official' : null;
+      let posterImageKind = null;
       if (!poster && artistId) {
-        const ph = photos.get(artistId);
         const ra = list.find((x) => x.id === artistId);
-        poster = ph?.medium || ph?.photo || ra?.artwork || null;
+        const f = artistFallbackImage({ portrait: ra ? currentPortrait(ra) : null, deezer: photos.get(artistId), artwork: ra?.artwork });
+        poster = f?.url || null;
         posterKind = poster ? 'artist' : null;
+        posterImageKind = f?.kind || null;
       }
       if (!poster && performer && /[A-Za-z぀-ヿ一-龯가-힣]/.test(performer)) {
         const np = namePhotos.get(norm(performer));
-        if (np?.photo) { poster = np.photo; posterKind = 'artist'; }
-        else if ((!np || (!np.photo && np.v !== 2)) && !photoQueue.includes(performer)) photoQueue.push(performer);
+        if (np?.photo) { poster = np.photo; posterKind = 'artist'; posterImageKind = 'name-matched-photo'; }
+        else if (namePhotoDue(np) && !photoQueue.includes(performer)) photoQueue.push(performer);
       }
-      return { ...it, poster, posterKind, performer, artistId, origin: origin || 'pending', originSource, originGenre };
+      return { ...it, poster, posterKind, posterImageKind, performer, artistId, origin: origin || 'pending', originSource, originGenre };
     });
     if (queue.length) pump().catch(() => {});
     if (photoQueue.length) pumpPhotos().catch(() => {});
@@ -325,7 +476,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       if (it.startDate && (!g.startDate || it.startDate < g.startDate)) g.startDate = it.startDate;
       const e = it.endDate || it.startDate;
       if (e && (!g.endDate || e > g.endDate)) g.endDate = e;
-      if (!g.poster && it.poster) { g.poster = it.poster; g.posterKind = it.posterKind; }
+      if (!g.poster && it.poster) { g.poster = it.poster; g.posterKind = it.posterKind; g.posterImageKind = it.posterImageKind ?? null; }
     }
     const RANK = { onsale: 0, upcoming: 1, soldout: 2, closed: 3, unknown: 4 };
     for (const g of out) {
@@ -401,8 +552,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => nameInTitle(it.title, n)))
       .map((it) => {
         const a = artists.find((x) => [x.name, x.nameOriginal, x.nameJa].some((n) => n && nameInTitle(it.title, n)));
-        const ph = a ? photos.get(a.id) : null;
-        return { ...it, poster: it.poster || ph?.medium || a?.artwork || null, posterKind: it.poster ? 'official' : 'artist', performer: a?.name || it.title, artistId: a?.id || null, origin: 'jp', originSource: 'search-artist' };
+        const f = it.poster ? null : a ? artistFallbackImage({ portrait: currentPortrait(a), deezer: photos.get(a.id), artwork: a.artwork }) : null;
+        return { ...it, poster: it.poster || f?.url || null, posterKind: it.poster ? 'official' : f ? 'artist' : null, posterImageKind: f?.kind || null, performer: a?.name || it.title, artistId: a?.id || null, origin: 'jp', originSource: 'search-artist' };
       });
     void list;
     return { ...r, items };
@@ -417,8 +568,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const items = concertsInCountry(r.items || [], 'JP').filter((it) => names.some((n) => nameInTitle(it.title, n)))
       .map((it) => {
         const a = artists.find((x) => [x.name, x.nameOriginal, ...(x.aliases || [])].some((n) => n && nameInTitle(it.title, n)));
-        const ph = a ? photos.get(a.id) : null;
-        return { ...it, poster: it.poster || ph?.medium || a?.artwork || null, posterKind: it.poster ? 'official' : 'artist', performer: a?.name || it.title, artistId: a?.id || null, origin: 'kr', originSource: 'search-artist' };
+        const f = it.poster ? null : a ? artistFallbackImage({ portrait: currentPortrait(a), deezer: photos.get(a.id), artwork: a.artwork }) : null;
+        return { ...it, poster: it.poster || f?.url || null, posterKind: it.poster ? 'official' : f ? 'artist' : null, posterImageKind: f?.kind || null, performer: a?.name || it.title, artistId: a?.id || null, origin: 'kr', originSource: 'search-artist' };
       });
     return { ...r, items };
   }
@@ -573,6 +724,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     await publishers.ready();
     return withPublishers(await newsRaw(opts));
   }
+  /* 판 뉴스 검색어(주제어 + 아티스트 이름 묶음)는 실행마다 차례로 몇 개씩만 — 원천 요청 수를 예전(판마다 6개)과 비슷하게 두고,
+     지난 결과와 합쳐 두므로 몇 번(5분 주기로 15분 안팎) 돌면 로스터 전체를 한 번씩 찾는다 */
+  const NEWS_QUERIES_PER_RUN = 7;
+  const newsSlot = { kr: 0, jp: 0 };
   async function newsRaw({ edition = 'kr', artist = null, force = false } = {}) {
     const list = await roster();
     const lang = edition === 'jp' ? 'ja' : 'ko';
@@ -590,16 +745,19 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const eds = edition === 'all' ? ['kr', 'jp'] : [edition];
     for (const ed of eds) {
       const l = ed === 'jp' ? 'ja' : 'ko';
-      const focus = await topArtists(ed === 'kr' ? 'jp' : 'kr', 8);
-      const names = focus.map((a) => (ed === 'kr' ? a.nameKo || a.name : a.nameOriginal && /[A-Za-z]/.test(a.nameOriginal) ? a.nameOriginal : a.name));
-      const base = ed === 'kr'
-        ? ['J팝 내한', '일본 가수 내한 공연', '일본 밴드 내한', 'J-POP 신곡']
-        : ['K-POP 来日', '韓国アイドル 来日公演', 'K-POP カムバック', 'K-POP 日本デビュー'];
-      const queries = [...base, names.slice(0, 4).map((n) => `"${n}"`).join(' OR '), names.slice(4, 8).map((n) => `"${n}"`).join(' OR ')].filter(Boolean);
-      const pool = list.filter((a) => a.origin === (ed === 'kr' ? 'jp' : 'kr')).map((a) => ({ id: a.id, names: a.names }));
-      const strong = ed === 'kr' ? /J-?팝|제이팝|J-?POP|일본\s?(가수|밴드|아이돌|그룹|싱어송라이터|뮤지션)|日\s?(가수|밴드|듀오|아이돌)/i : /K-?POP|韓流|韓国(の)?(アイドル|グループ|歌手)|ボーイズグループ|ガールズグループ/i;
+      const origin = ed === 'kr' ? 'jp' : 'kr';
+      /* 차트 상위부터 그 출신 아티스트 전부(예전: 상위 8팀만) */
+      const focus = await topArtists(origin, list.length);
+      const batches = artistQueryBatches(focus, l);
+      const pool = list.filter((a) => a.origin === origin).map((a) => ({ id: a.id, names: a.names }));
+      const context = NEWS_CONTEXT[ed];
       const script = ed === 'kr' ? /[가-힣]/ : /[぀-ヿ]/;
-      const r = await cached(`news-${ed}`, force ? 0 : 30 * MIN, () => newsFeed(queries, { lang: l, artists: pool, keep: (x) => script.test(x.title) && !/Weverse|EBiDAN|恵比寿学園/.test(x.source || '') && (x.artistIds.length > 0 || strong.test(x.title)) }), { budgetMs: 10000 });
+      const key = `news-${ed}`;
+      const r = await cached(key, force ? 0 : 30 * MIN, async () => {
+        const queries = rotate([...NEWS_TOPIC_QUERIES[ed], ...batches], newsSlot[ed]++, NEWS_QUERIES_PER_RUN);
+        const prev = await peek(key).catch(() => null);
+        return newsFeed(queries, { lang: l, artists: pool, previous: prev?.items || [], keep: (x) => script.test(x.title) && !/Weverse|EBiDAN|恵比寿学園/.test(x.source || '') && (x.artistIds.length > 0 || context.test(x.title)) });
+      }, { budgetMs: 10000 });
       parts.push({ ed, r });
     }
     if (parts.length === 1) return parts[0].r;
@@ -619,14 +777,37 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
 
   /* ---------- 굿즈 ---------- */
+  const goodsKey = (query, market) => `goods-${market}-${norm(query)}`;
+  const GOODS_MAX_STALE_MS = 24 * HOUR;
+  const goodsRecent = new KV('goods-recent');
+  const goodsRefresher = createGoodsRefresher({
+    recent: goodsRecent,
+    keyOf: goodsKey,
+    ageOf: async (key) => { const p = await peek(key); return p?.cache?.updatedAt ? Date.now() - Date.parse(p.cache.updatedAt) : Infinity; },
+    revalidate: (key, query, market) => revalidate(key, () => searchGoods(query, { market })),
+    seeds: () => goodsSeeds(),
+    minAgeMs: 2 * HOUR,
+    maxPerRun: 12,
+    gapMs: 3000,
+  });
+  // 현재 서버가 수집한 정확한 상품 URL만 절차 수집 대상으로 허용한다.
+  const assistanceOffers = new Map();
+  function rememberAssistanceOffers(items) {
+    for (const o of items || []) {
+      if (!o?.url) continue;
+      assistanceOffers.set(String(o.url), {url: String(o.url), artistName: String(o.artist || ''), title: String(o.title || '')});
+    }
+    while (assistanceOffers.size > 800) assistanceOffers.delete(assistanceOffers.keys().next().value);
+  }
   async function goods({ q, market = 'kr' }) {
     const query = String(q || '').trim().slice(0, 60);
     if (!query) return { items: [], sources: [], stores: STORES };
-    const key = `goods-${market}-${norm(query)}`;
-    /* 최근에 누가 본 굿즈 검색은 백그라운드에서 계속 새로 받는다(가격·재고·예약 상태) */
-    recentGoods.set(key, { query, market, at: Date.now() });
-    if (recentGoods.size > 200) recentGoods.delete(recentGoods.keys().next().value);
-    const r = await cached(key, 30 * MIN, () => searchGoods(query, { market }), { budgetMs: 12000 });
+    const key = goodsKey(query, market);
+    /* 최근에 누가 본 굿즈 검색은 백그라운드에서 계속 새로 받는다(가격·재고·예약 상태). 재시작해도 남게 디스크(KV)에 */
+    await goodsRefresher.remember(query, market).catch(() => {});
+    /* 30분 지나면 stale-while-revalidate. 하루 넘게 묵은 값(재시작·무검색으로 몇 주 묵은 캐시)은 현재 값처럼 내지 않고
+       최대 8초 새로 받아 본 뒤, 못 받으면 오래된 값을 state:'stale' + updatedAt과 함께 낸다 */
+    const r = await cached(key, 30 * MIN, () => searchGoods(query, { market }), { budgetMs: 12000, maxStaleMs: GOODS_MAX_STALE_MS, staleWaitMs: 8000 });
     await aladinDates.ready();
     const items = (r.items || []).map((o) => {
       const x = tidyOffer(o);
@@ -637,6 +818,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       return x;
     });
     if (aladinDateQueue.length) void pumpAladinDates();
+    rememberAssistanceOffers(items);
     return { ...r, items };
   }
 
@@ -683,8 +865,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     } catch { /* e+ 실패는 무시 */ }
     const seen = new Set();
     await photos.ready();
-    const fallbackPoster = (a && (photos.get(a.id)?.medium || photos.get(a.id)?.photo)) || photo?.photo?.pictureMedium || a?.artwork || null;
-    shows = groupTours(upcomingOnly(shows).filter((s) => (seen.has(s.id) ? false : seen.add(s.id)))).map((s) => (s.poster ? s : { ...s, poster: fallbackPoster, posterKind: fallbackPoster ? 'artist' : null })).sort((x, y) => (x.startDate || '9999').localeCompare(y.startDate || '9999'));
+    const fbArtist = a ? artistFallbackImage({ portrait: currentPortrait(a), deezer: photos.get(a.id) }) : null;
+    const fallbackImage = fbArtist || (photo?.photo?.pictureMedium ? { url: photo.photo.pictureMedium, kind: 'deezer-artist' } : null) || (a?.artwork ? { url: a.artwork, kind: 'album-cover' } : null);
+    const fallbackPoster = fallbackImage?.url || null;
+    shows = groupTours(upcomingOnly(shows).filter((s) => (seen.has(s.id) ? false : seen.add(s.id)))).map((s) => (s.poster ? s : { ...s, poster: fallbackPoster, posterKind: fallbackPoster ? 'artist' : null, posterImageKind: fallbackImage?.kind || null })).sort((x, y) => (x.startDate || '9999').localeCompare(y.startDate || '9999'));
 
     let fanclub = null;
     if (a) {
@@ -705,7 +889,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       genre: a?.appleGenre || a?.genre || null,
       appleArtistId: a?.appleArtistId || null,
       artwork: a?.artwork || null,
-      photo: photo?.photo?.picture ? photo.photo : (a && photos.get(a.id)?.photo ? { picture: photos.get(a.id).photo } : null),
+      photo: a && currentPortrait(a) ? { picture:currentPortrait(a).imageUrl, sourceUrl:currentPortrait(a).sourceUrl, checkedAt:currentPortrait(a).checkedAt, provider:'official-profile' } : photo?.photo?.picture ? photo.photo : (a && photos.get(a.id)?.photo ? { picture: photos.get(a.id).photo } : null),
+      portrait: a ? currentPortrait(a) : null,
       wiki: wiki?.wiki || null,
       links: a?.links || null,
       official: a?.official || null,
@@ -832,37 +1017,69 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   async function titlesFor(id) {
     if (!catalogTitles) {
       const c = await readJson('catalog', null);
-      catalogTitles = new Map(Object.entries(c?.artists || {}).map(([k, v]) => [k, (v.tracks || []).map((t) => t.title).slice(0, 200)]));
+      /* 곡명 + 앨범명. Deezer 인기곡이 지역 제한으로 비면 앨범명으로 대조한다(deezerArtist) */
+      catalogTitles = new Map(Object.entries(c?.artists || {}).map(([k, v]) => [k, [...new Set([...(v.tracks || []).map((t) => t.title), ...(v.tracks || []).map((t) => t.album).filter(Boolean)])].slice(0, 400)]));
     }
     return catalogTitles.get(id) || null;
   }
 
-  async function fillPhotos(limit = 200) {
+  /* 사진 판정 규칙이 바뀌면(PHOTO_RULE) 예전 규칙으로 '없음' 판정된 팀을 다시 본다.
+     v2: Deezer 인기곡이 지역 제한으로 비어(일본 아이돌·밴드 다수) 대조가 늘 실패해 '없음'으로 굳어 있었다
+     (운영 2026-10-22 /api/live/artists 65팀 중 34팀 사진 없음). 앨범명 대조를 더했다. */
+  const PHOTO_RULE = 2;
+  async function fillPhotos(limit = 200, { now = Date.now, pauseMs = 700 } = {}) {
     await photos.ready();
+    catalogTitles = null;   // 카탈로그는 하루 한 번 바뀐다 — 실행마다 새로 읽는다
     const list = await roster();
-    let n = 0;
+    const st = { checked: 0, found: 0, missing: 0, failed: 0, fresh: 0, total: list.length, withoutPhoto: 0 };
     for (const a of list) {
-      if (n >= limit) break;
       const prev = photos.get(a.id);
-      if (prev && Date.now() - prev.at < (prev.photo ? 14 : 1) * 24 * HOUR) continue;
-      const names = [...new Set([a.nameOriginal, a.name, a.nameJa, ...(a.aliases || [])].filter(Boolean))];
-      const latin = names.filter((x) => /[A-Za-z]/.test(x));
-      try {
-        const d = await deezerArtist([...latin, ...names], { knownTitles: await titlesFor(a.id) });
-        photos.set(a.id, { photo: d?.picture || null, medium: d?.pictureMedium || null, fans: d?.fans ?? null, at: Date.now() });
-      } catch { /* 다음에 */ }
-      n++;
-      await new Promise((r) => setTimeout(r, 700));
+      const due = photoDue(prev, now());
+      if (!due || st.checked >= limit) { if (!due) st.fresh++; if (!(prev?.photo)) st.withoutPhoto++; continue; }
+      st.checked++;
+      const r = await refreshArtistPhoto(a, { now });
+      if (r.outcome === 'found') st.found++;
+      else if (r.outcome === 'missing') { st.missing++; st.withoutPhoto++; }
+      else { st.failed++; if (!(prev?.photo)) st.withoutPhoto++; }
+      if (pauseMs) await new Promise((r) => setTimeout(r, pauseMs));
     }
+    return st;
+  }
+  /* 사진 있음 14일, '없음' 1일, 규칙 버전이 낮은 '없음'은 바로 다시 본다(9/29 같은 옛 판정 포함) */
+  function photoDue(prev, at = Date.now()) { return recheckDue(prev, { rule: PHOTO_RULE, now: at, positiveMs: 14 * 24 * HOUR, negativeMs: 24 * HOUR }); }
+  /* 아티스트 한 팀의 Deezer 사진 재확인. 쿼터·네트워크 실패는 저장하지 않는다(다음에 다시) */
+  async function refreshArtistPhoto(a, { now = Date.now } = {}) {
+    await photos.ready();
+    const prev = photos.get(a.id);
+    const names = [...new Set([a.nameOriginal, a.name, a.nameJa, ...(a.aliases || [])].filter(Boolean))];
+    const latin = names.filter((x) => /[A-Za-z]/.test(x));
+    let d;
+    try { d = await artistPhotoLookup([...latin, ...names], { knownTitles: await titlesFor(a.id) }); }
+    catch { return { ok: false, outcome: 'failed', reason: 'deezer_unavailable' }; }
+    /* 다시 확인했는데 못 찾았다고 예전에 확인된 사진을 지우지 않는다(Deezer 대조 실패는 '사진이 사라졌다'가 아니다) */
+    if (!d && prev?.photo) { photos.set(a.id, { ...prev, at: now(), v: PHOTO_RULE }); return { ok: true, outcome: 'found' }; }
+    photos.set(a.id, { photo: d?.picture || null, medium: d?.pictureMedium || null, fans: d?.fans ?? null, at: now(), v: PHOTO_RULE });
+    if((prev?.photo||null)!==(d?.picture||null))publish('media',{key:'artist-media:'+a.id});
+    return { ok: true, outcome: d?.picture ? 'found' : 'missing' };
+  }
+  /* 응답이 직접 부르는 사진 재확인(30분 주기 작업이 꺼진 환경·첫 화면 대비). 대기 12·동시 1·0.7초 간격 */
+  const photoRefresh = createRefreshQueue({ max: 12, concurrency: 1, pauseMs: 700, run: (a) => refreshArtistPhoto(a) });
+  function refreshPhotosFor(list) {
+    if (!photos.map) return;
+    for (const a of list || []) if (a?.id && !photos.get(a.id)?.photo && photoDue(photos.get(a.id))) photoRefresh.enqueue(a.id, a);
   }
 
   async function publicArtist(a) {
-    await photos.ready();
-    const ph = photos.get(a.id);
+    await Promise.all([photos.ready(),portraits.ready()]);
+    const ph = photos.get(a.id), portrait = exposePortrait(currentPortrait(a));
+    /* 공식 프로필(24시간 안 확인)이 먼저, 없으면 기존 Deezer 아티스트 사진. 출처 종류·원문·확인 시각을 함께 낸다.
+       artwork는 음악 재킷(앨범·곡)이지 아티스트 사진이 아니다 */
+    const pick = artistPhoto({ portrait, deezer: ph });
     return {
       id: a.id, name: a.name, nameOriginal: a.nameOriginal || null, nameJa: a.nameJa || null, nameKo: a.nameKo || null,
       origin: a.origin, genre: a.appleGenre || a.genre || null,
-      photo: ph?.medium || ph?.photo || null, artwork: a.artwork || null,
+      photo: pick?.url || null, photoLarge: pick?.large || null, photoKind: pick?.kind || null, photoSourceUrl: pick?.sourceUrl || null, photoCheckedAt: pick?.checkedAt || null,
+      portrait, artwork: a.artwork || null, artworkKind: a.artwork ? 'album-cover' : null,
       chartHits: a.chartHits || 0, bestRank: a.bestRank ?? null,
     };
   }
@@ -878,23 +1095,25 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const list = await roster();
     const want = edition === 'kr' ? ['jp'] : edition === 'jp' ? ['kr'] : ['jp', 'kr'];
     const rows = list.filter((a) => want.includes(a.origin)).sort((a, b) => (b.chartHits || 0) - (a.chartHits || 0));
+    await Promise.all([photos.ready(), portraits.ready()]);
+    refreshPortraitsFor(rows); refreshPhotosFor(rows);
     return { items: await Promise.all(rows.map(publicArtist)) };
   }
 
   /* ---------- 새 발매 ---------- */
   async function releases({ edition = 'kr', limit = 24 } = {}) {
     const raw = (await readJson('releases', [])) || [];
-    const rows = Array.isArray(raw) ? raw : raw.releases || [];
-    const want = edition === 'kr' ? ['jp'] : edition === 'jp' ? ['kr'] : ['jp', 'kr'];
+    const catalog = await readJson('catalog', null);
+    const rows = editionReleaseRows({artists:await roster(),releases:Array.isArray(raw)?raw:raw.releases||[],catalog,edition});
     const today = todayKst();
     const from = new Date(Date.now() - 45 * 24 * HOUR).toISOString().slice(0, 10);
     const list = rows
-      .filter((r) => want.includes(r.country) && r.releaseDate && r.releaseDate >= from && r.artwork !== undefined)
+      .filter((r) => r.releaseDate && r.releaseDate >= from && r.artwork !== undefined)
       .sort((a, b) => (a.releaseDate > today) === (b.releaseDate > today) ? b.releaseDate.localeCompare(a.releaseDate) : a.releaseDate > today ? -1 : 1)
       .slice(0, limit)
       .map((r) => ({
         id: r.id, tier: r.tier, artist: r.artist, artistKo: r.artistKo, artistId: r.artistId, title: r.title, titleKo: r.titleKo,
-        country: r.country, type: r.type, releaseDate: r.releaseDate, artwork: r.artwork || null, appleUrl: r.appleUrl || null,
+        country: r.country, type: r.type, releaseDate: r.releaseDate, artwork: r.artwork || null, artworkKind: r.artworkKind || null, artworkSource: r.artworkSource || null, appleUrl: r.appleUrl || null,
         trackCount: r.trackCount || null, offerCount: (r.offers || []).length, upcoming: r.releaseDate > today,
       }));
     return { items: list };
@@ -1027,17 +1246,20 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
         else if (off && (!ep || Date.now() - ep.at > 24 * HOUR) && !posterQueue.includes(off)) { posterQueue.push(off); officialUrls.add(off); pumpPosters().catch(() => {}); }
       }
       /* 그래도 없으면 라인업 첫 아티스트 사진(아티스트 사진임을 표시) */
+      let posterImageKind = null;
       if (!poster) {
         for (const x of lineup) {
-          const ph = x.artistId ? photos.get(x.artistId) : namePhotos.get(norm(x.name));
-          const pic = ph?.medium || ph?.photo || null;
-          if (pic) { poster = pic; posterKind = 'artist'; break; }
+          const ra = x.artistId ? list.find((r) => r.id === x.artistId) : null;
+          const pick = x.artistId ? artistPhoto({ portrait: ra ? currentPortrait(ra) : null, deezer: photos.get(x.artistId) }) : null;
+          const np = x.artistId ? null : namePhotos.get(norm(x.name));
+          const pic = pick?.url || np?.medium || np?.photo || null;
+          if (pic) { poster = pic; posterKind = 'artist'; posterImageKind = pick?.kind || 'name-matched-photo'; break; }
         }
-        /* 사진이 아직 없으면 앞쪽 출연자 셋의 사진을 찾아 둔다(다음 응답부터 반영) */
-        if (!poster) for (const x of lineup.slice(0, 3)) if (!x.artistId && !namePhotos.get(norm(x.name)) && !photoQueue.includes(x.name) && /[A-Za-z぀-ヿ一-龯]/.test(x.name)) photoQueue.push(x.name);
+        /* 사진이 아직 없으면 앞쪽 출연자 셋의 사진을 찾아 둔다(다음 응답부터 반영). '없음' 판정도 TTL이 지나면 다시 */
+        if (!poster) for (const x of lineup.slice(0, 3)) if (!x.artistId && namePhotoDue(namePhotos.get(norm(x.name))) && !photoQueue.includes(x.name) && /[A-Za-z぀-ヿ一-龯]/.test(x.name)) photoQueue.push(x.name);
       }
-      return withKo({ ...f, poster, posterKind, officialSite: site?.url || f.links.map((l) => festLineups.get(l.url)?.official).find(Boolean) || null, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });
-    }).filter((f) => !country || f.country === country);
+      return withKo({ ...f, poster, posterKind, posterImageKind, officialSite: site?.url || f.links.map((l) => festLineups.get(l.url)?.official).find(Boolean) || null, lineup, lineupJp: lineup.filter((x) => x.origin === 'jp').length, lineupKr: lineup.filter((x) => x.origin === 'kr').length });
+    }).map(f=>({...f,...eventGeography(f)})).filter(f=>['KR','JP'].includes(f.country)&&(!country||f.country===country));
     if (queue.length) pump().catch(() => {});
     if (photoQueue.length) pumpPhotos().catch(() => {});
     /* 에디션에 맞는 순서: 한국 팬(kr)은 일본 아티스트가 많이 나오는 페스티벌·일본 페스티벌을 먼저 보지 않고 날짜순을 유지하되,
@@ -1046,6 +1268,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
 
   async function home({ edition = 'kr' } = {}) {
+    await portraits.ready();
     const charts = await getCharts().catch(() => null);
     const chartCountries = edition === 'kr' ? ['jp'] : edition === 'jp' ? ['kr'] : ['jp', 'kr'];
     const chart = chartCountries.map((c) => ({
@@ -1064,18 +1287,24 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     const fx = await readJson('fx', null);
     const fcf = await fanclubFeed({ edition });
     const fest = await festivals({ edition, budgetMs: 1500 }).catch(() => ({ items: [] }));
+    const [rawCoverReleases,coverCatalog,fullRoster]=await Promise.all([readJson('releases',[]),readJson('catalog',null),roster()]);
+    const publicById=new Map(ar.items.map(x=>[x.id,x]));
+    /* 화면에 나갈 아티스트의 공식 프로필·사진을 백그라운드로 다시 확인(제한된 큐, 응답은 기다리지 않는다) */
+    { const shown=fullRoster.filter(x=>publicById.has(x.id)); refreshPortraitsFor(shown); refreshPhotosFor(shown); }
+    const coverPool=buildCoverMedia({artists:fullRoster.filter(x=>publicById.has(x.id)).map(x=>({...publicById.get(x.id),mergedIds:x.mergedIds||[],appleArtistId:x.appleArtistId})),releases:Array.isArray(rawCoverReleases)?rawCoverReleases:rawCoverReleases?.releases||[],catalog:coverCatalog,concerts:[...v.items,...a.items],edition});
     return {
+      ...coverPool,
       edition,
-      fanclub: fcf.windows.filter((w) => !w.isPublic).slice(0, 8), fanclubTotal: fcf.windows.filter((w) => !w.isPublic).length,
-      tickets: t.items.slice(0, 12), ticketsTotal: t.items.length,
-      visiting: v.items.filter((x) => !x.unconfirmed).slice(0, 12), visitingTotal: v.items.filter((x) => !x.unconfirmed).length, visitingGroups: v.groups,
-      abroad: a.items.slice(0, 8), abroadTotal: a.items.length,
+      fanclub: fcf.windows.filter((w) => !w.isPublic).slice(0, 8).map(withPosterStatus), fanclubTotal: fcf.windows.filter((w) => !w.isPublic).length,
+      tickets: t.items.slice(0, 12).map(withPosterStatus), ticketsTotal: t.items.length,
+      visiting: v.items.filter((x) => !x.unconfirmed).slice(0, 12).map(withPosterStatus), visitingTotal: v.items.filter((x) => !x.unconfirmed).length, visitingGroups: v.groups,
+      abroad: a.items.slice(0, 8).map(withPosterStatus), abroadTotal: a.items.length,
       /* 홈: 한국 페스티벌의 J-POP·일본 페스티벌의 K-POP 출연이 많은 곳 먼저, 나머지는 날짜순 */
       festivals: [...fest.items].sort((x, y) => ((y.country === 'JP' ? y.lineupKr : y.lineupJp) || 0) - ((x.country === 'JP' ? x.lineupKr : x.lineupJp) || 0) || String(x.startDate).localeCompare(String(y.startDate))).slice(0, 16), festivalsTotal: fest.items.length,
       news: (n.items || []).slice(0, 8), newsTotal: (n.items || []).length, newsCache: n.cache || null,
       chart,
       releases: rel.items,
-      artists: ar.items.slice(0, 16),
+      artists: ar.items.slice(0, 72),
       fx,
       classifying: v.classifying || 0,
       fetchedAt: new Date().toISOString(),
@@ -1147,13 +1376,13 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       const n = norm(name.split(/[、,&×]| feat\.?| with /i)[0]);
       const a = ros.find((x) => [x.name, x.nameOriginal, x.nameJa, ...(x.aliases || [])].some((y) => y && norm(y) === n));
       if (!a) return null;
-      const ph = photos.get(a.id);
-      return ph?.medium || ph?.photo || a.artwork || null;
+      return artistFallbackImage({ portrait: currentPortrait(a), deezer: photos.get(a.id), artwork: a.artwork });
     };
     const fill = (e) => {
       const m = (byTitle.get(tkey(e.title)) || []).find((v) => sameArtist(v.artist, e.artist));
       const alt = m?.artwork ? null : artistImg(e.artist);
-      return { rank: e.rank, lastRank: e.lastRank ?? null, move: e.move || null, title: unescapeHtml(e.title), artist: unescapeHtml(e.artist), artwork: m?.artwork || alt || null, artworkKind: m?.artwork ? 'track' : alt ? 'artist' : null, appleUrl: m?.appleUrl || null };
+      /* artworkKind: 곡 재킷 'track' / 그 아티스트의 다른 음악 재킷 'album-cover' / 아티스트 사진 'artist'(+ 출처 artworkPhotoKind) */
+      return { rank: e.rank, lastRank: e.lastRank ?? null, move: e.move || null, title: unescapeHtml(e.title), artist: unescapeHtml(e.artist), artwork: m?.artwork || alt?.url || null, artworkKind: m?.artwork ? 'track' : alt ? (alt.kind === 'album-cover' ? 'album-cover' : 'artist') : null, artworkPhotoKind: !m?.artwork && alt && alt.kind !== 'album-cover' ? alt.kind : null, appleUrl: m?.appleUrl || null };
     };
     const list = c[srcKey];
     const entries = list.filter((e) => e.move === 'new').slice(0, 12).map(fill);
@@ -1222,7 +1451,8 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       const hit = matchesMembershipOwner(own2, [r.facts.ogTitle, r.facts.title, r.facts.name, r.entry, r.home, r.facts.shopArtist]);
       if (!hit) return { found: false, official: officialOf(a), rejected: r.entry, reason: 'fanclub-name-mismatch', checkedAt: new Date().toISOString() };
     }
-    return r?.found && weakEntry(r) ? { found: false, official: officialOf(a), rejected: r.entry, reason: 'not-a-join-page', checkedAt: new Date().toISOString() } : r;
+    const result=r?.found && weakEntry(r) ? { found: false, official: officialOf(a), rejected: r.entry, reason: 'not-a-join-page', checkedAt: new Date().toISOString() } : r;
+    return result ? {...result,factsRule:FC_FACTS_RULE} : result;
   }
   async function findFanclubRaw(a) {
     const r = await findFanclubRaw0(a);
@@ -1286,7 +1516,10 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   }
   async function fanclubRaw(a, { budgetMs = 2500, peekOnly = false } = {}) {
     if (peekOnly) { const pk = await peek(`fc-${a.id}`, { ttlMs: 6 * HOUR }); return pk?.fc ? exposeMembership({ ...pk.fc, cache: pk.cache }, a) : null; }
-    const r = await cached(`fc-${a.id}`, 6 * HOUR, async () => ({ items: [], fc: await findFanclub(a), sources: [{ provider: 'official-site', ok: true }] }), { budgetMs });
+    const prior=await peek(`fc-${a.id}`);
+    const parserChanged=prior?.fc?.found && prior.fc.factsRule!==FC_FACTS_RULE;
+    const r = await cached(`fc-${a.id}`, parserChanged ? 0 : 6 * HOUR, async () => ({ items: [], fc: await findFanclub(a), sources: [{ provider: 'official-site', ok: true }] }), { budgetMs,maxStaleMs:parserChanged?-1:null,staleWaitMs:budgetMs });
+    if(parserChanged && r?.fc?.factsRule===FC_FACTS_RULE && !r.cache?.lastError)r.cache={...r.cache,state:'fresh'};
     return r?.fc ? exposeMembership({ ...r.fc, cache: r.cache }, a) : null;
   }
 
@@ -1294,7 +1527,9 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   function fcItems(a, fc, { now = Date.now() } = {}) {
     if (!fc?.found) return { windows: [], tours: [], trades: [] };
     const photo = photos.get(a.id);
-    const poster = photo?.medium || photo?.photo || a.artwork || null;
+    const fbImage = artistFallbackImage({ portrait: currentPortrait(a), deezer: photo, artwork: a.artwork });
+    const poster = fbImage?.url || null;
+    const posterImageKind = fbImage?.kind || null;
     const facts = fc.facts || {};
     const club = {
       name: facts.name || null, entry: fc.entry, home: fc.home, platform: fc.platform || facts.platform || null,
@@ -1335,7 +1570,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
           venue: venues[0] || null, venueCount: venues.length, city: null, country: dir === 'kr-visiting' ? 'KR' : 'JP',
           startDate: sorted[0]?.date || null, endDate: sorted[sorted.length - 1]?.date || null,
           shows: sorted.slice(0, 60).map((x) => ({ date: x.date, endDate: x.date, venue: x.venue, city: null, url: page.url })),
-          showCount: sorted.length || null, poster, posterKind: 'artist', url: page.url, kind: 'concert',
+          showCount: sorted.length || null, poster, posterKind: 'artist', posterImageKind, url: page.url, kind: 'concert',
           direction: dir, fanclub: club, fetchedAt: page.checkedAt,
         };
       };
@@ -1496,7 +1731,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
       out[k] = { count: (r.items || []).length, cache: r.cache, sources: r.sources };
     }
     await origins.ready();
-    return { sources: out, originCache: origins.map.size, classifyQueue: queue.length, classifiedVersion, fanclubs: { ...fcProgress }, realtime: { clients: clients.size, jobs: syncState, topics: lastByTopic } };
+    return { media: { portraitRefresh: portraitRefresh.stats(), photoRefresh: photoRefresh.stats() }, sources: out, originCache: origins.map.size, classifyQueue: queue.length, classifiedVersion, fanclubs: { ...fcProgress }, realtime: { clients: clients.size, jobs: syncState, topics: lastByTopic } };
   }
 
   /* ---------- 실시간 동기화 ----------
@@ -1506,15 +1741,19 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
   const TOPIC_OF = (key) => (/^(kr-visiting|kr-domestic|jp-kpop|eplus-search-)/.test(key) ? 'concerts' : key === 'kr-opens' ? 'tickets' : /^news-/.test(key) ? 'news' : /^goods-/.test(key) ? 'goods' : /^fc-/.test(key) ? 'fanclubs' : null);
   const clients = new Set();
   const lastByTopic = {};
-  const recentGoods = new Map();
-  async function refreshRecentGoods() {
-    const since = Date.now() - 6 * HOUR;
-    const list = [...recentGoods].filter(([, v]) => v.at > since).sort((a, b) => b[1].at - a[1].at).slice(0, 15);
-    for (const [key, v] of list) {
-      await revalidate(key, () => searchGoods(v.query, { market: v.market })).catch(() => {});
-      await new Promise((r) => setTimeout(r, 2000));
+  /* 굿즈: 추천 검색어(굿즈 화면 칩과 같은 목록) + 디스크에 남긴 최근 검색어를, 2시간 넘게 묵은 것만 오래된 순으로 하나씩 */
+  async function goodsSeeds() {
+    const out = [];
+    for (const edition of ['kr', 'jp']) {
+      let names = [];
+      try { names = (await artists({ edition })).items.slice(0, 10).map(suggestQuery).filter(Boolean); } catch { names = []; }
+      if (!names.length) names = GOODS_SEEDS_FALLBACK[edition] || [];
+      for (const q of names) out.push({ query: String(q).trim().slice(0, 60), market: edition });
     }
-    return list.length;
+    return out;
+  }
+  async function refreshRecentGoods() {
+    return goodsRefresher.run();
   }
   let pendingPush = new Map();
   let pushTimer = null;
@@ -1630,11 +1869,60 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     }
   }
 
+
+  const assistanceCache = new Map(), assistanceInflight = new Map();
+  async function assistanceContext(query) {
+    if (query.kind === 'fanclub') {
+      const id = typeof query.artistId === 'string' ? query.artistId : '';
+      const a = (await roster()).find(x => x.id === id || (x.mergedIds || []).includes(id));
+      if (!a) return null;
+      const fc = await fanclubRaw(a, {peekOnly:true}).catch(() => null);
+      const url = fanclubAssistanceSource(fc);
+      return url ? {url, kind:'fanclub', artistName:a.nameOriginal || a.name, locale:query.locale === 'ja' ? 'ja' : 'ko'} : null;
+    }
+    if (query.kind !== 'purchase' || typeof query.url !== 'string' || query.url.length > 2000) return null;
+    const url = query.url;
+    const live = assistanceOffers.get(url);
+    if (live) return {...live,kind:'purchase',locale:query.locale === 'ja' ? 'ja' : 'ko'};
+    const rels = await readJson('releases', []);
+    for (const release of Array.isArray(rels) ? rels : []) {
+      if ((release.offers || []).some(o => offerHasSource(o,url))) return {url,kind:'purchase',artistName:release.artist || '',locale:query.locale === 'ja' ? 'ja' : 'ko'};
+    }
+    return null;
+  }
+  async function assistanceFor(query) {
+    const context = await assistanceContext(query);
+    if (!context) throw Object.assign(new Error('This source has not been collected for this artist or product'), {status:404});
+    const imageOnly=query.view === 'images';
+    const key = context.kind + '|' + context.url + '|' + context.locale + '|' + (imageOnly?'images':'full');
+    const saved = assistanceCache.get(key);
+    if (saved && Date.now() - saved.at < (saved.value.status === 'unavailable' ? 10_000 : 15 * MIN)) return {...saved.value,cache:{state:'cached',updatedAt:saved.value.fetchedAt}};
+    if (!assistanceInflight.has(key)) {
+      if (assistanceInflight.size >= 3) throw Object.assign(new Error('Public source collection is busy'), {status:503});
+      const promise = assistanceCollector({...context,kind:context.kind === 'purchase' ? 'goods' : 'fanclub'},{maxPages:imageOnly?1:3}).then(async value => {
+        if(context.kind==='purchase'){
+          const rels=await readJson('releases',[]);
+          const release=(Array.isArray(rels)?rels:[]).find(r=>(r.offers||[]).some(o=>offerHasSource(o,context.url)));
+          if(release){value.editionSources=deriveEditionSources(release,value);rememberAssistanceOffers(value.editionSources.map(x=>({...x,artist:release.artist,title:release.title})));}
+        }
+        assistanceCache.set(key,{at:Date.now(),value});
+        while (assistanceCache.size > 160) assistanceCache.delete(assistanceCache.keys().next().value);
+        return value;
+      }).finally(() => assistanceInflight.delete(key));
+      assistanceInflight.set(key,promise);
+    }
+    return assistanceInflight.get(key);
+  }
+
   function register(app) {
     const ed = (v) => (['kr', 'jp', 'all'].includes(v) ? v : 'kr');
     const wrap = (fn) => async (req, res) => {
       try { res.json(await fn(req)); } catch (e) { res.status(502).json({ error: String(e?.message || e), code: 'UPSTREAM' }); }
     };
+    app.get('/api/live/assistance', async (req,res) => {
+      try { res.set('Cache-Control','private, no-store'); res.json(await assistanceFor(req.query)); }
+      catch (e) { res.status([400,403,404,429,503,504].includes(e?.status) ? e.status : 502).json({error:e?.status === 404 ? 'Verified artist/product source not found' : 'Public source could not be read',code:'ASSISTANCE_UNAVAILABLE'}); }
+    });
     app.get('/api/live/concerts', wrap((req) => concerts({ edition: ed(req.query.edition), scope: String(req.query.scope || 'visiting'), origin: String(req.query.origin || 'default') })));
     app.get('/api/live/tickets', wrap((req) => tickets({ edition: ed(req.query.edition), origin: String(req.query.origin || 'default') })));
     app.get('/api/live/news', wrap((req) => news({ edition: ed(req.query.edition), artist: req.query.artist ? String(req.query.artist).slice(0, 80) : null })));
@@ -1688,6 +1976,29 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/home', wrap((req) => home({ edition: ed(req.query.edition) })));
     app.get('/api/live/search', wrap((req) => search({ q: req.query.q, edition: ed(req.query.edition) })));
     app.get('/api/live/artists', wrap((req) => artists({ edition: ed(req.query.edition) })));
+    app.get('/api/live/portraits', async (req,res) => {
+      res.set('Cache-Control','private, no-store');
+      try {
+        if(Array.isArray(req.query.ids))throw Object.assign(new Error('invalid artist ids'),{status:400});
+        const raw=req.originalUrl?.match(/[?&]ids=([^&]*)/)?.[1];
+        let ids;
+        try {ids=raw===undefined?(typeof req.query.ids==='string'?req.query.ids.split(','):[]):raw.split(',').map(decodeURIComponent);}catch{throw Object.assign(new Error('invalid artist ids'),{status:400});}
+        res.json(await portraitBatch(ids));
+      }
+      catch(e) { res.status([400,404].includes(e.status)?e.status:502).json({error:e.status===404?'unknown artist':e.status===400?'invalid artist ids':'portrait unavailable'}); }
+    });
+    /* 표시 이름: ?locale=ko|ja&ids=로스터id,…(최대 20). 찾는 중이면 status:'pending' — 같은 요청을 다시 하면 된다 */
+    app.get('/api/live/display-names', async (req,res) => {
+      res.set('Cache-Control','private, no-store');
+      try {
+        if(Array.isArray(req.query.ids)||Array.isArray(req.query.locale))throw Object.assign(new Error('invalid artist ids'),{status:400});
+        const raw=req.originalUrl?.match(/[?&]ids=([^&]*)/)?.[1];
+        let ids;
+        try {ids=raw===undefined?(typeof req.query.ids==='string'?req.query.ids.split(','):[]):raw.split(',').map(decodeURIComponent);}catch{throw Object.assign(new Error('invalid artist ids'),{status:400});}
+        res.json(await displayNameBatch(String(req.query.locale||''),ids));
+      }
+      catch(e) { res.status([400,404].includes(e.status)?e.status:502).json({error:e.status===404?'unknown artist':e.status===400?e.message:'display names unavailable'}); }
+    });
     app.get('/api/live/releases', wrap((req) => releases({ edition: ed(req.query.edition), limit: Math.min(Number(req.query.limit) || 24, 60) })));
     app.get('/api/live/fx', wrap(async () => (await readJson('fx', null)) || {}));
     /* WebGL 텍스처용 이미지 중계 — CORS 헤더가 없는 예매처 이미지만. 허용한 호스트만, 메모리에 잠깐 보관 */
@@ -1696,13 +2007,14 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     let imgCacheBytes = 0;
     app.get('/api/live/img', async (req, res) => {
       let u;
-      try { u = validateArtworkUrl(String(req.query.u || '')); } catch (e) { return res.status(e.status || 400).end(); }
+      await Promise.all([eventPosters.ready(), festSites.ready()]).catch(() => {});
+      try { u = validateArtworkUrl(String(req.query.u || ''), { trusted: isKnownPoster }); } catch (e) { return res.status(e.status || 400).end(); }
       const key = u.href;
       let hit = imgCache.get(key);
       if (!hit) {
         if (!imgInflight.has(key)) {
           if (imgInflight.size >= 4) return res.status(503).end();
-          const pending = fetchArtwork(key).then(result => {
+          const pending = fetchArtwork(key, { trusted: isKnownPoster }).then(result => {
             imgCache.set(key, result); imgCacheBytes += result.buf.length;
             while (imgCache.size > 80 || imgCacheBytes > 48 * 1024 * 1024) {
               const oldest = imgCache.keys().next().value;
@@ -1737,5 +2049,7 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     app.get('/api/live/fc-referrals', wrap(async () => { await fcClicks.ready(); return { items: [...fcClicks.map].map(([artistId, v]) => ({ artistId, ...v })).sort((a, b) => (b.join + b.sale) - (a.join + a.sale)) }; }));
   }
 
-  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, awards, goods, artist, status, home, festivals, search, artists, artistBrief, releases, fillPhotos, fanclubFeed };
+  /* 이미지 재확인 큐 상태(개수·사유만) — 테스트·상태 화면용 */
+  const mediaRefresh = { status: () => ({ portraitRefresh: portraitRefresh.stats(), photoRefresh: photoRefresh.stats() }), idle: () => Promise.all([portraitRefresh.idle(), photoRefresh.idle()]), failureOf: (kind, id) => (kind === 'portrait' ? portraitRefresh : photoRefresh).failureOf(id) };
+  return { register, warm, startRealtime, dispose, notify, repairRoster, concerts, tickets, news, awards, goods, artist, status, home, festivals, search, artists, artistBrief, releases, fillPhotos, fanclubFeed, mediaRefresh, displayNameBatch, displayNameStatus: () => displayNames.stats(), displayNameIdle: () => displayNames.idle() };
 }

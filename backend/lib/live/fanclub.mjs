@@ -192,6 +192,15 @@ export function parseWeverseShop(html, pageUrl) {
     url: m ? `https://shop.weverse.io/ja/shop/JPY/artists/${m[1]}/sales/${c.saleId}` : null,
   }));
 }
+/* 상품 화면 注意事項의 판매 대상 문장(원문 그대로)과 같은 화면의 판매자 표기(商号名·所在地). 국적·거주 판정은 하지 않는다 */
+export function parseWeverseSalesPolicy(html, url) {
+  const t = String(html || "").replace(/<script(?! id="__NEXT_DATA__")[\s\S]*?<\/script>/g, " ").replace(/\\n/g, " ");
+  const m = t.match(/当該商品は、販売者が属する国・地域にお住いのお客様に販売されます。/);
+  if (!m) return null;
+  const dd = (label) => { const x = t.match(new RegExp(label + "</dt>\\s*<dd[^>]*>([^<]{2,200})</dd>")); return x ? x[1].trim() : null; };
+  const seller = dd("商号名/代表者");
+  return { quote: m[0], seller: seller ? seller.split(" / ")[0].trim() : null, sellerAddress: dd("所在地"), url, checkedAt: new Date().toISOString() };
+}
 export async function weverseShopFacts(url) {
   let u = url;
   if (weverseKind(u) === 'shortlink') u = await resolveRedirect(u);
@@ -224,12 +233,14 @@ export async function weverseShopFacts(url) {
   /* 상품 화면의 판매 공지에서 유효 기간 */
   let period = null;
   let jpAddress = false;
+  let salesPolicy = null;
   try {
     const ph = await fetchJa(pick.url, { timeout: 10000, retries: 0, headers: { 'Accept-Language': 'ja' } });
     const txt = ph.replace(/<script(?! id="__NEXT_DATA__")[\s\S]*?<\/script>/g, ' ').replace(/\\n/g, ' ');
     const pm = txt.match(/有効期限[：:]\s*(入会日から\s*\d+\s*日)|(入会日より\s*\d+\s*日)/);
     period = pm ? (pm[1] || pm[2]).replace(/\s+/g, '') : null;
     jpAddress = /日本国内の住所をお持ちの方のみ/.test(txt);
+    salesPolicy = parseWeverseSalesPolicy(ph, pick.url);
   } catch { /* 기간은 비워 둔다 */ }
   const q = pick.name.match(/[「『]([^」』]{2,30})[」』]/);
   return {
@@ -238,7 +249,7 @@ export async function weverseShopFacts(url) {
     fees: { annual: pick.price, monthly: null, joinFee: null, free: false, currency: 'JPY', overseasAnnual: null, overseasAnnualUsd: null, taxIncluded: pick.taxIncluded ?? null },
     saleOpen: !!open, saleStatus: pick.status || null,
     overseas: 'unknown', residence: null, overseasJoin: null, payments: [], languages: [], needsPhone: false,
-    platform: 'Weverse', shopArtist, shipJpOnly: jpAddress, checkedAt: new Date().toISOString(),
+    platform: 'Weverse', shopArtist, shopArtistId:Number(aid), shipJpOnly: jpAddress, salesPolicy, checkedAt: new Date().toISOString(),
   };
 }
 
@@ -331,6 +342,11 @@ function amountAfter(seg, label) {
   const v = yen(m[1] || m[2]);
   return v == null ? null : { v, cur: m[3] === 'USD' || m[3] === 'ドル' ? 'USD' : 'JPY' };
 }
+export function feeTaxState(flatPara) {
+  const near = String.raw`[0-9][0-9,]{0,7}\s*(?:¶\s*)*円\s*(?:¶\s*)*[（(]\s*`;
+  const incl = new RegExp(near + "税込").test(flatPara), excl = new RegExp(near + "(?:税抜|税別)").test(flatPara);
+  return incl && !excl ? true : excl && !incl ? false : null;
+}
 export function parseResidence(flatPara) {
   const f = flatPara;
   const JP = /日本にお住まいの方|日本国内にお住まいの方|日本国内在住の方/g;
@@ -357,9 +373,21 @@ export function parseResidence(flatPara) {
       debitNg: /デビットカード[^。¶]{0,24}(?:動作保証外|できません|ご利用いただけません|使用できません)/.test(seg),
     };
   };
+  /* 같은 거주지 표 안에서 연회비 블록 뒤에 그 블록의 注意事項이 오고, 그 다음에 별도의 「月会費コース」 블록이 오는 배치
+   (Ringo Jam 해외 쪽)가 있다. 첫 注意事項에서 끊으면 월회비를 놓치므로, 다음 거주지 머리/회원 등록 전까지에서만 월회비 블록을 따로 읽는다. */
+  const HARD_END = /推奨環境|会員登録\s*¶|新規会員登録の前に|よくある(?:ご)?質問|日本(?:以外)?にお住まいの方\s*¶/;
+  const withLateMonthly = (from, c) => {
+    if (c.monthly) return c;
+    const s2 = f.slice(from, from + 8000); const e = s2.slice(10).search(HARD_END); const sec = e >= 0 ? s2.slice(0, e + 10) : s2;
+    const k = sec.search(/月会費コース\s*¶/);
+    if (k < 0) return c;
+    const block = sec.slice(k); const stop = block.slice(6).search(/注意事項/); const seg = stop >= 0 ? block.slice(0, stop + 6) : block;
+    const monthly = amountAfter(seg, "月会費(?!まとめて|コース)|月額");
+    return monthly ? { ...c, monthly, monthlyPayments: segPayments(seg) } : c;
+  };
   return {
-    jp: ji != null ? course(cut(ji)) : null,
-    overseas: course(cut(oi)),
+    jp: ji != null ? withLateMonthly(ji, course(cut(ji))) : null,
+    overseas: withLateMonthly(oi, course(cut(oi))),
     autoRenew: /自動継続/.test(f),
     residenceLocked: /誤って【?日本以外にお住まいの方】?として|退会いただかないとコース変更/.test(f),
     realName: /必ず本人様がご登録|申込者と会員情報が違うと/.test(f),
@@ -446,7 +474,8 @@ function parseFacts(html, entryUrl) {
     ogTitle: ogTitle ? ogTitle.replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d))).replace(/&amp;/g, '&').trim().slice(0, 120) : null,
     title,
     name,
-    fees: { annual, monthly, joinFee, handlingFee, free, currency: 'JPY', overseasAnnual: overseasFee && overseasFee !== annual ? overseasFee : null, overseasAnnualUsd: overseasUsd },
+    /* 세금 표기: 금액 바로 뒤 （税込）/（税抜·税別）만 근거로 삼는다. 둘 다 있거나 없으면 null(미확인) */
+    fees: { annual, monthly, joinFee, handlingFee, free, currency: 'JPY', overseasAnnual: overseasFee && overseasFee !== annual ? overseasFee : null, overseasAnnualUsd: overseasUsd, taxIncluded: feeTaxState(halfwidth(lines.join(' ¶ '))) },
     overseas: overseasNo || jpOnly ? 'no' : overseasYes || residence ? 'yes' : 'unknown',
     residence,
     overseasJoin,

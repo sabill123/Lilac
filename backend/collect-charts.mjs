@@ -115,19 +115,83 @@ async function fetchJson(url, tries = 3) {
   throw lastErr;
 }
 
-/** Billboard JAPAN HOT 100 — 스트리밍·다운로드·CD·라디오·동영상·노래방 합산 종합 차트 */
-async function billboardJP() {
-  const r = await fetch('https://www.billboard-japan.com/charts/detail?a=hot100', {
-    headers: { 'user-agent': UA, 'accept-language': 'ja,en;q=0.8' },
-  });
-  const h = await r.text();
-  return h.split(/<tr class="rank\d+"/).slice(1).map((b) => {
+/** Billboard JAPAN HOT 100 — 스트리밍·다운로드·CD·라디오·동영상·노래방 합산 종합 차트
+ *
+ *  2026-10-22 운영: 이 소스만 0곡(ok:false)인데 이유가 어디에도 남지 않았다.
+ *  예전 코드는 HTTP 상태를 보지 않고, 타임아웃도 없고, 파싱 0건도 '성공'으로 돌려줬다.
+ *  그래서 접속 실패(차단·타임아웃)·오류 페이지·마크업 변경이 모두 똑같이 "빈 목록"으로 보였다.
+ *  이제는 원인을 오류로 던지고(상태 화면에 남는다), 주소 표기 두 가지를 차례로 시도한다. */
+export const BILLBOARD_URLS = [
+  'https://www.billboard-japan.com/charts/detail?a=hot100',
+  'https://www.billboard-japan.com/charts/detail/?a=hot100',
+];
+export function parseBillboardHot100(h) {
+  return String(h || '').split(/<tr class="rank\d+"/).slice(1).map((b) => {
     const rank = b.match(/class="rank_td[^"]*">\s*<span>(\d+)<\/span>/)?.[1] || b.match(/<p class="rank">(\d+)<\/p>/)?.[1];
-    const title = strip(b.match(/<p class="musuc_title">([\s\S]*?)<\/p>/)?.[1]);
-    const artist = strip(b.match(/<p class="artist_name">([\s\S]*?)<\/p>/)?.[1]);
+    const title = decodeHtml(strip(b.match(/<p class="musuc_title">([\s\S]*?)<\/p>/)?.[1]));
+    const artist = decodeHtml(strip(b.match(/<p class="artist_name">([\s\S]*?)<\/p>/)?.[1]));
     const last = b.match(/<span class="last">前回：([^<]*)<\/span>/)?.[1];
     const move = /class="up"/.test(b) ? 'up' : /class="down"/.test(b) ? 'down' : /class="new"/.test(b) ? 'new' : '';
     return rank && title ? { rank: +rank, title, artist, lastRank: Number(last) || null, move } : null;
+  }).filter(Boolean);
+}
+export async function billboardJP({ fetchImpl = fetch, timeoutMs = 20000, urls = BILLBOARD_URLS } = {}) {
+  const errors = [];
+  for (const url of urls) {
+    try {
+      const r = await fetchImpl(url, {
+        headers: { 'user-agent': UA, 'accept-language': 'ja,en;q=0.8' },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const h = await r.text();
+      const rows = parseBillboardHot100(h);
+      if (rows.length) return rows;
+      throw new Error(`0곡 파싱(${h.length}B, rank 행 ${(h.match(/<tr class="rank\d+"/g) || []).length}개) — 마크업 변경 또는 차단 페이지`);
+    } catch (e) {
+      const why = e?.name === 'TimeoutError' || e?.name === 'AbortError' ? `timeout ${Math.round(timeoutMs / 1000)}s` : (e?.cause?.code || e?.message || String(e));
+      errors.push(`${url.replace('https://www.billboard-japan.com', '')}: ${why}`);
+    }
+  }
+  throw new Error(`Billboard JAPAN 수집 실패 — ${errors.join(' / ')}`);
+}
+
+/* 주간 차트는 한 주에 한 번 바뀐다. 원천이 잠깐 막혔다고 그 칸을 0곡으로 비우면
+   통합 순위의 가중치 30%가 통째로 빠진다. 마지막으로 받은 목록이 8일 안이면 그대로 쓰되,
+   언제 받은 것인지(carriedFrom)와 이번 실패 이유를 함께 남긴다. 8일이 지나면 비운다(지난 주 차트를 이번 주인 척하지 않는다). */
+export const WEEKLY_CARRY_MAX_MS = 8 * 24 * 3600e3;
+export function settleWeeklySource(name, fresh, prevCountry, { now = Date.now(), error = null } = {}) {
+  if (fresh.length) return { list: fresh, meta: { ok: true, count: fresh.length, collectedAt: new Date(now).toISOString(), error: null } };
+  const prevList = Array.isArray(prevCountry?.[name]) ? prevCountry[name] : [];
+  const prevMeta = prevCountry?.sourceMeta?.[name] || null;
+  const prevAt = prevMeta?.collectedAt || (prevMeta?.carriedFrom ?? null);
+  const age = prevAt ? now - Date.parse(prevAt) : Infinity;
+  if (prevList.length && Number.isFinite(age) && age <= WEEKLY_CARRY_MAX_MS) {
+    return { list: prevList, meta: { ok: false, count: prevList.length, collectedAt: prevAt, carriedFrom: prevAt, error: error || '수집 0곡' } };
+  }
+  return { list: [], meta: { ok: false, count: 0, collectedAt: null, error: error || '수집 0곡' } };
+}
+
+/* 오리콘 순위 행에는 재킷 사진(<p class="image"><img …>)이 있다.
+   예전엔 버려서, Apple 차트에 없는 CD 신곡(초동 진입)이 통합 차트에서 글자 자리표시로 보였다
+   (운영 2026-10-22: 일본 통합 79곡 중 29곡이 아트워크 없음, 모두 oricon+youtube 출처).
+   아마존 썸네일은 _SL160_ 크기 지정만 바꿔 같은 이미지를 크게 받는다. 대체 그림(noimage)은 버린다. */
+export function oriconArtwork(block) {
+  const src = String(block || '').match(/<p class="image"[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"/i)?.[1];
+  if (!src || /noimage|no_image|nowprinting|dummy|spacer/i.test(src)) return null;
+  let u;
+  try { u = new URL(src.replace(/&amp;/g, '&'), 'https://www.oricon.co.jp/'); } catch { return null; }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  u.protocol = 'https:';
+  return u.href.replace(/\._SL\d+_\./, '._SL500_.');
+}
+export function parseOriconRank(h) {
+  return String(h || '').split('box-rank-entry').slice(1).map((b) => {
+    const rank = b.match(/<p class="num[^"]*">\s*(\d+)\s*<\/p>/)?.[1];
+    const title = strip(b.match(/<h2 class="title"[^>]*>([\s\S]*?)<\/h2>/)?.[1]);
+    const artist = strip(b.match(/<p class="name"[^>]*>([\s\S]*?)<\/p>/)?.[1]);
+    const artwork = oriconArtwork(b);
+    return rank && title ? { rank: +rank, title, artist, ...(artwork ? { artwork } : {}) } : null;
   }).filter(Boolean);
 }
 
@@ -138,12 +202,7 @@ async function oriconJP(maxPages = 5) {
     const buf = await fetch(u, { headers: { 'user-agent': UA, 'accept-language': 'ja' } }).then((x) => x.arrayBuffer());
     return new TextDecoder('shift_jis').decode(buf);
   };
-  const parse = (h) => h.split('box-rank-entry').slice(1).map((b) => {
-    const rank = b.match(/<p class="num[^"]*">\s*(\d+)\s*<\/p>/)?.[1];
-    const title = strip(b.match(/<h2 class="title"[^>]*>([\s\S]*?)<\/h2>/)?.[1]);
-    const artist = strip(b.match(/<p class="name"[^>]*>([\s\S]*?)<\/p>/)?.[1]);
-    return rank && title ? { rank: +rank, title, artist } : null;
-  }).filter(Boolean);
+  const parse = parseOriconRank;
 
   const out = [];
   const seen = new Set();
@@ -305,7 +364,7 @@ function buildCombined(sources, weights) {
     .map((e, i) => ({ ...e, rank: i + 1, appleRank: e.ranks.apple ?? null, youtubeRank: e.ranks.youtube ?? null }));
 }
 
-async function buildCountry(c) {
+async function buildCountry(c, prevCountry = null) {
   console.log(`\n=== ${c.label}(${c.code}) ===`);
   const apple = await appleChart(c.code);
   console.log(`Apple 차트 ${apple.length}곡 수집`);
@@ -317,19 +376,33 @@ async function buildCountry(c) {
   /* 현지 대표 차트 — 양국 대칭으로 2종씩 수집한다.
      일본: Billboard JAPAN(종합) + 오리콘(피지컬 판매)
      한국: 멜론(최대 음원 플랫폼) + 지니(이용자층이 달라 교차검증) */
-  let local1 = [], local2 = [], local1Name = '', local2Name = '';
+  let local1 = [], local2 = [], local1Name = '', local2Name = '', local1Err = null, local2Err = null;
   if (c.code === 'jp') {
     local1Name = 'billboard'; local2Name = 'oricon';
-    local1 = await billboardJP().catch((e) => { console.log(`  Billboard JAPAN 실패: ${e.message}`); return []; });
+    local1 = await billboardJP().catch((e) => { local1Err = e.message; console.log(`  Billboard JAPAN 실패: ${e.message}`); return []; });
     console.log(`Billboard JAPAN HOT100 ${local1.length}곡 수집`);
-    local2 = await oriconJP(3).catch((e) => { console.log(`  오리콘 실패: ${e.message}`); return []; });
+    local2 = await oriconJP(3).catch((e) => { local2Err = e.message; console.log(`  오리콘 실패: ${e.message}`); return []; });
     console.log(`오리콘 주간 싱글 ${local2.length}곡 수집`);
   } else {
     local1Name = 'melon'; local2Name = 'genie';
-    local1 = await melonKR().catch((e) => { console.log(`  멜론 실패: ${e.message}`); return []; });
+    local1 = await melonKR().catch((e) => { local1Err = e.message; console.log(`  멜론 실패: ${e.message}`); return []; });
     console.log(`멜론 TOP100 ${local1.length}곡 수집`);
-    local2 = await genieKR().catch((e) => { console.log(`  지니 실패: ${e.message}`); return []; });
+    local2 = await genieKR().catch((e) => { local2Err = e.message; console.log(`  지니 실패: ${e.message}`); return []; });
     console.log(`지니 차트 ${local2.length}곡 수집`);
+  }
+
+  /* 주간 차트(Billboard JAPAN·오리콘)만 이전 목록을 이어 쓴다. 멜론·지니는 실시간 차트라 묵은 값을 쓰지 않는다 */
+  const sourceMeta = {};
+  if (c.code === 'jp') {
+    const s1 = settleWeeklySource(local1Name, local1, prevCountry, { error: local1Err });
+    const s2 = settleWeeklySource(local2Name, local2, prevCountry, { error: local2Err });
+    if (!local1.length && s1.list.length) console.log(`  Billboard JAPAN — 이전 목록 ${s1.list.length}곡 유지(${s1.meta.carriedFrom})`);
+    if (!local2.length && s2.list.length) console.log(`  오리콘 — 이전 목록 ${s2.list.length}곡 유지(${s2.meta.carriedFrom})`);
+    local1 = s1.list; local2 = s2.list; sourceMeta[local1Name] = s1.meta; sourceMeta[local2Name] = s2.meta;
+  } else {
+    const at = new Date().toISOString();
+    sourceMeta[local1Name] = { ok: local1.length > 0, count: local1.length, collectedAt: local1.length ? at : null, error: local1.length ? null : (local1Err || '수집 0곡') };
+    sourceMeta[local2Name] = { ok: local2.length > 0, count: local2.length, collectedAt: local2.length ? at : null, error: local2.length ? null : (local2Err || '수집 0곡') };
   }
 
   /* MV 해석 풀 = Apple ∪ RSS ∪ 현지차트 상위 (중복 제거)
@@ -391,7 +464,7 @@ async function buildCountry(c) {
   const sources = { apple: appleOut, appleRss: rssOut, youtube, [local1Name]: local1Out, [local2Name]: local2Out };
   const combined = buildCombined(sources, weights);
 
-  return { ...sources, combined, weights, sourceLabels: SOURCE_LABELS[c.code] };
+  return { ...sources, combined, weights, sourceLabels: SOURCE_LABELS[c.code], sourceMeta };
 }
 
 /** 색인 재구축 — 수집 완료 후에만 호출한다 */
@@ -421,7 +494,7 @@ async function main() {
   };
   for (const c of COUNTRIES) {
     try {
-      out.countries[c.code] = { label: c.label, ...(await buildCountry(c)) };
+      out.countries[c.code] = { label: c.label, ...(await buildCountry(c, prev.countries?.[c.code] || null)) };
       await writeFile(path.join(DB, 'charts.json'), JSON.stringify(out, null, 2));   // 국가별 부분 저장
     } catch (e) {
       // 이전 값은 이미 out 에 깔려 있으므로 그대로 남는다
@@ -446,6 +519,7 @@ async function main() {
    예전엔 이 파일을 임포트하는 순간 수집이 시작돼서 서버에서 쓸 수 없었고,
    그래서 차트가 사람이 손으로 돌릴 때만 갱신됐다 — 실측 218시간(9일) 정체. */
 export { main as collectCharts };
+export { buildCombined };
 
 /* CLI 로 직접 실행할 때만 돈다 */
 const runDirectly =
