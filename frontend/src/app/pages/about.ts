@@ -47,23 +47,23 @@ export function renderAbout(root: HTMLElement, which: 'about' | 'faq') {
   const ja = getLocale() === 'ja';
   const D = ja ? JA : KO;
   const toc = `<nav class="doc-toc" aria-label="Lilac"><p class="doc-toc-h">Lilac</p><ul>
-    <li><a href="#/about" class="${which === 'about' ? 'on' : ''}">${esc(D.about.title)}</a></li>
-    <li><a href="#/faq" class="${which === 'faq' ? 'on' : ''}">${ja ? 'よくある質問' : '자주 묻는 질문'}</a></li>
+    <li><a href="#/about" class="${which === 'about' ? 'on' : ''}"${which === 'about' ? ' aria-current="page"' : ''}>${esc(D.about.title)}</a></li>
+    <li><a href="#/faq" class="${which === 'faq' ? 'on' : ''}"${which === 'faq' ? ' aria-current="page"' : ''}>${ja ? 'よくある質問' : '자주 묻는 질문'}</a></li>
     <li><a href="#/terms">${ja ? '利用規約' : '이용약관'}</a></li>
     <li><a href="#/privacy">${ja ? 'プライバシーポリシー' : '개인정보처리방침'}</a></li>
     <li><a href="#/contact">${ja ? 'お問い合わせ' : '문의'}</a></li>
     <li><a href="#/status">${ja ? 'データの状態' : '데이터 상태'}</a></li>
   </ul></nav>`;
   if (which === 'faq') {
-    root.innerHTML = `<div class="doc">${toc}<article class="doc-body"><p class="doc-kicker">Lilac</p><h1>${ja ? 'よくある質問' : '자주 묻는 질문'}</h1>
+    root.innerHTML = `<div class="doc reading-page">${toc}<article class="doc-body"><h1>${ja ? 'よくある質問' : '자주 묻는 질문'}</h1>
       <div class="faq">${D.faq.map(([q, a]) => `<details class="faq-item"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
     </article></div>`;
     return;
   }
   const a = D.about;
-  const table = (head: string[], rows: Row[]) => `<table class="doc-table"><thead><tr>${head.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${esc(c)}</td>` : `<th scope="row">${esc(c)}</th>`)).join('')}</tr>`).join('')}</tbody></table>`;
-  root.innerHTML = `<div class="doc">${toc}<article class="doc-body">
-    <p class="doc-kicker">Lilac</p><h1>${esc(a.title)}</h1>
+  const table = (head: string[], rows: Row[]) => `<div class="reading-table" tabindex="0" role="region" aria-label="${esc(head.join(' · '))}"><table class="doc-table"><thead><tr>${head.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${esc(c)}</td>` : `<th scope="row">${esc(c)}</th>`)).join('')}</tr>`).join('')}</tbody></table></div>`;
+  root.innerHTML = `<div class="doc reading-page">${toc}<article class="doc-body">
+    <h1>${esc(a.title)}</h1>
     <p class="doc-lead">${esc(a.lead)}</p>
     <section class="doc-sec"><h2>${ja ? 'できること' : '하는 일'}</h2><ul class="doc-list">${a.does.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>
     <section class="doc-sec"><h2>${ja ? 'しないこと' : '하지 않는 일'}</h2><ul class="doc-list">${a.doesnt.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>

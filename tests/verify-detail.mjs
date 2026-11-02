@@ -62,7 +62,8 @@ globalThis.fetch = orig;
 /* 음반 형식 · 알라딘 머리표 */
 ok('[2LP]·아날로그盤은 LP(CD 아님)', formatOf('[수입] Vaundy - replica [2LP]') === 'LP' && formatOf('ヨルシカ / 盗作 【アナログ盤】') === 'LP');
 ok('CD+Blu-ray / CD+DVD', formatOf('ANTENNA (CD+Blu-ray)') === 'CD+Blu-ray' && formatOf('狂言 (初回限定盤 CD+DVD)') === 'CD+DVD');
-ok('형식 표기 없으면 CD', formatOf('BTS - PROOF') === 'CD');
+/* 형식 표기가 없으면 CD라고 주장하지 않는다(예전 기본값 CD가 HMV LP·책을 CD로 표시했다) */
+ok('형식 표기 없으면 형식 없음(null)', formatOf('BTS - PROOF') === null);
 ok('알라딘 머리표 제거', stripTags('[수입] [LP] Ado - 狂言') === 'Ado - 狂言' && stripTags('Ado - 狂言') === 'Ado - 狂言');
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

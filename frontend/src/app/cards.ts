@@ -1,5 +1,6 @@
+import { cityReading } from './name-reading';
 /* 목록 카드 — 공연·티켓 오픈·뉴스·상품·발매·아티스트·차트 */
-import { esc, safeHref, safeImage, icon, img, fmtRange, fmtDateTime, fmtTime, fmtDay, until, ddayOf, ago, money, saleLabel, genreLabel, approxMoney } from './ui';
+import { esc, safeHref, safeImage, icon, img, fmtRange, fmtDateTime, fmtTime, fmtDay, ddayOf, ago, money, saleLabel, genreLabel, approxMoney, ticketNow, ticketInstant, untilText, clockPendingLabel } from './ui';
 import { withUtm } from './fanclub';
 import { t, getLocale } from './i18n';
 import { state, isFollowing, toggleFollow } from './state';
@@ -16,7 +17,7 @@ export interface Concert {
   openSchedule?: { at: string | null; label: string; endAt?: string | null }[];
   status: string; statusText?: string | null; poster: string | null; url: string;
   genre?: string | null; kind?: string; badges?: string[]; direction?: string; saleType?: string | null; description?: string | null;
-  unconfirmed?: boolean; openTba?: boolean; posterKind?: string | null; saleSortAt?: string | null; closesAt?: string | null;
+  unconfirmed?: boolean; openTba?: boolean; posterKind?: string | null; posterImageKind?: string | null; saleSortAt?: string | null; closesAt?: string | null;
   shows?: { date: string | null; endDate?: string | null; venue: string | null; city: string | null; url: string }[]; showCount?: number; venueCount?: number; performerKo?: string | null;
   windows?: { label: string | null; opensAt: string | null; closesAt: string | null; date: string | null; venue: string | null; url: string }[]; windowCount?: number;
   alsoAt?: { provider: string; providerLabel?: string; url: string; status?: string | null }[];
@@ -29,8 +30,9 @@ export interface Offer {
   price: number | null; listPrice?: number | null; memberPrice?: number | null; currency: string; releaseDate: string | null; image: string | null;
   availability: string; url: string; bonus?: string | null; imported?: boolean; set?: number | null; region?: string | null; releaseDatePrecision?: string | null;
 }
-export interface Release { id: string; tier: string; artist: string; artistKo?: string; artistId?: string; title: string; titleKo?: string; country: string; type?: string; releaseDate: string; artwork: string | null; trackCount?: number | null; offerCount?: number; upcoming?: boolean }
-export interface ArtistLite { id: string; name: string; nameOriginal?: string | null; nameKo?: string | null; nameJa?: string | null; origin?: string; genre?: string | null; photo?: string | null; artwork?: string | null }
+export interface Release { id: string; tier: string; artist: string; artistKo?: string; artistId?: string; title: string; titleKo?: string; country: string; type?: string; releaseDate: string; artwork: string | null; artworkKind?:string|null; artworkSource?:{artistId?:string;sourceUrl?:string;url?:string}|null; appleUrl?:string|null; trackCount?: number | null; offerCount?: number; upcoming?: boolean }
+export interface OfficialPortrait { artistId:string; status:'verified'; imageUrl:string; sourceUrl:string; checkedAt:string; method:'official-profile' }
+export interface ArtistLite { portrait?:OfficialPortrait|null; id: string; name: string; nameOriginal?: string | null; nameKo?: string | null; nameJa?: string | null; origin?: string; genre?: string | null; photo?: string | null; artwork?: string | null }
 
 /* 화면에 그린 공연을 기억해 두고 상세 시트에서 쓴다 */
 class ConcertRegistry extends Map<string, Concert> {
@@ -40,7 +42,7 @@ export const concertRegistry = new ConcertRegistry();
 
 /* 예매처마다 "서울특별시" "인천시" "인천"처럼 달라서 한 가지로 */
 export function cityName(city: string | null | undefined) {
-  return String(city || '').trim().replace(/^(서울|부산|대구|인천|광주|대전|울산|세종)(특별자치시|특별시|광역시|시)$/, '$1');
+  const name=String(city || '').trim().replace(/^(서울|부산|대구|인천|광주|대전|울산|세종)(특별자치시|특별시|광역시|시)$/, '$1');return getLocale()==='ja'?cityReading(name):name;
 }
 export function placeOf(c: Concert) {
   const v = c.venue || '';
@@ -53,8 +55,9 @@ export function whenOf(c: Concert) {
   return (c.showCount || 0) > 1 ? `${r} · ${t('c.shows', { n: c.showCount! })}` : r;
 }
 function titleOf(c: Concert) {
-  const ko = getLocale() === 'ko' && c.performerKo && !c.title.includes(c.performerKo) ? ` <span class="ko-name">${esc(c.performerKo)}</span>` : '';
-  return esc(c.title) + ko;
+  const title=getLocale()==='ko'&&c.performerKo&&c.title===c.performer?c.performerKo:c.title;
+  const ko = getLocale() === 'ko' && c.performerKo && !title.includes(c.performerKo) ? ` <span class="ko-name">${esc(c.performerKo)}</span>` : '';
+  return esc(title) + ko;
 }
 
 const PROVIDER: Record<string, [string, string]> = {
@@ -100,12 +103,18 @@ function dateBox(c: Concert) {
   return `<span class="datebox" aria-hidden="true"><em>${esc(c.startDate ? c.startDate.slice(0, 4) : '')}</em><b>${esc(md)}</b><span>${esc([wd, multi].filter(Boolean).join(' '))}</span><i>${esc(cityName(c.city) || c.venue || '')}</i></span>`;
 }
 
+export function posterKindLabel(c:Concert){
+ const ja=getLocale()==='ja';
+ if(c.posterImageKind==='album-cover')return ja?'アルバムカバー・公演ポスターではありません':'앨범 커버 · 공연 포스터 아님';
+ if(c.posterKind!=='artist')return '';
+ return ['official-profile','deezer-artist','name-matched-photo'].includes(c.posterImageKind||'')?(ja?'アーティスト写真・公演ポスターではありません':'아티스트 사진 · 공연 포스터 아님'):(ja?'代替画像・公演ポスターではありません':'대체 이미지 · 공연 포스터 아님');
+}
 export function posterCard(c: Concert) {
   concertRegistry.set(c.id, c);
   const dd = ddayOf(c.startDate);
   const place = placeOf(c);
   return `<article class="pcard">
-    <button class="pcard-art" data-open-concert="${esc(c.id)}" aria-label="${esc(c.title)}">${!c.poster ? dateBox(c) : img(c.poster, '', c.posterKind === 'artist' ? 'poster is-artist-photo' : 'poster', { ratio: '3/4', initial: c.performer || c.title, text: true })}</button>
+    <button class="pcard-art" data-open-concert="${esc(c.id)}" aria-label="${esc(c.title)}">${!c.poster ? dateBox(c) : img(c.poster, '', c.posterKind === 'artist' ? 'poster is-artist-photo' : 'poster', { ratio: '3/4', initial: c.performer || c.title, text: true })}${c.poster&&posterKindLabel(c)?'<span class="media-kind-note">'+esc(posterKindLabel(c))+'</span>':''}</button>
     <div class="pcard-body">
       <p class="pcard-date">${whenOf(c)}${dd ? ` <span class="dday">${dd}</span>` : ''}</p>
       <h3 class="pcard-title"><button data-open-concert="${esc(c.id)}">${titleOf(c)}</button></h3>
@@ -127,34 +136,76 @@ export function festCard(f: Concert & { country?: string; lineup?: { name: strin
   const names = (f.lineup || []).filter((x) => x.origin === want).slice(0, 3).map((x) => x.name);
   const hi = n ? `<p class="fest-hi"><b>${want === 'jp' ? 'J-POP' : 'K-POP'} ${n}${ja ? '組' : '팀'}</b> ${esc(names.join(', '))}${n > names.length ? ' …' : ''}</p>` : (f.lineup?.length ? `<p class="fest-hi muted">${ja ? '出演' : '라인업'} ${f.lineup.length}${ja ? '組' : '팀'}</p>` : '');
   return `<article class="pcard fcard">
-    <button class="pcard-art" data-open-concert="${esc(f.id)}" aria-label="${esc(f.title)}">${f.poster ? img(f.poster, '', f.posterKind === 'artist' ? 'poster is-artist-photo' : 'poster', { ratio: '3/4', initial: f.title, text: true }) : dateBox(f)}<span class="fest-cn">${esc(cn)}</span></button>
+    <button class="pcard-art" data-open-concert="${esc(f.id)}" aria-label="${esc(f.title)}">${f.poster ? img(f.poster, '', f.posterKind === 'artist' ? 'poster is-artist-photo' : 'poster', { ratio: '3/4', initial: f.title, text: true }) : dateBox(f)}<span class="fest-cn">${esc(cn)}</span>${f.poster&&posterKindLabel(f)?'<span class="media-kind-note">'+esc(posterKindLabel(f))+'</span>':''}</button>
     <div class="pcard-body">
       <p class="pcard-date">${whenOf(f)}${dd ? ` <span class="dday">${dd}</span>` : ''}</p>
       <h3 class="pcard-title"><button data-open-concert="${esc(f.id)}">${esc(f.title)}</button></h3>
-      ${f.venue ? `<p class="pcard-venue">${esc([f.venue, f.city].filter(Boolean).join(' · '))}</p>` : ''}
+      ${f.venue ? `<p class="pcard-venue">${esc([f.venue, cityName(f.city)].filter(Boolean).join(' · '))}</p>` : ''}
       ${hi}
     </div>
   </article>`;
 }
 
+/* 티켓 시각 판단 — 서버시계(ticketNow) 기준. 판매 구간만 판단하며 잔여석·현재 판매 여부는 보장하지 않는다.
+   phase: unsynced(서버시계 미동기) | upcoming(다음 오픈이 미래) | closing(열린 창의 마감이 미래) |
+          closed(모든 시각이 확정적이고 마감이 지남) | unverified(오픈은 지났거나 시각이 없고, 마감을 확정할 수 없음)
+   시간대가 없는 시각(ambiguous)이 하나라도 있으면 closed로 단정하지 않는다. */
+type TimingInput = Pick<Concert, 'ticketOpenAt' | 'closesAt' | 'openSchedule'> & { windows?: { opensAt: string | null; closesAt: string | null }[] | null };
+export function ticketTiming(c: TimingInput, now: number | null = ticketNow()) {
+  const sched = c.openSchedule || [];
+  const wins = c.windows || [];
+  const openRaw = [c.ticketOpenAt, ...sched.map((s) => s.at), ...wins.map((w) => w.opensAt)].filter((a): a is string => !!a);
+  const endRaw = [c.closesAt, ...sched.map((s) => s.endAt), ...wins.map((w) => w.closesAt)].filter((a): a is string => !!a);
+  const ambiguous = [...openRaw, ...endRaw].some((a) => ticketInstant(a) == null);
+  const byTime = (a: string, b: string) => (ticketInstant(a) as number) - (ticketInstant(b) as number);
+  const opens = openRaw.filter((a) => ticketInstant(a) != null).sort(byTime);
+  const ends = endRaw.filter((a) => ticketInstant(a) != null).sort(byTime);
+  const firstAt = opens[0] || ends[0] || null;
+  const base = { opensAt: null as string | null, closing: null as string | null, closed: false, firstAt, ambiguous };
+  if (now == null) return { ...base, known: false as const, phase: 'unsynced' as const };
+  const opensAt = opens.find((a) => (ticketInstant(a) as number) > now) || null;
+  if (opensAt) return { ...base, known: true as const, phase: 'upcoming' as const, opensAt };
+  const closing = ends.find((a) => (ticketInstant(a) as number) > now) || null;
+  if (closing) return { ...base, known: true as const, phase: 'closing' as const, closing };
+  const close = ticketInstant(c.closesAt);
+  const closed = !ambiguous && close != null && close <= now && sched.every((s) => !s.at || !!s.endAt) && wins.every((w) => !w.opensAt || !!w.closesAt);
+  return { ...base, known: true as const, phase: closed ? 'closed' as const : 'unverified' as const, closed };
+}
+/** 행 최외곽에 붙이는 경계 속성(main의 clock.watch가 읽는다). 미동기면 가장 이른 공지 시각을 넣어 첫 동기화 후 판단하게 한다. */
+export function ticketBoundaryAttrs(tm: ReturnType<typeof ticketTiming>) {
+  const open = tm.opensAt || (!tm.known ? tm.firstAt : null);
+  const close = tm.closing;
+  return `${open ? ` data-ticket-open="${esc(open)}"` : ''}${close ? ` data-ticket-close="${esc(close)}"` : ''}`;
+}
+/** 판매 상태를 현재 시각으로 확정할 수 없을 때의 문구. 원문 status는 수집 시점의 값일 뿐 지금의 판매·잔여석을 보장하지 않는다. */
+export function ticketStatusNote(c: Pick<Concert, 'status'>) {
+  const ja = getLocale() === 'ja';
+  if (c.status === 'onsale') return ja ? '取得時点で受付中' : '원문 수집 시 접수 중';
+  if (c.status === 'soldout') return ja ? '取得時点で完売' : '원문 수집 시 매진';
+  return ja ? '受付状況は販売元で確認' : '접수 상태 원문 확인';
+}
+
 export function ticketRow(c: Concert, { day = '' }: { day?: string } = {}) {
   concertRegistry.set(c.id, c);
-  const now = Date.now();
-  const opensAt = [c.ticketOpenAt, ...(c.openSchedule || []).map((s) => s.at)].filter((a): a is string => !!a && Date.parse(a) > now).sort()[0] || null;
-  const at = opensAt || c.ticketOpenAt || null;
-  const closing = !opensAt && c.closesAt && Date.parse(c.closesAt) > now ? c.closesAt : null;
-  const soon = (opensAt && Date.parse(opensAt) - now < 36 * 3600e3) || (closing && Date.parse(closing) - now < 36 * 3600e3);
+  const now = ticketNow();
+  const tm = ticketTiming(c, now);
+  const { opensAt, closing } = tm;
+  const at = opensAt || tm.firstAt || null;
+  const soon = now != null && ((opensAt && (ticketInstant(opensAt) as number) - now < 36 * 3600e3) || (closing && (ticketInstant(closing) as number) - now < 36 * 3600e3));
   // 팬클럽 접수 이름은 공식 명칭 그대로(팬클럽 사이트에서 같은 이름을 찾게), 성격은 태그로 설명
   const label = c.provider === 'fanclub' ? (c.ticketOpenLabel || c.saleType || t('c.open')) : saleLabel(c.ticketOpenLabel || c.saleType) || t('c.open');
   /* 일정표 안(그날 칸)에서는 같은 날이면 시각만, 다른 날이면 날짜까지 */
   const kstDay = (x: string) => Number.isFinite(Date.parse(x)) ? new Date(Date.parse(x) + 9 * 3600e3).toISOString().slice(0, 10) : '';
   const fmtAt = (x: string) => (day && kstDay(x) === day ? fmtTime(x) : fmtDateTime(x));
-  const timeHtml = opensAt
-    ? `<b>${esc(fmtAt(opensAt))}</b><span data-until="${esc(opensAt)}" data-until-k="c.soon">${esc(t('c.soon', { t: until(opensAt) }))}</span>`
+  const timeHtml = !tm.known
+    ? (at ? `<b>${esc(fmtAt(at))}</b><span class="is-unsynced">${esc(clockPendingLabel())}</span>` : `<b>${esc(t('c.tba'))}</b><span></span>`)
+    : opensAt
+    ? `<b>${esc(fmtAt(opensAt))}</b><span data-until="${esc(opensAt)}" data-until-k="c.soon">${esc(untilText('c.soon', opensAt, now))}</span>`
     : closing
-      ? `<b>~ ${esc(fmtAt(closing))}</b><span data-until="${esc(closing)}" data-until-k="c.closes">${esc(t('c.closes', { t: until(closing) }))}</span>`
-      : at ? `<b>${esc(fmtAt(at))}</b><span>${esc(t('st.onsale'))}</span>` : `<b>${esc(t('c.tba'))}</b><span></span>`;
-  return `<li class="trow${soon ? ' is-soon' : ''}${c.provider === 'fanclub' ? ' is-fc' : ''}" data-row-concert="${esc(c.id)}">
+      ? `<b>~ ${esc(fmtAt(closing))}</b><span data-until="${esc(closing)}" data-until-k="c.closes">${esc(untilText('c.closes', closing, now))}</span>`
+      : tm.closed ? `<b>${esc(fmtAt(c.closesAt!))}</b><span>${esc(t('st.closed'))}</span>`
+      : at ? `<b>${esc(fmtAt(at))}</b><span class="is-unverified">${esc(ticketStatusNote(c))}</span>` : `<b>${esc(t('c.tba'))}</b><span>${esc(ticketStatusNote(c))}</span>`;
+  return `<li class="trow${soon ? ' is-soon' : ''}${c.provider === 'fanclub' ? ' is-fc' : ''}" data-row-concert="${esc(c.id)}"${ticketBoundaryAttrs(tm)}>
     <div class="trow-time">${timeHtml}</div>
     <button class="trow-art" data-open-concert="${esc(c.id)}" aria-label="${esc(c.title)}">${img(c.poster, '', 'thumb', { ratio: '3/4', initial: c.performer || c.title })}</button>
     <div class="trow-main">
@@ -206,13 +257,14 @@ export function goodsCard(g: Offer, fx: { jpyKrw?: number } | null, buyer: strin
     g.region === 'JP' && state.edition !== 'jp' ? t('g.jpPress') : '',
     g.bonus === 'hmv' ? t('g.bonusHmv') : g.bonus ? t('g.bonusAny') : '',
   ].filter(Boolean);
-  return `<a class="gcard" href="${esc(safeHref(g.url, false))}" target="_blank" rel="noopener">
+  const help = '#/assist?kind=purchase&url=' + encodeURIComponent(safeHref(g.url, false)) + '&artist=' + encodeURIComponent(g.artist || '') + '&title=' + encodeURIComponent(g.title);
+  return `<article class="gcard"><a class="gcard-product" href="${help}">
     ${img(g.image, '', 'square', { ratio: '1/1', initial: g.artist || g.title, cover: { title: g.title, sub: g.artist || '' } })}
     <span class="gcard-store"><span>${esc(g.storeLabel)}</span>${av ? `<span class="gav gav-${esc(g.availability)}">${esc(av)}</span>` : ''}</span>
     <span class="gcard-title">${esc(g.title)}</span>
     <span class="gcard-price"><b>${money(g.price, g.currency)}</b>${approx ? `<span class="approx">${esc(approx)}</span>` : ''}</span>
     ${meta.length ? `<span class="gcard-meta">${meta.map(esc).join(' · ')}</span>` : ''}
-  </a>`;
+  </a><div class="gcard-actions"><a href="${help}">${getLocale() === 'ja' ? '購入方法・入力サポート' : '구매 방법·입력 도움'}</a><a href="${esc(safeHref(g.url, false))}" target="_blank" rel="noopener">${getLocale() === 'ja' ? '原文' : '원문'}${icon('i-ext','ic xs')}</a></div></article>`;
 }
 
 /* Apple 표기 꼬리(" - Single" " - EP")는 제목이 아니라 유형이다 */
@@ -228,18 +280,25 @@ export function releaseCard(r: Release) {
   const typeL = REL_TYPE[type]?.[getLocale() === 'ja' ? 1 : 0] || '';
   return `<a class="rcard" href="${href}">
     ${img(r.artwork, '', 'square', { ratio: '1/1', initial: r.artist, cover: { title: releaseTitle(r.title), sub: r.artist } })}
-    <span class="rcard-title">${esc(releaseTitle(r.title))}</span>
+    <span class="rcard-title" data-content-original-work translate="no">${esc(releaseTitle(r.title))}</span>
     <span class="rcard-artist">${esc(artist)}</span>
     <span class="rcard-meta">${r.upcoming ? `<span class="tag tag-accent">${t('g.upcoming')}</span>` : ''}${esc([fmtDay(r.releaseDate, { year: true }), typeL].filter(Boolean).join(' · '))}${r.offerCount ? ` · ${t('g.compare')}` : ''}</span>
   </a>`;
 }
 
-/* 일본어 화면에서 한글 표기만 있는 이름은 로스터의 원어(라틴) 표기가 있으면 그것으로 */
-export function artistName(a: { name: string; nameOriginal?: string | null; nameJa?: string | null }) {
-  if (getLocale() === 'ja' && /[가-힣]/.test(a.name)) {
-    if (a.nameOriginal && !/[가-힣]/.test(a.nameOriginal)) return a.nameOriginal;
-    /* 위키백과 일본어판 제목(볼빨간사춘기 → Bolbbalgan4, 임영웅 → イム・ヨンウン) */
-    if (a.nameJa && !/[가-힣]/.test(a.nameJa)) return a.nameJa;
+/* 화면 언어(에디션 아님)에서 읽을 수 없는 글자의 이름만 바꾼다. 라틴 브랜드명(Mrs. GREEN APPLE·BTS)은 그대로.
+   ko: 가나·한자 이름 → 확인된 한글 표기(nameKo: 로스터 또는 /api/live/display-names)
+   ja: 한글 이름 → nameJa(위키백과 일본어판 제목: 볼빨간사춘기 → 赤頬思春期) → 한글 없는 원어 표기
+   확인된 이름이 없으면 원래 이름 — 지어내지 않는다 */
+export function artistName(a: { name: string; nameOriginal?: string | null; nameJa?: string | null; nameKo?: string | null }) {
+  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/, KANA_KANJI = /[぀-ヿ㐀-䶿一-鿿々〆ｦ-ﾟ]/;
+  const loc = getLocale();
+  if (loc === 'ko' && KANA_KANJI.test(a.name)) {
+    if (a.nameKo && HANGUL.test(a.nameKo) && !KANA_KANJI.test(a.nameKo)) return a.nameKo;
+  }
+  if (loc === 'ja' && HANGUL.test(a.name)) {
+    if (a.nameJa && !HANGUL.test(a.nameJa)) return a.nameJa;
+    if (a.nameOriginal && !HANGUL.test(a.nameOriginal)) return a.nameOriginal;
   }
   return a.name;
 }
@@ -249,7 +308,7 @@ export function artistCard(a: ArtistLite) {
   return `<a class="acard" href="#/artist/${encodeURIComponent(a.id)}">
     ${img(a.photo || a.artwork, '', 'round', { ratio: '1/1', initial: a.name })}
     <span class="acard-name">${esc(artistName(a))}</span>
-    <span class="acard-meta">${esc(getLocale() === 'ko' && a.nameKo && a.nameKo !== a.name ? a.nameKo : [o, genreLabel(a.genre)].filter(Boolean).join(' · '))}</span>
+    <span class="acard-meta">${esc(getLocale() === 'ko' && a.nameKo && a.nameKo !== artistName(a) ? a.nameKo : [o, genreLabel(a.genre)].filter(Boolean).join(' · '))}</span>
   </a>`;
 }
 
@@ -284,8 +343,8 @@ export function chartRow(e: ChartEntry, i: number, { compact = false, sourceLabe
   const src = !compact && rk ? Object.entries(rk).filter(([, v]) => v).map(([k, v]) => `${esc(sourceLabels[k] || k)} ${esc(t('ch.rankN', { n: v as number }))}`).join(' · ') : '';
   return `<li class="crow" data-track-key="${esc(keyOf(tr))}">
     <span class="crow-rank">${esc(e.rank ?? i + 1)}</span>
-    <button class="crow-art" data-play="${i}" aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist })}<span class="crow-play">${icon('i-play', 'ic')}</span><span class="crow-eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
-    <div class="crow-main"><b>${esc(e.title)}</b><a href="#/artist/name/${encodeURIComponent(e.artist)}">${esc(e.artist)}</a>${src ? `<span class="crow-src">${src}</span>` : ''}</div>
+    <button class="crow-art" data-play="${i}" data-content-original-label aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist })}<span class="crow-play">${icon('i-play', 'ic')}</span><span class="crow-eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
+    <div class="crow-main"><b data-content-original-work translate="no">${esc(e.title)}</b><a href="#/artist/name/${encodeURIComponent(e.artist)}">${esc(e.artist)}</a>${src ? `<span class="crow-src">${src}</span>` : ''}</div>
     ${compact ? '' : `<div class="crow-soc">${likeBtn(trackTarget(tr), 'is-mini')}${talkBtn(trackTarget(tr), '#/track/{key}', 'is-mini')}</div>`}
   </li>`;
 }
@@ -293,12 +352,14 @@ export function chartRow(e: ChartEntry, i: number, { compact = false, sourceLabe
 /* 티켓 오픈 카드 — 예매처 앱의 오픈 예정 카드처럼: 흐린 포스터 배경 위에 포스터, 아래에 오픈 시각을 가장 먼저 */
 export function openLabel(iso: string | null | undefined) {
   if (!iso) return '';
-  const ms = Date.parse(iso);
-  if (!Number.isFinite(ms)) return '';
+  const ms = ticketInstant(iso);
+  if (ms == null) return '';
   const k = new Date(ms + 9 * 3600e3);
   const day = k.toISOString().slice(0, 10);
-  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 33 * 3600e3).toISOString().slice(0, 10);
+  const now = ticketNow();
+  if (now == null) return fmtDateTime(iso); // 미동기면 '오늘/내일' 같은 상대 표현을 쓰지 않는다
+  const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
+  const tomorrow = new Date(now + 33 * 3600e3).toISOString().slice(0, 10);
   const hm = `${String(k.getUTCHours()).padStart(2, '0')}:${String(k.getUTCMinutes()).padStart(2, '0')}`;
   if (day === today) return `${t('c.today')} ${hm}`;
   if (day === tomorrow) return `${t('c.tomorrow')} ${hm}`;
@@ -306,14 +367,15 @@ export function openLabel(iso: string | null | undefined) {
 }
 export function openCard(c: Concert) {
   concertRegistry.set(c.id, c);
-  const now = Date.now();
-  const opensAt = [c.ticketOpenAt, ...(c.openSchedule || []).map((x) => x.at)].filter((a): a is string => !!a && Date.parse(a) > now).sort()[0] || null;
-  const closing = !opensAt && c.closesAt && Date.parse(c.closesAt) > now ? c.closesAt : null;
-  const time = opensAt ? openLabel(opensAt) : closing ? t('c.closesAt', { t: openLabel(closing) }) : c.openTba ? t('c.tba') : t('st.onsale');
+  const tm = ticketTiming(c);
+  const { opensAt, closing } = tm;
+  const time = !tm.known
+    ? (tm.firstAt ? `${fmtDateTime(tm.firstAt)} · ${clockPendingLabel()}` : c.openTba ? t('c.tba') : clockPendingLabel())
+    : opensAt ? openLabel(opensAt) : closing ? t('c.closesAt', { t: openLabel(closing) }) : tm.closed ? t('st.closed') : c.openTba && !tm.firstAt ? t('c.tba') : ticketStatusNote(c);
   const kind = c.provider === 'fanclub' ? ((c as Concert & { isPublic?: boolean }).isPublic ? t('fc.tag.public') : c.fcOnly ? t('fc.tag.only') : t('fc.tag.first')) : saleLabel(c.ticketOpenLabel || c.saleType) || '';
   const poster = safeImage(c.poster);
   const bg = poster ? ` style="background-image:url(${esc(JSON.stringify(poster))})"` : '';
-  return `<li class="ocard${opensAt ? '' : ' is-live'}">
+  return `<li class="ocard${tm.phase === 'closing' ? ' is-live' : ''}"${ticketBoundaryAttrs(tm)}>
     <button class="ocard-art" data-open-concert="${esc(c.id)}" aria-label="${esc(c.title)}"><span class="ocard-bg"${bg}></span>${img(c.poster, '', 'poster', { ratio: '3/4', initial: c.performer || c.title, text: true })}</button>
     <p class="ocard-time">${esc(time)}</p>
     <h3 class="ocard-title"><button data-open-concert="${esc(c.id)}">${esc(c.title)}</button></h3>
@@ -326,25 +388,25 @@ export function openCard(c: Concert) {
    시각은 고정폭 숫자로 한 칸씩 넘어가며 들어오고(fx.ts bindBoard), 줄 전체가 공연 상세로 가는 버튼이다 */
 export function boardRow(c: Concert, i: number) {
   concertRegistry.set(c.id, c);
-  const now = Date.now();
-  const opensAt = [c.ticketOpenAt, ...(c.openSchedule || []).map((x) => x.at)].filter((a): a is string => !!a && Date.parse(a) > now).sort()[0] || null;
-  const closing = !opensAt && c.closesAt && Date.parse(c.closesAt) > now ? c.closesAt : null;
-  const at = opensAt || closing;
-  const k = at ? new Date(Date.parse(at) + 9 * 3600e3) : null;
+  const now = ticketNow();
+  const tm = ticketTiming(c, now);
+  const { opensAt, closing } = tm;
+  const at = opensAt || closing || (!tm.known ? tm.firstAt : null);
+  const k = at ? new Date((ticketInstant(at) as number) + 9 * 3600e3) : null;
   const hm = k ? `${String(k.getUTCHours()).padStart(2, '0')}:${String(k.getUTCMinutes()).padStart(2, '0')}` : '--:--';
   const day = k ? k.toISOString().slice(0, 10) : '';
-  const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
-  const tomorrow = new Date(now + 33 * 3600e3).toISOString().slice(0, 10);
-  const dayL = !k ? (c.openTba ? t('c.tba') : '') : day === today ? t('c.today') : day === tomorrow ? t('c.tomorrow') : fmtDay(day);
+  const today = now == null ? '' : new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
+  const tomorrow = now == null ? '' : new Date(now + 33 * 3600e3).toISOString().slice(0, 10);
+  const dayL = !k ? (c.openTba ? t('c.tba') : '') : today && day === today ? t('c.today') : tomorrow && day === tomorrow ? t('c.tomorrow') : fmtDay(day);
   const ja = getLocale() === 'ja';
   const verb = opensAt ? (ja ? '発売' : '오픈') : closing ? (ja ? '締切' : '마감') : '';
-  const days = k ? Math.round((Date.parse(day) - Date.parse(today)) / 864e5) : null;
-  const st = !opensAt && !closing ? t('st.onsale') : days === 0 ? (ja ? '本日' : 'TODAY') : days != null ? `D-${days}` : '';
-  const stCls = !opensAt ? 'is-live' : days != null && days <= 1 ? 'is-soon' : '';
+  const days = k && today ? Math.round((Date.parse(day) - Date.parse(today)) / 864e5) : null;
+  const st = !tm.known ? (ja ? '同期中' : '동기화 중') : tm.closed ? t('st.closed') : !opensAt && !closing ? ticketStatusNote(c) : days === 0 ? (ja ? '本日' : 'TODAY') : days != null ? `D-${days}` : '';
+  const stCls = tm.phase === 'closing' ? 'is-live' : opensAt && days != null && days <= 1 ? 'is-soon' : '';
   const kind = c.provider === 'fanclub' ? ((c as Concert & { isPublic?: boolean }).isPublic ? t('fc.tag.public') : c.fcOnly ? t('fc.tag.only') : t('fc.tag.first')) : saleLabel(c.ticketOpenLabel || c.saleType) || (ja ? '一般' : '일반 예매');
   const poster = safeImage(c.poster);
   const who = artistName({ name: c.performer || '', nameOriginal: (c as Concert & { performerKo?: string }).performerKo || null }) || placeOf(c);
-  return `<button type="button" class="fx-board-row" style="--r:${i}" data-open-concert="${esc(c.id)}">
+  return `<button type="button" class="fx-board-row" style="--r:${i}" data-open-concert="${esc(c.id)}"${ticketBoundaryAttrs(tm)}>
     <span class="fx-board-time"><b data-flap>${esc(hm)}</b><small>${esc([dayL, verb].filter(Boolean).join(' '))}</small></span>
     <span class="fx-board-t">${poster ? `<img src="${esc(poster)}" alt="" loading="lazy" referrerpolicy="no-referrer" onload="if(this.naturalWidth<8)this.onerror()" onerror="this.outerHTML='<span class=&quot;fx-board-ini&quot;>${esc((c.performer || c.title).slice(0, 1))}</span>'">` : `<span class="fx-board-ini">${esc((c.performer || c.title).slice(0, 1))}</span>`}<div><b>${esc(c.title)}</b><span>${esc(who)}</span></div></span>
     <span class="fx-board-kind${c.provider === 'fanclub' ? ' is-fc' : ''}">${esc(kind)}</span>

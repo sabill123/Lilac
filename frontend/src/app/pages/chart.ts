@@ -58,7 +58,7 @@ export async function renderChart(root: HTMLElement, alive: () => boolean, sub?:
   const short: Record<string, string> = ja
     ? { billboard: 'Billboard', oricon: 'オリコン', melon: 'Melon', genie: 'genie', apple: 'Apple Music', appleRss: 'Apple 公式フィード', youtube: 'YouTube' }
     : { billboard: '빌보드', oricon: '오리콘', melon: '멜론', genie: '지니', apple: 'Apple Music', appleRss: 'Apple 공식 피드', youtube: 'YouTube' };
-  root.querySelector('#chTools')!.innerHTML = `<div class="chips">${['combined', ...d.sources].map((s) => `<a class="chip ${s === source ? 'on' : ''}" href="#/chart/${country}/${encodeURIComponent(s)}">${esc(labels[s] || s)}</a>`).join('')}</div>
+  root.querySelector('#chTools')!.innerHTML = `<div class="chips">${['combined', ...d.sources].map((s) => `<a class="chip ${s === source ? 'on' : ''}" href="#/chart/${country}/${encodeURIComponent(s)}" ${s === source ? 'aria-current="page"' : ''}>${esc(labels[s] || s)}</a>`).join('')}</div>
     <span class="fresh">${d.live ? 'LIVE · ' : ''}${esc(t('updated', { t: ago(d.updated) }))}</span>`;
   const sourceRail = root.querySelector<HTMLElement>('#chTools .chips');
   const selectedSource = sourceRail?.querySelector<HTMLElement>('.on');
@@ -93,9 +93,9 @@ async function paintMoves(root: HTMLElement, country: 'jp' | 'kr', alive: () => 
   try { m = await api(`/api/live/chart-moves?country=${country}`); } catch { return; }
   if (!alive() || !m.source || (!m.rising.length && !m.entries.length)) return;
   const card = (e: Move, i: number, kind: 'up' | 'new') => `<li class="shelf-card">
-      <button class="shelf-art" data-shelf="${kind}" data-i="${i}" aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist, cover: { title: e.title, sub: e.artist } })}<span class="crow-play">${icon('i-play', 'ic')}</span></button>
+      <button class="shelf-art" data-shelf="${kind}" data-i="${i}" data-content-original-label aria-label="${esc(e.title)} ${t('ch.play')}">${img(e.artwork, '', 'square', { ratio: '1/1', initial: e.artist, cover: { title: e.title, sub: e.artist } })}<span class="crow-play">${icon('i-play', 'ic')}</span></button>
       <p class="shelf-move">${kind === 'up' && e.lastRank ? esc(t('ch.moveUp', { from: e.lastRank, to: e.rank })) : esc(t('ch.moveNew', { r: e.rank }))}</p>
-      <b>${esc(e.title)}</b><a href="#/artist/name/${encodeURIComponent(e.artist)}">${esc(e.artist)}</a>
+      <b data-content-original-work translate="no">${esc(e.title)}</b><a href="#/artist/name/${encodeURIComponent(e.artist)}">${esc(e.artist)}</a>
     </li>`;
   const shelf = (title: string, list: Move[], kind: 'up' | 'new') => list.length ? `<section class="shelf-sec"><h2 class="shelf-h">${esc(title)}</h2><ul class="shelf">${list.map((e, i) => card(e, i, kind)).join('')}</ul></section>` : '';
   box.innerHTML = `<div class="shelves">${shelf(t('ch.rising'), m.rising, 'up')}${shelf(t('ch.new'), m.entries, 'new')}</div><p class="method small">${esc(t('ch.movesSrc', { s: m.sourceLabel || m.source }))}</p>`;

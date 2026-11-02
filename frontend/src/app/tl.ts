@@ -1,9 +1,9 @@
 /* 공연 페이지 부품 — 티켓링크 PC 웹 구성요소를 옮긴 것(tl.css와 짝).
  * 상품 카드(product_grid_unit) · 히어로 배너(페이드 + 썸네일) · 탭 · 스켈레톤 · 위로 가기.
  * 카드는 공연 상세 페이지(#/concert/<id>)로 가는 진짜 링크다. */
-import { esc, safeImage, icon, fmtRange, fmtDateTime, ddayOf, saleLabel } from './ui';
+import { esc, safeImage, icon, fmtRange, fmtDateTime, ddayOf, saleLabel, clockPendingLabel } from './ui';
 import { t, getLocale } from './i18n';
-import { concertRegistry, providerName, cityName, placeOf, whenOf } from './cards';
+import { concertRegistry, providerName, cityName, placeOf, whenOf, ticketTiming, ticketStatusNote, ticketBoundaryAttrs, posterKindLabel } from './cards';
 import type { Concert } from './cards';
 
 type Fest = Concert & { country?: string; lineup?: { name: string; origin: string | null }[]; lineupJp?: number; lineupKr?: number };
@@ -45,7 +45,7 @@ function dateFace(c: Concert) {
 }
 /* 날짜 칸을 아래에 깔고 포스터를 위에 — 포스터가 깨지면(onerror로 지워지면) 날짜 칸이 보인다 */
 export function posterFace(c: Concert) {
-  return dateFace(c) + (safeImage(c.poster) ? tlImg(c.poster, '') : '');
+  return dateFace(c) + (safeImage(c.poster) ? tlImg(c.poster, '')+(posterKindLabel(c)?'<span class="media-kind-note">'+esc(posterKindLabel(c))+'</span>':'') : '');
 }
 
 /* ---------- 카드 위 배지(product_flag) — 사실만: 예매 상태·팬클럽·예매처 수·교차 출연 ---------- */
@@ -112,15 +112,12 @@ export function tlCard(c: Concert, { rank = 0, open = false, dday = true }: { ra
   const dd = dday ? ddayOf(c.startDate) : '';
   let period = fmtRange(c.startDate, c.endDate).replace(/\s*–\s*/, ' ~ ');
   if ((c.showCount || 0) > 1) period += ` · ${t('c.shows', { n: c.showCount! })}`;
-  if (open) {
-    const now = Date.now();
-    const at = [c.ticketOpenAt, ...(c.openSchedule || []).map((s) => s.at)].filter((a): a is string => !!a && Date.parse(a) > now).sort()[0];
-    const closing = !at && c.closesAt && Date.parse(c.closesAt) > now ? c.closesAt : null;
-    period = at ? `${fmtDateTime(at)} ${getLocale() === 'ja' ? '発売' : '오픈'}` : closing ? t('c.closesAt', { t: fmtDateTime(closing) }) : c.openTba ? t('c.tba') : t('st.onsale');
-  }
+  const timing=open?ticketTiming(c):null;
+  if(timing)period=!timing.known?clockPendingLabel():timing.opensAt?fmtDateTime(timing.opensAt)+' '+(getLocale()==='ja'?'発売':'오픈'):timing.closing?t('c.closesAt',{t:fmtDateTime(timing.closing)}):timing.closed?t('st.closed'):c.openTba?t('c.tba'):ticketStatusNote(c);
+
   const label = open ? (c.provider === 'fanclub' ? (c.ticketOpenLabel || c.saleType || '') : saleLabel(c.ticketOpenLabel || c.saleType) || '') : '';
   const place = (c.venueCount || 0) > 1 ? placeOf(c) : c.venue || '';
-  return `<li class="tl-card${open ? ' tl-open' : ''}">
+  return `<li class="tl-card${open ? ' tl-open' : ''}"${timing?ticketBoundaryAttrs(timing):''}>
     <a class="tl-card-link" href="${concertHref(c)}" data-concert="${esc(c.id)}">
       <div class="tl-imgbox${photo ? ' is-photo' : ''}">${posterFace(c)}${rank ? `<span class="tl-ranking"><span class="tl-rank">${rank}<span class="blind">${getLocale() === 'ja' ? '位' : '위'}</span></span></span>` : ''}</div>
       <div class="tl-info">

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {withReleaseImages} from '../backend/lib/release-images.mjs';
+const release={artistId:'a',title:'POPS',editions:[{id:'box'}]};const catalog={artists:{a:{fetchedAt:'observed',tracks:[{album:'POPS',albumId:1,artwork:'https://images.example/real.jpg',appleUrl:'https://music.apple.com/album/1'}]}}};
+const got=withReleaseImages(release,{catalog});assert.equal(got.artwork,'https://images.example/real.jpg');assert.equal(got.artworkKind,'album-cover');assert.equal(got.editions[0].artwork,undefined);assert.equal(release.artwork,undefined);assert.equal(got.artworkSource.albumId,1);
+assert.equal(withReleaseImages({...release,artistId:'other'},{catalog}).artwork,null);assert.equal(withReleaseImages({...release,title:'POPS live'},{catalog}).artwork,null);assert.equal(withReleaseImages(release,{catalog:{artists:{a:{tracks:[...catalog.artists.a.tracks,{album:'POPS',albumId:2,artwork:'https://images.example/other.jpg'}]}}}}).artwork,null);
+assert.equal(withReleaseImages({...release,artwork:'javascript:alert(1)'},{catalog:{}}).artwork,null);assert.equal(withReleaseImages({...release,artwork:'https://images.example/existing.jpg'},{catalog}).artwork,'https://images.example/existing.jpg');
+console.log('PASS release images: exact artist/full album identity, ambiguity held, no synthetic edition photo, unsafe URL rejection, nonmutation');
+const {deriveEditionSources}=await import('../backend/lib/release-images.mjs');
+const src='https://shop.example/products/upch29512';
+const report={url:src,fetchedAt:'observed',sources:[{sourceUrl:src}],guides:[{url:'https://shop.example/products/upch29510',sourceUrl:src},{url:'https://evil.example/products/upch29513',sourceUrl:src},{url:'https://shop.example/products/upch295110',sourceUrl:src}]};
+assert.equal(deriveEditionSources({editions:[{id:'box',catalogNo:'UPCH-29510'},{id:'dvd',catalogNo:'UPCH-29513'},{id:'other',catalogNo:'UPCH-29511'}]},report).length,1);
+assert.equal(deriveEditionSources({editions:[{id:'box',catalogNo:'UPCH-29510'}]},{...report,sources:[]}).length,0);
+console.log('PASS edition image lineage: exact catalog token, same storefront, observed source receipt; no cross-host or substring borrowing');

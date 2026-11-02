@@ -3,7 +3,7 @@
  *
  * 다시 그리는 조건: 탭이 보이고, 입력 중이 아니고, 상세 시트·메뉴가 닫혀 있고, 2.5초 동안 조작이 없을 때.
  * 그 전에 온 알림은 모아 뒀다가 조건이 맞으면 한 번만 반영한다. 스크롤 위치는 지킨다. */
-export type LiveTopic = 'concerts' | 'tickets' | 'news' | 'fanclubs' | 'charts' | 'community' | 'goods' | 'fx';
+export type LiveTopic = 'concerts' | 'tickets' | 'news' | 'fanclubs' | 'charts' | 'community' | 'goods' | 'fx' | 'media';
 export interface LiveUpdate { topic: LiveTopic; at: number; added: number; keys: string[]; byKey?: Record<string, number> }
 
 /* 원천 키 → 그 데이터를 보는 에디션. 목록에 없는 키(팬클럽·차트·커뮤니티 등)는 모든 에디션에 해당 */
@@ -48,7 +48,7 @@ export function startLive() {
   es.addEventListener('update', (e) => {
     let u: LiveUpdate;
     try { u = JSON.parse((e as MessageEvent).data); } catch { return; }
-    if (!u || !['concerts', 'tickets', 'news', 'fanclubs', 'charts', 'community', 'goods', 'fx'].includes(u.topic) || !Array.isArray(u.keys) || !u.keys.every((k) => typeof k === 'string') || !Number.isFinite(u.at) || !Number.isFinite(u.added)) return;
+    if (!u || !['concerts', 'tickets', 'news', 'fanclubs', 'charts', 'community', 'goods', 'fx', 'media'].includes(u.topic) || !Array.isArray(u.keys) || !u.keys.every((k) => typeof k === 'string') || !Number.isFinite(u.at) || !Number.isFinite(u.added)) return;
     live.lastAt = Math.max(live.lastAt, u.at || Date.now());
     tell();
     listeners.forEach((fn) => { try { fn(u); } catch (e) { console.error('Live update listener failed', e); } });

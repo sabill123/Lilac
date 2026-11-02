@@ -20,11 +20,11 @@ const norm = (s: string) => s.normalize('NFKC').toLowerCase().replace(/\s+/g, ''
 
 export async function renderArtists(root: HTMLElement, alive: () => boolean) {
   const ed = state.edition;
-  root.innerHTML = `
+  root.innerHTML = `<div class="detail-artists">
     <section class="page-head"><h1>${t('a.title')}</h1></section>
     <div id="aMq"></div>
-    <div class="toolbar"><label class="find"><input type="search" id="aFind" placeholder="${t('a.find')}" autocomplete="off"></label><span class="count" id="aCount"></span></div>
-    <div class="grid-artists" id="aGrid">${skeletonRows(18, 'sk-round')}</div>`;
+    <div class="toolbar"><label class="find"><input type="search" id="aFind" aria-label="${esc(t('a.find'))}" placeholder="${t('a.find')}" autocomplete="off"></label><span class="count" id="aCount" role="status" aria-live="polite"></span></div>
+    <div class="grid-artists" id="aGrid">${skeletonRows(18, 'sk-round')}</div></div>`;
   let items: ArtistLite[] = [];
   try {
     items = (await api(`/api/live/artists?edition=${ed}`)).items || [];
@@ -90,10 +90,10 @@ export async function renderArtist(root: HTMLElement, alive: () => boolean, key:
   const origin = p.origin === 'jp' || p.origin === 'kr' ? t(`a.origin.${p.origin}`) : p.origin === 'other' ? t('a.origin.other') : '';
   const links = Object.entries(p.links || {}).filter(([k, v]) => v?.url && LINK_LABEL[k]).slice(0, 7);
   const photo = p.photo?.picture || p.artwork;
-  root.innerHTML = `<div class="artist-page">
+  root.innerHTML = `<div class="artist-page detail-artist">
     <section class="artist-head">
       <span class="artist-head-bg" aria-hidden="true"${photo ? ` style="background-image:url('${esc(photo).replace(/'/g, '%27')}')"` : ''}></span>
-      ${img(photo, '', 'round xl', { ratio: '1/1', initial: p.name })}
+      ${img(photo, p.name, 'round xl', { ratio: '1/1', initial: p.name })}
       <div class="artist-id">
         <p class="kicker">${esc([origin, genreLabel(p.genre), p.operator].filter(Boolean).join(' · '))}</p>
         <h1>${esc(displayName(p.name, p.names))}</h1>
@@ -133,7 +133,7 @@ export async function renderArtist(root: HTMLElement, alive: () => boolean, key:
     if (!alive()) return;
     const box = root.querySelector('#arTracks')!;
     const tracks: Track[] = list.slice(0, 10).map((x) => ({ title: x.title, artist: x.artist || p.name, artwork: x.artwork, preview: x.preview, appleUrl: x.appleUrl }));
-    box.innerHTML = `<div class="sec-head"><h2>${t('a.tracks')}</h2></div>` + (tracks.length ? `<ol class="clist compact">${tracks.map((tr, i) => `<li class="crow" data-track-key="${esc(keyOf(tr))}"><span class="crow-rank">${i + 1}</span><button class="crow-art" data-play="${i}" aria-label="${esc(tr.title)}">${img(tr.artwork, tr.title, 'square', { ratio: '1/1' })}<span class="crow-play">${icon('i-play')}</span><span class="crow-eq"><i></i><i></i><i></i></span></button><div class="crow-main"><b>${esc(tr.title)}</b><span>${esc(tr.artist)}</span></div></li>`).join('')}</ol>` : emptyState(t('empty.generic')));
+    box.innerHTML = `<div class="sec-head"><h2>${t('a.tracks')}</h2></div>` + (tracks.length ? `<ol class="clist compact">${tracks.map((tr, i) => `<li class="crow" data-track-key="${esc(keyOf(tr))}"><span class="crow-rank">${i + 1}</span><button class="crow-art" data-content-original-label translate="no" data-play="${i}" aria-label="${esc(tr.title)}">${img(tr.artwork, tr.title, 'square', { ratio: '1/1' })}<span class="crow-play">${icon('i-play')}</span><span class="crow-eq"><i></i><i></i><i></i></span></button><div class="crow-main"><b data-content-original-work translate="no">${esc(tr.title)}</b><span>${esc(tr.artist)}</span></div></li>`).join('')}</ol>` : emptyState(t('empty.generic')));
     box.querySelectorAll<HTMLElement>('[data-play]').forEach((b) => b.addEventListener('click', () => playList(tracks, Number(b.dataset.play))));
     markPlaying();
   });

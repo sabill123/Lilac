@@ -195,3 +195,10 @@ Lilac/
 
 - 데모 데이터입니다. 가사 패널 텍스트는 자체 제작 예시 문구이며 실제 가사가 아닙니다.
 - 실서비스의 가사·음원 기능은 각 권리 계약(신탁단체·레이블) 후 활성화됩니다.
+
+
+## 가입·구매 절차와 번역 지원
+
+`#/assist`에서 아티스트·판매처별 공개 원문과 입력 항목, 기기 내 한일 번역을 확인합니다. 상품 사진은 실제 판매처 원문에서 수집하고 앨범 커버와 구분합니다. 로그인·인증·결제는 공식 사이트에서 직접 진행합니다. 공개 HTML 수집과 브라우저 번역 지원의 한계, 검증 환경은 [현재 구현 문서](docs/design/lilac-v2-system.md)를 따릅니다. 운영 배포 여부와 로컬 구현은 구분합니다.
+
+검증: `node tests/verify-assistance.mjs`, `node tests/verify-assistance-routing.mjs`, `node tests/verify-assistance-ui.mjs`, `node tests/verify-release-images.mjs`, `node tests/verify-home-hub.mjs`, `npm run build`. 테스트에는 운영 자격증명을 주입하지 않습니다.

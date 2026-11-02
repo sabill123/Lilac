@@ -86,7 +86,7 @@ export async function renderGuide(root: HTMLElement, sub?: string, sub2?: string
     <ul>${PLATS.map((p) => `<li><a href="#/guide/fc/${p}" class="${p === plat ? 'on' : ''}"${p === plat ? ' aria-current="page"' : ''}>${esc(PLATFORM_NAME[p])}</a></li>`).join('')}</ul>
   </nav>`;
   if (plat) {
-    root.innerHTML = `<div class="doc">${toc}<article class="doc-body"><p class="doc-kicker">${ja ? 'ファンクラブ入会' : '팬클럽 가입 방법'}</p><h1>${esc(PLATFORM_NAME[plat])}</h1><div id="docPlat"><div class="sk sk-block"></div></div></article></div>`;
+    root.innerHTML = `<div class="doc reading-page">${toc}<article class="doc-body"><h1>${esc(PLATFORM_NAME[plat])}</h1><div id="docPlat" aria-busy="true"><div class="sk sk-block" aria-hidden="true"></div></div></article></div>`;
     const [list, fx] = await Promise.all([
       api(`/api/live/fanclub-list?edition=${state.edition === 'jp' ? 'jp' : state.edition}`).catch(() => ({ items: [] })),
       api('/api/live/fx').catch(() => null),
@@ -106,11 +106,11 @@ export async function renderGuide(root: HTMLElement, sub?: string, sub2?: string
       ${stepsHtml(guideSteps(plat, facts, club, fx, { isExample: true, shared: true }))}
       ${platformNotesHtml((plat === 'plusmember' ? 'PLUS MEMBER' : plat === 'familyclub' ? 'FAMILY CLUB' : 'Weverse') as PlatKey)}
       <p class="src-note">${ja ? '確認日' : '확인한 날'} ${CHECKED.replace(/-/g, '.')}</p>`;
+    root.querySelector('#docPlat')?.removeAttribute('aria-busy');
     return;
   }
   const doc = D[tab];
-  root.innerHTML = `<div class="doc">${toc}<article class="doc-body">
-    <p class="doc-kicker">${t('nav.guide')}</p>
+  root.innerHTML = `<div class="doc reading-page">${toc}<article class="doc-body">
     <h1>${esc(doc.title)}</h1>
     <p class="doc-lead">${esc(doc.lead)}</p>
     ${doc.blocks.map((b) => `<section class="doc-sec">
@@ -119,9 +119,9 @@ export async function renderGuide(root: HTMLElement, sub?: string, sub2?: string
       ${b.src.length ? `<p class="doc-src">${t('guide.src')} ${b.src.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)}${icon('i-ext', 'ic xs')}</a>`).join('')}</p>` : ''}
     </section>`).join('')}
     ${tab === 'fc' ? `<section class="doc-sec"><h2>${ja ? 'システム別の海外入会' : '팬클럽 시스템별 해외 가입'}</h2>
-      <table class="pdp-table"><thead><tr><th scope="col">${ja ? 'システム' : '시스템'}</th><th scope="col">${ja ? '海外入会' : '한국에서 가입'}</th><th scope="col">${ja ? '内容' : '내용'}</th></tr></thead><tbody>
+      <div class="reading-table" tabindex="0" role="region" aria-label="${ja ? 'システム別の海外入会' : '팬클럽 시스템별 해외 가입'}"><table class="pdp-table"><thead><tr><th scope="col">${ja ? 'システム' : '시스템'}</th><th scope="col">${ja ? '海外入会' : '한국에서 가입'}</th><th scope="col">${ja ? '内容' : '내용'}</th></tr></thead><tbody>
       ${(Object.keys(PLATFORM_KNOW) as PlatKey[]).filter((k) => PLATFORM_KNOW[k]?.overseas).map((k) => { const o = PLATFORM_KNOW[k]!.overseas!; return `<tr><th scope="row">${esc(k)}</th><td>${o.v === 'yes' ? (ja ? '可' : '가능') : o.v === 'no' ? (ja ? '不可' : '불가') : (ja ? 'クラブごと' : '팬클럽마다 다름')}</td><td>${esc(ja ? o.ja : o.ko)} <a href="${esc(safeExternal(o.src.url))}" target="_blank" rel="noopener">${esc(ja ? o.src.ja : o.src.ko)}${icon('i-ext', 'ic xs')}</a></td></tr>`; }).join('')}
-      </tbody></table>
+      </tbody></table></div>
       <ul class="doc-list">${PLATS.map((p) => `<li><a href="#/guide/fc/${p}">${esc(PLATFORM_NAME[p])} ${ja ? '入会の流れ' : '가입 순서'}</a></li>`).join('')}</ul></section>
       ${ja ? '' : `<section class="doc-sec"><h2>한국에서 가입 전 준비</h2><p class="doc-lead">카드사·행정안전부·예매처 공식 안내로 정리했습니다(${KNOW_CHECKED.replace(/-/g, '.')} 확인).</p>${prepHtml(prepCards(null, null))}</section>`}` : ''}
   </article></div>`;

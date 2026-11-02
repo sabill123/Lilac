@@ -1,3 +1,4 @@
+import { serverTimePayload } from '../../backend/lib/server-time.mjs';
 import { PLANS } from '../../backend/lib/pricing.mjs';
 import { phoneticKey, expandQuery } from '../../backend/lib/ko-ja.mjs';
 const error=(status,message,code='READ_ONLY_PREVIEW')=>Object.assign(new Error(message),{status,code});
@@ -50,7 +51,7 @@ export function createPublicHandler({data,manifest={},fetchImpl=globalThis.fetch
    const raw=req.url||'/'; let decoded;try{decoded=decodeURIComponent(raw.split('?')[0])}catch{throw error(403,'Invalid path')}
    if(/(?:^|\/)\.\.?($|\/)|\\|\0|%|\/\//.test(decoded))throw error(403,'Path not allowed');
    const url=new URL(raw,'http://preview.local'),p=url.pathname,s=url.searchParams;
-   const exact=new Set(['/api/health','/api/me','/api/charts','/api/catalog/search','/api/catalog/albums','/api/search','/api/readings','/api/index/status','/api/store/releases','/api/focus/mixes','/api/plans','/api/fx/series','/api/status']);
+   const exact=new Set(['/api/time','/api/health','/api/me','/api/charts','/api/catalog/search','/api/catalog/albums','/api/search','/api/readings','/api/index/status','/api/store/releases','/api/focus/mixes','/api/plans','/api/fx/series','/api/status']);
    const allowed=exact.has(p)||/^\/api\/db\/(artists|tracks|events|products)$/.test(p)||/^\/api\/artist\/[^/]+\/(tracks|stats|fandom)$/.test(p)||/^\/api\/store\/releases\/[^/]+$/.test(p)||p==='/api/catalog/batch';
    if(!allowed)throw error(403,'Endpoint unavailable in read-only preview');
    if(req.method!=='GET'&&!(req.method==='POST'&&p==='/api/catalog/batch'))throw error(405,'Method not allowed');
@@ -59,7 +60,8 @@ export function createPublicHandler({data,manifest={},fetchImpl=globalThis.fetch
    const limit=num(s.get('limit'),25,500)||1,offset=num(s.get('offset'),0,100000),deadline=now()+7500;
    const term=(key='term')=>{const v=s.get(key)?.trim();if(!v||v.length>160)throw error(400,'Search term must contain 1–160 characters','INVALID_INPUT');return v};
    let result;
-   if(p==='/api/health')result={ok:true,service:'lilac-public-preview',readOnly:true,sha256:manifest.sha256};
+   if(p==='/api/time')result=serverTimePayload(now());
+   else if(p==='/api/health')result={ok:true,service:'lilac-public-preview',readOnly:true,sha256:manifest.sha256};
    else if(p==='/api/me')result={user:null};
    else if(p.startsWith('/api/db/')){const rows=data[p.split('/').at(-1)]||[];result=s.has('limit')?{items:rows.slice(offset,offset+limit),total:rows.length,limit,offset,hasMore:offset+limit<rows.length}:rows;}
    else if(p==='/api/charts'){const c=data.charts?.countries?.[country];const source=s.get('source')||'combined';if(!c||!Array.isArray(c[source]))throw error(404,'Chart source unavailable','NOT_FOUND');const counts=Object.fromEntries(Object.entries(c).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.length]));result={country,countryLabel:c.label,source,updated:data.charts.updated,live:false,limit:Math.min(s.has('limit')?limit:100,300),total:c[source].length,counts,sources:Object.keys(counts).filter(k=>k!=='combined'),sourceLabels:c.sourceLabels,weights:c.weights,method:source==='combined'?'Lilac weighted snapshot, not an official chart.':'Collected source snapshot; not live.',list:c[source].slice(0,Math.min(s.has('limit')?limit:100,300))};}

@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+/** Actual ui.ts toast function with document/time boundaries only. No browser/API mutation. */
+import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import ts from '../frontend/node_modules/typescript/lib/typescript.js';
+let locale='ko',id=0;const timers=new Map();
+class El{constructor(tag='div'){this.tagName=tag;this.children=[];this.attrs={};this.hidden=false;this.textContent='';this.handlers={};const classes=new Set();this.classList={add:x=>classes.add(x),remove:x=>classes.delete(x),contains:x=>classes.has(x)};}setAttribute(k,v){this.attrs[k]=v;}append(...els){this.children.push(...els);}appendChild(el){this.children.push(el);}replaceChildren(){this.children=[];}addEventListener(t,fn){this.handlers[t]=fn;}click(){this.handlers.click?.();}}
+const body=new El('body'),document={body,createElement:t=>new El(t),getElementById:k=>body.children.find(el=>el.id===k)||null};
+const exports={};const source=fs.readFileSync(new URL('../frontend/src/app/ui.ts',import.meta.url),'utf8');
+vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports,require:n=>{assert.equal(n,'./i18n');return{getLocale:()=>locale,t:x=>x};},document,window:{setTimeout:(f,n)=>{timers.set(++id,{f,n});return id;}},clearTimeout:n=>timers.delete(n),console,URL});
+exports.toast('첫 알림');const el=document.getElementById('toast');assert.equal(body.children.length,1);assert.equal(el.attrs.role,'status');assert.equal(el.hidden,false);assert.equal(el.children[0].textContent,'첫 알림');assert.equal(el.children[1].attrs['aria-label'],'알림 닫기');assert.equal(timers.size,1);assert.equal([...timers.values()][0].n,4000);
+exports.toast('새 알림');assert.equal(body.children.length,1);assert.equal(el.children[0].textContent,'새 알림');assert.equal(timers.size,1,'Replacement cancels earlier timer');el.children[1].click();assert.equal(el.hidden,true);assert.equal(el.classList.contains('show'),false);assert.equal(timers.size,0);
+locale='ja';exports.toast('更新しました');assert.equal(el.children[1].attrs['aria-label'],'通知を閉じる');assert.equal(el.hidden,false);[...timers.values()][0].f();assert.equal(el.hidden,true);assert.equal(timers.size,0);console.log('PASS product feedback: actual toast role/message/dismiss/reuse/timer cancellation/timeout/ko-ja labels');

@@ -1,19 +1,14 @@
-/* Lilac 인터랙션 레이어
-   레퍼런스를 React 없이 옮겼다(값은 원본 그대로):
-   - affectUI(MIT): Segmented Control(미끄러지는 표시·앞쪽 모서리가 먼저 가는 늘어남), Number Ticker(자리별 굴림·처음 보일 때 0부터),
-     Text Reveal(단어마다 흐림에서 떠오름), Reaction Bar(톡 튀는 아이콘·한 자리씩 굴러가는 수), Cover Flow(3D 커버·스프링), Logo Marquee(끝없는 띠·멈춤·관성)
-   - Inspora: Airport matrix time(출발 안내판), holo 3D card(포인터 따라 기우는 카드 — 반짝이는 빛 반사는 빼고 기울기·그림자만)
-   화면 코드는 그대로 두고, 그려진 DOM을 보고 덧입힌다. 움직임 줄이기 설정이면 전부 끈다. */
+/* Shared interaction feedback. Route content is readable immediately; page-owned
+   cover flow and marquee retain their own controls and lifetime. */
 
 import { getLocale } from './i18n';
+import { installKinetic } from './kinetic-scene';
 
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-let routeAt = performance.now();
-/** 경로를 옮길 때만 제목·섹션 등장 효과를 쓴다(실시간 반영으로 다시 그릴 때 깜빡이지 않게) */
-export function markRoute() { routeAt = performance.now(); }
-const freshRoute = () => performance.now() - routeAt < 1600;
+/** Public route hook retained; effects retire when their actual DOM leaves. */
+export function markRoute() { sweepEffects(); }
 
 /* ---------- 1. 미끄러지는 선택 표시 (Segmented Control) ---------- */
 type GlideKind = 'invert' | 'raise' | 'line';
@@ -27,7 +22,9 @@ const GLIDE: [string, GlideKind][] = [
 const ACTIVE = '.on, [aria-selected="true"], [aria-current="page"]';
 
 function glide(box: HTMLElement, kind: GlideKind) {
-  if (box.dataset.fxGlide) return;
+  if (box.dataset.fxGlide || !box.isConnected) return;
+  const life = flowLifetime(box);
+  let raf = 0;
   box.dataset.fxGlide = kind;
   const bar = document.createElement('span');
   bar.className = `fx-glide fx-glide-${kind}`;
@@ -36,6 +33,7 @@ function glide(box: HTMLElement, kind: GlideKind) {
   let lastX = -1;
   let first = true;
   const place = () => {
+    if (!life.alive()) return;
     if (bar.parentNode !== box) box.append(bar); // 화면 코드가 안쪽을 다시 그리면 다시 붙인다
     const items = Array.from(box.children).filter((el) => el !== bar) as HTMLElement[];
     const on = items.find((el) => el.matches(ACTIVE)) || items.map((el) => el.querySelector<HTMLElement>(ACTIVE)).find(Boolean);
@@ -47,31 +45,45 @@ function glide(box: HTMLElement, kind: GlideKind) {
     const x = on.offsetLeft + pl;
     const right = box.scrollWidth - (on.offsetLeft + on.offsetWidth) + pr;
     bar.dataset.dir = lastX < 0 || x === lastX ? '' : x > lastX ? 'right' : 'left';
-    if (first || reduce()) bar.style.transition = 'none';
+    bar.style.transition = first || reduce() ? 'none' : '';
     bar.style.left = `${x}px`;
     bar.style.right = `${Math.max(0, right)}px`;
     if (kind === 'line') { bar.style.top = ''; bar.style.height = ''; }
     else { bar.style.top = `${on.offsetTop}px`; bar.style.height = `${on.offsetHeight}px`; bar.style.borderRadius = getComputedStyle(on).borderRadius; }
     bar.style.opacity = '1';
-    if (first) { void bar.offsetWidth; bar.style.transition = ''; first = false; }
+    if (first) { void bar.offsetWidth; first = false; }
     lastX = x;
   };
   place();
-  new MutationObserver(() => requestAnimationFrame(place)).observe(box, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-selected', 'aria-current', 'hidden'], childList: true });
-  new ResizeObserver(() => { first = true; place(); }).observe(box);
+  const changed = new MutationObserver(() => {
+    if (!life.alive() || raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; place(); });
+  });
+  changed.observe(box, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-selected', 'aria-current', 'hidden'], childList: true });
+  const sizing = new ResizeObserver(() => { first = true; place(); });
+  sizing.observe(box);
+  life.cleanup(() => { changed.disconnect(); sizing.disconnect(); cancelAnimationFrame(raf); bar.remove(); delete box.dataset.fxGlide; });
 }
 
 /* ---------- 2. 굴러가는 숫자 (Number Ticker) ---------- */
 const easeOut4 = (t: number) => 1 - Math.pow(1 - t, 4);
 const mod10 = (n: number) => ((n % 10) + 10) % 10;
 /** 숫자 칸은 글자를 DOM에 넣지 않고(::before) 그린다 — textContent는 원래 글자 그대로라 다른 코드·검색이 깨지지 않는다 */
-export function ticker(el: HTMLElement, { delay = 0, from0 = true } = {}) {
+const ticks = new WeakMap<HTMLElement, () => void>();
+export function ticker(el: HTMLElement, { delay = 0, from0 = false } = {}) {
   const text = (el.textContent || '').trim();
   if (!/\d/.test(text) || el.dataset.fxTick === text || text.length > 16) return;
   /* 값이 바뀌면(좋아요 수 등) 화면 코드가 글자를 통째로 바꾼다 — 직전 값은 data-fx-tick에 남아 있어 거기서부터 굴린다 */
   const old = el.dataset.fxTick || '';
+  ticks.get(el)?.();
   const prevDigits = Array.from(old).filter((c) => c >= '0' && c <= '9').map(Number);
   el.dataset.fxTick = text;
+  // First paint and reduced motion show the real value, without observers or rolling.
+  if ((!old && !from0) || reduce() || !el.isConnected) return;
+  const life = flowLifetime(el);
+  let raf = 0, timer = 0;
+  ticks.set(el, life.destroy);
+  life.cleanup(() => { cancelAnimationFrame(raf); clearTimeout(timer); ticks.delete(el); });
   const chars = Array.from(text);
   const vis = chars.map((c) => (c >= '0' && c <= '9' ? `<span class="fx-nt-col"><span class="fx-nt-stack" data-v="${c}"></span></span>` : `<span class="fx-nt-c" data-c="${c === '"' ? '&quot;' : c.replace(/&/g, '&amp;').replace(/</g, '&lt;')}"></span>`)).join('');
   /* 원문은 투명하게 자리에 남겨 줄 높이·기준선·접근성 이름을 그대로 맡기고, 굴러가는 칸은 그 위에 겹친다 */
@@ -83,95 +95,58 @@ export function ticker(el: HTMLElement, { delay = 0, from0 = true } = {}) {
   if (reduce()) { stacks.forEach((s, i) => set(s, to[i])); return; }
   stacks.forEach((s, i) => set(s, start[i]));
   const roll = () => {
+    if (!life.alive()) return;
     const t0 = performance.now();
     // 왼쪽 자리일수록 조금 늦게 — 안내판처럼 한 칸씩 넘어간다
     const deltas = to.map((v, i) => { const d = mod10(v - start[i]); return d === 0 && from0 && !prevDigits.length ? 10 : d; });
     const frame = (now: number) => {
+      raf = 0;
+      if (!life.alive()) return;
       let done = true;
       stacks.forEach((s, i) => {
-        const lag = (stacks.length - 1 - i) * 40;
-        const t = Math.min(1, Math.max(0, (now - t0 - lag) / 900));
+        const lag = (stacks.length - 1 - i) * 12;
+        const t = Math.min(1, Math.max(0, (now - t0 - lag) / 200));
         if (t < 1) done = false;
         set(s, start[i] + deltas[i] * easeOut4(t));
       });
-      if (!done) requestAnimationFrame(frame);
+      if (!done) raf = requestAnimationFrame(frame);
+      else life.destroy();
     };
-    requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
   };
-  const io = new IntersectionObserver(([e]) => {
-    if (!e.isIntersecting) return;
-    io.disconnect();
-    setTimeout(roll, delay);
-  }, { threshold: 0.3 });
-  io.observe(el);
+  if (delay > 0) timer = window.setTimeout(roll, delay); else roll();
 }
 const TICK_SEL = '.chip .n, .tl-cap small, .soc-like .n, #aCount, [data-tick]';
 
-/* ---------- 3. 제목 등장 (Text Reveal) ---------- */
-function reveal(h: HTMLElement) {
-  if (h.dataset.fxRv) return;
-  h.dataset.fxRv = '1';
-  if (reduce() || !freshRoute()) return;
-  let i = 0;
-  for (const node of Array.from(h.childNodes)) {
-    if (node.nodeType === 3) {
-      const parts = (node.textContent || '').split(/(\s+)/);
-      const frag = document.createDocumentFragment();
-      for (const p of parts) {
-        if (!p) continue;
-        if (/^\s+$/.test(p)) { frag.append(p); continue; }
-        const s = document.createElement('span');
-        s.className = 'fx-rv';
-        s.style.setProperty('--i', String(i++));
-        s.textContent = p;
-        frag.append(s);
-      }
-      node.replaceWith(frag);
-    } else if (node instanceof HTMLElement) {
-      node.classList.add('fx-rv');
-      node.style.setProperty('--i', String(i++));
-    }
-  }
-  requestAnimationFrame(() => h.classList.add('fx-rv-on'));
-}
-const REVEAL_SEL = '.page-head h1, .tl-page-title, .sec-head h2, .tl-sec-title';
-
-/* 섹션이 화면에 들어올 때 살짝 떠오른다 — 경로를 옮긴 직후에 그려진 것만 */
-let secIO: IntersectionObserver | null = null;
-function riseIn(sec: HTMLElement) {
-  if (sec.dataset.fxRise || reduce() || !freshRoute()) { sec.dataset.fxRise = '1'; return; }
-  sec.dataset.fxRise = '1';
-  const r = sec.getBoundingClientRect();
-  if (r.top < innerHeight * 0.9) return; // 첫 화면은 바로 보이게
-  sec.classList.add('fx-rise');
-  secIO ??= new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('fx-rise-on'); secIO!.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-  secIO.observe(sec);
-  setTimeout(() => sec.classList.add('fx-rise-on'), 2600); // 관찰이 안 되는 환경에서도 결국 보이게
-}
-
 /* ---------- 4. 기우는 카드 (holo 3D card — 빛 반사 없이) ---------- */
 export function tilt(el: HTMLElement, max = 7) {
-  if (el.dataset.fxTilt || !fine() || reduce()) return;
+  if (el.dataset.fxTilt || !fine() || reduce() || !el.isConnected) return;
+  const life = flowLifetime(el);
+  const signal = life.signal;
   el.dataset.fxTilt = '1';
   el.classList.add('fx-tilt');
   let raf = 0;
   el.addEventListener('pointermove', (e) => {
+    if (!life.alive() || reduce()) return;
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width - 0.5;
     const py = (e.clientY - r.top) / r.height - 0.5;
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!life.alive() || reduce()) return;
       el.classList.add('is-tilting');
       el.style.setProperty('--rx', `${(-py * max * 2).toFixed(2)}deg`);
       el.style.setProperty('--ry', `${(px * max * 2).toFixed(2)}deg`);
     });
-  });
+  }, { signal });
   el.addEventListener('pointerleave', () => {
     cancelAnimationFrame(raf);
     el.classList.remove('is-tilting');
     el.style.setProperty('--rx', '0deg');
     el.style.setProperty('--ry', '0deg');
-  });
+  }, { signal });
+  life.cleanup(() => { cancelAnimationFrame(raf); el.classList.remove('fx-tilt', 'is-tilting'); el.style.removeProperty('--rx'); el.style.removeProperty('--ry'); delete el.dataset.fxTilt; });
 }
 const TILT_SEL = '.tl-pd-imgbox, .pdp-img, [data-tilt]';
 
@@ -180,22 +155,28 @@ export type FlowItem = { id: string; image: string | null; title: string; sub: s
 export function coverFlowHtml(items: FlowItem[], label: string) {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   return `<div class="fx-cf" tabindex="0" role="listbox" aria-label="${esc(label)}" data-fx-flow>
-    <div class="fx-cf-stage">${items.map((it, i) => `<div class="fx-cf-card" role="option" aria-selected="false" data-cf="${i}" aria-label="${esc(it.title)}">
+    <div class="fx-cf-stage">${items.map((it, i) => `<div class="fx-cf-card" data-content-original-label translate="no" role="option" aria-selected="false" data-cf="${i}" aria-label="${esc(it.title)}">
       <div class="fx-cf-face">${it.image ? `<img src="${esc(it.image)}" alt="" draggable="false" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<span class="fx-cf-ph" aria-hidden="true">${esc((it.initial || it.title).slice(0, 1).toUpperCase())}</span></div>
       <div class="fx-cf-mirror" aria-hidden="true">${it.image ? `<img src="${esc(it.image)}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>
     </div>`).join('')}</div>
-    <div class="fx-cf-foot"><button type="button" class="fx-cf-btn" data-cf-step="-1" aria-label="${getLocale() === 'ja' ? '前へ' : '이전'}">‹</button><a class="fx-cf-cap" href="#"><b></b><span></span></a><button type="button" class="fx-cf-btn" data-cf-step="1" aria-label="${getLocale() === 'ja' ? '次へ' : '다음'}">›</button></div>
+    <div class="fx-cf-foot"><button type="button" class="fx-cf-btn" data-cf-step="-1" aria-label="${getLocale() === 'ja' ? '前へ' : '이전'}">‹</button><a class="fx-cf-cap" href="#"><b data-content-original-work translate="no"></b><span></span></a><button type="button" class="fx-cf-btn" data-cf-step="1" aria-label="${getLocale() === 'ja' ? '次へ' : '다음'}">›</button></div>
   </div>`;
 }
-/* Cover flow and marquee own their listeners/observers, including callers without a route signal. */
+/* All effects retire on removal, including standalone exported binders. */
+const effects = new Set<{ box: HTMLElement; destroy: () => void }>();
+let removalObserver: MutationObserver | null = null;
+function sweepEffects() {
+  for (const effect of effects) if (!effect.box.isConnected) effect.destroy();
+}
 function flowLifetime(box: HTMLElement, external?: AbortSignal) {
   const ctrl = new AbortController();
   const disposers: (() => void)[] = [];
-  let removed: MutationObserver | null = null;
+  const entry = { box, destroy: () => destroy() };
   const destroy = () => {
     if (ctrl.signal.aborted) return;
     ctrl.abort();
-    removed?.disconnect();
+    effects.delete(entry);
+    if (!effects.size) { removalObserver?.disconnect(); removalObserver = null; }
     external?.removeEventListener('abort', destroy);
     disposers.splice(0).forEach((fn) => fn());
   };
@@ -206,10 +187,13 @@ function flowLifetime(box: HTMLElement, external?: AbortSignal) {
   if (external?.aborted || !box.isConnected) destroy();
   else {
     external?.addEventListener('abort', destroy, { once: true });
-    removed = new MutationObserver(() => { if (!box.isConnected) destroy(); });
-    removed.observe(document.body, { childList: true, subtree: true });
+    effects.add(entry);
+    if (!removalObserver) {
+      removalObserver = new MutationObserver(sweepEffects);
+      removalObserver.observe(document.body, { childList: true, subtree: true });
+    }
   }
-  return { signal: ctrl.signal, alive, cleanup(fn: () => void) { if (ctrl.signal.aborted) fn(); else disposers.push(fn); } };
+  return { signal: ctrl.signal, alive, destroy, cleanup(fn: () => void) { if (ctrl.signal.aborted) fn(); else disposers.push(fn); } };
 }
 
 export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: AbortSignal) {
@@ -259,7 +243,7 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
       if (media.matches) { st.pos = st.target = Math.min(last, Math.max(0, Math.round(st.target))); st.vel = 0; paint(); return; }
       const dt = Math.min(now - st.t, 32) / 1000;
       st.t = now;
-      const k = 190, c = 2 * Math.sqrt(k) * 0.92; // 임계 감쇠보다 살짝 아래 — 아주 조금만 출렁이고 멈춘다
+      const k = 190, c = 2 * Math.sqrt(k); // Critical damping: settle without a bounce.
       st.vel += (k * (st.target - st.pos) - c * st.vel) * dt;
       st.pos += st.vel * dt;
       if (Math.abs(st.target - st.pos) < 0.0006 && Math.abs(st.vel) < 0.002) { st.pos = st.target; st.vel = 0; st.raf = 0; paint(); return; }
@@ -358,6 +342,7 @@ export function bindCoverFlow(root: HTMLElement, items: FlowItem[], signal?: Abo
     const d = drag; drag = null;
     if (d && stage.hasPointerCapture?.(d.id)) stage.releasePointerCapture(d.id);
     delete box.dataset.dragging;
+    delete box.dataset.bound;
   });
   paint();
 }
@@ -434,29 +419,42 @@ export function bindMarquee(box: HTMLElement, signal?: AbortSignal, speed = 32) 
   box.addEventListener('click', e => { if (drag?.moved || performance.now() < blockedUntil) e.preventDefault(); }, { capture: true, signal });
   document.addEventListener('visibilitychange', schedule, { signal });
   media.addEventListener('change', () => { finish(undefined, true); state.forEach(s => { s.v = 0; }); schedule(); }, { signal });
-  life.cleanup(() => { stop(); finish(undefined, true); sizing.disconnect(); visibility.disconnect(); });
+  life.cleanup(() => { stop(); finish(undefined, true); sizing.disconnect(); visibility.disconnect(); delete box.dataset.bound; });
   paint(); schedule();
 }
 
-/* ---------- 7. 출발 안내판 (Airport matrix time) — 시각은 한 칸씩 넘어가며 들어온다 ---------- */
+/* ---------- 7. 출발 안내판 — 시각은 처음부터 읽을 수 있다 ---------- */
 export function bindBoard(root: HTMLElement) {
-  root.querySelectorAll<HTMLElement>('.fx-board [data-flap]').forEach((el, i) => {
+  root.querySelectorAll<HTMLElement>('.fx-board [data-flap]').forEach((el) => {
     if (el.dataset.fxTick) return;
-    ticker(el, { delay: 80 + i * 70 });
+    ticker(el);
   });
 }
 
 /* ---------- 덧입히기 ---------- */
 function enhance(scope: ParentNode) {
   for (const [sel, kind] of GLIDE) scope.querySelectorAll<HTMLElement>(sel).forEach((b) => glide(b, kind));
-  scope.querySelectorAll<HTMLElement>(TICK_SEL).forEach((el) => ticker(el, { from0: freshRoute() }));
-  scope.querySelectorAll<HTMLElement>(REVEAL_SEL).forEach(reveal);
+  scope.querySelectorAll<HTMLElement>(TICK_SEL).forEach((el) => ticker(el));
   scope.querySelectorAll<HTMLElement>(TILT_SEL).forEach((el) => tilt(el));
-  scope.querySelectorAll<HTMLElement>('#page > .sec, #page > section, #page .live-view > .sec, .tl-sec, .tl-region-sec').forEach(riseIn);
 }
-let queued = false;
+let installation: (() => void) | null = null;
 export function installFx() {
-  const run = () => { queued = false; enhance(document); };
+  if (installation) return installation;
+  let raf = 0;
+  /* Staged reveal and the ribbon band ride this observer's ticks; they add no document observer. */
+  const kinetic = installKinetic();
+  const run = () => { raf = 0; sweepEffects(); enhance(document); kinetic.scan(document); };
+  const observer = new MutationObserver(() => { if (!raf) raf = requestAnimationFrame(run); });
+  const destroy = () => {
+    observer.disconnect(); cancelAnimationFrame(raf); raf = 0;
+    kinetic.destroy();
+    for (const effect of [...effects]) effect.destroy();
+    window.removeEventListener('pagehide', destroy);
+    installation = null;
+  };
+  installation = destroy;
   run();
-  new MutationObserver(() => { if (!queued) { queued = true; requestAnimationFrame(run); } }).observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('pagehide', destroy, { once: true });
+  return destroy;
 }

@@ -27,11 +27,7 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 /* ---------- 1. 미끄러지는 선택 표시 ---------- */
 [data-fx-glide] { position: relative; isolation: isolate; }
 .fx-glide { position: absolute; left: 0; right: 100%; opacity: 0; pointer-events: none;
-  transition: left 380ms var(--fx-ease), right 380ms var(--fx-ease), top 300ms var(--fx-ease), height 300ms var(--fx-ease), opacity 160ms ease; }
-/* 가는 쪽 모서리가 먼저 닿고 뒤 모서리가 따라온다 — 살짝 늘어났다가 자리 잡는다 */
-.fx-glide[data-dir="right"] { transition-duration: 400ms, 270ms, 300ms, 300ms, 160ms; }
-.fx-glide[data-dir="left"] { transition-duration: 270ms, 400ms, 300ms, 300ms, 160ms; }
-
+  transition: left 200ms var(--fx-ease), right 200ms var(--fx-ease), top 200ms var(--fx-ease), height 200ms var(--fx-ease), opacity 160ms ease; }
 /* 알약 칩: 흰 표시를 '차이' 합성으로 얹어 아래 칩을 반전 — 회색 칩은 검정, 검정 글자는 흰색이 된다(움직이는 동안에도 글자가 읽힌다) */
 .fx-glide-invert { z-index: 2; background: #fff; mix-blend-mode: difference; }
 [data-fx-glide="invert"] > .chip.on { background: var(--bg-2); color: var(--ink); }
@@ -57,19 +53,11 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 .fx-nt-stack::before { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0"; display: block; white-space: pre; text-align: center; line-height: 1.15em; }
 .fx-nt-c::before { content: attr(data-c); white-space: pre; }
 
-/* ---------- 3. 제목 등장 — 단어마다 흐림에서 떠오른다 ---------- */
-.fx-rv { display: inline-block; opacity: 0; filter: blur(8px); transform: translateY(.35em); }
-.fx-rv-on .fx-rv { animation: fx-rv 620ms cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
-@keyframes fx-rv { to { opacity: 1; filter: none; transform: none; } }
-.fx-rise { opacity: 0; transform: translateY(18px); }
-.fx-rise.fx-rise-on { opacity: 1; transform: none; transition: opacity 600ms var(--fx-ease), transform 700ms var(--fx-ease); }
-
-/* 경로 이동: 새 화면이 아래에서 살짝 */
-#page.is-ready > :not(.home-stage):not(.stage) { animation: fx-page-in 420ms var(--fx-ease) both; }
-@keyframes fx-page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Legacy reveal classes remain readable, without page-wide entrance choreography. */
+.fx-rv, .fx-rise { opacity: 1; filter: none; transform: none; }
 
 /* ---------- 4. 기우는 카드 ---------- */
-.fx-tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 650ms var(--fx-ease), box-shadow 650ms var(--fx-ease); will-change: transform; }
+.fx-tilt { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 220ms var(--fx-ease), box-shadow 220ms var(--fx-ease); will-change: transform; }
 .fx-tilt.is-tilting { transition: transform 120ms linear, box-shadow 300ms var(--fx-ease); box-shadow: 0 24px 48px -16px rgb(17 18 20 / .35); }
 
 /* ---------- 5. 커버 플로 ---------- */
@@ -93,9 +81,9 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 .fx-cf-cap { display: grid; justify-items: center; gap: 2px; text-align: center; min-width: 0; }
 .fx-cf-cap b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
 .fx-cf-cap span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--ink-3); }
-.fx-cf-cap.is-in b, .fx-cf-cap.is-in span { animation: fx-cap 360ms var(--fx-ease) both; }
-.fx-cf-cap.is-in span { animation-delay: 40ms; }
-@keyframes fx-cap { from { opacity: 0; transform: translateY(6px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
+.fx-cf-cap.is-in b, .fx-cf-cap.is-in span { animation: fx-cap 200ms var(--fx-ease) both; }
+.fx-cf-cap.is-in span { animation-delay: 0ms; }
+@keyframes fx-cap { from { opacity: .65; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 
 /* 커버 플로 아래 나머지 격자 */
 .grid-squares.after-flow { margin-top: 48px; }
@@ -140,9 +128,7 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 .fx-board-st { font: 600 13px/1 var(--font-mono); letter-spacing: .02em; color: var(--b-ink); white-space: nowrap; }
 .fx-board-st.is-live { color: #8FE3A8; }
 .fx-board-st.is-soon { color: var(--accent-on-dark); }
-/* 안내판처럼 행이 위에서부터 차례로 켜진다 */
-.fx-board.is-on .fx-board-row { animation: fx-row 520ms var(--fx-ease) both; animation-delay: calc(var(--r, 0) * 45ms); }
-@keyframes fx-row { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+/* Timetable rows are visible immediately, including live refreshes. */
 
 /* ---------- 빈 화면: 겹친 달력 카드(affectUI Empty Calendar) ---------- */
 .fx-empty-cal { position: relative; width: 120px; height: 96px; margin: 0 auto 6px; }
@@ -169,8 +155,8 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 .fc-stale-note { display: flex; align-items: center; gap: 8px; margin: 4px 0 12px; font-size: 13px; color: var(--ink-3); }
 
 /* 좋아요 — 톡 튀고 채워진다(Reaction Bar) */
-.soc-like.pop .ic, [data-soc-like].pop .ic, .like-btn.pop .ic { animation: fx-pop 320ms cubic-bezier(.65, 0, .35, 1); }
-@keyframes fx-pop { 0% { transform: scale(1); } 40% { transform: scale(1.32) rotate(-8deg); } 70% { transform: scale(.92); } 100% { transform: scale(1); } }
+.soc-like.pop .ic, [data-soc-like].pop .ic, .like-btn.pop .ic { animation: fx-pop 180ms var(--fx-ease); }
+@keyframes fx-pop { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
 
 @media (max-width: 760px) {
   .fx-board-head { display: none; }
@@ -189,7 +175,11 @@ html:lang(ja) { --font-display: "Host Grotesk", "Hiragino Sans", "Noto Sans JP",
 @media (prefers-reduced-motion: reduce) {
   .fx-glide, .fx-tilt, .fx-cf-cap b, .fx-cf-cap span, .fx-board-row, .fx-empty-cal i { transition: none !important; animation: none !important; }
   .fx-rv, .fx-rise { opacity: 1 !important; filter: none !important; transform: none !important; animation: none !important; }
-  #page.is-ready > * { animation: none !important; }
+  .fx-tilt { transform: none !important; }
+  .fx-nt { display: none; }
+  .fx-ghost { color: inherit; }
+  .soc-like.pop .ic, [data-soc-like].pop .ic, .like-btn.pop .ic { animation: none !important; }
+  .fx-mq-row, .fx-cf-card { will-change: auto; }
 }
 }
 

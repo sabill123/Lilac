@@ -1,0 +1,21 @@
+/* Task pages only. Shared tokens and fonts remain owned by the app shell. */
+.browse-fanclub .fc-toolbar,.browse-news-tools{gap:16px;align-items:center;flex-wrap:wrap}
+.browse-fanclub .fc-toolbar .find{flex:1 1 16rem;min-width:0}
+.browse-reset{min-height:44px;font-size:14px;line-height:20px;font-weight:600;padding:8px 12px;white-space:nowrap}
+.browse-reset:disabled{opacity:.55;cursor:default}
+.browse-fanclub .fc-result-count,.news-result{font-size:14px;line-height:20px;font-weight:500;font-variant-numeric:tabular-nums;margin:16px 0;color:var(--ink-2)}
+.browse-empty{padding:32px 24px;background:var(--bg-2);border-radius:8px}
+.browse-empty h3{font-size:20px;line-height:28px;font-weight:600;margin:0 0 8px;text-wrap:balance}
+.browse-empty p,.browse-search-recovery p,.browse-auth-note{font-size:14px;line-height:20px;text-wrap:pretty;max-width:65ch}
+.browse-empty a,.browse-auth-back{display:inline-block;margin-top:16px;text-decoration:underline;text-underline-offset:4px;font-weight:500}
+.browse-search-recovery{margin:16px auto 0;max-width:40rem}
+.browse-recovery-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+.browse-recovery-links .btn{min-height:44px}
+.browse-auth-note{margin:12px 0 24px;color:var(--ink-2)}
+.task-auth .browse-auth-back{font-size:14px;line-height:20px}
+.browse-fanclub :is(button,a,input):focus-visible,.browse-news-tools button:focus-visible,.browse-recovery-links a:focus-visible,.browse-auth-back:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.browse-reset:not(:disabled):hover,.browse-recovery-links a:hover{background:var(--bg-2)}
+.browse-reset:not(:disabled):active,.browse-recovery-links a:active{transform:translateY(1px)}
+@media(max-width:600px){.browse-fanclub .fc-toolbar .find{flex-basis:100%}.browse-fanclub .fc-toolbar .chips{flex:1 1 100%;flex-wrap:wrap}.browse-empty{padding:24px 16px}.browse-news-tools .chips{flex-basis:100%;flex-wrap:wrap}}
+
+.browse-fanclub [hidden]{display:none!important}

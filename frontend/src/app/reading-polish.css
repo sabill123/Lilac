@@ -1,0 +1,107 @@
+/* Read and Operate surfaces only. Imported after the shared shell styles. */
+.reading-page, .task-page { --reading-muted: #565260; --reading-line: #e6e2eb; color: var(--ink); }
+:is(.reading-page, .task-page) ::selection { background: var(--brand-t2); color: var(--ink); }
+:is(.reading-page, .task-page) :is(a, button, input, summary, [tabindex]):focus-visible { outline: 2px solid var(--brand-2); outline-offset: 4px; }
+:is(.reading-page, .task-page) a { text-underline-offset: .2em; }
+.reading-page.doc { grid-template-columns: 204px minmax(0, 1fr); gap: 56px; max-width: 1120px; margin-inline: auto; padding-block: 12px 48px; }
+.reading-page .doc-toc { gap: 12px; }
+.reading-page .doc-toc-h { font-size: 13px; color: var(--reading-muted); margin-block: 12px 4px; }
+.reading-page .doc-toc ul { display: grid; gap: 2px; }
+.reading-page .doc-toc a { display: flex; align-items: center; min-height: 44px; padding: 9px 12px; border-radius: 4px; box-shadow: none; font-size: 14px; line-height: 1.5; }
+.reading-page .doc-toc a:hover { background: var(--bg-2); }
+.reading-page .doc-toc a.on { color: var(--brand-3); background: var(--brand-t); box-shadow: none; font-weight: 700; }
+.reading-page .doc-body { min-width: 0; max-width: 76ch; }
+.reading-page .doc-body h1 { margin: 0; font-size: 2rem; letter-spacing: -.03em; line-height: 1.35; text-wrap: balance; }
+.reading-page .doc-lead { font-size: 1rem; line-height: 1.9; margin-top: 20px; color: var(--ink-2); }
+.reading-page .doc-sec { margin-top: 40px; padding-top: 28px; box-shadow: inset 0 1px 0 var(--reading-line); }
+.reading-page .doc-sec h2 { font-size: 1.25rem; line-height: 1.5; letter-spacing: -.02em; }
+.reading-page .doc-list { margin-top: 14px; padding-left: 22px; }
+.reading-page .doc-list li { font-size: 15px; line-height: 1.85; padding-left: 3px; margin-top: 10px; }
+.reading-page .doc-list li::marker { color: var(--reading-muted); }
+.reading-page .reading-table { max-width: 100%; overflow-x: auto; margin-top: 18px; border-block: 1px solid var(--reading-line); scrollbar-color: var(--line-2) var(--bg-2); }
+.reading-page .reading-table table { width: 100%; min-width: 560px; margin: 0; border-collapse: collapse; box-shadow: none; font-size: 14px; }
+.reading-page .reading-table :is(th, td) { padding: 14px 16px; vertical-align: top; line-height: 1.75; text-align: left; border-bottom: 1px solid var(--reading-line); box-shadow: none; }
+.reading-page .reading-table thead th { background: var(--bg-2); color: var(--reading-muted); font-size: 13px; font-weight: 600; }
+.reading-page .reading-table tbody th { width: 24%; min-width: 120px; font-weight: 650; }
+.reading-page .reading-table tr:last-child > * { border-bottom: 0; }
+.reading-page .reading-table td:last-child { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.reading-page :is(.doc-src, .src-note, .doc-shot figcaption, .doc-who b, .doc-who small, .fck-src, .fck-plat a) { color: var(--reading-muted) !important; }
+.reading-page .doc-src { gap: 8px 16px; margin-top: 16px !important; line-height: 1.7; }
+.reading-page .doc-src a { min-height: 32px; }
+.reading-page .faq { margin-top: 28px; border-top: 1px solid var(--reading-line); }
+.reading-page .faq-item { border-bottom: 1px solid var(--reading-line); }
+.reading-page .faq-item summary { display: list-item; list-style: disclosure-closed; padding: 22px 8px 22px 0; margin-left: 20px; cursor: pointer; font-size: 16px; font-weight: 650; line-height: 1.7; }
+.reading-page .faq-item summary::-webkit-details-marker { display: inline; }
+.reading-page .faq-item summary::after, .reading-page .faq-item summary::before { content: none; }
+.reading-page .faq-item[open] summary { list-style-type: disclosure-open; color: var(--brand-3); }
+.reading-page .faq-item summary:hover { color: var(--brand-3); }
+.reading-page .faq-item p { padding: 0 0 24px 20px; margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.9; }
+.reading-page .doc-steps > li { padding-block: 28px; }
+.reading-page .doc-steps h4 { font-size: 17px; line-height: 1.6; }
+.reading-page .doc-steps p { font-size: 15px; line-height: 1.85; }
+.reading-page .doc-warn { padding: 12px 16px; box-shadow: none; border: 1px solid var(--reading-line); background: var(--bg-2); }
+.reading-page .fck-card summary { min-height: 56px; line-height: 1.65; }
+.task-page .page-head h1, .task-page.auth h1 { font-size: 2rem; line-height: 1.35; letter-spacing: -.03em; }
+.task-page .muted, .task-page .hint { color: var(--reading-muted); }
+.task-page :is(input, button, .btn) { font-family: var(--font); }
+.task-page input { caret-color: var(--brand-2); }
+.task-page input::placeholder { color: var(--reading-muted); opacity: 1; }
+.task-page :is(.auth-cta, .more-links) { flex-wrap: wrap; gap: 12px; }
+.task-page .btn { min-height: 44px; border-radius: 6px; }
+.task-page button:disabled { opacity: .6; cursor: wait; }
+.task-page .form-err:empty { display: none; }
+.task-page .form-err:not(:empty) { padding: 12px 14px; border: 1px solid #e9b7b3; background: var(--danger-t); color: #9f241b; border-radius: 4px; font-size: 14px; line-height: 1.7; }
+.task-page .empty { padding: 32px 16px; border-block: 1px solid var(--reading-line); color: var(--reading-muted); line-height: 1.8; }
+.task-page .empty .btn { margin-top: 16px; }
+.task-search-label { display: block; font-size: 14px; font-weight: 650; margin: 0 0 10px; }
+.task-search .bigsearch { height: 60px; padding: 6px 8px 6px 16px; border: 1px solid #aaa5b1; border-radius: 6px; background: #fff; color: var(--reading-muted); gap: 12px; }
+.task-search .bigsearch:focus-within { box-shadow: none; border-color: var(--brand-2); outline: 2px solid var(--brand-2); outline-offset: 2px; }
+.task-search .bigsearch input { height: 44px; }
+.task-search .bigsearch input:focus-visible { outline-offset: -2px; }
+.task-search .search-head { margin-top: 32px; }
+.task-search .more-links { display: flex; border-top: 1px solid var(--reading-line); padding-top: 24px; }
+.task-guest { max-width: 640px; margin-inline: auto; padding-block: 32px 64px; }
+.task-guest .lede { max-width: 52ch; line-height: 1.85; }
+.task-my .my-head { align-items: center; gap: 16px; }
+.task-my .my-head > div { min-width: 0; }
+.task-my .my-head p { overflow-wrap: anywhere; }
+.task-my .acct { max-width: 640px; margin-top: 48px; }
+.task-my .acct-form { gap: 16px; padding-block: 24px; }
+.task-my .acct-form label, .task-auth label { font-size: 14px; line-height: 1.6; font-weight: 600; gap: 8px; }
+.task-my .acct-form :is(input), .task-auth input { width: 100%; min-width: 0; height: 48px; padding: 10px 14px; border: 1px solid #aaa5b1; background: #fff; border-radius: 5px; font-size: 16px; color: var(--ink); }
+.task-my .acct-form input:focus, .task-auth input:focus { box-shadow: none; border-color: var(--brand-2); outline: 2px solid var(--brand-2); outline-offset: 2px; background: #fff; }
+.task-my .acct-row { align-items: stretch; gap: 12px; }
+.task-my .acct-danger { margin-top: 12px; border-color: var(--reading-line); }
+.task-my .acct-danger summary { display: list-item; padding: 12px 0; min-height: 44px; color: var(--reading-muted); font-size: 14px; }
+.task-my .acct-danger p { font-size: 14px; line-height: 1.85; }
+.task-auth.auth { max-width: 440px; margin: 48px auto 80px; padding: 0; gap: 28px; }
+.task-auth.auth form { gap: 20px; }
+.task-auth .hint { font-size: 13px; font-weight: 400; line-height: 1.7; }
+.task-auth .btn { margin-top: 4px; height: 48px; font-size: 15px; border-radius: 6px; }
+.task-auth .task-auth-alt { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-align: center; border-top: 1px solid var(--reading-line); padding-top: 24px; text-decoration: underline; font-size: 14px; }
+@media (max-width: 900px) {
+  .reading-page.doc { grid-template-columns: 1fr; gap: 32px; }
+  .reading-page .doc-toc { position: static; display: grid; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid var(--reading-line); }
+  .reading-page .doc-toc-h { display: none; }
+  .reading-page .doc-toc ul { display: flex; flex-wrap: wrap; gap: 4px; }
+  .reading-page .doc-toc a { height: auto; min-height: 44px; border: 1px solid transparent; padding: 8px 12px; border-radius: 4px; font-size: 13px; }
+  .reading-page .doc-toc a.on { border-color: var(--brand-t2); }
+  .reading-page .doc-body { max-width: 100%; }
+}
+@media (max-width: 540px) {
+  .reading-page.doc { padding-block: 0 32px; gap: 28px; }
+  .reading-page .doc-body h1, .task-page .page-head h1, .task-page.auth h1 { font-size: 1.625rem; }
+  .reading-page .doc-lead { margin-top: 16px; font-size: 15px; }
+  .reading-page .doc-sec { margin-top: 32px; padding-top: 24px; }
+  .reading-page .doc-list li { font-size: 14px; }
+  .reading-page .faq-item summary { padding-block: 18px; font-size: 15px; }
+  .reading-page .faq-item p { font-size: 14px; }
+  .task-auth.auth { margin-block: 24px 48px; }
+  .task-my .my-head { align-items: flex-start; }
+  .task-my .acct-row { flex-wrap: wrap; }
+  .task-my .acct-row input { flex-basis: 100%; }
+  .task-search .bigsearch { gap: 8px; padding-left: 12px; }
+  .task-search .bigsearch > .ic { display: none; }
+  .task-search .bigsearch .btn { padding-inline: 16px; }
+  .task-page .more-links .btn { max-width: 100%; white-space: normal; height: auto; padding-block: 12px; }
+}

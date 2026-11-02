@@ -6,7 +6,7 @@ import { ticketDay } from './_safety';
 import { api } from '../../api';
 import { state } from '../state';
 import { t, getLocale } from '../i18n';
-import { esc, freshness } from '../ui';
+import { esc, freshness, ticketNow, ticketInstant } from '../ui';
 import type { Concert } from '../cards';
 import { tlGrid, secHead, capsules, dots, bindTabs, skelBanner, skelGrid, heroHtml, bindHero, bindTopButton, regionGroup, REGION_ORDER } from '../tl';
 
@@ -20,9 +20,10 @@ let originMode: 'default' | 'all' = 'default';
 const PAGE = 24;
 const ja = () => getLocale() === 'ja';
 const monthLabel = (m: string) => (ja() ? `${Number(m.slice(5))}月` : `${Number(m.slice(5))}월`);
-const todayKst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+const todayKst = () => {const now=ticketNow();return now===null?'':new Date(now+9*3600e3).toISOString().slice(0,10);};
 const ddayText = (c: Concert) => {
   const d = c.startDate || '';
+  if(!todayKst())return '';
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
   const n = Math.round((Date.parse(`${d}T00:00:00Z`) - Date.parse(`${todayKst()}T00:00:00Z`)) / 864e5);
   return n === 0 ? t('c.dday.today') : n > 0 ? `D-${n}` : '';
@@ -139,7 +140,8 @@ async function renderShows(root: HTMLElement, alive: () => boolean, body: HTMLEl
   let rWin = 'all';
   const inWin = (c: Concert) => {
     if (rWin === 'all') return true;
-    const lim = new Date(Date.now() + 9 * 3600e3 + (rWin === 'month' ? 31 : 92) * 864e5).toISOString().slice(0, 10);
+    const n=ticketNow();if(n===null)return true;
+    const lim = new Date(n + 9 * 3600e3 + (rWin === 'month' ? 31 : 92) * 864e5).toISOString().slice(0, 10);
     return (c.startDate || '9999') <= lim;
   };
   const paintRank = () => {
@@ -216,9 +218,9 @@ async function renderTickets(root: HTMLElement, alive: () => boolean, body: HTML
   if (!alive()) return;
   const cache = groups.find((g) => g.cache)?.cache || null;
   const tkey = (x: Concert) => x.saleSortAt || x.ticketOpenAt || x.openSchedule?.[0]?.at || '';
-  const now = Date.now();
-  const upcoming = (x: Concert) => [x.ticketOpenAt, ...(x.openSchedule || []).map((s) => s.at)].some((a) => a && Date.parse(a) > now);
-  const soonList = items.filter((x) => !x.unconfirmed && upcoming(x) && Date.parse(tkey(x)) - now < 48 * 3600e3).sort((a, b) => tkey(a).localeCompare(tkey(b)));
+  const now = ticketNow();
+  const upcoming = (x: Concert) => [x.ticketOpenAt, ...(x.openSchedule || []).map((s) => s.at)].some((a) => now!==null && (ticketInstant(a)??-Infinity) > now);
+  const soonList = items.filter((x) => !x.unconfirmed && upcoming(x) && now!==null && (ticketInstant(tkey(x))??Infinity) - now < 48 * 3600e3).sort((a, b) => tkey(a).localeCompare(tkey(b)));
   const months = [...new Set(items.map((x) => tkey(x).slice(0, 7)).filter(Boolean))].sort();
   let side = '';
   let month = '';
@@ -243,7 +245,7 @@ async function renderTickets(root: HTMLElement, alive: () => boolean, body: HTML
     if (!day) return esc(t('c.tba'));
     const d = new Date(`${day}T00:00:00+09:00`);
     const wd = new Intl.DateTimeFormat(ja() ? 'ja-JP' : 'ko-KR', { weekday: 'short', timeZone: 'Asia/Seoul' }).format(d);
-    const tomorrow = new Date(Date.now() + 33 * 3600e3).toISOString().slice(0, 10);
+    const tomorrow = now===null?'':new Date(now + 33 * 3600e3).toISOString().slice(0, 10);
     const rel = day === todayKst() ? (ja() ? '今日' : '오늘') : day === tomorrow ? (ja() ? '明日' : '내일') : '';
     return `<span class="num">${Number(day.slice(5, 7))}.${Number(day.slice(8))}</span>(${esc(wd)})${rel ? ` <span class="tl-hl">${rel}</span>` : ''}`;
   };

@@ -28,8 +28,8 @@ export async function renderTrack(root: HTMLElement, alive: () => boolean, key?:
       <div class="song-art">${img(s.artwork, '', 'square', { ratio: '1/1', initial: s.title })}</div>
       <div class="song-info">
         <p class="song-kind">${ct('kind.track')}</p>
-        <h1>${esc(s.title)}</h1>
-        <dl class="song-meta"><dt>${ct('track.artist')}</dt><dd><a href="${artistHref}">${esc(s.artist || '')}</a></dd>${s.album ? `<dt>${ct('track.album')}</dt><dd>${esc(s.album)}</dd>` : ''}</dl>
+        <h1 data-content-original-work translate="no">${esc(s.title)}</h1>
+        <dl class="song-meta"><dt>${ct('track.artist')}</dt><dd><a href="${artistHref}">${esc(s.artist || '')}</a></dd>${s.album ? `<dt>${ct('track.album')}</dt><dd data-content-original-work translate="no">${esc(s.album)}</dd>` : ''}</dl>
         <div class="song-acts">
           <button type="button" class="btn btn-solid" data-play>${icon('i-play', 'ic xs')}${ct('track.play')}</button>
           ${likeBtn(tg, 'is-box')}

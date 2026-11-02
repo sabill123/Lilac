@@ -100,16 +100,16 @@ export async function renderFanclubPage(root: HTMLElement, alive: () => boolean)
   const byPlat = PLATS.map((p) => ({ p, rows: found.filter((x) => plat(x) === p) })).filter((g) => g.rows.length);
   root.querySelector('#fcpBody')!.innerHTML = `
 
-    <section class="sec"><div class="sec-head"><h2>${t('fcp.fees')}</h2></div>
+    <section class="sec browse-fanclub"><div class="sec-head"><h2>${t('fcp.fees')}</h2></div>
       <div class="toolbar fc-toolbar"><label class="find">${icon('i-search')}<input type="search" id="fcQuery" maxlength="100" aria-label="${ja ? 'アーティスト・ファンクラブを検索' : '아티스트·팬클럽 검색'}" placeholder="${ja ? 'アーティスト・ファンクラブを検索' : '아티스트·팬클럽 검색'}"></label><div class="chips" role="group">
         <button type="button" class="chip on" data-f="all" aria-pressed="true">${t('fcl.all')} <span class="n">${counts.all}</span></button>
         ${kr ? `<button type="button" class="chip" data-f="ovs" aria-pressed="false">${t('fc.overseas.yes2')} <span class="n">${counts.ovs}</span></button>` : ''}
         <button type="button" class="chip" data-f="open" aria-pressed="false">${t('fcp.openNow')} <span class="n">${counts.open}</span></button>
-      </div></div>
+      </div><button type="button" class="btn btn-line browse-reset" id="fcReset" disabled>${ja ? '条件をリセット' : '조건 초기화'}</button></div>
       ${found.some((x) => x.cache?.lastError || x.cache?.state === 'stale') ? `<p class="fc-stale-note" role="note"><i class="fresh-dot" aria-hidden="true"></i>${ja ? '点の付いたカードは更新間隔を過ぎた情報です。料金・入会条件は入会前に公式ページでご確認ください。' : '점이 붙은 카드는 확인 주기가 지난 정보입니다. 회비·가입 조건은 가입 전에 공식 페이지에서 확인하세요.'}</p>` : ''}
       <p class="fc-result-count" role="status" aria-live="polite"></p>
-      ${found.length ? `<ul class="fct-grid" id="fcl">${found.map(row).join('')}</ul>` : emptyState(t('empty.generic'))}
-      <p class="fc-filter-empty muted" hidden>${ja ? '一致するファンクラブがありません。検索語や条件を変えてください。' : '일치하는 팬클럽이 없습니다. 검색어나 조건을 바꿔 보세요.'}</p>
+      ${found.length ? `<ul class="fct-grid" id="fcl">${found.map(row).join('')}</ul>` : emptyState(ja ? '表示できるファンクラブ情報はまだありません。' : '아직 표시할 팬클럽 정보가 없습니다.', `<a class="btn btn-line" href="#/artists">${ja ? 'アーティストを見る' : '아티스트 둘러보기'}</a>`)}
+      <div class="fc-filter-empty browse-empty" hidden><h3>${ja ? '条件に合うファンクラブがありません' : '조건에 맞는 팬클럽이 없습니다'}</h3><p>${ja ? '検索語を短くするか、「条件をリセット」で全件を表示してください。' : '검색어를 짧게 바꾸거나 ‘조건 초기화’로 전체 목록을 확인하세요.'}</p><a href="#/artists">${ja ? 'アーティストから探す' : '아티스트에서 찾아보기'}</a></div>
       <p class="src-note">${t('fcp.src')}${buyerCurrency() === 'KRW' && fx?.jpyKrw ? ` · ${t('fcp.fx', { v: (fx.jpyKrw * 100).toFixed(0) })}` : ''}</p>
       ${missing.length ? `<details class="fcp-miss"><summary>${t('fcp.missing', { n: missing.length })}</summary><ul>${missing.map((x) => `<li><a href="#/artist/${encodeURIComponent(x.artistId)}">${esc(x.artist)}</a>${x.status === 'unverified' ? `<span class="muted"> ${ja ? '未確認' : '아직 확인하지 못함'}</span>` : ''}${fanclubCacheNotice(x.cache)}${x.official ? ` <a class="muted" href="${esc(safeExternal(x.official))}" target="_blank" rel="noopener">${t('fcp.official')}${icon('i-ext', 'ic xs')}</a>` : ''}</li>`).join('')}</ul></details>` : ''}
     </section>
@@ -127,10 +127,13 @@ export async function renderFanclubPage(root: HTMLElement, alive: () => boolean)
       const match = (filter === 'all' || (filter === 'ovs' ? li.dataset.ovs === 'yes' : li.dataset.open === '1')) && query.every((q) => (li.dataset.search || '').includes(q));
       li.hidden = !match; if (match) visible++;
     });
-    root.querySelector('.fc-result-count')!.textContent = ja ? visible + '件' : visible + '개 팬클럽';
+    const active = [filter === 'ovs' ? t('fc.overseas.yes2') : filter === 'open' ? t('fcp.openNow') : t('fcl.all'), search.value.trim() ? (ja ? '検索: ' : '검색: ') + search.value.trim() : ''].filter(Boolean).join(' · ');
+    root.querySelector('.fc-result-count')!.textContent = ja ? `${active} · 全${found.length}件中 ${visible}件` : `${active} · 전체 ${found.length}개 중 ${visible}개`;
+    root.querySelector<HTMLButtonElement>('#fcReset')!.disabled = filter === 'all' && !search.value;
     (root.querySelector('.fc-filter-empty') as HTMLElement).hidden = visible > 0 || !found.length;
   };
   search.addEventListener('input', apply);
+  root.querySelector('#fcReset')!.addEventListener('click', () => { filter = 'all'; search.value = ''; apply(); search.focus(); });
   root.querySelectorAll<HTMLButtonElement>('[data-f]').forEach((btn) => btn.addEventListener('click', () => { filter = btn.dataset.f || 'all'; apply(); }));
   apply();
 }

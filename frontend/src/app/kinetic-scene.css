@@ -1,0 +1,69 @@
+/* Lilac kinetic layer (kinetic-scene.ts / kinetic-ribbon.ts).
+   Bright white base, solid accents only: ink, lilac, pale lilac, lime.
+   No gradient text, no glow, no blurred blobs, no shine sweeps. Imported by kinetic-scene.ts,
+   so it loads after the shared shell styles and before route-owned page styles. */
+:root {
+  --kx-ink: #211D29;
+  --kx-lilac: #7D5BA6;
+  --kx-lilac-deep: #573C7B;
+  --kx-lilac-soft: #E3DAEE;
+  --kx-lilac-tint: #F3EFF8;
+  --kx-lime: #D7F26B;
+  --kx-lime-ink: #263300;
+  --kx-ease: cubic-bezier(.22, 1, .36, 1);
+  --kx-press: cubic-bezier(.3, 0, .2, 1);
+}
+
+/* ---------- Ribbon band ---------- */
+.kx-ribbon { position: relative; display: block; width: 100%; height: clamp(64px, 8.5vw, 112px); margin: clamp(-6px, -.4vw, 0px) 0 clamp(10px, 1.4vw, 20px);
+  overflow: hidden; pointer-events: none; user-select: none; contain: strict; }
+.kx-ribbon--head { height: clamp(44px, 5.6vw, 72px); margin: clamp(10px, 1.2vw, 16px) 0 0; }
+.kx-ribbon-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* Before WebGL (loading/idle) and after a fallback: a static editorial rule in the same palette. */
+.kx-ribbon::before, .kx-ribbon::after { content: ""; position: absolute; left: 0; top: 50%; pointer-events: none; }
+.kx-ribbon::before { right: 0; height: 1px; background: var(--kx-ink); opacity: .9; }
+.kx-ribbon::after { width: clamp(56px, 9vw, 120px); height: 6px; margin-top: -3px; background: var(--kx-lilac); box-shadow: clamp(60px, 9.6vw, 128px) 0 0 -1px var(--kx-lime); border-radius: 1px; }
+.kx-ribbon[data-kx-scene="ready"]::before, .kx-ribbon[data-kx-scene="ready"]::after { display: none; }
+
+/* ---------- Staged reveal (below-the-fold blocks only; see kinetic-scene.ts) ---------- */
+[data-kx="wait"] { opacity: 0; transform: translate3d(0, 18px, 0); }
+[data-kx="in"] { animation: kx-rise 620ms var(--kx-ease) calc(var(--kx-i, 0) * 70ms) both; }
+[data-kx="wait"]:focus-within, [data-kx="wait"]:target { opacity: 1; transform: none; }
+@keyframes kx-rise { from { opacity: 0; transform: translate3d(0, 18px, 0); } to { opacity: 1; transform: none; } }
+
+/* ---------- Buttons: hover lift, tactile press ---------- */
+:is(.btn, .v2-btn, .tl-btn, .icon-btn, .soc-btn, .hdr-login, .fx-cf-btn, .pdp-cta) {
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .2s var(--kx-ease), transform .2s var(--kx-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.v2-btn.is-primary, .v2-btn.is-dark, .btn-brand, .btn-solid, .sbtn-solid, .hdr-login):hover { transform: translate3d(0, -2px, 0); box-shadow: 0 3px 0 var(--kx-lime); }
+  :is(.v2-btn.is-line, .btn-line):hover { transform: translate3d(0, -2px, 0); border-color: var(--kx-ink); box-shadow: inset 0 0 0 1px var(--kx-ink), 0 3px 0 var(--kx-lilac-soft); }
+  .sec-head .more { transition: color .18s ease, background-color .18s ease; border-radius: 999px; }
+  .sec-head .more:hover { color: var(--kx-lime-ink); background: var(--kx-lime); }
+  .sec-head .more .ic { transition: transform .22s var(--kx-ease); }
+  .sec-head .more:hover .ic { transform: translateX(3px); }
+}
+:is(.btn, .v2-btn, .tl-btn, .icon-btn, .soc-btn, .hdr-login, .fx-cf-btn, .pdp-cta, .chip):active:not(:disabled) {
+  transform: translate3d(0, 1px, 0) scale(.97); transition-duration: 60ms; transition-timing-function: var(--kx-press);
+}
+.chip { transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s var(--kx-ease); }
+
+/* ---------- Cards: frame lifts, image stays untouched and unobstructed ---------- */
+:is(.pcard-art, .rcard .media, .gcard .media, .shelf-art, .ocard-art) { transition: transform .32s var(--kx-ease), box-shadow .32s var(--kx-ease); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.pcard, .shelf-card):hover :is(.pcard-art, .shelf-art) { transform: translate3d(-3px, -3px, 0); box-shadow: 6px 6px 0 var(--kx-lilac-soft); }
+  :is(.rcard, .gcard):hover .media { transform: translate3d(-3px, -3px, 0); box-shadow: 6px 6px 0 var(--kx-lime); }
+  .ocard:hover .ocard-art { transform: translate3d(0, -3px, 0); box-shadow: 0 6px 0 var(--kx-lilac-soft); }
+  :is(.pcard, .rcard, .gcard, .shelf-card):hover :is(.pcard-title, .rcard-title, .gcard-title) { color: var(--kx-lilac-deep); }
+}
+:is(.pcard, .rcard, .gcard, .shelf-card, .ocard):active :is(.pcard-art, .rcard .media, .gcard .media, .shelf-art, .ocard-art) { transform: scale(.985); box-shadow: none; transition-duration: 80ms; }
+:is(.pcard-title, .rcard-title, .gcard-title) { transition: color .2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-kx="wait"], [data-kx="in"] { opacity: 1 !important; transform: none !important; animation: none !important; }
+  :is(.btn, .v2-btn, .tl-btn, .icon-btn, .soc-btn, .hdr-login, .fx-cf-btn, .pdp-cta, .chip, .pcard-art, .rcard .media, .gcard .media, .shelf-art, .ocard-art, .sec-head .more .ic) { transform: none !important; transition-property: background-color, color, border-color, box-shadow !important; }
+}
+@media print {
+  [data-kx] { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .kx-ribbon { display: none; }
+}

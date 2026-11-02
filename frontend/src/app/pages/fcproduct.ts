@@ -1,3 +1,5 @@
+import { assistanceHtml, mountAssistance } from '../assistance';
+import type { AssistanceContext } from '../assistance';
 import { fanclubCacheNotice } from './fanclub';
 import type { FanclubCache } from './fanclub';
 import { safeExternal } from './_safety';
@@ -20,7 +22,7 @@ import SHOTS from '../fcshots.json';
 import type { Target } from '../social';
 import { ct } from '../cm-i18n';
 
-type Facts = FcFacts & { residence?: Residence | null; overseasJoin?: string | null; image?: string | null; period?: string | null; ogTitle?: string | null; fees: FcFacts['fees'] & { free?: boolean }; evidence?: Evidence | null; verdict?: Verdict | null; evidencePages?: string[]; globalSite?: { url: string; label: string } | null };
+type Facts = FcFacts & { residence?: Residence | null; overseasJoin?: string | null; image?: string | null; period?: string | null; ogTitle?: string | null; fees: FcFacts['fees'] & { free?: boolean }; evidence?: Evidence | null; verdict?: Verdict | null; evidencePages?: string[]; globalSite?: { url: string; label: string } | null; salesPolicy?: { quote: string; seller: string | null; sellerAddress: string | null; url: string; checkedAt?: string } | null };
 interface Profile { id: string | null; name: string; names: string[]; origin: string; photo: { picture?: string } | null; artwork: string | null; fanclub: (Fanclub & { cache?: FanclubCache | null }) | null }
 
 const KO = {
@@ -86,7 +88,7 @@ interface Opt { key: string; label: string; sub?: string; amt: Amt | null; per: 
 
 export async function renderFanclubProduct(root: HTMLElement, alive: () => boolean, artistId: string) {
   const L = getLocale() === 'ja' ? JA : KO;
-  root.innerHTML = `<div class="page fcpd"><div class="pdp">${'<div class="sk sk-block"></div>'.repeat(2)}</div></div>`;
+  root.innerHTML = `<div class="page fcpd detail-fanclub"><div class="pdp">${'<div class="sk sk-block"></div>'.repeat(2)}</div></div>`;
   const [p, fx] = await Promise.all([
     api(`/api/live/artist?id=${encodeURIComponent(artistId)}&edition=${state.edition}`).catch(() => null) as Promise<Profile | null>,
     api('/api/live/fx').catch(() => null),
@@ -99,7 +101,7 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
   }
   const fc = p.fanclub;
   if (!p || !fc || fc.found === false || !(fc.entry || fc.home)) {
-    root.innerHTML = `<div class="page fcpd"><div class="feed-empty"><p>${esc(L.notFound)}</p>${fanclubCacheNotice(fc?.cache)}<a class="btn btn-line" href="#/fanclub">${esc(L.crumbs)}</a></div></div>`;
+    root.innerHTML = `<div class="page fcpd detail-fanclub"><div class="feed-empty"><p>${esc(L.notFound)}</p>${fanclubCacheNotice(fc?.cache)}<a class="btn btn-line" href="#/fanclub">${esc(L.crumbs)}</a></div></div>`;
     return;
   }
   const f = (fc.facts || { fees: null, overseas: 'unknown', payments: [], languages: [] }) as Facts;
@@ -148,7 +150,8 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
     if (pl.length) rows.push([L.pay, `${payKo(cleanPays(pl)).join(', ')}${pay?.debitNg ? ` (${t('fc.debitNg')})` : ''}`]);
     else if (plat === 'weverse') rows.push([L.pay, L.wvPay]);
     if (res?.autoRenew) rows.push([L.renew, L.renewYes]);
-    rows.push([L.lang, f.languages?.includes('한국어') ? L.langKo : L.langJa]);
+    /* languages 미수집을 "일본어"로 단정하지 않는다 */
+    rows.push([L.lang, f.languages?.includes('한국어') ? L.langKo : f.languages?.length ? f.languages.join(', ') : (ja ? '未確認(原文で確認)' : '미확인(원문 확인)')]);
     rows.push([L.windows, windows.length ? L.windowsN.replace('{n}', String(windows.length)) : L.windowsNone]);
     return rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
   };
@@ -177,14 +180,25 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
       <tr><th scope="row">${esc(L.pay)}</th><td>${esc(payKo(res.overseas.payments).join(', ') || '-')}</td>${res.jp ? `<td>${esc(payKo(res.jp.payments).join(', ') || '-')}</td>` : ''}</tr>
     </tbody></table>` : `<table class="pdp-table"><tbody>${courses('ovs').map((o) => `<tr><th scope="row">${esc(o.label)}</th><td>${o.free ? `<b>${esc(L.free)}</b>` : cell(o.amt)}</td></tr>`).join('')}${f.fees?.joinFee ? `<tr><th scope="row">${esc(t('fc.joinFee'))}</th><td>${cell({ v: f.fees.joinFee, cur: 'JPY' })}</td></tr>` : ''}${f.fees?.handlingFee ? `<tr><th scope="row">${esc(t('fc.handlingFee'))}</th><td>${cell({ v: f.fees.handlingFee, cur: 'JPY' })}</td></tr>` : ''}${f.fees?.annual && f.fees?.joinFee ? `<tr><th scope="row">${esc(t('fc.firstYear'))}</th><td>${cell({ v: f.fees.annual + f.fees.joinFee + (f.fees.handlingFee || 0), cur: 'JPY' })}<span class="sub">${esc(t('fc.firstYear.sub'))}</span></td></tr>` : ''}${(f.payments || []).length ? `<tr><th scope="row">${esc(L.pay)}</th><td>${esc(payKo(f.payments).join(', '))}</td></tr>` : ''}</tbody></table>`;
   const srcUrl = f.url || fc.entry || fc.home || '';
-  const rows = summaryRows({ evidence: f.evidence || null, verdict: f.verdict || null, overseas: ovsState, platform: pk, payments: (res?.overseas?.payments?.length ? res.overseas.payments : f.payments) || [], payKo, residence: res, pagesRead: f.evidencePages, club: `「${club}」`, entry: f.url || fc.entry || null });
+  /* 세금 표기: 수집된 값만. 모르면 미확인으로 둔다 */
+  const taxIncl = (f.fees as { taxIncluded?: boolean | null } | null)?.taxIncluded;
+  const taxRow = `<tr><th scope="row">${ja ? '税' : '세금'}</th><td${res?.jp ? ' colspan="2"' : ''}>${taxIncl === true ? esc(ja ? '税込（原文表記）' : '세금 포함(원문 표기)') : taxIncl === false ? esc(ja ? '税別（原文表記）' : '세금 별도(원문 표기)') : `<span class="muted">${esc(ja ? '未確認・原文で確認' : '미확인 · 원문에서 확인')}</span>`}</td></tr>`;
+  const feeTableFull = feeTable.replace(/<\/tbody><\/table>$/, `${taxRow}</tbody></table>`);
+  const rowsAll = summaryRows({ evidence: f.evidence || null, verdict: f.verdict || null, overseas: ovsState, platform: pk, payments: (res?.overseas?.payments?.length ? res.overseas.payments : f.payments) || [], payKo, residence: res, pagesRead: f.evidencePages, club: `「${club}」`, entry: f.url || fc.entry || null });
+  /* 가입 페이지가 "본인 명의 등록"을 요구(residence.realName)하는데 본인 확인 판정이 비어 있으면
+   * "안내 없음"으로 모순되게 보여 주지 않는다. 같은 가입 페이지 출처로 원문 의미만 옮긴다. */
+  const rowsName = res?.realName && !f.verdict?.realName ? rowsAll.map((r) => r.key === 'name' ? { ...r, tone: 'warn' as const, status: ja ? '本人名義で登録' : '본인 명의로 가입', text: L.nReal, ev: [], src: srcUrl ? [{ ko: '이 팬클럽 가입 페이지', ja: '入会ページ', url: srcUrl }] : undefined } : r) : rowsAll;
+  /* Weverse 상품 注意事項의 판매 대상 문장: 원문 인용 + 같은 화면의 판매자 표기만. 한국 거주자 가능/불가는 판정하지 않는다 */
+  const sp = f.salesPolicy && safeExternal(f.salesPolicy.url) ? f.salesPolicy : null;
+  const rows = sp && ovsState !== 'yes' && ovsState !== 'no' ? rowsName.map((r) => r.key === 'ovs' ? { ...r, tone: 'warn' as const, status: ja ? '販売対象の記載あり' : '판매 대상 제한 문구 있음', text: (ja ? `商品ページの注意事項: 「${sp.quote}」` : `상품 페이지 주의사항에 "이 상품은 판매자가 속한 국가·지역에 사는 고객에게 판매됩니다"라고 적혀 있습니다.`) + (sp.seller ? (ja ? ` 販売者表記: ${sp.seller}${sp.sellerAddress ? `（${sp.sellerAddress}）` : ''}。` : ` 같은 화면의 판매자 표기: ${sp.seller}${sp.sellerAddress ? ` (${sp.sellerAddress})` : ''}.`) : '') + (ja ? '' : ' 한국 거주자가 살 수 있는지는 이 문장만으로 판단하지 않았습니다. 구매 전에 원문과 다른 국가 샵(GLOBAL 등) 멤버십을 확인하세요.'), ev: [{ quote: sp.quote, url: sp.url }], src: undefined } : r) : rowsName;
   const feeFor = res?.overseas?.annual ? { v: res.overseas.annual.v, per: 'y' as const, cur: res.overseas.annual.cur } : f.fees?.annual ? { v: f.fees.annual, per: 'y' as const } : f.fees?.monthly ? { v: f.fees.monthly, per: 'm' as const } : null;
   const showPrep = !ja && ovsState !== 'no';
   const pkName = pk || '';
   /* 부제: og:title 에서 사이트 이름을 뺀 팬클럽 쪽 표기 ("… OFFICIAL SITE｜OFFICIAL FAN CLUB 「Ringo Jam」" → 뒤쪽) */
   const subtitle = (f.ogTitle || '').split(/[｜|]/).map((x) => x.trim()).find((x) => /FAN ?CLUB|FANCLUB|MEMBERSHIP|ファンクラブ/i.test(x) && x !== club) || `${aname} ${L.official}`;
 
-  root.innerHTML = `<div class="page fcpd">
+  const assistanceContext:AssistanceContext={kind:'fanclub',artistId,artistName:aname,title:club,url:fc.entry||fc.home||'',image:image||undefined};
+  root.innerHTML = `<div class="page fcpd detail-fanclub">
     <nav class="crumbs" aria-label="breadcrumb"><a href="#/fanclub">${esc(L.crumbs)}</a>${icon('i-chev-r', 'ic xs')}<a href="#/artist/${encodeURIComponent(artistId)}">${esc(aname)}</a></nav>
     <section class="pdp">
       <div class="pdp-media">
@@ -196,22 +210,22 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
         <h1 class="pdp-title">${esc(club)}</h1>
         <p class="pdp-sub">${esc(subtitle)}</p>
         ${fanclubCacheNotice(fc.cache)}
-        <div class="pdp-price"><b id="pdpPrice"></b><span id="pdpPer"></span><small id="pdpKrw"></small></div>
+        <div class="pdp-price" aria-live="polite" aria-atomic="true"><b id="pdpPrice"></b><span id="pdpPer"></span><small id="pdpKrw"></small></div>
         <ul class="pdp-flags">${flags}</ul>
         <div class="pdp-opts">
-          ${hasRes ? `<div class="pdp-opt"><p class="pdp-opt-h">${esc(L.residence)}</p><div class="pdp-seg" role="radiogroup">${(['ovs', 'jp'] as const).map((s) => `<button type="button" role="radio" data-side="${s}" aria-checked="${s === side}">${esc(s === 'ovs' ? L.ovs : L.jp)}</button>`).join('')}</div></div>` : ''}
-          <div class="pdp-opt"><p class="pdp-opt-h">${esc(L.course)}</p><div class="pdp-courses" id="pdpCourses" role="radiogroup"></div></div>
+          ${hasRes ? `<div class="pdp-opt"><p class="pdp-opt-h">${esc(L.residence)}</p><div class="pdp-seg" role="radiogroup" aria-label="${esc(L.residence)}">${(['ovs', 'jp'] as const).map((s) => `<button type="button" role="radio" data-side="${s}" tabindex="${s === side ? 0 : -1}" aria-checked="${s === side}">${esc(s === 'ovs' ? L.ovs : L.jp)}</button>`).join('')}</div></div>` : ''}
+          <div class="pdp-opt"><p class="pdp-opt-h">${esc(L.course)}</p><div class="pdp-courses" id="pdpCourses" role="radiogroup" aria-label="${esc(L.course)}"></div></div>
         </div>
         <dl class="pdp-spec" id="pdpSpec">${specs()}</dl>
-        <div class="pdp-cta">
+        <div class="pdp-cta"><a class="btn btn-solid lg" data-detail-scroll href="#pdpCheck">${ja?'入会条件を確認':'가입 조건 먼저 확인'}</a><a class="btn btn-line" data-assist-scroll href="#pdpAssist">${ja?'入力サポートへ':'입력 도움으로 이동'}</a>
           ${likeBtn(tg, 'is-box')}
           ${shareBtn(null, `#/fanclub/${encodeURIComponent(artistId)}`, `${club} · ${p.name}`, 'is-box icon-only')}
-          <a class="btn btn-solid lg pdp-join" id="pdpJoin" target="_blank" rel="noopener" data-fc-track="join" data-artist="${esc(artistId)}"></a>
+          <a class="btn btn-line lg pdp-join" id="pdpJoin" target="_blank" rel="noopener" data-fc-track="join" data-artist="${esc(artistId)}"></a>
         </div>
         <p class="pdp-note">${esc(L.note)}</p>
       </div>
     </section>
-    <nav class="pdp-tabs" id="pdpTabs"><a href="#pdpCheck" class="on">${esc(L.tabCheck)}</a><a href="#pdpHow">${esc(L.tabHow)}</a><a href="#pdpFee">${esc(L.tabFee)}</a>${showPrep ? `<a href="#pdpPrep">${esc(L.tabPrep)}</a>` : ''}<a href="#pdpWin">${esc(L.tabWin)}${windows.length ? ` <em>${windows.length}</em>` : ''}</a><a href="#pdpQna">${esc(L.tabQna)}</a></nav>
+    <nav class="pdp-tabs" id="pdpTabs" aria-label="${esc(ja ? '入会ガイド' : '가입 안내')}"><a href="#pdpCheck" class="on">${esc(L.tabCheck)}</a><a href="#pdpFee">${esc(L.tabFee)}</a><a href="#pdpHow">${esc(L.tabHow)}</a>${showPrep ? `<a href="#pdpPrep">${esc(L.tabPrep)}</a>` : ''}<a href="#pdpAssist">${ja?'入力サポート':'입력 도움'}</a><a href="#pdpWin">${esc(L.tabWin)}${windows.length ? ` <em>${windows.length}</em>` : ''}</a><a href="#pdpQna">${esc(L.tabQna)}</a></nav>
     <div class="pdp-detail">
       <section class="pdp-sec" id="pdpCheck">
         <h2>${esc(L.checkH)}<span>${esc(L.checked.replace('{d}', KNOW_CHECKED.replace(/-/g, '.')))}</span></h2>
@@ -220,6 +234,7 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
         ${f.globalSite ? `<p class="fck-global"><a class="btn btn-line" href="${esc(safeExternal(f.globalSite.url))}" target="_blank" rel="noopener">${esc(L.globalBtn)}${icon('i-ext', 'ic xs')}</a></p>` : ''}
         ${pk && PLATFORM_KNOW[pk] ? `<h3 class="fck-h3">${esc(L.platH.replace('{p}', pkName))}</h3>${platformNotesHtml(pk)}` : ''}
       </section>
+      <section class="pdp-sec" id="pdpFee"><h2>${esc(L.tabFee)}</h2>${feeTableFull}<p class="src-note">${esc(t('fc.source'))} <a href="${esc(safeExternal(srcUrl))}" target="_blank" rel="noopener">${esc(srcUrl.replace(/^https?:\/\//, '').slice(0, 60))}</a>${!ja && fx?.jpyKrw ? ` · ${esc(t('fcp.fx', { v: (fx.jpyKrw * 100).toFixed(0) }))}` : ''}</p></section>
       <section class="pdp-sec" id="pdpHow">
         <h2>${esc(L.tabHow)}${PLATFORM_NAME[plat] ? `<span>${esc(PLATFORM_NAME[plat])} · ${esc(L.checked.replace('{d}', CHECKED.replace(/-/g, '.')))}</span>` : ''}</h2>
         <ol class="psteps">${steps.map((s, i) => `<li class="pstep">
@@ -227,8 +242,8 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
           ${s.img ? `<figure class="pstep-img"><a href="${esc(s.img.src)}" target="_blank" rel="noopener"><img src="${esc(s.img.src)}" alt="${esc(s.h)}" width="${s.img.w}" height="${s.img.h}" loading="lazy" decoding="async"></a><figcaption>${esc(s.img.cap)}</figcaption></figure>` : ''}
         </li>`).join('')}</ol>
       </section>
-      <section class="pdp-sec" id="pdpFee"><h2>${esc(L.tabFee)}</h2>${feeTable}<p class="src-note">${esc(t('fc.source'))} <a href="${esc(safeExternal(srcUrl))}" target="_blank" rel="noopener">${esc(srcUrl.replace(/^https?:\/\//, '').slice(0, 60))}</a>${!ja && fx?.jpyKrw ? ` · ${esc(t('fcp.fx', { v: (fx.jpyKrw * 100).toFixed(0) }))}` : ''}</p></section>
       ${showPrep ? `<section class="pdp-sec" id="pdpPrep"><h2>${esc(L.prepH)}<span>${esc(L.prepSub)}</span></h2>${prepHtml(prepCards(feeFor, fx))}</section>` : ''}
+      <section id="pdpAssist" class="pdp-sec"><h2>${ja?'条件確認後の入力サポート':'조건 확인 후 입력 도움'}</h2><p class="detail-boundary">${ja?'公開案内と端末内の入力補助です。入会資格の保証や公式サイトへの入力・送信は行いません。':'공개 안내 확인과 기기 내 입력 보조입니다. 가입 자격을 보증하거나 공식 사이트에 대신 입력·전송하지 않습니다.'}</p>${assistanceHtml(assistanceContext)}</section>
       <p class="pdp-change">${esc(L.nCheck)}</p>
       <section class="pdp-sec" id="pdpWin"><h2>${esc(L.tabWin)}</h2>${windows.length ? `<ul class="tlist">${windows.map((w) => fcWindowRow(w, { id: artistId, name: p.name })).join('')}</ul>` : `<p class="side-empty">${esc(t('fc.noWindows'))}</p>`}</section>
       <section class="pdp-sec" id="pdpQna"><h2>${esc(L.qnaH)}</h2><div id="pdpQnaList">${skeletonRows(2, 'sk-line')}</div>
@@ -237,11 +252,13 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
     <div class="pdp-bar">${likeBtn(tg, 'is-box')}<a class="btn btn-solid lg" id="pdpJoin2" target="_blank" rel="noopener" data-fc-track="join" data-artist="${esc(artistId)}"></a></div>
   </div>`;
 
+  mountAssistance(root,assistanceContext,{alive});
+  root.querySelectorAll<HTMLAnchorElement>('[data-assist-scroll],[data-detail-scroll]').forEach(link => link.addEventListener('click',e=>{e.preventDefault();root.querySelector(link.getAttribute('href')!)?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});}));
   const paint = () => {
     const list = courses(side);
     if (sel >= list.length) sel = 0;
     const o = list[sel];
-    root.querySelector('#pdpCourses')!.innerHTML = list.map((x, i) => `<button type="button" role="radio" class="pdp-course" data-i="${i}" aria-checked="${i === sel}"><span><b>${esc(x.label)}</b>${x.sub ? `<em>${esc(x.sub)}</em>` : ''}</span><strong>${esc(x.free ? L.free : amtText(x.amt))}${x.amt && !x.free ? `<small>${esc(x.per === 'y' ? L.perYear : L.perMonth)}</small>` : ''}</strong></button>`).join('');
+    root.querySelector('#pdpCourses')!.innerHTML = list.map((x, i) => `<button type="button" role="radio" class="pdp-course" data-i="${i}" tabindex="${i === sel ? 0 : -1}" aria-checked="${i === sel}"><span><b>${esc(x.label)}</b>${x.sub ? `<em>${esc(x.sub)}</em>` : ''}</span><strong>${esc(x.free ? L.free : amtText(x.amt))}${x.amt && !x.free ? `<small>${esc(x.per === 'y' ? L.perYear : L.perMonth)}</small>` : ''}</strong></button>`).join('');
     root.querySelector('#pdpPrice')!.textContent = o ? (o.free ? L.free : amtText(o.amt)) : L.seePage;
     root.querySelector('#pdpPer')!.textContent = o?.amt && !o.free ? (o.per === 'y' ? L.perYear : L.perMonth) : '';
     const krw = o?.amt && o.amt.cur === 'JPY' && !o.free ? approx(o.amt.v, fx) : '';
@@ -258,18 +275,27 @@ export async function renderFanclubProduct(root: HTMLElement, alive: () => boole
       a.setAttribute('aria-disabled', String(!href));
       a.innerHTML = `${esc(label)}${icon('i-ext', 'ic xs')}`;
     }
-    root.querySelectorAll<HTMLButtonElement>('.pdp-course').forEach((b) => b.addEventListener('click', () => { sel = Number(b.dataset.i); paint(); }));
+    root.querySelectorAll<HTMLButtonElement>('.pdp-course').forEach((b) => b.addEventListener('click', () => { sel = Number(b.dataset.i); paint(); root.querySelector<HTMLButtonElement>('.pdp-course[aria-checked="true"]')?.focus(); }));
   };
   paint();
   root.querySelectorAll<HTMLButtonElement>('[data-side]').forEach((b) => b.addEventListener('click', () => {
     side = b.dataset.side as 'ovs' | 'jp';
     sel = 0;
-    root.querySelectorAll('[data-side]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    root.querySelectorAll<HTMLButtonElement>('[data-side]').forEach((x) => { x.setAttribute('aria-checked', String(x === b)); x.tabIndex = x === b ? 0 : -1; });
     paint();
+  }));
+  root.querySelectorAll<HTMLElement>('[role="radiogroup"]').forEach(group => group.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    const radios = Array.from(group.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const index = radios.indexOf(document.activeElement as HTMLButtonElement);
+    if (index < 0 || !radios.length) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? radios.length - 1 : (index + (event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1) + radios.length) % radios.length;
+    radios[next].click(); group.querySelector<HTMLButtonElement>('[aria-checked="true"]')?.focus();
   }));
   /* 탭: 스크롤 위치에 맞춰 표시 */
   const tabs = Array.from(root.querySelectorAll<HTMLAnchorElement>('#pdpTabs a'));
-  tabs.forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); root.querySelector(a.getAttribute('href')!)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  tabs.forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); root.querySelector(a.getAttribute('href')!)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); }));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((es) => es.forEach((en) => { if (en.isIntersecting) tabs.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === `#${en.target.id}`)); }), { rootMargin: '-45% 0px -50% 0px' });
     const sections = Array.from(root.querySelectorAll('.pdp-sec'));

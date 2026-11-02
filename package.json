@@ -14,7 +14,7 @@
     "test:smoke": "node scripts/smoke.mjs",
     "verify:macos": "bash scripts/verify-macos.sh",
     "test:contract": "node tests/verify-site-contract.mjs",
-    "test": "node tests/verify-v6-app.mjs && node tests/verify-realtime.mjs && node tests/verify-fanclub.mjs && node tests/verify-fc-evidence.mjs && node tests/verify-persist.mjs && node tests/verify-festivals.mjs && node tests/verify-vendors.mjs && node tests/verify-text.mjs && node tests/verify-account.mjs && node tests/verify-detail.mjs && node tests/verify-community.mjs && node tests/verify-site-contract.mjs && node scripts/smoke.mjs && npm run test:production",
+    "test": "node tests/verify-v6-app.mjs && node tests/verify-realtime.mjs && node tests/verify-fanclub.mjs && node tests/verify-fc-evidence.mjs && node tests/verify-persist.mjs && node tests/verify-festivals.mjs && node tests/verify-media-refresh.mjs && node tests/verify-vendors.mjs && node tests/verify-text.mjs && node tests/verify-news.mjs && node tests/verify-account.mjs && node tests/verify-detail.mjs && node tests/verify-goods-freshness.mjs && node tests/verify-community.mjs && node tests/verify-site-contract.mjs && node scripts/smoke.mjs && npm run test:production",
     "collect:artists": "node backend/collect-artists.mjs --per=70",
     "collect:charts": "node backend/collect-charts.mjs",
     "collect:products": "node backend/collect-products.mjs",
@@ -39,11 +39,16 @@
     "live:goods": "node backend/lib/live/goods.mjs",
     "test:fanclub": "node tests/verify-fanclub.mjs",
     "test:detail": "node tests/verify-detail.mjs",
+    "test:goods": "node tests/verify-goods-freshness.mjs",
+    "test:news": "node tests/verify-news.mjs",
+    "test:media": "node tests/verify-media-refresh.mjs",
     "test:community": "node tests/verify-community.mjs",
     "test:realtime": "node tests/verify-realtime.mjs",
     "test:production": "node tests/verify-production-shell.mjs && node tests/verify-production-flows.mjs && node tests/verify-production-security.mjs && node tests/verify-production-live.mjs && node scripts/verify-production-build.mjs --target=node --release",
     "start:production": "node scripts/start-production.mjs",
-    "check:production": "node scripts/start-production.mjs --check"
+    "check:production": "node scripts/start-production.mjs --check",
+    "test:content-localization": "node tests/verify-content-localization.mjs && node tests/verify-display-names.mjs && node tests/verify-display-name-helpers.mjs && node tests/verify-ja-lead-reading.mjs && node tests/verify-original-work-titles.mjs",
+    "test:fan-hub": "node tests/verify-assistance.mjs && node tests/verify-assistance-ui.mjs && node tests/verify-browse-ux.mjs && node tests/verify-detail-decision.mjs && node tests/verify-cover-media.mjs && node tests/verify-festival-geography.mjs && node tests/verify-home-cover.mjs && node tests/verify-home-hub.mjs && node tests/verify-home-news.mjs && node tests/verify-home-priorities.mjs && node tests/verify-home-ticket-refresh.mjs && node tests/verify-artist-marquee.mjs && node tests/verify-hero-scene.mjs && node tests/verify-fx-lifecycle.mjs && node tests/verify-kinetic-scene.mjs && node tests/verify-flow-redesign.mjs && node tests/verify-product-navigation.mjs && node tests/verify-product-feedback.mjs && node tests/verify-purchase-journey.mjs && node tests/verify-release-images.mjs && node tests/verify-media-delivery.mjs && node tests/verify-official-portraits.mjs && node tests/verify-portraits-routing.mjs && node tests/verify-portrait-proxy.mjs && node tests/verify-profile-handoff.mjs && node tests/verify-ja-lead-reading.mjs && node tests/verify-server-clock.mjs && node tests/verify-server-time-route.mjs && node tests/verify-ticket-consumers.mjs && node tests/verify-ticket-time-ui.mjs && node tests/verify-assistance-source.mjs && node tests/verify-assistance-routing.mjs && npm run test:content-localization"
   },
   "dependencies": {
     "kuromoji": "^0.1.2"

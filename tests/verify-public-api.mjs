@@ -8,7 +8,7 @@ const data={artists:[{id:'a',name:'Artist',links:{}}],catalog:{builtAt:timestamp
 let calls=0,active=0,maximum=0;const urls=[];
 const fetchImpl=async url=>{calls++;urls.push(String(url));active++;maximum=Math.max(maximum,active);await Promise.resolve();active--;return {ok:true,json:async()=>({results:[{trackId:999,trackName:'Other',artistName:'Other'}]})}};
 const handler=createPublicHandler({data,fetchImpl});
-async function request(url,method='GET',body,run=handler,requestHeaders={}){const req=Readable.from(body?[JSON.stringify(body)]:[]);Object.assign(req,{url,method,headers:requestHeaders});const headers={};let value;const res={setHeader:(k,v)=>headers[k]=v,end:v=>value=JSON.parse(v)};await run(req,res);assert.match(headers['Content-Type'],/json/);return {status:res.statusCode,body:value}}
+async function request(url,method='GET',body,run=handler,requestHeaders={}){const req=Readable.from(body?[JSON.stringify(body)]:[]);Object.assign(req,{url,method,headers:requestHeaders});const headers={};let value;const res={setHeader:(k,v)=>headers[k]=v,end:v=>value=JSON.parse(v)};await run(req,res);assert.match(headers['Content-Type'],/json/);return {status:res.statusCode,body:value,headers}}
 assert.equal((await request('/api/me')).body.user,null);
 assert.equal((await request('/api/charts?country=jp')).body.updated,timestamp);
 assert.equal((await request('/api/charts?country=kr')).body.total,0);
@@ -162,3 +162,9 @@ try{
 }finally{AbortSignal.timeout=originalTimeout}
 
 console.log('PASS public API contract, snapshot schema, country/filter, exact ID fallback, limits, strict metadata/manifest scalars, bounded artist queries/upstream bytes, canonical FX allowlist/64-date live series/redirect rejection/fallback provenance/time budget/no forwarded credentials, private/mutation boundaries, no side-effect imports');
+
+// A live server clock is not the source snapshot timestamp and does not enable writes/collectors.
+const fixedClock=1793608539000,timeHandler=createPublicHandler({data,now:()=>fixedClock});
+const timeReply=await request('/api/time','GET',undefined,timeHandler);
+assert.equal(timeReply.status,200);assert.equal(timeReply.body.epochMs,fixedClock);assert.equal(timeReply.body.timeZone,'Asia/Seoul');assert.equal(timeReply.body.utcOffsetMinutes,540);assert.match(timeReply.body.kst,/\+09:00$/);assert.match(timeReply.headers['Cache-Control'],/no-store/);assert.equal((await request('/api/time','POST',undefined,timeHandler)).status,405);
+console.log('PASS public server time: fixed live clock/KST/no-store, no writes or collector capability added');

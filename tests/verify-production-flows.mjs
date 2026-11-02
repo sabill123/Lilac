@@ -9,7 +9,7 @@ const test = (name, fn) => { fn(); console.log(`PASS ${name}`); count++; };
 function load(file, globals = {}, modules = {}) {
   const js = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const exports = {};
-  vm.runInNewContext(js, { exports, require: (name) => { if (!(name in modules)) throw new Error(`Unmocked import ${name}`); return modules[name]; }, URL, console: { error() {} }, ...globals });
+  vm.runInNewContext(js, { exports, require: (name) => { if(name==='./name-reading')return load('frontend/src/app/name-reading.ts'); if (!(name in modules)) throw new Error(`Unmocked import ${name}`); return modules[name]; }, URL, console: { error() {} }, ...globals });
   return exports;
 }
 const safety = load('frontend/src/app/pages/_safety.ts');
@@ -39,12 +39,13 @@ test('a failing subscriber does not prevent the next subscriber', () => {
   source.listeners.update({ data: JSON.stringify({ topic: 'goods', keys: [], at: 123, added: 1 }) });
   assert.equal(updates, 1); assert.equal(live.live.lastAt, 123);
 });
+test('recovered media update is accepted without an API mutation',()=>{const before=updates;source.listeners.update({data:JSON.stringify({topic:'media',keys:['artist-media:fixture'],at:124,added:0})});assert.equal(updates,before+1);});
 test('edition filters ignore unrelated source updates', () => {
   assert.equal(live.relevance({ keys: ['news-jp'], added: 5 }, 'kr').hit, false);
   assert.equal(live.relevance({ keys: ['news-jp', 'news-kr'], byKey: { 'news-jp': 5, 'news-kr': 2 } }, 'kr').added, 2);
 });
 const listeners = {};
-const body = { innerHTML: '' };
+const body = { innerHTML: '',setAttribute(){},removeAttribute(){} };
 const form = { addEventListener: (k, fn) => { listeners[k] = fn; }, querySelector: () => ({ focus() {} }) };
 const retry = { addEventListener: (k, fn) => { listeners.retry = fn; } };
 const root = { innerHTML: '', querySelector: (q) => q === '#sForm' ? form : q === '[data-retry]' ? retry : body };
@@ -65,7 +66,7 @@ const authButton = { disabled: false };
 const authForm = { addEventListener: (_, fn) => { submitAuth = fn; }, reportValidity: () => false, querySelector: () => authButton };
 const authRoot = { innerHTML: '', querySelector: () => authForm };
 const auth = load('frontend/src/app/pages/misc.ts', {}, {
-  '../../api': {}, '../state': { state: {}, login: async () => { authCalls++; } }, '../i18n': { t: (x) => x }, '../cm-i18n': {}, '../cards': {},
+  '../../api': {}, '../state': { state: {}, login: async () => { authCalls++; } }, '../i18n': { t: (x) => x,getLocale:()=> 'ko' }, '../cm-i18n': {}, '../cards': {},
   '../ui': { params: () => new URLSearchParams(), esc: (x) => x },
 });
 auth.renderAuth(authRoot, 'login');

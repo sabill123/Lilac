@@ -95,12 +95,15 @@ let flowMotionPassed = false;
 try { await import('./verify-flow-redesign.mjs'); flowMotionPassed = true; } catch (error) { console.error(error); }
 check('fx 레이어: CSS 모션 축소 + 실제 커버 플로·띠의 설정 변경·정리 동작', /prefers-reduced-motion: reduce/.test(fxCss) && flowMotionPassed);
 check('fx 레이어: 굴러가는 숫자는 원문을 투명하게 남겨 textContent·접근성 이름을 바꾸지 않는다', /fx-ghost/.test(fxTs) && /::before \{ content: "0\\A 1/.test(fxCss) && /aria-hidden="true"/.test(fxTs));
-check('홈: 티켓 오픈은 출발 안내판, 새 앨범은 3D 커버 플로(무대는 그대로)', /boardHtml\(opens/.test(home) && /coverFlowHtml\(d\.releases/.test(home) && home.indexOf('stageHtml(slides)') > 0);
-const order = ['secVisiting', 'secTickets', 'secNews', 'secChart', 'secReleases', 'secAbroad', 'awards-wrap', 'secArtists'].map((k) => Math.max(home.indexOf(`'${k}'`), home.indexOf(`id="${k}"`), home.indexOf(`class="${k}"`)));
-check('홈 순서: 무대 → 내한 → 티켓 오픈·선행 → 소식·차트 → 새 앨범 → 현지 공연 → 음악상 → 아티스트', home.indexOf('stageHtml(slides)') > 0 && order.every((v, i) => v > 0 && (i === 0 || v > order[i - 1])), order.join(','));
+// The rejected 3D-home contract must not lock a shipped photo-led home back to the old design.
+const homeCover = read(path.join(APP, 'pages', 'home-cover.ts'));
+check('홈: 사진 배너·티켓 안내판·실제 발매 카드, 이전 3D 홈은 마운트하지 않는다', /homeCoverHtml\(d\)/.test(home) && /mountHomeCover/.test(home) && /homeTicketHtml\(opens/.test(home) && /releaseCard/.test(home) && !/mountStage3D|coverFlowHtml/.test(home));
+const sectionSource = home.slice(home.indexOf('function sectionsHtml'), home.indexOf('export async function renderHome'));
+const order = ['secTickets','secVisiting','secFest','secAbroad','secNews','secChart','secFanclub','secReleases','secTalkWrap','secArtists','awards-wrap'].map(k => k === 'secArtists' ? sectionSource.indexOf('artistRow(d)') : Math.max(sectionSource.indexOf('id="'+k+'"'), sectionSource.indexOf('class="'+k+'"')));
+check('홈 순서: 배너 → 티켓 → 다가오는 공연·페스티벌·현지 → 소식/보조 차트 → 팬클럽·신보·커뮤니티', /stage \+ sectionsHtml\(d\)/.test(home) && order.every((v,i)=>v>=0&&(i===0||v>order[i-1])), order.join(','));
+check('홈 배너: 같은 아티스트의 프로필·앨범/공연 2초 전환과 검증된 사진 조건', /COVER_FRAME_MS\s*=\s*2000/.test(homeCover) && /secondary/.test(homeCover) && /portrait/.test(homeCover) && /artistId/.test(homeCover));
 const stage3d = read(path.join(FE, 'src', 'three', 'stage3d.ts'));
-check('홈 무대: three.js 곡면 갤러리(정점 셰이더 휘기·끌기·관성·자동 넘김·반사) + 평면 대체', /mountStage3D/.test(home) && /uRadius/.test(stage3d) && /pointerdown/.test(stage3d) && /flick/.test(stage3d) && /autoplayMs/.test(stage3d) && /uReflect/.test(stage3d) && /stage-flat/.test(home));
-check('홈 무대: 텍스처·렌더러 해제와 화면 밖·탭 숨김 시 정지', /dispose\(\)/.test(stage3d) && /forceContextLoss/.test(stage3d) && /createSceneLifecycle/.test(stage3d));
+check('보존된 3D 모듈: 텍스처·렌더러 해제와 화면 밖·탭 숨김 시 정지', /dispose\(\)/.test(stage3d) && /forceContextLoss/.test(stage3d) && /createSceneLifecycle/.test(stage3d));
 check('섹션 설명 부제·방법 설명 상자 없이', !/sec-sub/.test(home) && !/class="note/.test(home) && /\.sec-sub \{ display: none; \}/.test(css));
 const awardsCss = read(path.join(FE, 'src', 'awards', 'awards.css'));
 check('음악상 무대 CSS에도 그라디언트·글로우 없음', !/linear-gradient|radial-gradient|text-shadow|background-clip:\s*text/.test(awardsCss));

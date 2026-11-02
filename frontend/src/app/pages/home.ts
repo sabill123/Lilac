@@ -1,23 +1,35 @@
-/* 홈
- *  1) 무대(기본): 공연 포스터가 곡면으로 둘러선 3D 갤러리(three.js). 끌기·관성·자동 넘김, 제목과 버튼은 DOM.
- *  2) 다가오는 내한 공연 → 티켓 오픈·선행 접수 → 소식·차트 → 새 앨범 → 현지 공연 → 음악상 → 아티스트
- *     목록은 가로 선반(예매처·음악 앱과 같은 방식)으로, 섹션 설명 문구 없이 제목과 전체보기만. */
+import { artistMarqueeHtml, mountArtistMarquee } from '../artist-marquee';
+/* 홈 — 아티스트 단위 팬덤 서비스의 첫 화면.
+ *  주 기능 다섯 가지(아티스트 커뮤니티 · 팬클럽 가입 · 공연 · 발매 · 굿즈 구매)로 바로 이어지게 구성한다.
+ *  1) 아티스트별 현재 공식 프로필 2초 → 같은 아티스트 앨범·공연 이미지 2초
+ *  2) 아티스트 이름으로 이어지는 탐색과 실제 가입·구매 도움
+ *  3) 티켓 오픈·팬클럽 선행 마감 안내판
+ *  4) 다가오는 공연 격자
+ *  5) 팬클럽 가입(회비·해외 가입·한국어 화면·접수 중 선행)
+ *  6) 새 앨범·싱글 → 판매처·특전 비교
+ *  7) 커뮤니티(인기 글 · 활발한 아티스트 커뮤니티)
+ *  8) 소식 · 차트 / 페스티벌 · 현지 공연 / 음악상
+ *  크기는 고정하지 않는다(v2.css·home-v2.css 의 clamp/auto-fill). */
 import { api } from '../../api';
 import { state } from '../state';
 import { t, getLocale } from '../i18n';
-import { esc, icon, img, errorState, emptyState, ddayOf } from '../ui';
-import { festCard, posterCard, boardHtml, releaseFlowItem, newsRow, artistCard, chartRow, concertRegistry, openConcert, placeOf, whenOf, providerName, artistName } from '../cards';
+import { esc, icon, img, errorState, emptyState, money, fmtDay, safeImage, safeHref } from '../ui';
+import { festCard, posterCard, chartRow, artistName, releaseCard } from '../cards';
 import { ct } from '../cm-i18n';
 import { when } from '../social';
 import type { Concert, News, Release, ArtistLite, ChartEntry } from '../cards';
 import { playList } from '../player';
 import type { Track } from '../player';
-import { mountStage3D, disposeScene, setSceneMotionPaused, isSceneMotionPaused } from '../../three';
-import type { StageHandle } from '../../three/stage3d';
 import { homeAwardsHtml, mountHomeAwards } from '../../awards';
 import { awardsUpdatesHtml, mountAwardsUpdates } from '../../awards/live';
 import '../../awards/awards.css';
-import { coverFlowHtml, bindCoverFlow, bindBoard } from '../fx';
+import { sharedServerClock, mountServerClock, ticketBoundaries, SERVER_CLOCK_LABELS } from '../server-clock';
+import { homeTicketHtml, plannedTickets, updateTicketCountdowns } from '../home-tickets';
+import { upcomingHomeEvents } from '../home-planning';
+import { homeNewsHtml, mountHomeNews } from '../home-news';
+import '../home-priorities.css';
+import { homeCoverHtml, mountHomeCover, coverCandidateIds, coverSlides } from './home-cover';
+import '../home-v2.css';
 
 interface HomeData {
   edition: string;
@@ -28,290 +40,242 @@ interface HomeData {
   festivals?: Concert[]; festivalsTotal?: number;
   news: News[]; newsTotal: number; newsCache: { state: string; updatedAt: string | null } | null;
   chart: { country: 'jp' | 'kr'; items: ChartEntry[] }[];
-  releases: Release[]; artists: ArtistLite[];
+  releases: Release[]; coverReleases?:Release[]; coverConcerts?:Concert[]; artists: ArtistLite[]; coverArtists?: ArtistLite[]; portraitsPending?:boolean;
   classifying: number;
 }
+type Money = { v: number; cur: string } | null;
+interface FanclubItem {
+  artistId: string; artist: string; artistLatin?: string | null; artistKo?: string | null; photo?: string | null; image?: string | null;
+  found: boolean; name: string | null; checkedAt?: string | null; platform?: string | null; overseas?: string; languages?: string[];
+  fees?: { annual: number | null; monthly: number | null; currency: string; overseasAnnualUsd?: number | null; free?: boolean } | null;
+  residence?: { jp?: { annual: Money; monthly: Money } | null; overseas?: { annual: Money; monthly: Money } | null } | null;
+}
 
-interface Slide { image: string; label: string; c?: Concert; r?: Release }
-
+let lastHomeData:HomeData|null=null;
+let calendarClockReady = false;
 let homeAbort: AbortController | null = null;
 let secAbort: AbortController | null = null;
+let coverAbort: AbortController | null = null;
+const ja = () => getLocale() === 'ja';
+const L = (ko: string, jp: string) => (ja() ? jp : ko);
 
-/* CORS 헤더를 주는 이미지 호스트는 바로, 아니면 백엔드 중계로(WebGL 텍스처는 교차 출처 허락이 필요하다) */
-const CORS_OK = /(^|\.)(mzstatic\.com|dzcdn\.net|interpark\.com|melon\.co\.kr)$/i;
-export function texUrl(u: string) {
-  try { return CORS_OK.test(new URL(u).hostname) ? u : `/api/live/img?u=${encodeURIComponent(u)}`; } catch { return u; }
+/* ---------- 섹션 공통 ---------- */
+function head(title: string, href = '', more = t('more')) {
+  return `<div class="sec-head"><h2>${esc(title)}</h2>${href ? `<a class="more" href="${href}">${esc(more)}</a>` : ''}</div>`;
 }
 
-function slidesOf(d: HomeData): Slide[] {
+/* 아티스트 홈 바로가기 — 원형 사진 + 배지(선행 접수 중 / 내한·来日 예정) */
+function artistRow(d: HomeData) { return artistMarqueeHtml(d.artists); }
+
+/* 팬클럽 가입 카드 — 나라 설정(에디션)에 맞는 회비, 해외 가입·한국어 화면, 지금 열린 선행 수 */
+function feeOf(f: FanclubItem) {
   const ed = state.edition;
-  const out: Slide[] = [];
-  const seen = new Set<string>();
-  const add = (c: Concert, label: string) => {
-    if (!c.poster || c.unconfirmed) return;
-    const k = `${c.performer || ''}|${c.title}`;
-    if (seen.has(k)) return;
-    seen.add(k);
-    out.push({ image: c.poster, label, c });
-  };
-  for (const c of d.visiting) if (out.length < 9) add(c, t(`stage.visiting.${ed}`));
-  for (const c of d.abroad) if (out.length < 12) add(c, t(`stage.abroad.${ed}`));
-  for (const r of d.releases) if (out.length < 8 && r.artwork) out.push({ image: r.artwork, label: t('stage.release'), r });
-  return out;
+  const r = ed === 'jp' ? f.residence?.jp : f.residence?.overseas || f.residence?.jp;
+  const a = r?.annual || (f.fees?.annual ? { v: f.fees.annual, cur: f.fees.currency } : null);
+  const m = r?.monthly || (f.fees?.monthly ? { v: f.fees.monthly, cur: f.fees.currency } : null);
+  if (f.fees?.free) return L('무료', '無料');
+  if (a) return `${money(a.v, a.cur)}<small>/${L('년', '年')}</small>`;
+  if (m) return `${money(m.v, m.cur)}<small>/${L('월', '月')}</small>`;
+  return L('회비 미확인', '会費未確認');
+}
+function fanclubCard(f: FanclubItem, open: number) {
+  const overseas = f.overseas === 'yes';
+  const overseasLabel = overseas ? L('해외 가입 가능 안내', '海外入会の案内あり') : f.overseas === 'no' ? L('해외 가입 제한 안내', '海外入会制限の案内あり') : L('해외 조건 미확인', '海外条件は未確認');
+  const koUi = (f.languages || []).includes('한국어');
+  const fee = feeOf(f);
+  return `<li><a class="h-fc" href="#/fanclub/${encodeURIComponent(f.artistId)}">
+    ${img(f.image || f.photo, '', 'square', { ratio: '4/3', initial: f.artist })}
+    <span class="h-fc-body">
+      <span class="h-fc-artist">${esc(artistName({ name: f.artist, nameOriginal: f.artistLatin || null }))}</span>
+      <b class="h-fc-name">${esc(f.name || L('공식 팬클럽', '公式ファンクラブ'))}</b>
+      <span class="h-fc-tags"><span class="v2-tag${overseas ? ' is-accent' : ''}">${overseasLabel}</span>${koUi ? `<span class="v2-tag">${L('한국어 화면', '韓国語あり')}</span>` : ''}${open ? `<span class="v2-tag is-hot">${L(`선행 접수 ${open}`, `先行受付 ${open}`)}</span>` : ''}</span>
+      ${f.checkedAt ? `<small class="h-fc-checked">${L('원문 수집','原文取得')} ${esc(fmtDay(f.checkedAt.slice(0,10),{year:true}))}</small>` : ''}
+    </span>
+    <span class="h-fc-side">${fee ? `<span class="h-fc-fee">${fee}</span>` : ''}<span class="h-fc-go">${L('조건·입력 도움', '条件・入力サポート')}${icon('i-chev-r', 'ic xs')}</span></span>
+  </a></li>`;
 }
 
-function slideInfo(s: Slide) {
-  if (s.c) {
-    const c = s.c;
-    concertRegistry.set(c.id, c);
-    const dd = ddayOf(c.startDate);
-    const st = t(`st.${c.status}`);
-    const name = c.performer || c.title;
-    const ko = getLocale() === 'ko' && c.performerKo && c.performerKo !== name ? c.performerKo : '';
-    return `<p class="stage-eyebrow"><span class="stage-label">${esc(s.label)}</span>${dd ? `<b class="stage-dday">${esc(dd)}</b>` : ''}${st ? `<span>${esc(st)}</span>` : ''}</p>
-      <h2 class="stage-title${[...name].length > 16 ? ' is-long' : ''}">${esc(name)}${ko ? `<small>${esc(ko)}</small>` : ''}</h2>
-      ${c.title !== name ? `<p class="stage-sub">${esc(c.title)}</p>` : ''}
-      <p class="stage-meta">${esc([whenOf(c), placeOf(c)].filter(Boolean).join('  ·  '))}</p>
-      <div class="stage-cta">
-        <button type="button" class="sbtn sbtn-solid" data-open-concert="${esc(c.id)}">${t('stage.info')}</button>
-        <a class="sbtn" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(providerName(c))}${icon('i-ext', 'ic xs')}</a>
-      </div>`;
-  }
-  const r = s.r!;
-  const href = r.tier === 'curated' ? `#/release/${encodeURIComponent(r.id)}` : `#/goods?q=${encodeURIComponent(r.artist)}`;
-  return `<p class="stage-eyebrow"><span class="stage-label">${esc(s.label)}</span></p>
-    <h2 class="stage-title${[...r.artist].length > 16 ? ' is-long' : ''}">${esc(r.artist)}</h2>
-    <p class="stage-sub">${esc(r.title)}</p>
-    <div class="stage-cta"><a class="sbtn sbtn-solid" href="${href}">${t('stage.album')}</a></div>`;
+/* 전면 무대의 몰입감은 유지하고 실제 실행 도움은 바로 아래에 연결한다. */
+function supportNavHtml() {
+  const paths = [
+    {url:'#/fanclub', icon:'i-heart', title:L('팬클럽 가입','ファンクラブ入会'), sub:L('아티스트별 조건·회비·입력 도움','アーティスト別の条件・会費・入力サポート')},
+    {url:'#/goods', icon:'i-bag', title:L('앨범·굿즈 구매','アルバム・グッズ購入'), sub:L('상품 사진부터 판매처별 구매 절차까지','商品写真から販売店ごとの購入手順まで')},
+    {url:'#/assist', icon:'i-globe', title:L('한일 번역·입력 도움','日韓翻訳・入力サポート'), sub:L('공개 원문 번역·국가번호·가나 형식','公開原文の翻訳・国番号・カナ形式')},
+    {url:'#/community', icon:'i-users', title:L('아티스트 커뮤니티','アーティストコミュニティ'), sub:L('같은 아티스트를 좋아하는 팬들과','同じアーティストを好きなファンと')},
+  ];
+  return '<nav class="h-shortcuts" aria-label="'+L('팬 활동 바로가기','ファン活動へのショートカット')+'">'+paths.map(p=>'<a href="'+p.url+'">'+icon(p.icon)+'<span><b>'+p.title+'</b><small>'+p.sub+'</small></span>'+icon('i-chev-r','ic xs')+'</a>').join('')+'</nav>';
 }
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
-
-/* 무대: 어두운 전폭 화면에 공연 포스터가 곡면으로 둘러선다(3D). WebGL이 없으면 같은 자리에서 평면 캐러셀 */
-function stageHtml(slides: Slide[]) {
-  const n = slides.length;
-  return `<section class="stage" aria-roledescription="carousel" aria-label="${esc(t('stage.label'))}" tabindex="-1">
-    <h1 class="sr-only">${esc(t(`home.title.${state.edition}`))}</h1>
-    <div class="stage-canvas" data-stage aria-hidden="true"></div>
-    <div class="stage-flat" aria-hidden="true">${slides.map((s, i) => `<button type="button" class="stage-flat-item" data-flat="${i}" tabindex="-1">${img(s.image, '', 'poster', { ratio: '3/4' })}</button>`).join('')}</div>
-    <div class="stage-in">
-      <div class="stage-info" id="stageInfo" aria-live="off">${slides[0] ? slideInfo(slides[0]) : ''}</div>
-      <div class="stage-nav">
-        <button type="button" class="stage-motion" data-stage-motion aria-pressed="${isSceneMotionPaused()}" aria-label="${getLocale() === 'ja' ? '自動再生を一時停止' : '자동 넘김 일시정지'}">${isSceneMotionPaused() ? icon('i-play') : icon('i-pause')}</button>
-        <span class="stage-position" aria-hidden="true"><b>01</b> / ${pad2(n)}</span>
-        <div class="stage-bars" role="tablist" aria-label="${esc(t('stage.label'))}">${slides.map((s, i) => `<button type="button" role="tab" data-stage-to="${i}" tabindex="${i === 0 ? 0 : -1}" aria-controls="stageInfo" aria-selected="${i === 0}" aria-label="${i + 1} / ${n} · ${esc(s.c?.performer || s.c?.title || s.r?.artist || s.label)}"></button>`).join('')}</div>
-        <button type="button" class="stage-arrow" data-stage-go="-1" aria-label="${esc(t('stage.prev'))}">${icon('i-chev-l')}</button>
-        <button type="button" class="stage-arrow" data-stage-go="1" aria-label="${esc(t('stage.next'))}">${icon('i-chev-r')}</button>
-      </div>
+function sectionsHtml(d: HomeData) {
+  const ed = state.edition, now = sharedServerClock().now();
+  // No device-clock filtering: pending discovery is recomputed on the first server sync.
+  const events = (rows:Concert[]) => now === null ? rows : upcomingHomeEvents(rows,now);
+  const visList = events(d.visiting.filter(x => !x.unconfirmed));
+  const festivals = events(d.festivals || []);
+  const abroad = events(d.abroad);
+  const ch = d.chart.find(c=>c.country==='jp') || d.chart[0];
+  const opens = plannedTickets([...d.fanclub, ...d.tickets]);
+  return `
+    <section class="sec h-ticket-priority" id="secTickets">${head(L('티켓 오픈 · 팬클럽 선행','チケット発売・FC先行'),'#/concerts/tickets')}
+      <div class="home-ticket-clock"></div><p class="home-ticket-method">${L('Lilac 서버 KST 기준. 남은 시간은 접수 일정이며, 매진·실제 접수 여부는 예매처에서 확인하세요.','LilacサーバーKST基準。残り時間は受付予定です。完売・実際の受付状況は販売サイトでご確認ください。')}</p>
+      <div class="home-ticket-board">${homeTicketHtml(opens,now)}</div><p class="home-ticket-refresh" role="status"></p>
+    </section>
+    <section class="sec" id="secVisiting">${head(t(`home.visiting.${ed}`), '#/concerts/visiting')}
+      ${visList.length ? `<ul class="v2-grid h-posters" style="--min:clamp(148px,13vw,210px)">${visList.slice(0, 6).map(c => `<li>${posterCard(c)}</li>`).join('')}</ul>` : emptyState(d.classifying ? t('c.classifying', { n: d.classifying }) : t('empty.generic'))}
+    </section>
+    ${festivals.length ? `<section class="sec" id="secFest">${head(L('한국·일본 음악 페스티벌', '韓国・日本の音楽フェス'), '#/concerts/festivals')}<ul class="v2-rail" style="--col:clamp(150px,19vw,240px)">${festivals.slice(0, 8).map(c => `<li>${festCard(c)}</li>`).join('')}</ul></section>` : ''}
+    ${abroad.length ? `<section class="sec" id="secAbroad">${head(t(`home.abroad.${ed}`), '#/concerts/abroad')}<ul class="v2-rail" style="--col:clamp(150px,19vw,240px)">${abroad.slice(0, 8).map(c => `<li>${posterCard(c)}</li>`).join('')}</ul></section>` : ''}
+    <div class="h-discovery-row">
+      <section class="sec" id="secNews">${head(t('home.news'),'#/news')}${homeNewsHtml()}</section>
+      <aside class="sec h-chart" id="secChart" aria-label="${ch?.country==='kr'?L('한국 차트 TOP 10','韓国チャート TOP 10'):L('일본 차트 TOP 10','日本チャート TOP 10')}">${head(ch?.country==='kr'?L('한국 차트 TOP 10','韓国チャート TOP 10'):L('일본 차트 TOP 10','日本チャート TOP 10'),'#/chart/'+(ch?.country||'jp'))}${ch?.items.length?`<ol class="clist compact">${ch.items.slice(0,10).map((e,i)=>chartRow(e,i,{compact:true})).join('')}</ol>`:emptyState(t('empty.generic'))}</aside>
     </div>
-  </section>`;
-}
-
-function bindStage(root: HTMLElement, slides: Slide[], signal: AbortSignal) {
-  const stage = root.querySelector<HTMLElement>('.stage');
-  if (!stage || !slides.length) return;
-  const host = stage.querySelector<HTMLElement>('[data-stage]')!;
-  const info = stage.querySelector<HTMLElement>('.stage-info')!;
-  const pos = stage.querySelector<HTMLElement>('.stage-position')!;
-  const flats = Array.from(stage.querySelectorAll<HTMLElement>('[data-flat]'));
-  const bars = Array.from(stage.querySelectorAll<HTMLButtonElement>('[data-stage-to]'));
-  const n = slides.length;
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let cur = -1;
-  let handle: StageHandle | null = null;
-  let timer = 0;
-  let paused = isSceneMotionPaused();
-  let inView = true;
-  const motion = stage.querySelector<HTMLButtonElement>('[data-stage-motion]')!;
-  const syncMotion = () => {
-    motion.disabled = reduce.matches;
-    motion.setAttribute('aria-pressed', String(paused || reduce.matches));
-    motion.setAttribute('aria-label', getLocale() === 'ja' ? (paused ? '自動再生を再開' : '自動再生を一時停止') : (paused ? '자동 넘김 재개' : '자동 넘김 일시정지'));
-    if (reduce.matches) motion.setAttribute('aria-label', getLocale() === 'ja' ? '端末のモーション軽減設定を使用中' : '기기의 모션 줄이기 설정 적용 중');
-    motion.innerHTML = icon(paused || reduce.matches ? 'i-play' : 'i-pause');
-  };
-  motion.addEventListener('click', () => { paused = !paused; setSceneMotionPaused(paused); syncMotion(); restartFlat(); }, { signal });
-  syncMotion();
-  const visibility = new IntersectionObserver(([e]) => { inView = e.isIntersecting; });
-  visibility.observe(stage);
-  const show = (i: number) => {
-    if (signal.aborted || i === cur) return;
-    cur = i;
-    info.innerHTML = slideInfo(slides[i]);
-    info.classList.remove('is-in'); void info.offsetWidth; info.classList.add('is-in');
-    pos.innerHTML = `<b>${pad2(i + 1)}</b> / ${pad2(n)}`;
-    bars.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1; });
-    flats.forEach((el, k) => {
-      let d = k - i; if (d > n / 2) d -= n; if (d < -n / 2) d += n;
-      el.style.setProperty('--d', String(d));
-      el.classList.toggle('is-on', d === 0);
-      el.hidden = Math.abs(d) > 2;
-    });
-  };
-  const goTo = (i: number) => { const k = ((i % n) + n) % n; if (handle) handle.goTo(k); else show(k); };
-  const go = (delta: number) => { if (handle) handle.go(delta); else goTo(cur + delta); };
-  stage.querySelectorAll<HTMLButtonElement>('[data-stage-go]').forEach((b) => b.addEventListener('click', () => { go(Number(b.dataset.stageGo)); restartFlat(); }, { signal }));
-  bars.forEach((b) => b.addEventListener('click', () => { goTo(Number(b.dataset.stageTo)); restartFlat(); }, { signal }));
-  stage.addEventListener('keydown', (e) => {
-    if ((e.target as HTMLElement).closest('input, textarea')) return;
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
-      e.preventDefault();
-      const next = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : ((cur + (e.key === 'ArrowRight' ? 1 : -1) + n) % n);
-      goTo(next);
-      if ((e.target as HTMLElement).hasAttribute('data-stage-to')) bars[next].focus();
-      restartFlat();
-    }
-  }, { signal });
-  const pick = (i: number) => {
-    const s = slides[i];
-    if (s.c) openConcert(s.c.id);
-    else if (s.r) location.hash = s.r.tier === 'curated' ? `#/release/${encodeURIComponent(s.r.id)}` : `#/goods?q=${encodeURIComponent(s.r.artist)}`;
-  };
-  flats.forEach((el, k) => el.addEventListener('click', () => (k === cur ? pick(k) : goTo(k)), { signal }));
-  /* 평면 캐러셀의 자동 넘김 — 3D는 자체 자동 넘김을 쓴다. 모션 줄이기면 멈춘다 */
-  function restartFlat() {
-    clearInterval(timer);
-    if (handle || paused || reduce.matches || n < 2) return;
-    timer = window.setInterval(() => { if (inView && !document.hidden && !stage!.matches(':hover, :focus-within')) goTo(cur + 1); }, 5200);
-  }
-  reduce.addEventListener('change', () => { syncMotion(); restartFlat(); }, { signal });
-  show(0);
-  stage.classList.add('is-loading');
-  mountStage3D(host, slides.map((s) => ({ image: texUrl(s.image), label: s.label, title: s.c ? (s.c.performer || s.c.title) : s.r?.title, sub: s.c ? s.c.title : s.r?.artist })), { onFocus: show, onPick: pick, onFallback: () => {
-    if (signal.aborted) return;
-    handle = null; stage.classList.remove('is-3d'); stage.classList.add('is-flat'); restartFlat();
-  } }).then((h) => {
-    if (signal.aborted) { h?.destroy(); return; }
-    handle = h;
-    stage.classList.remove('is-loading');
-    stage.classList.toggle('is-3d', !!h);
-    stage.classList.toggle('is-flat', !h);
-    if (h) { clearInterval(timer); if (cur > 0) h.goTo(cur); }
-    else restartFlat();
-  });
-  signal.addEventListener('abort', () => { clearInterval(timer); visibility.disconnect(); disposeScene(); }, { once: true });
-}
-
-/* 가로 선반: 제목 · 전체보기 · 앞뒤 버튼 */
-function shelf(id: string, title: string, href: string, body: string, cls: string) {
-  return `<section class="sec shelf-sec" id="${id}">
-    <div class="sec-head"><h2>${esc(title)}</h2><div class="sec-tools">${href ? `<a class="more" href="${href}">${t('more')}</a>` : ''}
-      <button type="button" class="rail-btn" data-rail="-1" aria-label="${esc(t('shelf.prev'))}">${icon('i-chev-l', 'ic')}</button><button type="button" class="rail-btn" data-rail="1" aria-label="${esc(t('shelf.next'))}">${icon('i-chev-r', 'ic')}</button></div></div>
-    <ul class="rail ${cls}">${body}</ul>
-  </section>`;
-}
-function bindRails(root: HTMLElement, signal: AbortSignal) {
-  root.querySelectorAll<HTMLElement>('.shelf-sec').forEach((sec) => {
-    const rail = sec.querySelector<HTMLElement>('.rail');
-    if (!rail) return;
-    const btns = sec.querySelectorAll<HTMLButtonElement>('[data-rail]');
-    const sync = () => {
-      const max = rail.scrollWidth - rail.clientWidth - 2;
-      btns[0].disabled = rail.scrollLeft <= 2;
-      btns[1].disabled = rail.scrollLeft >= max;
-      sec.classList.toggle('no-scroll', max <= 0);
-    };
-    btns.forEach((b) => b.addEventListener('click', () => rail.scrollBy({ left: Number(b.dataset.rail) * rail.clientWidth * 0.9, behavior: 'smooth' }), { signal }));
-    rail.addEventListener('scroll', sync, { passive: true, signal });
-    sync();
-  });
+    <section class="sec h-fcs" id="secFanclub">${head(L('팬클럽 가입', 'ファンクラブ入会'), '#/fanclub', L('팬클럽 전체', 'すべて見る'))}
+      <p class="h-fc-intro">${L('아티스트별로 조건과 회비, 실제 원문과 입력 도움을 확인하세요.','アーティストごとの条件・会費と、原文・入力サポートを確認。')}</p><ul class="h-fc-list" aria-busy="true"><li class="sk sk-line"></li></ul>
+    </section>
+    ${d.releases.length ? `<section class="sec" id="secReleases">${head(t('home.releases'), '#/goods')}<p class="h-release-note">${L('앨범 커버를 둘러보고, 상세에서 판매처별 상품 사진과 구매 절차를 확인하세요.','カバーを見て、詳細から販売店の商品写真と購入手順を確認。')}</p><div class="v2-grid h-releases" style="--min:clamp(132px,13vw,190px)">${d.releases.slice(0, 6).map(releaseCard).join('')}</div></section>` : ''}
+    <div class="h-split" id="secTalkWrap"><section class="sec" id="secTalk">${head(ct('home.talk'), '#/community')}<div class="talk-body">${'<div class="sk sk-line"></div>'.repeat(5)}</div></section><section class="sec" id="secGals">${head(ct('home.gals'), '#/community/list')}<ol class="gal-rank">${'<li class="sk sk-line"></li>'.repeat(5)}</ol></section></div>
+    ${supportNavHtml()}
+    <form class="h-goods-search" role="search" action="#/goods"><label for="hGoodsQ">${L('굿즈·앨범 판매처 찾기', 'グッズ・CDの販売店を探す')}</label><div>${icon('i-search')}<input id="hGoodsQ" name="q" type="search" maxlength="80" placeholder="${L('아티스트·앨범명으로 판매처·가격 비교', 'アーティスト・作品名で販売店を比較')}" autocomplete="off"><button type="submit" class="v2-btn is-dark">${L('비교하기', '比較する')}</button></div></form>
+    ${artistRow(d)}<div class="awards-wrap">${awardsUpdatesHtml()}${homeAwardsHtml()}</div>`;
 }
 
 export async function renderHome(root: HTMLElement, alive: () => boolean) {
   homeAbort?.abort();
+  coverAbort?.abort();
   const ctrl = new AbortController();
   homeAbort = ctrl;
   const ed = state.edition;
-  root.innerHTML = `<section class="home-loading" aria-busy="true"><span class="sk" style="width:36%;height:32px"></span><div class="sk" style="height:340px;margin-top:24px"></div></section>`;
-
+  root.innerHTML = `<div class="cover-loading" aria-busy="true" aria-label="${L('메인 정보를 불러오는 중','メイン情報を読み込み中')}">Lilac</div>`;
   let d: HomeData;
   try {
     d = await api(`/api/live/home?edition=${ed}`);
   } catch {
-    if (!alive()) return;
+    if (!alive() || ctrl.signal.aborted || homeAbort !== ctrl) return;
     root.innerHTML = errorState(t('err.generic'));
     root.querySelector('[data-retry]')?.addEventListener('click', () => renderHome(root, alive));
     return;
   }
   if (!alive() || ctrl.signal.aborted) return;
-
-  const slides = slidesOf(d);
-  root.innerHTML = `${slides.length ? stageHtml(slides) : `<h1 class="sr-only">${esc(t(`home.title.${ed}`))}</h1>`}${sectionsHtml(d)}`;
+  calendarClockReady = sharedServerClock().now() !== null;
+  d.portraitsPending = coverCandidateIds(d).length > 0;
+  const stage = homeCoverHtml(d);
+  root.innerHTML = stage + sectionsHtml(d);
+  lastHomeData=d;
   secAbort?.abort();
   secAbort = new AbortController();
   bindSections(root, d, alive, secAbort.signal);
-  bindStage(root, slides, ctrl.signal);
-
+  mountCover(root,d,ctrl);
+  void hydrateCover(root,d,ctrl,alive);
 }
 
-/* 실시간 반영: 무대(3D)는 그대로 두고 아래 목록만 새 데이터로 바꿔 끼운다 */
+function mountCover(root:HTMLElement,d:HomeData,parent:AbortController) {
+  coverAbort?.abort(); const own=new AbortController(); coverAbort=own;
+  parent.signal.addEventListener('abort',()=>own.abort(),{once:true});
+  mountHomeCover(root,d,own.signal);
+}
+async function hydrateCover(root:HTMLElement,d:HomeData,parent:AbortController,alive:()=>boolean) {
+  const ids=coverCandidateIds(d); if(!ids.length)return;
+  const before=JSON.stringify(coverSlides(d));
+  const rows=[...d.artists,...(d.coverArtists||[])];
+  const missing=ids.filter(id=>!rows.some(a=>{const p=a.portrait,age=Date.now()-Date.parse(p?.checkedAt||'');return a.id===id&&p?.artistId===id&&p.status==='verified'&&p.method==='official-profile'&&safeImage(p.imageUrl)&&safeHref(p.sourceUrl,false)&&age>=-60000&&age<86400000;}));
+  if(!missing.length){d.portraitsPending=false;const empty=root.querySelector<HTMLElement>('.cover-empty');if(empty)empty.outerHTML=homeCoverHtml(d);return;}
+  const chunks=Array.from({length:Math.ceil(missing.length/12)},(_,i)=>missing.slice(i*12,i*12+12));
+  const responses:{items?:{id:string;portrait?:ArtistLite['portrait']}[]}[]=new Array(chunks.length);
+  let cursor=0;
+  const worker=async()=>{while(cursor<chunks.length&&!parent.signal.aborted){const at=cursor++;try{responses[at]=await api('/api/live/portraits?ids='+chunks[at].map(encodeURIComponent).join(','),{signal:parent.signal});}catch{responses[at]={items:[]};}}};
+  await Promise.all(Array.from({length:Math.min(3,chunks.length)},()=>worker()));
+  const result={items:responses.flatMap(r=>r?.items||[])};
+  if(!alive()||parent.signal.aborted||homeAbort!==parent)return;
+  const updates=new Map((result.items||[]).filter(x=>ids.includes(x.id)&&x.portrait?.artistId===x.id).map(x=>[x.id,x.portrait]));
+  const merge=(a:ArtistLite)=>updates.has(a.id)?{...a,portrait:updates.get(a.id)}:a;
+  d.artists=d.artists.map(merge);d.coverArtists=d.coverArtists?.map(merge);d.portraitsPending=false;
+  if(before===JSON.stringify(coverSlides(d))&&root.querySelector('.home-cover'))return;
+  const old=root.querySelector<HTMLElement>('.home-cover,.cover-empty');if(!old)return;
+  const paused=old.querySelector('[data-cover-motion]')?.getAttribute('aria-pressed')==='true';
+  coverAbort?.abort();old.outerHTML=homeCoverHtml(d);mountCover(root,d,parent);
+  if(paused)root.querySelector<HTMLButtonElement>('[data-cover-motion]')?.click();
+}
+
+/* 실시간 반영: 히어로는 그대로 두고 아래 섹션만 바꿔 끼운다 */
 export async function refreshHome(root: HTMLElement, alive: () => boolean) {
-  if (!homeAbort || homeAbort.signal.aborted) return;
+  const ctrl = homeAbort;
+  if (!ctrl || ctrl.signal.aborted) return;
   let d: HomeData;
   try { d = await api(`/api/live/home?edition=${state.edition}`); } catch { return; }
-  if (!alive() || !homeAbort || homeAbort.signal.aborted) return;
+  if (!alive() || homeAbort !== ctrl || ctrl.signal.aborted) return;
+  const previousCover=lastHomeData?JSON.stringify(coverSlides(lastHomeData)):null;
+  if(previousCover!==JSON.stringify(coverSlides(d))){
+    const old=root.querySelector<HTMLElement>('.home-cover,.cover-empty');
+    if(old){const paused=old.querySelector('[data-cover-motion]')?.getAttribute('aria-pressed')==='true';coverAbort?.abort();old.outerHTML=homeCoverHtml(d);mountCover(root,d,ctrl);if(paused)root.querySelector<HTMLButtonElement>('[data-cover-motion]')?.click();}
+  }
+  lastHomeData=d;
   const box = document.createElement('div');
   box.innerHTML = sectionsHtml(d);
   secAbort?.abort();
   secAbort = new AbortController();
-  Array.from(root.children).forEach((el) => { if (!el.classList.contains('stage') && !el.classList.contains('sr-only')) el.remove(); });
+  Array.from(root.children).forEach((el) => { if (!el.classList.contains('home-cover') && !el.classList.contains('cover-empty') && !el.classList.contains('sr-only')) el.remove(); });
   root.append(...Array.from(box.childNodes));
   bindSections(root, d, alive, secAbort.signal);
 }
 
-function sectionsHtml(d: HomeData) {
-  const ed = state.edition;
-  const visList = d.visiting.filter((x) => !x.unconfirmed);
-  const ch = d.chart[0];
-  const opens = [...d.fanclub, ...d.tickets.filter((x) => x.provider !== 'fanclub')]
-    .sort((a, b) => String(a.saleSortAt || a.ticketOpenAt || '').localeCompare(String(b.saleSortAt || b.ticketOpenAt || '')));
-  const li = (html: string) => `<li>${html}</li>`;
-  const ja = getLocale() === 'ja';
-  const paths = [
-    { href: '#/concerts/visiting', title: t(`home.visiting.${ed}`), ic: 'i-ticket' },
-    { href: '#/concerts/tickets', title: t('home.opens'), ic: 'i-cal' },
-    { href: '#/fanclub', title: t('nav.fanclub'), ic: 'i-heart' },
-    { href: '#/goods', title: t('home.releases'), ic: 'i-bag' },
-  ];
-  return `<nav class="home-paths" aria-label="${ja ? '見つける' : '빠르게 찾기'}">${paths.map(p => `<a href="${p.href}"><span class="home-path-icon">${icon(p.ic)}</span><span><b>${esc(p.title)}</b><small>${p.href === '#/fanclub' ? (ja ? '入会条件を比較' : '가입 조건 비교') : (ja ? '情報を見る' : '일정·정보 보기')}</small></span>${icon('i-chev-r', 'ic xs')}</a>`).join('')}</nav>
-    ${visList.length ? shelf('secVisiting', t(`home.visiting.${ed}`), '#/concerts/visiting', visList.slice(0, 16).map((c) => li(posterCard(c))).join(''), 'rail-posters')
-      : `<section class="sec" id="secVisiting"><div class="sec-head"><h2>${esc(t(`home.visiting.${ed}`))}</h2></div>${emptyState(d.classifying ? t('c.classifying', { n: d.classifying }) : t('empty.generic'))}</section>`}
-    ${opens.length ? `<section class="sec" id="secTickets"><div class="sec-head"><h2>${esc(t('home.opens'))}</h2><a class="more" href="#/concerts/tickets">${t('more')}</a></div>${boardHtml(opens.slice(0, 8))}</section>` : ''}
-    <div class="split">
-      <section class="sec" id="secNews"><div class="sec-head"><h2>${esc(t('home.news'))}</h2><a class="more" href="#/news">${t('more')}</a></div>${d.news.length ? `<ul class="nlist">${d.news.slice(0, 8).map(newsRow).join('')}</ul>` : emptyState(t('empty.generic'))}</section>
-      <section class="sec" id="secChart">${ch ? `<div class="sec-head"><h2>${esc(t(`home.chart.${ch.country}`))}</h2><a class="more" href="#/chart/${ch.country}">${t('more')}</a></div><ol class="clist compact">${ch.items.map((e, i) => chartRow(e, i, { compact: true })).join('')}</ol>` : ''}</section>
-    </div>
-    <div class="split" id="secTalkWrap">
-      <section class="sec" id="secTalk"><div class="sec-head"><h2>${esc(ct('home.talk'))}</h2><a class="more" href="#/community">${t('more')}</a></div><div class="talk-body">${'<div class="sk sk-line"></div>'.repeat(5)}</div></section>
-      <section class="sec" id="secGals"><div class="sec-head"><h2>${esc(ct('home.gals'))}</h2><a class="more" href="#/community/list">${t('more')}</a></div><ol class="gal-rank">${'<li class="sk sk-line"></li>'.repeat(5)}</ol></section>
-    </div>
-    ${d.releases.length ? `<section class="sec" id="secReleases"><div class="sec-head"><h2>${esc(t('home.releases'))}</h2><a class="more" href="#/goods">${t('more')}</a></div>${coverFlowHtml(d.releases.slice(0, 16).map(releaseFlowItem), t('home.releases'))}</section>` : ''}
-    ${d.festivals?.length ? shelf('secFest', getLocale() === 'ja' ? '韓国・日本の音楽フェス' : '한국·일본 음악 페스티벌', '#/concerts/festivals', d.festivals.slice(0, 16).map((c) => li(festCard(c))).join(''), 'rail-posters') : ''}
-    ${d.abroad.length ? shelf('secAbroad', t(`home.abroad.${ed}`), '#/concerts/abroad', d.abroad.slice(0, 12).map((c) => li(posterCard(c))).join(''), 'rail-posters') : ''}
-    <div class="awards-wrap">${awardsUpdatesHtml()}${homeAwardsHtml()}</div>
-    ${shelf('secArtists', t('home.artists'), '#/artists', d.artists.slice(0, 18).map((a) => li(artistCard(a))).join(''), 'rail-artists')}`;
-}
-
 function bindSections(root: HTMLElement, d: HomeData, alive: () => boolean, signal: AbortSignal) {
-  const ch = d.chart[0];
+  mountArtistMarquee(root,signal);
+  const ch = d.chart.find(c=>c.country==='jp') || d.chart[0];
   if (ch) {
     const tracks: Track[] = ch.items.map((e) => ({ title: e.title, artist: e.artist, artwork: e.artwork, appleUrl: e.appleUrl }));
     root.querySelector('#secChart')?.querySelectorAll<HTMLElement>('[data-play]').forEach((b) => b.addEventListener('click', () => playList(tracks, Number(b.dataset.play)), { signal }));
   }
-  void paintTalk(root, state.edition, () => alive() && !signal.aborted);
-  bindRails(root, signal);
-  bindCoverFlow(root, d.releases.slice(0, 16).map(releaseFlowItem), signal);
-  const board = root.querySelector<HTMLElement>('#secTickets .fx-board');
-  if (board) {
-    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { io.disconnect(); board.classList.add('is-on'); bindBoard(board.parentElement!); } }, { threshold: 0.2 });
-    io.observe(board);
-    signal.addEventListener('abort', () => io.disconnect(), { once: true });
-  }
+  const live = () => alive() && !signal.aborted;
+  void paintTalk(root, state.edition, live);
+  void paintFanclubs(root, d, live);
+  const form = root.querySelector<HTMLFormElement>('.h-goods-search');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = (form.querySelector('input') as HTMLInputElement).value.trim();
+    location.hash = q ? `#/goods?q=${encodeURIComponent(q)}` : '#/goods';
+  }, { signal });
+  const newsHost = root.querySelector<HTMLElement>('#secNews');
+  if(newsHost)mountHomeNews(newsHost,d.news,d.artists,signal,live);
+  const clock=sharedServerClock(),board=root.querySelector<HTMLElement>('.home-ticket-board');
+  const clockHost=root.querySelector<HTMLElement>('.home-ticket-clock');
+  if(clockHost)mountServerClock(clockHost,clock,{signal,labels:SERVER_CLOCK_LABELS[ja()?'ja':'ko']});
+  let ticketItems=plannedTickets([...d.fanclub,...d.tickets]),unwatch=()=>{},pending=false;
+  let timer:ReturnType<typeof setTimeout>|undefined;
+  const paint=()=>{if(live()&&board)board.innerHTML=homeTicketHtml(ticketItems,clock.now(),clock.state().uncertaintyMs||0);};
+  const arm=()=>{unwatch();unwatch=clock.watch(ticketBoundaries(ticketItems),()=>{paint();void revalidate();},{signal});};
+  const revalidate=async()=>{if(pending||!live())return;pending=true;
+    const status=root.querySelector<HTMLElement>('.home-ticket-refresh');if(status)status.textContent=L('티켓 원문 수집 정보를 다시 확인하는 중','チケットの取得情報を再確認中');
+    try{const r=await api('/api/live/tickets?edition='+d.edition,{signal});if(!live())return;if(!Array.isArray(r.items))throw Error('invalid ticket response');ticketItems=plannedTickets(r.items);paint();arm();if(status)status.textContent=L('일정 갱신 완료 · 좌석·접수 여부는 예매처 확인','予定を更新しました。空席・受付状況は販売サイトでご確認ください。');}
+    catch{if(live()&&status)status.textContent=L('최신 정보 조회 실패 · 표시된 일정과 원문을 확인하세요.','最新情報の取得に失敗しました。表示済みの予定と原文をご確認ください。');}
+    finally{pending=false;}
+  };
+  let tickPhase='';
+  const tick=()=>{if(timer)clearTimeout(timer);if(!live()||document.visibilityState==='hidden')return;updateTicketCountdowns(board!,ticketItems,clock.now(),clock.state().uncertaintyMs||0);timer=setTimeout(tick,1000-((clock.now()??0)%1000)+5);};
+  const refreshClock=()=>{const phase=clock.now()===null?'unknown':'known';if(phase!==tickPhase){tickPhase=phase;paint();if(phase==='known'&&!calendarClockReady){calendarClockReady=true;void refreshHome(root,alive);}}tick();};
+  if(board){paint();arm();clock.onChange(refreshClock,{signal});clock.onDayChange(()=>{void refreshHome(root,alive);},{signal});refreshClock();document.addEventListener('visibilitychange',refreshClock,{signal});}
+  signal.addEventListener('abort',()=>{if(timer)clearTimeout(timer);unwatch();},{once:true});
   const aw = root.querySelector<HTMLElement>('.awards-wrap');
   if (aw) { mountHomeAwards(aw, signal); mountAwardsUpdates(aw, signal); }
 }
 
-/* 커뮤니티 — 개념글이 있으면 개념글, 없으면 새 글. 옆에는 활발한 갤러리 순위(글이 없으면 차트 순) */
+/* 팬클럽 가입 — 가입 정보가 확인된 팬클럽만. 해외 가입 가능 → 선행 접수 중 → 한국어 화면 순 */
+async function paintFanclubs(root: HTMLElement, d: HomeData, alive: () => boolean) {
+  const r = (await api(`/api/live/fanclub-list?edition=${state.edition}`).catch(() => null)) as { items: FanclubItem[] } | null;
+  if (!alive()) return;
+  const sec = root.querySelector<HTMLElement>('#secFanclub');
+  const box = sec?.querySelector('.h-fc-list');
+  if (!sec || !box) return;
+  const openBy = new Map<string, number>();
+  for (const c of d.fanclub) if (c.artistId) openBy.set(c.artistId, (openBy.get(c.artistId) || 0) + 1);
+  const score = (f: FanclubItem) => (f.overseas === 'yes' ? 4 : 0) + (openBy.get(f.artistId) ? 2 : 0) + ((f.languages || []).includes('한국어') ? 1 : 0);
+  const list = (r?.items || []).filter((f) => f.found).sort((a, b) => score(b) - score(a)).slice(0, 6);
+  box.setAttribute('aria-busy','false');
+  if (!list.length) { box.innerHTML = `<li class="h-fc-unavailable">${L('가입 정보를 불러오지 못했습니다. 팬클럽 검색에서 다시 확인하세요.','入会情報を取得できませんでした。ファンクラブ検索から確認してください。')}</li>`; return; }
+  box.innerHTML = list.map((f) => fanclubCard(f, openBy.get(f.artistId) || 0)).join('');
+  sec.hidden = false;
+}
+
+/* 커뮤니티 — 개념글이 있으면 개념글, 없으면 새 글. 옆에는 활발한 아티스트 커뮤니티 */
 async function paintTalk(root: HTMLElement, ed: string, alive: () => boolean) {
   const [hub, gals] = await Promise.all([
     api(`/api/community/hub?edition=${ed}`).catch(() => null),
@@ -323,19 +287,22 @@ async function paintTalk(root: HTMLElement, ed: string, alive: () => boolean) {
   if (!box || !rank) return;
   type R = { board: string; no: number; head: string; title: string; cmt: number; up: number; at: string; gallery?: { id: string; kind: string; artist?: { name: string; nameOriginal?: string | null } } };
   const best: R[] = hub?.best || [];
-  const rows: R[] = (best.length >= 3 ? best : hub?.recent || []).slice(0, 8);
+  const rows: R[] = (best.length >= 3 ? best : hub?.recent || []).slice(0, 6);
   if (best.length >= 3) root.querySelector('#secTalk h2')!.textContent = ct('home.talkBest');
   const gname = (g: R['gallery']) => (!g ? '' : g.kind === 'general' ? ct(`g.${g.id}` as never) : artistName(g.artist as { name: string }));
   box.innerHTML = rows.length
     ? `<ul class="mini-list">${rows.map((x) => `<li><a href="#/community/${encodeURIComponent(x.board)}/${x.no}"><span class="mh">${esc(gname(x.gallery))}</span><span class="mt">${esc(x.title)}</span>${x.cmt ? `<em class="rc">[${x.cmt}]</em>` : ''}</a><span class="mu">${x.up ? `${icon('i-up', 'ic xs')}${x.up}` : ''}</span><time>${esc(when(x.at))}</time></li>`).join('')}</ul>`
-    : `<p class="cm-empty">${esc(ct('home.talkEmpty'))}</p>`;
-  const top: { id: string; artist: { name: string; nameOriginal?: string | null; photo?: string | null; artwork?: string | null }; posts: number; week: number }[] = (gals?.items || []).slice(0, 8);
+    : `<div class="h-talk-empty"><p>${esc(ct('home.talkEmpty'))}</p><a class="v2-btn is-primary" href="#/community">${L('커뮤니티 둘러보기', 'コミュニティへ')}</a></div>`;
+  const top: { id: string; artist: { name: string; nameOriginal?: string | null; photo?: string | null; artwork?: string | null }; posts: number; week: number }[] = (gals?.items || []).slice(0, 6);
   rank.innerHTML = top.map((g, i) => `<li><span class="rk">${i + 1}</span><a href="#/community/${encodeURIComponent(g.id)}">${img(g.artist.photo || g.artist.artwork, '', 'round', { ratio: '1/1', initial: g.artist.name })}<b>${esc(artistName(g.artist))}</b></a><em>${g.posts ? esc(ct('gal.posts', { n: g.posts })) : ''}</em></li>`).join('');
 }
 
 export function leaveHome() {
   homeAbort?.abort();
   homeAbort = null;
+  lastHomeData=null;
   secAbort?.abort();
   secAbort = null;
+  coverAbort?.abort();
+  coverAbort = null;
 }

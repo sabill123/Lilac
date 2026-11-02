@@ -1,19 +1,26 @@
+import { renderAssistance } from './pages/assist';
 /* Lilac 앱 진입점 — 셸(헤더·에디션 전환·내비게이션·푸터) + 해시 라우터 */
 import './app.css';
 import './editorial.css';
 import './tl.css';
 import './fx.css';
-import './redesign.css';
-import './product-redesign.css';
+import './v2.css';
+import './impeccable-polish.css';
+import './reading-polish.css';
+import './detail-polish.css';
+import './product-system.css';
+import './browse-ux.css';
+import './product-navigation.css';
+import { productNavigationHtml, mountProductNavigation } from './product-navigation';
 import { installFx, markRoute } from './fx';
 import { state, setEdition, setLang, onChange, loadSession } from './state';
 import type { Edition } from './state';
 import { t, getLocale } from './i18n';
-import { esc, icon, ago, toast, until, fmtTime } from './ui';
+import { esc, icon, ago, toast, untilText, ticketNow, ticketInstant, setTicketTimeSource, fmtTime } from './ui';
 import { startLive, onLive, onLiveStatus, live, userBusy, relevance } from './live';
 import type { LiveTopic } from './live';
 import { initPlayer, markPlaying, localizePlayer } from './player';
-import { openConcert } from './cards';
+import { openConcert, concertRegistry } from './cards';
 import { renderHome, leaveHome, refreshHome } from './pages/home';
 import { renderFanclubPage } from './pages/fanclub';
 import { renderFanclubProduct } from './pages/fcproduct';
@@ -32,27 +39,39 @@ import { ct } from './cm-i18n';
 import { renderAbout } from './pages/about';
 import { isSiteRoute, setSiteMode, SITE_TITLES } from '../site/routes';
 import { loadAliases } from '../koja';
+import { sharedServerClock, mountServerClock, ticketBoundaries, SERVER_CLOCK_LABELS } from './server-clock';
+import './server-clock.css';
+import { installContentLocalization } from './content-localization';
+import './content-localization.css';
 
 type SiteModule = typeof import('../site');
 let sitePromise: Promise<SiteModule> | null = null;
 const loadSite = () => (sitePromise ??= import('../site'));
 
+setTicketTimeSource(() => sharedServerClock().now());
+
 const NAV = [
   { r: 'home', href: '#/', k: 'nav.home', ic: 'i-home' },
-  { r: 'concerts', href: '#/concerts', k: 'nav.concerts', ic: 'i-ticket' },
-  { r: 'fanclub', href: '#/fanclub', k: 'nav.fanclub', ic: 'i-heart' },
   { r: 'community', href: '#/community', k: 'cm.nav', ic: 'i-users' },
-  { r: 'news', href: '#/news', k: 'nav.news', ic: 'i-news' },
+  { r: 'fanclub', href: '#/fanclub', k: 'nav.fanclub', ic: 'i-heart' },
+  { r: 'assist', href: '#/assist', k: 'assist', ic: 'i-globe' },
+  { r: 'concerts', href: '#/concerts', k: 'nav.concerts', ic: 'i-ticket' },
   { r: 'goods', href: '#/goods', k: 'nav.goods', ic: 'i-bag' },
+  { r: 'news', href: '#/news', k: 'nav.news', ic: 'i-news' },
   { r: 'chart', href: '#/chart', k: 'nav.chart', ic: 'i-chart' },
   { r: 'artists', href: '#/artists', k: 'nav.artists', ic: 'i-mic' },
 ];
-const MOBILE_NAV = ['home', 'concerts', 'community', 'fanclub', 'my'];
-const navLabel = (k: string) => (k === 'cm.nav' ? ct('nav') : t(k));
+const MOBILE_NAV = ['home', 'concerts', 'fanclub', 'community', 'my'];
+let contentLocalization:ReturnType<typeof installContentLocalization>|null=null;
+let cleanupHeaderClock: (()=>void)|undefined;
+let cleanupProductNavigation: (() => void) | undefined;
+const navLabel = (k: string) => (k === 'assist' ? (getLocale() === 'ja' ? '入会・購入サポート' : '가입·구매 도우미') : k === 'cm.nav' ? ct('nav') : t(k));
 
 const $ = (id: string) => document.getElementById(id)!;
 
 function renderShell() {
+  cleanupProductNavigation?.();
+  cleanupHeaderClock?.();
   const skip = document.querySelector('.skip-link');
   if (skip) skip.textContent = getLocale() === 'ja' ? '本文へスキップ' : '본문으로 건너뛰기';
   $('mnav').setAttribute('aria-label', getLocale() === 'ja' ? 'メニュー' : '메뉴');
@@ -65,9 +84,10 @@ function renderShell() {
     <div class="hdr-in">
       <a class="logo" href="#/" aria-label="Lilac">Lilac</a>
       <nav class="gnb" aria-label="${getLocale() === 'ja' ? 'メインメニュー' : '주 메뉴'}">
-        ${NAV.filter((n) => n.r !== 'home').map((n) => `<a href="${n.href}" data-r="${n.r}">${navLabel(n.k)}</a>`).join('')}
+        ${NAV.filter((n) => ['community', 'fanclub', 'concerts', 'goods'].includes(n.r)).map((n) => `<a href="${n.href}" data-r="${n.r}">${navLabel(n.k)}</a>`).join('')}
       </nav>
       <form class="header-search" role="search"><label class="sr-only" for="headerQuery">${t('search.go')}</label>${icon('i-search')}<input id="headerQuery" name="q" type="search" maxlength="160" placeholder="${getLocale() === 'ja' ? 'アーティスト・公演を検索' : '아티스트·공연 검색'}" autocomplete="off"><button type="submit" aria-label="${t('search.go')}">${icon('i-chev-r', 'ic sm')}</button></form>
+      ${productNavigationHtml([...NAV.map(n => ({ r: n.r, href: n.href, label: navLabel(n.k) })), { r: 'my', href: '#/my', label: t('nav.my') }, ...['guide', 'about', 'faq', 'terms', 'privacy', 'contact', 'status'].map(r => ({ r, href: `#/${r}`, label: t(r === 'guide' ? 'nav.guide' : `foot.${r}`) })), ...(!state.me ? [{ r: 'login', href: '#/login', label: t('nav.login') }] : [])], getLocale() === 'ja')}
       <div class="hdr-tools">
         <a class="hdr-ic m-search" href="#/search" aria-label="${t('search.go')}">${icon('i-search')}</a>
         <div class="edp">
@@ -83,6 +103,7 @@ function renderShell() {
         ${state.me ? `<a class="hdr-me" href="#/my" aria-label="${t('nav.my')}"><span>${esc((state.me.name || '?').slice(0, 1))}</span></a>` : `<a class="hdr-login" href="#/login">${t('nav.login')}</a>`}
       </div>
     </div>
+    <div class="header-server-time" id="headerServerClock"></div><div class="content-language-bar" id="contentLanguageBar"></div>
     <nav class="gnb-m" aria-label="${getLocale() === 'ja' ? 'メニュー' : '메뉴'}"><div class="gnb-m-in">${NAV.map((n) => `<a href="${n.href}" data-r="${n.r}">${navLabel(n.k)}</a>`).join('')}</div></nav>`;
   $('mnav').innerHTML = MOBILE_NAV.map((r) => {
     const n = NAV.find((x) => x.r === r) || { r: 'my', href: '#/my', k: 'nav.my', ic: 'i-user' };
@@ -123,6 +144,9 @@ function renderShell() {
   });
   if (menuWasOpen) openMenu(true, true);
   menu.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((b) => b.addEventListener('click', () => { openMenu(false); setLang(b.dataset.lang as 'ko' | 'ja'); }));
+  cleanupProductNavigation = mountProductNavigation($('hdr'));
+  contentLocalization?.refresh();
+  cleanupHeaderClock = mountServerClock($('headerServerClock'), sharedServerClock(), {compact:true, labels:SERVER_CLOCK_LABELS[getLocale()==='ja'?'ja':'ko']}).destroy;
   paintLive();
   markNav();
 }
@@ -146,7 +170,7 @@ function markNav() {
   const s = seg()[0] || 'home';
   const map: Record<string, string> = { release: 'goods', artist: 'artists', search: '', login: 'my', signup: 'my', guide: '', track: 'chart', e: 'concerts', concert: 'concerts' };
   const cur = map[s] ?? s;
-  document.querySelectorAll<HTMLAnchorElement>('.gnb a, .gnb-m a, #mnav a').forEach((a) => {
+  document.querySelectorAll<HTMLAnchorElement>('.gnb a, .gnb-m a, .product-menu-links a, #mnav a').forEach((a) => {
     const on = a.dataset.r === cur;
     a.classList.toggle('on', on);
     if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -159,7 +183,23 @@ const LEGACY: Record<string, string> = {
 };
 
 let gen = 0;
+let cleanupTicketBoundaries = ()=>{};
+function watchTicketRoute(root:HTMLElement){
+  cleanupTicketBoundaries();
+  if(!seg()[0])return; // Home owns its own ticket fragment and request lifecycle.
+  const targets=Array.from(root.querySelectorAll<HTMLElement>('[data-until],[data-ticket-open],[data-ticket-close]'));
+  const visibleConcerts=[...new Set(Array.from(root.querySelectorAll<HTMLElement>('[data-open-concert]'),el=>el.dataset.openConcert))].flatMap(id=>{const c=id?concertRegistry.get(id):null;return c?[{opensAt:c.ticketOpenAt,closesAt:c.closesAt},...(c.windows||[]),...(c.openSchedule||[]).map(w=>({opensAt:w.at,closesAt:w.endAt}))]:[];});
+  const boundaries=ticketBoundaries([...targets.flatMap(el=>[{opensAt:el.dataset.until||el.dataset.ticketOpen||null,closesAt:el.dataset.ticketClose||null}]),...visibleConcerts]);
+  cleanupTicketBoundaries=sharedServerClock().watch(boundaries,()=>{
+    root.querySelectorAll<HTMLElement>('[data-until]').forEach(el=>el.textContent=untilText(el.dataset.untilK||'c.soon',el.dataset.until));
+    queueLive('tickets',0);
+  });
+}
+let hadServerTime=false;
+sharedServerClock().onChange(()=>{const known=sharedServerClock().now()!==null;if(known&&!hadServerTime&&['concerts','concert','fanclub','artist'].includes(seg()[0]))queueLive('tickets',0);hadServerTime=known;});
 async function route() {
+  cleanupTicketBoundaries();
+  document.querySelector<HTMLDialogElement>('#productMenu[open]')?.close();
   markRoute();
   const my = ++gen;
   const alive = () => my === gen;
@@ -197,10 +237,10 @@ async function route() {
   markNav();
   window.scrollTo({ top: 0 });
   root.classList.remove('is-ready');
-  const titles: Record<string, string> = { '': t('nav.home'), concerts: t('nav.concerts'), news: t('nav.news'), fanclub: t('nav.fanclub'), guide: t('nav.guide'), goods: t('nav.goods'), chart: t('nav.chart'), artists: t('nav.artists'), artist: t('nav.artists'), my: t('nav.my'), login: t('auth.login'), signup: t('auth.signup'), search: t('search.go'), release: t('g.compare'), status: t('foot.status') };
+  const titles: Record<string, string> = { '': t('nav.home'), concerts: t('nav.concerts'), news: t('nav.news'), assist: getLocale() === 'ja' ? '入会・購入サポート' : '가입·구매 도우미', fanclub: t('nav.fanclub'), guide: t('nav.guide'), goods: t('nav.goods'), chart: t('nav.chart'), artists: t('nav.artists'), artist: t('nav.artists'), my: t('nav.my'), login: t('auth.login'), signup: t('auth.signup'), search: t('search.go'), release: t('g.compare'), status: t('foot.status') };
   document.title = `${titles[s || ''] || 'Lilac'} · Lilac`;
   await renderInto(root, alive, s, a, b);
-  if (alive()) { root.classList.add('is-ready'); markPlaying(); }
+  if (alive()) { root.classList.add('is-ready'); markPlaying(); watchTicketRoute(root); }
 }
 
 /* 경로 하나를 root에 그린다 — 보통 이동과 실시간 반영(화면 밖 그릇에 그린 뒤 바꿔 끼우기)이 같이 쓴다 */
@@ -216,6 +256,7 @@ async function renderInto(root: HTMLElement, alive: () => boolean, s: string, a:
       case 'concert': await renderConcertPage(root, alive, a); break;
       case 'fanclub': if (a) await renderFanclubProduct(root, alive, a); else await renderFanclubPage(root, alive); break;
       case 'guide': await renderGuide(root, a, b, alive); break;
+      case 'assist': await renderAssistance(root, alive); break;
       case 'goods': await renderGoods(root, alive); break;
       case 'release': await renderRelease(root, alive, a); break;
       case 'chart': await renderChart(root, alive, a, b); break;
@@ -230,7 +271,8 @@ async function renderInto(root: HTMLElement, alive: () => boolean, s: string, a:
       case 'signup': renderAuth(root, 'signup'); break;
       case 'status': await renderStatus(root, alive); break;
       default:
-        root.innerHTML = `<section class="page-head"><h1>404</h1><p class="lede">${esc(location.hash)}</p><a class="btn btn-solid" href="#/">${t('nav.home')}</a></section>`;
+        root.innerHTML = `<section class="page-head product-not-found"><p class="product-not-found-label">Lilac · 404</p><h1>${getLocale() === 'ja' ? 'ページが見つかりません' : '페이지를 찾을 수 없어요'}</h1><p class="lede">${getLocale() === 'ja' ? 'アドレスを確認するか、メニューからお探しの情報へ移動してください。' : '주소를 확인하거나 메뉴에서 찾는 정보로 이동해 주세요.'}</p><div class="product-not-found-actions"><button class="btn btn-line" type="button" data-not-found-back>${getLocale() === 'ja' ? '前のページへ' : '이전 페이지로'}</button><a class="btn btn-solid" href="#/">${t('nav.home')}</a><a class="btn btn-line" href="#/search">${t('search.go')}</a><a class="btn btn-line" href="#/concerts">${t('nav.concerts')}</a></div></section>`;
+        root.querySelector('[data-not-found-back]')?.addEventListener('click', () => { if (history.length > 1) history.back(); else location.hash = '#/'; });
     }
   } catch (e) {
     console.error(e);
@@ -241,16 +283,17 @@ async function renderInto(root: HTMLElement, alive: () => boolean, s: string, a:
 /* 실시간 반영: 지금 보고 있는 화면과 관련된 주제가 바뀌면, 조작이 멈췄을 때 조용히 다시 그린다.
    화면 밖 그릇에 먼저 그려서(뼈대 깜빡임 없이) 통째로 바꿔 끼우고, 스크롤 위치는 그대로 둔다. */
 const ROUTE_TOPICS: Record<string, LiveTopic[]> = {
-  '': ['concerts', 'tickets', 'news', 'fanclubs', 'charts', 'community'],
-  concerts: ['concerts', 'tickets', 'fanclubs'],
+  '': ['concerts', 'tickets', 'news', 'fanclubs', 'charts', 'community', 'media'],
+  concerts: ['concerts', 'tickets', 'fanclubs', 'media'],
+  concert: ['concerts', 'tickets', 'fanclubs', 'fx', 'media'],
   news: ['news'],
   community: ['community'],
-  fanclub: ['fanclubs', 'fx'],
+  fanclub: ['fanclubs', 'fx', 'media'],
   goods: ['goods', 'fx'],
   release: ['goods', 'fx'],
   chart: ['charts'],
-  artists: ['charts'],
-  artist: ['concerts', 'news', 'fanclubs', 'charts', 'community', 'goods'],
+  artists: ['charts', 'media'],
+  artist: ['concerts', 'news', 'fanclubs', 'charts', 'community', 'goods', 'media'],
   status: ['concerts', 'tickets', 'news', 'fanclubs'],
 };
 let pendingLive: { topics: Set<LiveTopic>; added: number } | null = null;
@@ -310,6 +353,7 @@ async function softRoute(): Promise<boolean> {
   // Invalidate callbacks belonging to the replaced view only after the new one is ready.
   my = ++gen;
   root.replaceChildren(box);
+  watchTicketRoute(root);
   window.scrollTo({ top: y });
   markPlaying();
   return true;
@@ -385,6 +429,7 @@ async function boot() {
   installFcTracking();
   installFx();
   renderShell();
+  contentLocalization=installContentLocalization({locale:getLocale,root:$('page'),identities:()=>Array.from(concertRegistry.values()).flatMap(c=>{const extra=(c as typeof c&{lineup?:{name:string}[]}).lineup||[];return [...(c.performer?[{id:'concert:'+c.performer,name:c.performer,nameKo:c.performerKo}]:[]),...(/^[\x20-\x7e]+$/.test(c.title)?[{id:'work:'+c.id,name:c.title}]:[]),...(c.venue&&(/[가-힣]/.test(c.venue)||/^[\x20-\x7e]+$/.test(c.venue))?[{id:'venue:'+c.venue,name:c.venue,venue:true}]:[]),...(c.fanclub?.name?[{id:'club:'+c.id,name:c.fanclub.name}]:[]),...extra.map(a=>({id:'lineup:'+a.name,name:a.name}))];}),controls:()=>document.getElementById('contentLanguageBar')});
   loadAliases().catch(() => {});
   window.addEventListener('hashchange', () => { pendingLive = null; void route(); });
   route();
@@ -397,8 +442,9 @@ async function boot() {
     let passed = false;
     document.querySelectorAll<HTMLElement>('[data-until]').forEach((el) => {
       const at = el.dataset.until!;
-      if (Date.parse(at) <= Date.now()) passed = true;
-      el.textContent = t(el.dataset.untilK || 'c.soon', { t: until(at) });
+      const serverNow=ticketNow();
+      if (serverNow!==null && (ticketInstant(at)??Infinity) <= serverNow) passed = true;
+      el.textContent = untilText(el.dataset.untilK || 'c.soon', at);
     });
     if (passed) queueLive('tickets', 0);
   }, 30000);

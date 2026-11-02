@@ -4,6 +4,7 @@ const apiProxy = { '/api': { target: process.env.LILAC_API || 'http://localhost:
 const safetyHeaders = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'strict-origin-when-cross-origin', 'X-Frame-Options': 'DENY' };
 
 export default defineConfig({
+  plugins: [{ name: 'lilac-release-identity', generateBundle() { this.emitFile({ type: 'asset', fileName: 'release.json', source: JSON.stringify({ revision: process.env.VERCEL_GIT_COMMIT_SHA || process.env.LILAC_RELEASE_REVISION || null, builtAt: new Date().toISOString() }) }); } }],
   server: {
     host: '127.0.0.1',
     port: Number(process.env.LILAC_FE_PORT) || 5180,

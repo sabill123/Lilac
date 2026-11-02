@@ -65,13 +65,41 @@ export function fmtTime(iso?: string | null) {
   return `${String(k.getUTCHours()).padStart(2, '0')}:${String(k.getUTCMinutes()).padStart(2, '0')}`;
 }
 
-export function until(iso?: string | null) {
+/* 티켓 시각 기준 = 서버시계. main이 setTicketTimeSource(() => sharedServerClock().now())로 주입한다.
+   주입 전·미동기 상태에서는 null — 사용자 PC 시계(Date.now)로 대체해 오픈/마감을 단정하지 않는다. */
+let ticketTimeSource: (() => number | null) | null = null;
+export function setTicketTimeSource(fn: (() => number | null) | null) { ticketTimeSource = fn; }
+export function ticketNow(): number | null {
+  try { const n = ticketTimeSource?.(); return typeof n === 'number' && Number.isFinite(n) ? n : null; } catch { return null; }
+}
+/** 시간대(Z 또는 ±HH:MM)가 명시된 시각만 절대 시각으로 인정. 날짜만 있거나 시간대가 없으면 null(추측 금지). */
+export function ticketInstant(iso?: string | null): number | null {
+  if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?\s*(?:Z|[+-]\d{2}:?\d{2})$/i.test(iso.trim())) return null;
+  const ms = Date.parse(iso.trim().replace(' ', 'T').replace(/([+-]\d{2})(\d{2})$/, '$1:$2'));
+  return Number.isFinite(ms) ? ms : null;
+}
+export function clockPendingLabel() { return getLocale() === 'ja' ? 'サーバー時刻を同期中' : '서버 시간 동기화 중'; }
+/** t(key, { t: until }) 래핑. 미동기면 래핑 없이 동기화 문구만(‘동기화 중 후 오픈’ 같은 문장 방지). */
+/* 경계가 지난 뒤에는 '{t} 후 오픈'에 '오픈됨'을 끼워 넣지 않고, 키별로 지난 상태 문구를 그대로 돌려준다. */
+const PASSED_KEY: Record<string, string> = { 'c.soon': 'c.openedAgo', 'c.closes': 'st.closed', 'c.closesAt': 'st.closed' };
+export function untilText(key: string, iso?: string | null, now: number | null = ticketNow()) {
+  const at = ticketInstant(iso);
+  if (at == null) return '';
+  if (now == null) return clockPendingLabel();
+  if (at - now <= 0) return PASSED_KEY[key] ? t(PASSED_KEY[key]) : '';
+  return t(key, { t: until(iso, now) });
+}
+
+export function until(iso?: string | null, now: number | null = ticketNow()) {
   if (!iso) return '';
-  const diff = Date.parse(iso) - Date.now();
-  if (!Number.isFinite(diff)) return '';
+  const at = ticketInstant(iso);
+  if (at == null) return '';
+  if (now == null) return clockPendingLabel();
+  const diff = at - now;
   const ja = getLocale() === 'ja';
   if (diff <= 0) return t('c.openedAgo');
-  const m = Math.round(diff / 60e3);
+  if (diff < 60e3) { const sec = Math.ceil(diff / 1e3); return ja ? `${sec}秒` : `${sec}초`; } // 1분 미만은 초 단위(기존 '0분' 방지)
+  const m = Math.ceil(diff / 60e3);
   if (m < 60) return ja ? `${m}分` : `${m}분`;
   const h = Math.floor(m / 60);
   if (h < 48) return ja ? `${h}時間` : `${h}시간`;
@@ -79,9 +107,10 @@ export function until(iso?: string | null) {
   return ja ? `${d}日` : `${d}일`;
 }
 
-export function ddayOf(day?: string | null) {
+export function ddayOf(day?: string | null, now: number | null = ticketNow()) {
   if (!day || !parseDay(day)) return '';
-  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  if (now == null) return ''; // 서버시계 미동기면 D-day를 숨긴다(로컬 시계 대체 금지)
+  const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10);
   const utc = (d: string) => { const [y, m, dd] = d.split('-').map(Number); return Date.UTC(y, m - 1, dd); };
   const n = Math.round((utc(day) - utc(today)) / 864e5);
   if (n === 0) return t('c.dday.today');
@@ -128,7 +157,11 @@ export function approxMoney(v: number | null | undefined, from: string, to: stri
 }
 
 /* 이미지 — 핫링크 차단을 피하려 referrer 없이. 실패하면 이니셜 판으로 바꾼다 */
-export function img(src: string | null | undefined, alt: string, cls = '', { ratio = '', initial = '', text = false, cover = null as null | { title: string; sub?: string } } = {}) {
+/* 상태는 항상 바깥 .media 의 data-media-state: missing(주소 없음·안전하지 않음) → loading → loaded | error(모든 주소 실패).
+   alternates: 같은 대상의 "이미 있는" 다른 주소(예: 큰 사진 실패 → 같은 출처의 중간 크기)만. 주소를 만들어 내지 않는다. 최대 2개 */
+const MEDIA_LOAD = "this.parentElement&&this.parentElement.setAttribute('data-media-state','loaded')";
+const MEDIA_ERROR = "var p=this.parentElement,a=(this.getAttribute('data-alt')||'').split(' ').filter(Boolean);if(a.length){this.setAttribute('data-alt',a.slice(1).join(' '));p&&p.setAttribute('data-media-state','loading');this.src=a[0]}else{if(p){p.classList.add('is-empty');p.setAttribute('data-media-state','error')}this.remove()}";
+export function img(src: string | null | undefined, alt: string, cls = '', { ratio = '', initial = '', text = false, cover = null as null | { title: string; sub?: string }, alternates = [] as (string | null | undefined)[] } = {}) {
   const label = (initial || alt || '·').trim();
   /* 재킷이 없을 때 회색 상자에 글자 하나 대신, 제목·아티스트로 만든 표지(레코드 가게 임시 슬리브처럼) */
   const fallback = cover
@@ -136,9 +169,11 @@ export function img(src: string | null | undefined, alt: string, cls = '', { rat
     : text
     ? `<span class="ph ph-text" aria-hidden="true">${esc(label.length > 28 ? label.slice(0, 27) + '…' : label)}</span>`
     : `<span class="ph" aria-hidden="true">${esc(label.slice(0, 1).toUpperCase())}</span>`;
-  src = safeImage(src);
-  if (!src) return `<span class="media ${cls} is-empty" ${ratio ? `style="aspect-ratio:${ratio}"` : ''}>${fallback}</span>`;
-  return `<span class="media ${cls}" ${ratio ? `style="aspect-ratio:${ratio}"` : ''}><img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('is-empty');this.remove()">${fallback}</span>`;
+  const alts = [...new Set((Array.isArray(alternates) ? alternates : []).map(safeImage).filter(Boolean))];
+  src = safeImage(src) || alts.shift() || '';
+  if (!src) return `<span class="media ${cls} is-empty" data-media-state="missing" ${ratio ? `style="aspect-ratio:${ratio}"` : ''}>${fallback}</span>`;
+  const rest = alts.filter((u) => u !== src && !/\s/.test(u)).slice(0, 2);
+  return `<span class="media ${cls}" data-media-state="loading" ${ratio ? `style="aspect-ratio:${ratio}"` : ''}><img src="${esc(src)}" alt="${esc(alt)}"${rest.length ? ` data-alt="${esc(rest.join(' '))}"` : ''} loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="${MEDIA_LOAD}" onerror="${MEDIA_ERROR}">${fallback}</span>`;
 }
 
 export function skeletonRows(n = 4, cls = 'sk-row') {
@@ -149,8 +184,7 @@ export function skeletonCards(n = 6) {
 }
 
 export function emptyState(msg: string, action = '') {
-  /* affectUI Empty Calendar 참고 — 비어 있음을 겹친 빈 달력 카드로(마우스를 올리면 부채꼴로 펼쳐진다) */
-  return `<div class="empty"><div class="fx-empty-cal" aria-hidden="true"><i></i><i></i><i></i></div><p>${esc(msg)}</p>${action}</div>`;
+  return `<div class="empty"><p>${esc(msg)}</p>${action}</div>`;
 }
 export function errorState(msg: string) {
   return `<div class="empty is-error"><p>${esc(msg)}</p><button class="btn btn-line" data-retry>${t('retry')}</button></div>`;
@@ -178,16 +212,14 @@ export function announce(msg: string) {
 let toastTimer = 0;
 export function toast(msg: string) {
   let el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'toast';
-    el.setAttribute('role', 'status');
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => el!.classList.remove('show'), 2600);
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.replaceChildren();
+  const text = document.createElement('span'); text.textContent = msg;
+  const close = document.createElement('button'); close.type = 'button'; close.setAttribute('aria-label', getLocale() === 'ja' ? '通知を閉じる' : '알림 닫기'); close.innerHTML = icon('i-close','ic sm');
+  const hide = () => { clearTimeout(toastTimer); el!.classList.remove('show'); el!.hidden = true; };
+  close.addEventListener('click', hide, { once: true });
+  el.append(text, close); el.hidden = false; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = window.setTimeout(hide, 4000);
 }
 
 /* 예매처가 쓰는 판매 구분 문구를 화면 언어로 */

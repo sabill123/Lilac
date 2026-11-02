@@ -72,17 +72,22 @@ const textures = requests.map(r => {
 });
 await Promise.resolve(); ticks();
 assert.ok(textures.every(t => t.colorSpace === THREE.SRGBColorSpace), 'source artwork explicitly tagged sRGB');
-assert.ok(rr.scene.children.filter(x => x.visible).every(x => x.material.fragmentShader.includes('#include <colorspace_fragment>')), 'custom shaders encode to display color space');
-assert.ok(rr.scene.children.filter(x => x.visible).every(x => !x.material.fragmentShader.includes('tuv + vec2')), 'no artificial chromatic splitting');
-assert.equal(rr.scene.children.filter(x => x.visible).length, 8, 'no floor reflections');
-// Curve remains real geometry in the vertex shader, with full center color.
-assert.match(rr.scene.children[0].material.vertexShader, /sin\(a\) \* r/);
-assert.match(rr.scene.children[0].material.fragmentShader, /mix\(0\.62, 1\.0, uFocus\)/);
+const visible = rr.scene.children.filter(x => x.visible);
+const cardMeshes = visible.filter(x => x.userData.kind === 'card');
+assert.ok(visible.every(x => x.material.fragmentShader.includes('#include <colorspace_fragment>')), 'custom shaders encode to display color space');
+assert.ok(cardMeshes.every(x => !x.material.fragmentShader.includes('tuv + vec2')), 'no artificial chromatic splitting');
+assert.equal(rr.scene.children.filter(x => x.userData.kind === 'card').length, 8, 'one allocated card per poster, no floor reflections');
+assert.equal(cardMeshes.length, 5, 'wide stage renders only the contained five-poster fan');
+// Velocity bend is real geometry in the vertex shader; side cards recede into the panel colour instead of being darkened.
+assert.match(cardMeshes[0].material.vertexShader, /uBend/);
+assert.match(cardMeshes[0].material.fragmentShader, /mix\(uVeil, col, mix\(0\.8, 1\.0, uFocus\)\)/);
+assert.ok(!/col \*= mix/.test(cardMeshes[0].material.fragmentShader), 'artwork colour is not multiplied darker');
 
 stage.go(1); ticks(32);
 assert.equal(stage.index(), 1); assert.equal(focus.at(-1), 1);
-const center = rr.scene.children.find(x => x.visible && x.renderOrder === 100);
-assert.ok(Math.abs(center.material.uniforms.uTheta.value) < 0.002, 'one-card snap settles within about half a second');
+const center = rr.scene.children.find(x => x.visible && x.userData.kind === 'card' && x.renderOrder === 100);
+assert.ok(Math.abs(center.position.x) < 0.002, 'one-card snap settles within about half a second');
+assert.equal(center.material.uniforms.uBend.value, 0, 'cards are flat again once settled');
 stage.goTo(6); stage.goTo(3); stage.goTo(7); ticks(40);
 assert.equal(stage.index(), 7, 'rapid tab choices land on the final requested item');
 assert.equal(focus.at(-1), 7);
@@ -97,9 +102,9 @@ assert.equal(frames.size, 0);
 
 // Project the actual shader-centered card to canvas coordinates for hit testing.
 function point() {
-  const mesh = rr.scene.children.find(x => x.visible && x.renderOrder === 100);
-  const u = mesh.material.uniforms, radius = u.uRadius.value - u.uFocus.value * 0.14 - u.uLift.value * 0.12;
-  const v = new THREE.Vector3(Math.sin(u.uTheta.value) * radius, -(1 - u.uIntro.value) * 0.16, -Math.cos(u.uTheta.value) * radius).project(rr.camera);
+  const mesh = rr.scene.children.find(x => x.visible && x.userData.kind === 'card' && x.renderOrder === 100);
+  mesh.updateMatrixWorld();
+  const v = new THREE.Vector3().setFromMatrixPosition(mesh.matrixWorld).project(rr.camera);
   return { clientX: (v.x + 1) * host.clientWidth / 2, clientY: (1 - v.y) * host.clientHeight / 2 };
 }
 let serial = 0;
@@ -150,4 +155,4 @@ const lateTex = new THREE.Texture(); lateTex.disposals = 0;
 lateTex.addEventListener('dispose', () => lateTex.disposals++);
 requests[requestStart + 1].done(lateTex); await Promise.resolve(); await Promise.resolve();
 assert.equal(lateTex.disposals, 1, 'late arriving texture is disposed after destroy');
-console.log('PASS stage redesign: color/curve/snap, paused/reduced controls, touch direction, cancel/capture, native scroll, focus/offscreen autoplay, context fallback and disposal');
+console.log('PASS stage redesign (Lilac Ribbon): color/veil/bend/snap, paused/reduced controls, touch direction, cancel/capture, native scroll, focus/offscreen autoplay, context fallback and disposal');

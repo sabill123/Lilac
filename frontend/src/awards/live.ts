@@ -33,7 +33,7 @@ export function awardsUpdatesHtml() {
   return `<section class="award-updates" aria-labelledby="award-updates-title"><header><div><p>${text('AWARDS · 한국과 일본','AWARDS · 韓国と日本')}</p><h2 id="award-updates-title">${text('어워즈 최신 발표','アワード最新発表')}</h2></div><span>${text('발표일 최신순','発表日が新しい順')}</span></header><p class="award-updates-method">${text('공식 공지·보도를 10분 주기로 확인합니다. 매체 반영·서버 대기로 지연될 수 있습니다. 출연·VTR·진행자 구분과 전체 명단은 원문을 확인하세요.','公式発表・報道を10分間隔で確認します。配信・サーバー待機による遅延があります。出演・VTR・司会の区分と全名簿は原文をご確認ください。')}</p><div data-award-updates-body><p role="status">${text('최신 발표 확인 중…','最新発表を確認中…')}</p></div></section>`;
 }
 function noticeContent(x: AwardNotice) {
-  return `<span class="award-notice-meta"><b>${esc(x.seriesName)}${x.editionYear ? ` ${x.editionYear}` : ''}</b><span>${noticeKinds(x).map(kind=>esc(kindLabel(kind))).join(' / ')}</span></span><strong>${esc(x.title)}</strong><span class="award-notice-source">${x.provider?.startsWith('official:') ? `${text('공식','公式')} · ` : `${text('보도','報道')} · `}${esc(x.source || text('출처','出典'))} · ${esc(date(x.publishedAt, x.publishedAtSource === 'official-url-date'))}${x.stale ? ` · ${text('갱신 실패 · 이전 정보','更新失敗・過去の情報')}` : ''}</span>`;
+  return `<span class="award-notice-meta"><b data-content-original-work translate="no">${esc(x.seriesName)}${x.editionYear ? ` ${x.editionYear}` : ''}</b><span>${noticeKinds(x).map(kind=>esc(kindLabel(kind))).join(' / ')}</span></span><strong>${esc(x.title)}</strong><span class="award-notice-source">${x.provider?.startsWith('official:') ? `${text('공식','公式')} · ` : `${text('보도','報道')} · `}${esc(x.source || text('출처','出典'))} · ${esc(date(x.publishedAt, x.publishedAtSource === 'official-url-date'))}${x.stale ? ` · ${text('갱신 실패 · 이전 정보','更新失敗・過去の情報')}` : ''}</span>`;
 }
 const publicationTime = (value: string | null) => Date.parse(value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00+09:00` : value || '') || 0;
 const ordered = (items: AwardNotice[]) => [...items].sort((a,b) => publicationTime(b.publishedAt) - publicationTime(a.publishedAt) || a.id.localeCompare(b.id));
@@ -52,7 +52,7 @@ export function mountAwardsUpdates(root: HTMLElement, signal: AbortSignal) {
   const count = find('#award-result-count'), status = find('[data-award-status]'), checked = find('[data-award-checked]'), list = find<HTMLUListElement>('.award-notice-list'), moreButton = find<HTMLButtonElement>('[data-award-more]'), retry = find<HTMLButtonElement>('[data-award-retry]'), official = find('[data-award-official]');
   const options = (select: HTMLSelectElement, values: Map<string,string>, selected: string) => {
     if (selected && !values.has(selected)) values.set(selected,selected);
-    const html = `<option value="">${text('전체','すべて')}</option>` + [...values].map(([id,name])=>`<option value="${esc(id)}">${esc(name)}</option>`).join('');
+    const html = `<option value="">${text('전체','すべて')}</option>` + [...values].map(([id,name])=>`<option${select===seriesSelect?' data-content-original-work translate="no"':''} value="${esc(id)}">${esc(name)}</option>`).join('');
     if (select.dataset.options !== html) { select.innerHTML = html; select.dataset.options = html; }
     select.value = selected;
   };
@@ -108,7 +108,7 @@ export function mountAwardsUpdates(root: HTMLElement, signal: AbortSignal) {
     moreButton.hidden = rows.length <= 8; moreButton.setAttribute('aria-expanded',String(more));
     moreButton.textContent = more ? text('접기','閉じる') : text(`발표 ${rows.length}건 모두 보기`,`${rows.length}件の発表を表示`);
     retry.hidden = !failed; retry.disabled = loading;
-    const links = (data?.series || []).filter(x=>!filters.series || x.id===filters.series).map(x=>`<a href="${esc(safeUrl(x.officialUrl))}" target="_blank" rel="noopener noreferrer">${esc(x.name)} ${text('공식','公式')} ↗</a>`).join('');
+    const links = (data?.series || []).filter(x=>!filters.series || x.id===filters.series).map(x=>`<a href="${esc(safeUrl(x.officialUrl))}" target="_blank" rel="noopener noreferrer"><span data-content-original-work translate="no">${esc(x.name)}</span> ${text('공식','公式')} ↗</a>`).join('');
     if (official.innerHTML !== links) official.innerHTML = links;
   };
   const load = async () => {

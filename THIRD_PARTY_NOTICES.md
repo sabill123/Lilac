@@ -34,3 +34,13 @@ SOFTWARE.
 ## 참고만 한 것(코드 사용 없음)
 - inspora.design: 'Airport matrix time'(출발 안내판 → 홈 티켓 오픈), 'holo 3D card effect'(기우는 카드 → 공연 상세 포스터, 빛 반사 제외), 'hairlines'(고정폭 숫자 표기)
 - 21st.dev: 갤러리·3D 카테고리의 커버 배치 방식
+
+
+## Manrope
+
+Self-hosted Manrope variable Latin and Latin Extended webfonts. Source: Google Fonts (https://github.com/google/fonts/tree/main/ofl/manrope), SIL Open Font License 1.1. License: frontend/public/fonts/OFL-Manrope.txt. Only weights400–700 are used. Korean/Japanese glyphs use the existing script fallbacks.
+
+
+## Phosphor core 2.1.1
+
+The inline icon sprite retains Lilac icon IDs and uses the Phosphor regular icons plus filled heart. MIT license, source https://github.com/phosphor-icons/core, copyright Phosphor Icons. Full license: frontend/public/licenses/Phosphor-MIT.txt. No runtime icon dependency.

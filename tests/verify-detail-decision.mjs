@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import ts from '../frontend/node_modules/typescript/lib/typescript.js';
+const read=p=>readFileSync(new URL('../frontend/src/app/'+p,import.meta.url),'utf8');
+const fc=read('pages/fcproduct.ts'), concert=read('pages/concert.ts'), goods=read('pages/goods.ts');
+assert.ok(fc.indexOf('id="pdpCheck"')<fc.indexOf('id="pdpFee"'));
+assert.ok(fc.indexOf('id="pdpFee"')<fc.indexOf('id="pdpHow"'));
+assert.ok(fc.indexOf('id="pdpHow"')<fc.indexOf('id="pdpAssist"'));
+assert.match(fc,/querySelectorAll<HTMLAnchorElement>\('\[data-assist-scroll\],\[data-detail-scroll\]'\)/);
+assert.match(concert,/requirements\.join\(' · '\) \|\|/);
+assert.match(concert,/접수 방식은 원문 확인/);
+const esc=x=>String(x??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;');
+const release={title:'Fixture <release>',artist:'Fixture artist',releaseDate:'2020-01-01',editions:[{id:'a',label:'Observed edition',listPrice:4000,listCurrency:'JPY'}],campaign:{name:'Past',desc:'Historical only',storeClosesAt:'2020-01-01'},source:{url:'https://source.example/',name:'Source'}};
+const root={innerHTML:'',querySelector:()=>null,querySelectorAll:()=>[]};
+const testState={edition:'kr'},requested=[];const offers=[]; const api=async url=>{requested.push(url);return{release,comparison:{rows:offers}}}, exports={};
+const assistanceModule={};vm.runInNewContext(ts.transpileModule(read('assistance.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2023}}).outputText,{exports:assistanceModule,require(name){if(name==='./i18n')return {getLocale:()=>'ko'};return {};},URL,URLSearchParams});
+const compiled=ts.transpileModule(goods,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2023}}).outputText;
+const context={exports,require(name){if(name==='../../api')return {api};if(name==='../state')return {state:testState};if(name==='../i18n')return {t:x=>x,getLocale:()=> 'ko'};if(name==='./_safety')return {safeExternal:x=>/^https:\/\//.test(x||'')?x:'',bindSectionLink(){}};if(name==='../social')return {releaseTarget:()=>({}),likeBtn:()=>'',shareBtn:()=>'',commentsHtml:()=>'',bindSocial(){},bindComments(){},targetAdapter(){}};if(name==='../cm-i18n')return {ct:x=>x};if(name==='../assistance')return assistanceModule;if(name==='../ui')return {esc,img:()=>'<img alt="cover">',fmtDay:x=>x,money:x=>String(x),emptyState:x=>x,icon:()=>''};return {};},console,Date,URL,Map,Set,Promise};
+vm.runInNewContext(compiled,context);await exports.renderRelease(root,()=>true,'fixture');
+assert.match(root.innerHTML,/앨범 커버입니다/);assert.match(root.innerHTML,/종료된 예약 캠페인/);assert.match(root.innerHTML,/현재 구매 특전이 아닙니다/);assert.match(root.innerHTML,/확인된 판매처가 아직 없습니다/);assert.match(root.innerHTML,/Fixture &lt;release>/);
+assert.ok(root.innerHTML.indexOf('href="#relEditions"')<root.innerHTML.indexOf('id="relEditions"'));
+assert.match(root.innerHTML,/결제는 판매처에서 합니다/);
+offers.push({url:'https://shop.example/',store:'Observed store'}); release.editions[0].listPrice=null; await exports.renderRelease(root,()=>true,'fixture'); assert.match(root.innerHTML,/배송 조건 미확인/); assert.doesNotMatch(root.innerHTML,/직배송 불가·대행 필요 기록 있음/); assert.match(root.innerHTML,/가격은 원문 확인/); assert.match(root.innerHTML,/data-link-kind="home"/); assert.match(root.innerHTML,/판매처 첫 화면/);
+// Same store link reused for every edition (known-wrong curated data) is flagged; per-edition verified links are listed.
+release.editions=[{id:'reg',label:'Regular',catalogNo:'ABCD-20726',listPrice:3300},{id:'ltd',label:'Limited',catalogNo:'ABCD-29512',listPrice:4400}];
+offers.length=0; offers.push({offerId:'s',store:'S',editionId:'reg',catalogNo:'ABCD-20726',editionLabel:'Regular',url:'https://shop.example/products/abcd29512'},{offerId:'s',store:'S',editionId:'ltd',catalogNo:'ABCD-29512',editionLabel:'Limited',url:'https://shop.example/products/abcd29512'});
+await exports.renderRelease(root,()=>true,'fixture'); assert.match(root.innerHTML,/data-link-kind="mismatch"/); assert.match(root.innerHTML,/다른 상품이니 판매처에서 품번을 확인하세요/);
+offers[0].url='https://shop.example/products/abcd20726'; await exports.renderRelease(root,()=>true,'fixture'); assert.match(root.innerHTML,/data-link-kind="per-edition"/); assert.match(root.innerHTML,/ABCD-20726 · Regular/); assert.match(root.innerHTML,/ABCD-29512 · Limited/);
+console.log('PASS detail decisions: real release renderer, escaped source data, ended campaign, album/product distinction, honest no-offer state, navigable decision sequence; fanclub condition/fee before tools and preserved anchors');
+
+testState.edition='jp';await exports.renderRelease(root,()=>true,'fixture');assert.ok(requested.includes('/api/store/releases/fixture?buyer=jp'));testState.edition='kr';assert.ok(requested.includes('/api/store/releases/fixture?buyer=kr'));console.log('PASS release buyer-country request: Korea/Japan explicit, not device locale or implicit Korea default');

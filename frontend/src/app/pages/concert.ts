@@ -6,8 +6,8 @@
  * 값은 예매처 상품 페이지에서 읽은 사실만. 없는 칸은 만들지 않는다. */
 import { api } from '../../api';
 import { t, getLocale } from '../i18n';
-import { esc, safeHref, safeImage, icon, fmtRange, fmtDateTime, fmtDay, ago, saleLabel } from '../ui';
-import { concertRegistry, providerName, placeOf, whenOf, fcHowHref, followButton, bindFollow } from '../cards';
+import { esc, safeHref, safeImage, icon, fmtRange, fmtDateTime, fmtDay, ago, saleLabel, ticketNow, ticketInstant, clockPendingLabel } from '../ui';
+import { concertRegistry, providerName, cityName, placeOf, whenOf, fcHowHref, followButton, bindFollow } from '../cards';
 import type { Concert } from '../cards';
 import type { DetailResponse } from '../detail';
 import { howTo, fanclubBlock, priceCell, timesNote, statusJa, providerLabel } from '../detail';
@@ -62,7 +62,7 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
   const b = d?.booking;
   const loaded = !!r;
   const tg = concertTarget(c);
-  const now = Date.now();
+  const now = ticketNow();
   const photo = c.posterKind === 'artist';
   const artistHref = c.artistId ? `#/artist/${encodeURIComponent(c.artistId)}` : c.performer ? `#/artist/name/${encodeURIComponent(c.performer)}` : '';
 
@@ -102,11 +102,11 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
     : (c.openSchedule || []).filter((s) => s.at || s.endAt).map((s) => ({ label: c.provider === 'fanclub' ? s.label || '' : saleLabel(s.label) || t('c.open'), at: s.at, end: s.endAt || null, status: '' })));
   if (!sched.length && c.ticketOpenAt) sched.push({ label: saleLabel(c.ticketOpenLabel) || t('c.open'), at: c.ticketOpenAt, end: null, status: '' });
   const shows = d?.shows?.length ? d.shows.map((s) => ({ date: s.date, sub: [s.open ? `${t('d.doors')} ${s.open}` : '', s.start ? `${t('d.start')} ${s.start}` : ''].filter(Boolean).join(' · '), venue: s.venue || '' }))
-    : (c.shows || []).map((s) => ({ date: s.date, sub: '', venue: [s.venue, s.city].filter(Boolean).join(' · ') }));
-  const nextOpen = [b?.openAt, c.ticketOpenAt, ...sched.map((s) => s.at)].filter((x): x is string => !!x && Date.parse(x) > now).sort()[0];
-  const schedCol = sched.length ? `<div class="tl-reserve-col" style="flex:1.1"><h3 class="tl-reserve-heading"><em>STEP 1</em><b>${esc(t('c.schedule'))}</b></h3><ul class="tl-reserve-list">${sched.slice(0, 8).map((s) => { const end = s.end ? Date.parse(s.end) : s.at ? Date.parse(s.at) : 0; const past = end && end < now && (s.end ? true : false); const on = s.at && Date.parse(s.at) <= now && (!s.end || Date.parse(s.end) > now); return `<li class="${past ? 'is-past' : on ? 'is-now' : ''}"><b lang="${c.provider === 'fanclub' || c.provider === 'eplus' ? 'ja' : ''}">${esc(s.label)}</b><span>${s.at ? esc(fmtDateTime(s.at)) : ''}${s.end ? ` ~ ${esc(fmtDateTime(s.end))}` : ''}${s.status ? ` · ${esc(s.status)}` : ''}</span></li>`; }).join('')}</ul></div>` : '';
+    : (c.shows || []).map((s) => ({ date: s.date, sub: '', venue: [s.venue, cityName(s.city)].filter(Boolean).join(' · ') }));
+  const nextOpen = now===null?undefined:[b?.openAt, c.ticketOpenAt, ...sched.map((s) => s.at)].filter((x): x is string => !!x && (ticketInstant(x)??-Infinity) > now).sort()[0];
+  const schedCol = sched.length ? `<div class="tl-reserve-col" style="flex:1.1"><h3 class="tl-reserve-heading"><em>STEP 1</em><b>${esc(t('c.schedule'))}</b></h3><ul class="tl-reserve-list">${sched.slice(0, 8).map((s) => { const end = ticketInstant(s.end); const start=ticketInstant(s.at); const past = now!==null && end!==null && end <= now; const on = now!==null && start!==null && start <= now && (end===null||end>now); return `<li data-ticket-open="${esc(s.at||'')}" data-ticket-close="${esc(s.end||'')}" class="${past ? 'is-past' : on ? 'is-now' : ''}"><b lang="${c.provider === 'fanclub' || c.provider === 'eplus' ? 'ja' : ''}">${esc(s.label)}</b><span>${s.at ? esc(fmtDateTime(s.at)) : ''}${s.end ? ` ~ ${esc(fmtDateTime(s.end))}` : ''}${s.status ? ` · ${esc(s.status)}` : ''}</span></li>`; }).join('')}</ul></div>` : '';
   const showCol = shows.length ? `<div class="tl-reserve-col is-fill"><h3 class="tl-reserve-heading"><em>STEP ${schedCol ? 2 : 1}</em><b>${esc(t('d.times'))}</b></h3><ul class="tl-reserve-list">${shows.slice(0, 12).map((s) => `<li><b class="num">${esc(fmtDay(s.date))}</b><span>${esc([s.sub, s.venue].filter(Boolean).join(' · '))}</span></li>`).join('')}</ul></div>` : '';
-  const notice = c.status === 'soldout' ? (ja() ? '予定枚数が終了しました。' : '예정 매수가 모두 팔렸습니다.')
+  const notice = now===null?clockPendingLabel():c.status === 'soldout' ? (ja() ? '予定枚数が終了しました。' : '예정 매수가 모두 팔렸습니다.')
     : nextOpen ? (ja() ? `<b>${esc(fmtDateTime(nextOpen))}</b> 発売開始です。` : `<b>${esc(fmtDateTime(nextOpen))}</b>에 예매가 열립니다.`)
     : c.provider === 'fanclub' ? (ja() ? 'ファンクラブ会員の申込ページで受け付けています。' : '팬클럽 회원 신청 페이지에서 접수합니다.')
     : (ja() ? 'プレイガイドで日時と座席を選んで購入します。' : '예매처에서 날짜와 좌석을 골라 예매합니다.');
@@ -117,8 +117,13 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
   const bookHref = c.provider === 'fanclub' ? safeHref(withUtm(c.url, 'fanclub_sale'), false) : safeHref(c.url, false);
   const ghost = c.provider === 'fanclub' && fcHowHref(c) ? `<a class="tl-btn ghost xl" href="${esc(fcHowHref(c))}">${esc(t('fc.howLink'))}</a>`
     : b?.global ? `<a class="tl-btn ghost xl" href="${esc(safeHref(b.global.url, false))}" target="_blank" rel="noopener"><span>GLOBAL BOOKING</span></a>` : '';
-  const primary = `<a class="tl-btn primary xl" href="${esc(bookHref)}" target="_blank" rel="noopener" ${c.provider === 'fanclub' ? `data-fc-track="sale" data-artist="${esc(c.artistId || '')}"` : ''}>${esc(bookLabel)} ${icon('i-ext', 'ic xs')}</a>`;
+  const primary = `<a class="tl-btn primary xl" href="${esc(bookHref)}" target="_blank" rel="noopener" ${c.provider === 'fanclub' ? `data-fc-track="sale" data-artist="${esc(c.artistId || '')}"` : ''}>${esc(bookLabel)} <span class="detail-action-context">${ja() ? '外部サイト' : '외부 사이트'}</span> ${icon('i-ext', 'ic xs')}</a>`;
   const srcMeta = d ? `${esc(t('d.src', { p: providerLabel(c.provider) }))}${d.fetchedAt ? ` · ${esc(t('updated', { t: ago(d.fetchedAt) }))}` : ''} · <a href="${esc(safeHref(d.url, false))}" target="_blank" rel="noopener" style="text-decoration:underline">${esc(t('d.original'))}</a>` : loaded ? '' : esc(t('d.loading'));
+
+  // Use only observed facts; absence is never eligibility confirmation.
+  const requirements = [b?.jpPhone ? (ja() ? '日本の携帯電話番号が必要' : '일본 휴대폰 번호 필요') : '', b?.identityBooking ? (ja() ? '本人認証あり' : '본인 인증 예매') : '', c.condition || ''].filter(Boolean);
+  const bookingMethod = d?.sales?.length ? [...new Set(d.sales.map(s => s.type === 'lottery' ? t('d.lottery') : t('d.first')))].join(' · ') : c.provider === 'fanclub' ? (ja() ? 'ファンクラブ受付' : '팬클럽 접수') : (ja() ? '受付方式は原文で確認' : '접수 방식은 원문 확인');
+  const decisionFacts = [[ja() ? 'いつ' : '언제', period || (ja() ? '日程は原文確認' : '일정은 원문 확인')], [ja() ? 'どこで' : '어디서', venue || (ja() ? '会場は原文確認' : '장소는 원문 확인')], [ja() ? '申込方法' : '접수 방식', bookingMethod], [ja() ? '申込前の確認' : '신청 전 확인', requirements.join(' · ') || (ja() ? '本人確認・受取・申込資格は原文で確認' : '본인 확인·수령·신청 자격은 원문 확인')]];
 
   /* 탭 내용 */
   const panels: { key: string; label: string; html: string }[] = [];
@@ -157,11 +162,11 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
   panels.push({ key: 'talk', label: ct('soc.cmt'), html: `<div class="tl-pd-talk">${commentsHtml()}</div>` });
 
   /* 추천: 같은 방향(내한·원정)·가까운 날짜의 다른 공연 5개(지금 메모리에 있는 목록에서) */
-  const rec = [...concertRegistry.values()].filter((x) => x.id !== c.id && x.provider !== 'fanclub' && x.poster && (c.direction ? x.direction === c.direction : x.kind === c.kind) && (x.startDate || '') >= new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10))
+  const rec = [...concertRegistry.values()].filter((x) => x.id !== c.id && x.provider !== 'fanclub' && x.poster && (c.direction ? x.direction === c.direction : x.kind === c.kind) && (now===null || (x.startDate || '') >= new Date(now + 9 * 3600e3).toISOString().slice(0, 10)))
     .filter((x, i, arr) => arr.findIndex((y) => y.title === x.title) === i)
     .sort((a, b2) => Number(b2.artistId === c.artistId && !!c.artistId) - Number(a.artistId === c.artistId && !!c.artistId) || (a.startDate || '').localeCompare(b2.startDate || '')).slice(0, 5);
 
-  root.innerHTML = `<div class="tl" id="pdRoot">
+  root.innerHTML = `<div class="tl detail-concert" id="pdRoot">
     <section class="tl-sec">
       <div class="tl-pd" id="pdInfo">
         <div class="tl-pd-imgbox${photo ? ' is-photo' : ''}">${posterFace(c)}</div>
@@ -172,6 +177,7 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
             ${c.performerKo && getLocale() === 'ko' && !c.title.includes(c.performerKo) ? `<p class="tl-pd-sub">${esc(c.performerKo)}</p>` : ''}
             <div class="tl-pd-share">${shareBtn(tg, '#/e/{key}', c.title, 'icon-only')}</div>
           </div>
+          <section class="detail-decision"><h2>${ja() ? '申込前に確認' : '예매 전 확인'}</h2><dl>${decisionFacts.map(([label,value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><p>${ja() ? '空席・現在の受付状況・最終料金は外部サイトで確認してください。' : '잔여석·현재 접수 상태·최종 결제액은 외부 사이트에서 확인하세요.'}</p><button type="button" class="detail-local-action" data-go="${panels.some(p => p.key === 'guide') ? 'guide' : 'info'}">${ja() ? 'Lilacの購入案内を確認' : 'Lilac 예매 안내 확인'}</button></section>
           <h2 class="blind">${ja() ? '商品の代表情報' : '상품 대표 정보'}</h2>
           <ul class="tl-pd-list col2">${list1.join('')}</ul>
           ${list2.length ? `<ul class="tl-pd-list col2">${list2.join('')}</ul>` : ''}
@@ -186,11 +192,11 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
       <div class="tl-reserve-util"><p class="tl-reserve-meta">${srcMeta}</p><div class="tl-reserve-btns">${likeBtn(tg, 'is-box')}${ghost}${primary}</div></div>
     </section>
     <section class="tl-pd-tab" id="pdTab"><h2 class="blind">${ja() ? '商品情報タブ' : '상품 정보 탭'}</h2>
-      <div class="tl-inner"><div class="tl-tab-linebox" role="tablist">${panels.map((p, i) => `<div class="${i === 0 ? 'is-active' : ''}"><button type="button" role="tab" aria-selected="${i === 0}" data-pd="${p.key}">${esc(p.label)}${p.key === 'talk' ? ' <em class="sd-cn num" style="font-style:normal"></em>' : ''}</button></div>`).join('')}</div></div>
+      <div class="tl-inner"><div class="tl-tab-linebox" role="tablist" aria-label="${ja() ? '公演情報' : '공연 정보'}">${panels.map((p, i) => `<div class="${i === 0 ? 'is-active' : ''}"><button type="button" role="tab" id="pd-tab-${p.key}" aria-controls="pd-panel-${p.key}" tabindex="${i === 0 ? 0 : -1}" aria-selected="${i === 0}" data-pd="${p.key}">${esc(p.label)}${p.key === 'talk' ? ' <em class="sd-cn num" style="font-style:normal"></em>' : ''}</button></div>`).join('')}</div></div>
     </section>
-    <section class="tl-sec tl-pd-tabcont" id="pdCont">${panels.map((p, i) => `<section class="tl-pd-sec" data-panel="${p.key}" ${i === 0 ? '' : 'hidden'}><h2 class="blind">${esc(p.label)}</h2>${p.html}</section>`).join('')}</section>
+    <section class="tl-sec tl-pd-tabcont" id="pdCont">${panels.map((p, i) => `<section class="tl-pd-sec" id="pd-panel-${p.key}" role="tabpanel" aria-labelledby="pd-tab-${p.key}" tabindex="0" data-panel="${p.key}" ${i === 0 ? '' : 'hidden'}><h2 class="blind">${esc(p.label)}</h2>${p.html}</section>`).join('')}</section>
     ${rec.length ? `<section class="tl-sec tl-pd-rec">${secHead(ja() ? 'おすすめ公演' : '추천 공연')}${tlGrid(rec, { col5: true })}</section>` : ''}
-    <section class="tl-sum" id="pdSum" aria-hidden="true"><div class="tl-inner tl-sum-in">
+    <section class="tl-sum" id="pdSum" aria-hidden="true" inert><div class="tl-inner tl-sum-in">
       <div class="tl-sum-img">${safeImage(c.poster) ? `<img src="${esc(safeImage(c.poster))}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</div>
       <div class="tl-sum-info"><strong class="tl-sum-title">${esc(c.title)}</strong><div class="tl-sum-side">${venue ? `<span>${esc(venue)}</span>` : ''}<span class="num">${esc(whenOf(c) || period)}</span></div></div>
       <div class="tl-sum-btns">${ghost.replace('tl-btn ghost xl', 'tl-btn ghost md')}${primary.replace('tl-btn primary xl', 'tl-btn primary md')}</div>
@@ -200,14 +206,24 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
   const pd = root.querySelector<HTMLElement>('#pdRoot')!;
   /* 탭 전환(한 번에 한 내용) — 탭이 붙어 있는 상태면 내용 맨 위로 */
   const pick = (key: string) => {
-    pd.querySelectorAll<HTMLElement>('[data-pd]').forEach((btn) => { const on = btn.dataset.pd === key; btn.setAttribute('aria-selected', String(on)); btn.parentElement!.classList.toggle('is-active', on); });
+    pd.querySelectorAll<HTMLElement>('[data-pd]').forEach((btn) => { const on = btn.dataset.pd === key; btn.setAttribute('aria-selected', String(on)); btn.tabIndex = on ? 0 : -1; btn.parentElement!.classList.toggle('is-active', on); });
     pd.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== key; });
     const cont = pd.querySelector<HTMLElement>('#pdCont')!;
     const tabEl = pd.querySelector<HTMLElement>('#pdTab')!;
     if (tabEl.getBoundingClientRect().top <= (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hdr-total')) || 64) + 130) cont.scrollIntoView({ block: 'start' });
   };
   pd.querySelectorAll<HTMLButtonElement>('[data-pd]').forEach((btn) => btn.addEventListener('click', () => pick(btn.dataset.pd!)));
-  pd.querySelectorAll<HTMLElement>('[data-go]').forEach((el) => el.addEventListener('click', () => { pick(el.dataset.go!); pd.querySelector('#pdTab')!.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  pd.querySelector<HTMLElement>('[role="tablist"]')?.addEventListener('keydown', (event) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+    const tabs = Array.from(pd.querySelectorAll<HTMLButtonElement>('[data-pd]'));
+    const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
+    if (index < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    pick(tabs[next].dataset.pd!); tabs[next].focus();
+  });
+  pd.querySelectorAll<HTMLElement>('[data-go]').forEach((el) => el.addEventListener('click', () => { pick(el.dataset.go!); pd.querySelector('#pdTab')!.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); }));
 
   /* 요약 바: 정보 영역 아래로 스크롤하면 내려온다 */
   const sum = pd.querySelector<HTMLElement>('#pdSum')!;
@@ -217,7 +233,7 @@ function paint(root: HTMLElement, alive: () => boolean, c: Fest, r: DetailRespon
     const fixed = info.getBoundingClientRect().bottom < 0;
     if (fixed !== sum.classList.contains('is-fixed')) {
       sum.classList.toggle('is-fixed', fixed);
-      sum.setAttribute('aria-hidden', String(!fixed));
+      sum.setAttribute('aria-hidden', String(!fixed)); sum.inert = !fixed;
       pd.style.setProperty('--tl-sum-h', fixed ? `${sum.querySelector<HTMLElement>('.tl-sum-in')!.offsetHeight}px` : '0px');
     }
   };

@@ -64,10 +64,15 @@ export function clubName(raw: string | null | undefined) {
   const rest = n.replace(/^.*?OFFICIAL\s*FAN\s*CLUB\s*/i, '').replace(/^[＜<「『"]+|[＞>」』"]+$/g, '').trim();
   return rest.length >= 2 && rest !== n ? rest : n;
 }
-/* 일본어 화면에서는 한글 이름 대신 로마자 표기 */
-export function displayName(name: string, others: (string | null | undefined)[] = [], ja = getLocale() === 'ja') {
-  if (!ja || !/[가-힣]/.test(name)) return name;
-  return others.find((x) => x && /[A-Za-z]/.test(x) && !/[가-힣]/.test(x)) || name;
+/* 화면 언어에서 읽을 수 없는 글자의 이름만 바꾼다(라틴 브랜드명은 그대로).
+   canon: 확인된 표기(로스터 nameKo·nameJa 또는 /api/live/display-names). 있으면 먼저 쓴다.
+   ko: 가나·한자 이름 → canon.nameKo(한글) / ja: 한글 이름 → canon.nameJa → others 중 로마자 표기 */
+export function displayName(name: string, others: (string | null | undefined)[] = [], ja = getLocale() === 'ja', canon: { nameKo?: string | null; nameJa?: string | null } = {}) {
+  const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/, KANA_KANJI = /[぀-ヿ㐀-䶿一-鿿々〆ｦ-ﾟ]/;
+  if (!ja) return KANA_KANJI.test(name) && canon.nameKo && HANGUL.test(canon.nameKo) && !KANA_KANJI.test(canon.nameKo) ? canon.nameKo : name;
+  if (!HANGUL.test(name)) return name;
+  if (canon.nameJa && !HANGUL.test(canon.nameJa)) return canon.nameJa;
+  return others.find((x) => x && /[A-Za-z]/.test(x) && !HANGUL.test(x)) || name;
 }
 export const PLATFORM_NAME: Record<PlatformId, string> = { plusmember: 'PLUS MEMBER', familyclub: 'FAMILY CLUB', weverse: 'Weverse', generic: '' };
 

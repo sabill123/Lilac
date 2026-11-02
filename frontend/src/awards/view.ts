@@ -12,8 +12,8 @@ const asset = (file: string, alt: string, cls = '') => `<span class="ha-image ${
 const meta = (e: AwardEdition) => `<p class="ha-date">${e.edition && e.edition !== String(e.year) ? `${esc(trEdition(e.edition))} · ` : ''}<time datetime="${esc(e.date)}">${esc(e.date.replaceAll('-','.'))}</time>${e.endDate ? '–'+esc(e.endDate.slice(8)):''}</p>`;
 let curSeries = '';
 const cat = (r: AwardEntry) => trCategory(curSeries, r.category);
-const song = (r: AwardEntry) => `<a href="${esc(musicHref(r))}">${esc(r.recipient)}${r.work ? ' · '+esc(r.work):''}<span aria-hidden="true"> ↗</span></a>`;
-function lead(e: AwardEdition, index = 0) { const r=e.entries[index]; return `<div class="ha-lead"><p>${esc(cat(r))}</p><strong>${esc(r.recipient)}</strong>${r.work?`<span>${esc(r.work)}</span>`:''}<a class="ha-search" href="${esc(musicHref(r))}">${esc(tr('음악 검색'))} ↗</a></div>`; }
+const song = (r: AwardEntry) => `<a href="${esc(musicHref(r))}"><span data-public-name>${esc(r.recipient)}</span>${r.work ? ' · <bdi data-content-original-work translate="no">'+esc(r.work)+'</bdi>':''}<span aria-hidden="true"> ↗</span></a>`;
+function lead(e: AwardEdition, index = 0) { const r=e.entries[index]; return `<div class="ha-lead"><p>${esc(cat(r))}</p><strong data-public-name>${esc(r.recipient)}</strong>${r.work?`<span data-content-original-work translate="no">${esc(r.work)}</span>`:''}<a class="ha-search" href="${esc(musicHref(r))}">${esc(tr('음악 검색'))} ↗</a></div>`; }
 /** Each edition owns its composition, not a theme on a shared hero-card template. */
 export function brandStage(e: AwardEdition): string {
   curSeries = e.series;
@@ -24,7 +24,7 @@ export function brandStage(e: AwardEdition): string {
     case 'golden-disc': return `<div class="ha-golden">${asset('golden-disc-2026-keyvisual.jpg','제40회 골든디스크어워즈 공식 인디고 배경','ha-golden-bg')}<div class="ha-golden-front">${meta(e)}${asset('golden-disc-2026-title.svg','제40회 GOLDEN DISC AWARDS 공식 타이틀','ha-golden-title')}<h3 class="ha-sr">${esc(trName('골든디스크어워즈'))} 2026</h3><div class="ha-golden-winners">${e.entries.slice(0,3).map(r=>`<div><span>${esc(cat(r))}</span>${song(r)}</div>`).join('')}</div></div></div>`;
     case 'mma': return `<div class="ha-mma"><div class="ha-mma-art">${asset('mma-2025-keyvisual.png','MMA 2025 핑크와 옐로 패싯 선물 공식 키 비주얼','ha-mma-gift')}${asset('mma-2025-hero-logo.png','MMA 2025 THE 17th MELON MUSIC AWARDS 공식 로고','ha-mma-logo')}</div><div class="ha-mma-footer"><div>${meta(e)}<h3>MELON MUSIC AWARDS</h3></div>${lead(e)}</div></div>`;
     case 'record-awards': return `<div class="ha-record"><div class="ha-record-heading"><h3>輝く！日本レコード大賞</h3>${meta(e)}</div>${asset('record-awards-2025-keyvisual.jpg','제67회 일본 레코드대상 TBS 공식 진행자 키 비주얼','ha-record-visual')}<div class="ha-record-result">${lead(e)}<p>第67回<br>2025</p></div></div>`;
-    case 'kohaku': return `<div class="ha-kohaku"><div class="ha-kohaku-top"><span>第76回 NHK</span>${meta(e)}</div><h3 lang="ja"><span>紅</span><span>白</span><small>歌合戦</small></h3><div class="ha-kohaku-bottom"><div><p>2025.12.31</p><strong>${esc(trResult(e.result || ''))}</strong><p>${esc(tr('출연곡 기록'))}</p></div><div><p>${e.entries.map(r=>esc(r.recipient)).join(' / ')}</p><a href="https://www.nhk.or.jp/kouhaku/index.html" target="_blank" rel="noopener noreferrer">${esc(tr('공식 비주얼은 NHK에서'))} ↗</a></div></div></div>`;
+    case 'kohaku': return `<div class="ha-kohaku"><div class="ha-kohaku-top"><span>第76回 NHK</span>${meta(e)}</div><h3 lang="ja"><span>紅</span><span>白</span><small>歌合戦</small></h3><div class="ha-kohaku-bottom"><div><p>2025.12.31</p><strong>${esc(trResult(e.result || ''))}</strong><p>${esc(tr('출연곡 기록'))}</p></div><div><p>${e.entries.map(r=>`<span data-public-name>${esc(r.recipient)}</span>`).join(' / ')}</p><a href="https://www.nhk.or.jp/kouhaku/index.html" target="_blank" rel="noopener noreferrer">${esc(tr('공식 비주얼은 NHK에서'))} ↗</a></div></div></div>`;
     default: return `<h3>${esc(e.name)} ${esc(e.year)}</h3>`;
   }
 }

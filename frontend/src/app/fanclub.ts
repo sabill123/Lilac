@@ -2,7 +2,7 @@
  *
  * 예매처에 없는 공연도 팬클럽 선행·전용으로 신청할 수 있다. 팬에게는 신청 경로를,
  * 소속사에는 팬클럽 가입 유입을 만든다(가입 버튼은 utm_source=lilac 을 붙이고 클릭 수를 센다). */
-import { esc, icon, img, money, fmtDateTime, until, approxMoney } from './ui';
+import { esc, icon, img, money, fmtDateTime, untilText, ticketNow, ticketInstant, clockPendingLabel, approxMoney } from './ui';
 import { t, getLocale } from './i18n';
 import { buyerCurrency } from './state';
 import { platformOf, clubName, PLATFORM_NAME } from './fcguide';
@@ -79,7 +79,8 @@ export function fanclubSection(fc: Fanclub | null, artist: { id: string | null; 
   if (!fc || fc.found === false || !fc.entry && !fc.home) return '';
   const f = fc.facts as (FcFacts & { residence?: Residence | null; image?: string | null; period?: string | null; fees: FcFacts['fees'] & { free?: boolean } }) | null;
   const plat = platformOf(fc);
-  const open = fc.windows.filter((w) => !w.trade && (!w.closesAt || Date.parse(w.closesAt) > Date.now()));
+  const now=ticketNow();
+  const open = fc.windows.filter(w => !w.trade && (now===null || (ticketInstant(w.closesAt)??Infinity)>now));
   const club = clubName(fc.name || f?.name) || (plat === 'weverse' ? 'Weverse Membership' : `${artist.name} ${t('fc.official')}`);
   const ovsState = plat === 'familyclub' ? 'no' : f?.overseas || 'unknown';
   const ov = f?.residence?.overseas?.annual || null;
@@ -105,13 +106,13 @@ export function fanclubSection(fc: Fanclub | null, artist: { id: string | null; 
 }
 
 export function fcWindowRow(w: FcWindow, artist: { id: string | null; name: string }) {
-  const now = Date.now();
-  const opens = w.ticketOpenAt && Date.parse(w.ticketOpenAt) > now;
-  const time = opens
-    ? `<b>${esc(fmtDateTime(w.ticketOpenAt))}</b><span>${esc(t('c.soon', { t: until(w.ticketOpenAt) }))}</span>`
-    : `<b>~ ${esc(fmtDateTime(w.closesAt))}</b><span>${esc(t('c.closes', { t: until(w.closesAt) }))}</span>`;
+  const now = ticketNow();
+  const opens = now!==null && (ticketInstant(w.ticketOpenAt)??-Infinity)>now;
+  const time = now===null ? `<b>${esc(fmtDateTime(w.ticketOpenAt||w.closesAt))}</b><span>${clockPendingLabel()}</span>` : opens
+    ? `<b>${esc(fmtDateTime(w.ticketOpenAt))}</b><span>${esc(untilText('c.soon',w.ticketOpenAt))}</span>`
+    : `<b>~ ${esc(fmtDateTime(w.closesAt))}</b><span>${esc(untilText('c.closes',w.closesAt))}</span>`;
   const tags = [w.isPublic ? t('fc.tag.public') : w.fcOnly ? t('fc.tag.only') : t('fc.tag.first'), w.lottery ? t('fc.tag.lottery') : '', w.noJpPhone ? t('fc.tag.noPhone') : w.overseasOk ? t('fc.tag.overseas') : '', w.companionMember ? t('fc.tag.companion') : '', w.faceId ? t('fc.tag.face') : ''].filter(Boolean);
-  return `<li class="trow is-fc fc-wrow${!opens ? ' is-soon' : ''}">
+  return `<li data-ticket-open="${esc(w.ticketOpenAt||'')}" data-ticket-close="${esc(w.closesAt||'')}" class="trow is-fc fc-wrow${!opens ? ' is-soon' : ''}">
     <div class="trow-time">${time}</div>
     <div class="trow-main">
       <p class="trow-label">${tags.map((x) => `<span class="tag tag-fc">${esc(x)}</span>`).join('')}<span lang="ja">${esc(w.saleType || '')}</span></p>

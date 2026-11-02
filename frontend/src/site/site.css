@@ -7,7 +7,7 @@
   --st-text-caption:var(--fs-sm); --st-text-sm:var(--fs-base); --st-text-body:var(--fs-md);
   --st-text-title:var(--fs-xl); --st-text-headline:var(--fs-2xl); --st-text-display:var(--fs-3xl);
   --st-ease-standard:var(--ease-standard); --st-ease-out:var(--ease-out);
-  --st-font-sans:Inter,"Pretendard","Noto Sans KR",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --st-font-sans:var(--font);
 }
 body.site-mode .app, body.site-mode .player, body.site-mode .mobile-nav, body.site-mode .mnav, body.site-mode .m-work-mode, body.site-mode .right-dock, body.site-mode .skip-link { display:none !important; }
 html.site-mode { height:auto; min-height:100%; overflow:visible; overflow-y:auto; }

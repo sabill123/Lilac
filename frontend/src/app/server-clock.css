@@ -1,0 +1,38 @@
+/* 서버시간 KST 표시. 시각을 모르면 시각 칸을 숨기고 상태 문구만 보인다. */
+.lc-server-clock {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  min-width: 0;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.12));
+  border-radius: 999px;
+  color: var(--ink, inherit);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.lc-server-clock .lc-sc-label { color: var(--ink-3, currentColor); font-weight: 500; }
+.lc-server-clock .lc-sc-time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.lc-server-clock .lc-sc-time[hidden] { display: none; }
+.lc-server-clock .lc-sc-note { color: var(--ink-3, currentColor); font-size: 0.75rem; }
+.lc-server-clock[data-state="unsynced"] .lc-sc-note,
+.lc-server-clock[data-state="error"] .lc-sc-note,
+.lc-server-clock[data-state="stale"] .lc-sc-note { color: var(--ink-2, currentColor); font-weight: 500; }
+.lc-server-clock[data-state="stale"] .lc-sc-time { opacity: 0.72; }
+.lc-server-clock.is-compact { padding: 0.125rem 0.5rem; gap: 0.375em; font-size: 0.75rem; }
+.lc-server-clock.is-compact .lc-sc-note { display: none; }
+.lc-server-clock.is-compact[data-state="unsynced"] .lc-sc-note,
+.lc-server-clock.is-compact[data-state="error"] .lc-sc-note,
+.lc-server-clock.is-compact[data-state="stale"] .lc-sc-note { display: inline; }
+@media (max-width: 480px) {
+  .lc-server-clock:not(.is-compact) .lc-sc-note { display: none; }
+  .lc-server-clock[data-state="unsynced"] .lc-sc-note,
+  .lc-server-clock[data-state="error"] .lc-sc-note,
+  .lc-server-clock[data-state="stale"] .lc-sc-note { display: inline; }
+}
