@@ -43,7 +43,7 @@ const FC_FACTS_RULE=2;
 const JP_GENRE = /^(j-pop|j-rock|アニメ|anime|歌謡曲|演歌|enka|일본 만화 영화|ボーカロイド|vocaloid)/i;
 const norm = (s) => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s.・·'’"“”!?&＆_-]/g, '');
 
-export function createLiveService({ dbDir, readJson, writeJson = null, rosterLock = null, getCharts, assistanceCollector = collectAssistance, portraitCollector = collectOfficialPortrait, artistPhotoLookup = deezerArtist, displayNameCollectors = { ko: koreanNamesFor, ja: japaneseNamesFor }, displayNameWaitMs = 4000 }) {
+export function createLiveService({ dbDir, readJson, writeJson = null, rosterLock = null, getCharts, assistanceCollector = collectAssistance, portraitCollector = collectOfficialPortrait, artistPhotoLookup = deezerArtist, displayNameCollectors = { ko: koreanNamesFor, ja: japaneseNamesFor }, displayNameWaitMs = 4000, artworkFetcher = fetchArtwork }) {
   initCache(dbDir);
   const origins = new KV('origins');
   const photos = new KV('photos');
@@ -2007,14 +2007,17 @@ export function createLiveService({ dbDir, readJson, writeJson = null, rosterLoc
     let imgCacheBytes = 0;
     app.get('/api/live/img', async (req, res) => {
       let u;
-      await Promise.all([eventPosters.ready(), festSites.ready()]).catch(() => {});
-      try { u = validateArtworkUrl(String(req.query.u || ''), { trusted: isKnownPoster }); } catch (e) { return res.status(e.status || 400).end(); }
+      await Promise.all([eventPosters.ready(), festSites.ready(), portraits.ready()]).catch(() => {});
+      // Only current, roster-owned official-profile URLs. Never grant host-wide trust.
+      const officialImages = new Set((await roster().catch(()=>[])).flatMap(a => { const p=currentPortrait(a);if(p?.method!=='official-profile'||!p.imageUrl)return [];try{return [new URL(p.imageUrl).href];}catch{return [];} }));
+      const trustedImage = href => isKnownPoster(href) || officialImages.has(href);
+      try { u = validateArtworkUrl(String(req.query.u || ''), { trusted: trustedImage }); } catch (e) { return res.status(e.status || 400).end(); }
       const key = u.href;
       let hit = imgCache.get(key);
       if (!hit) {
         if (!imgInflight.has(key)) {
           if (imgInflight.size >= 4) return res.status(503).end();
-          const pending = fetchArtwork(key, { trusted: isKnownPoster }).then(result => {
+          const pending = artworkFetcher(key, { trusted: trustedImage }).then(result => {
             imgCache.set(key, result); imgCacheBytes += result.buf.length;
             while (imgCache.size > 80 || imgCacheBytes > 48 * 1024 * 1024) {
               const oldest = imgCache.keys().next().value;
